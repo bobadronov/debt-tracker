@@ -19,6 +19,13 @@ Pods/
 keystore.properties
 *.gpg
 *yarn.lock
+# Exception: commit the Kotlin/JS lockfiles for reproducible CI builds.
+# Without them, CI must freshly resolve/generate yarn.lock every run, and
+# that fresh-generation path was observed to fail on windows-latest runners
+# (kotlinStoreYarnLock / kotlinWasmStoreYarnLock: "Input file does not
+# exist") even though it worked on ubuntu-latest. Restoring from a known-
+# good committed lockfile avoids the fresh-generation path entirely.
+!kotlin-js-store/**/yarn.lock
 hs_err_pid*.log
 replay_pid*.log
 *.log
