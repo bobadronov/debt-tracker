@@ -1,13 +1,29 @@
+
 name: Release
 
-# Tag-triggered packaging: pushing a `v*` tag (or running this manually)
-# builds the Android APK, Windows .exe, Linux .deb, and the web build, then
-# publishes them as a GitHub Release + deploys the web build to GitHub Pages.
+# Tag-triggered packaging: pushing a `v*` tag, or running this manually.
+#
+# Builds:
+#   - Android APK
+#   - Windows .exe
+#   - Linux .deb
+#   - Web build
+#
+# Then:
+#   - publishes APK/.exe/.deb as a GitHub Release
+#   - deploys the web build to GitHub Pages
+
 on:
   push:
     tags:
       - 'v*'
+
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag to create (for example v1.0.0)'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -19,128 +35,211 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # Anon key is intentionally public (RLS protects data, not the key) — see STEPS.md Phase 0.
-  # Both are required at Gradle configuration time by sharedUI/build.gradle.kts's buildConfig block.
+  # The anon key is intentionally public. RLS protects the data, not the key.
+  # See STEPS.md Phase 0.
+  #
+  # Both values are required by sharedUI/build.gradle.kts during Gradle
+  # configuration because they are used by the BuildConfig block.
   SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
   SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
 jobs:
+
+  # ============================================================
+  # Android APK
+  # ============================================================
   android-apk:
     runs-on: ubuntu-latest
+
+    env:
+      # Optional Android signing configuration.
+      #
+      # If ANDROID_KEYSTORE_BASE64 is not configured, the build
+      # continues and produces an unsigned APK.
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - uses: gradle/actions/setup-gradle@v4
 
-      # Optional: only set up if the ANDROID_KEYSTORE_BASE64 secret exists (see STEPS.md).
-      # Without it, assembleRelease still succeeds and just produces an unsigned APK.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Decode signing keystore
         if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        shell: bash
         run: |
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.keystore"
           echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
 
       - name: Build release APK
-        env:
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: ./gradlew :androidApp:assembleRelease --stacktrace
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: debt-tracker-apk
           path: androidApp/build/outputs/apk/release/*.apk
+          if-no-files-found: error
 
+
+  # ============================================================
+  # Windows EXE
+  # ============================================================
   windows-exe:
     runs-on: windows-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - uses: gradle/actions/setup-gradle@v4
 
-      # Compose Desktop's Gradle plugin downloads WiX Toolset itself on first
-      # use (downloadWix/unzipWix tasks) — no manual install needed.
-      - name: Package .exe
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # Compose Desktop downloads WiX Toolset automatically when
+      # packageExe requires it.
+      - name: Package Windows executable
         run: ./gradlew :desktopApp:packageExe --stacktrace
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload Windows executable
+        uses: actions/upload-artifact@v4
         with:
           name: debt-tracker-exe
           path: desktopApp/build/compose/binaries/main/exe/*.exe
+          if-no-files-found: error
 
+
+  # ============================================================
+  # Linux DEB
+  # ============================================================
   linux-deb:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - uses: gradle/actions/setup-gradle@v4
 
-      # jpackage needs fakeroot/dpkg-deb to build .deb packages on Linux.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Install packaging tools
-        run: sudo apt-get update && sudo apt-get install -y fakeroot
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fakeroot dpkg-dev
 
-      - name: Package .deb
+      - name: Package Debian package
         run: ./gradlew :desktopApp:packageDeb --stacktrace
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload Debian package
+        uses: actions/upload-artifact@v4
         with:
           name: debt-tracker-deb
           path: desktopApp/build/compose/binaries/main/deb/*.deb
+          if-no-files-found: error
 
+
+  # ============================================================
+  # Web
+  # ============================================================
   web:
-    # ubuntu-latest's Binaryen wasm-opt binary crashes with SIGSEGV during
-    # the wasmJs production optimize step on GitHub-hosted Linux runners
-    # (confirmed: same Gradle task builds successfully on Windows). Using
-    # windows-latest sidesteps the buggy Linux binaryen binary.
+    # wasm-opt/Binaryen currently crashes on the Ubuntu runner
+    # for this project's wasmJs production optimization.
+    #
+    # Windows avoids the problematic Binaryen binary.
     runs-on: windows-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Build web distribution
         run: ./gradlew :webApp:composeCompatibilityBrowserDistribution --stacktrace
 
-      - uses: actions/upload-pages-artifact@v3
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: webApp/build/dist/composeWebCompatibility/productionExecutable
 
+
+  # ============================================================
+  # Deploy GitHub Pages
+  # ============================================================
   deploy-pages:
     needs: web
+
     runs-on: ubuntu-latest
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
-      - id: deployment
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
 
+
+  # ============================================================
+  # GitHub Release
+  # ============================================================
   github-release:
-    needs: [android-apk, windows-exe, linux-deb, web]
+    needs:
+      - android-apk
+      - windows-exe
+      - linux-deb
+
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      - name: Determine release tag
+        id: release-tag
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "tag=${{ inputs.release_tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.release-tag.outputs.tag }}
           generate_release_notes: true
           files: |
             artifacts/debt-tracker-apk/*.apk
