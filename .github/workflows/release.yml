@@ -100,7 +100,11 @@ jobs:
           path: desktopApp/build/compose/binaries/main/deb/*.deb
 
   web:
-    runs-on: ubuntu-latest
+    # ubuntu-latest's Binaryen wasm-opt binary crashes with SIGSEGV during
+    # the wasmJs production optimize step on GitHub-hosted Linux runners
+    # (confirmed: same Gradle task builds successfully on Windows). Using
+    # windows-latest sidesteps the buggy Linux binaryen binary.
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
