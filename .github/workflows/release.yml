@@ -18,6 +18,12 @@ concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  # Anon key is intentionally public (RLS protects data, not the key) — see STEPS.md Phase 0.
+  # Both are required at Gradle configuration time by sharedUI/build.gradle.kts's buildConfig block.
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
 jobs:
   android-apk:
     runs-on: ubuntu-latest
