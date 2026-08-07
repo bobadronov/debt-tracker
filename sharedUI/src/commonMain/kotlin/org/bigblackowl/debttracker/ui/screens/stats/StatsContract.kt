@@ -1,0 +1,28 @@
+package org.bigblackowl.debttracker.ui.screens.stats
+
+import com.ionspin.kotlin.bignum.decimal.BigDecimal
+import org.bigblackowl.debttracker.domain.model.CreditorWithBalance
+import org.bigblackowl.debttracker.domain.model.Currency
+import org.bigblackowl.debttracker.domain.model.DebtorWithBalance
+import org.bigblackowl.debttracker.domain.model.sumByCurrency
+
+/** One point on the 6-month debt/repay trend chart on [StatsScreen]. */
+data class MonthlyPoint(val label: String, val amount: BigDecimal)
+
+/**
+ * Derived stats for [StatsScreen] — computed straight from the live debtor/creditor lists, no separate aggregation query.
+ * Місячна динаміка (monthly*Trend) підсумовує суми напряму, без розбивки по валютах —
+ * прийнятне спрощення, поки немає курсів обміну для кросвалютного графіка.
+ */
+data class StatsState(
+    val isLoading: Boolean = true,
+    val debtors: List<DebtorWithBalance> = emptyList(),
+    val creditors: List<CreditorWithBalance> = emptyList(),
+    val monthlyDebtTrend: List<MonthlyPoint> = emptyList(),
+    val monthlyCreditorTrend: List<MonthlyPoint> = emptyList(),
+) {
+    val totalDebtorsByCurrency: Map<Currency, BigDecimal> get() = debtors.sumByCurrency({ it.debtor.currency }, { it.balance })
+    val totalCreditorsByCurrency: Map<Currency, BigDecimal> get() = creditors.sumByCurrency({ it.creditor.currency }, { it.balance })
+    val topDebtors: List<DebtorWithBalance> get() = debtors.sortedWith { a, b -> b.balance.compareTo(a.balance) }.take(5)
+    val topCreditors: List<CreditorWithBalance> get() = creditors.sortedWith { a, b -> b.balance.compareTo(a.balance) }.take(5)
+}

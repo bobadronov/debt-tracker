@@ -1,0 +1,187 @@
+package org.bigblackowl.debttracker.ui.screens.stats
+
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.tooling.preview.Preview
+import com.ionspin.kotlin.bignum.decimal.BigDecimal
+import org.bigblackowl.debttracker.core.i18n.LocalStrings
+import org.bigblackowl.debttracker.domain.model.Currency
+import org.bigblackowl.debttracker.domain.model.formatMoney
+import org.bigblackowl.debttracker.domain.model.formatTotals
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
+import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.theme.debtAccentColors
+import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
+import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
+import org.bigblackowl.debttracker.ui.components.SettingsSection
+import org.koin.compose.viewmodel.koinViewModel
+
+/** StatsScreen: два окремих KPI (без взаємозаліку), топи, динаміка за місяць (спек §6, п.6). */
+@Composable
+fun StatsScreen(onBack: () -> Unit, viewModel: StatsViewModel = koinViewModel()) {
+    val state by viewModel.state.collectAsState()
+    val strings = LocalStrings.current
+
+    PlaceholderScreen(title = strings.statsTitle, onBack = onBack) {
+        Column(
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(Dimens.space24),
+        ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Dimens.space12)) {
+                KpiCard(
+                    icon = Icons.AutoMirrored.Filled.TrendingDown,
+                    title = strings.statsDebtors,
+                    value = state.totalDebtorsByCurrency,
+                    modifier = Modifier.weight(1f),
+                )
+                KpiCard(
+                    icon = Icons.AutoMirrored.Filled.TrendingUp,
+                    title = strings.statsCreditors,
+                    value = state.totalCreditorsByCurrency,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
+            SettingsSection(strings.statsTopDebtors) {
+                state.topDebtors.forEachIndexed { index, item ->
+                    TopRow(rank = index + 1, name = item.debtor.fullName, balance = item.balance, currency = item.debtor.currency)
+                    if (index != state.topDebtors.lastIndex) SettingsRowDivider()
+                }
+            }
+
+            SettingsSection(strings.statsTopCreditors) {
+                state.topCreditors.forEachIndexed { index, item ->
+                    TopRow(rank = index + 1, name = item.creditor.fullName, balance = item.balance, currency = item.creditor.currency)
+                    if (index != state.topCreditors.lastIndex) SettingsRowDivider()
+                }
+            }
+
+            SettingsSection(strings.statsMonthlyDebtTrend) {
+                MonthlyBars(state.monthlyDebtTrend, modifier = Modifier.padding(Dimens.space16))
+            }
+
+            SettingsSection(strings.statsMonthlyCreditorTrend) {
+                MonthlyBars(state.monthlyCreditorTrend, modifier = Modifier.padding(Dimens.space16))
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun StatsScreenPreview() = DebtTrackerPreview {
+    StatsScreen(onBack = {})
+}
+
+/** Tonal-картка KPI з іконкою в колі — той самий візуальний словник, що й SettingsRow/SettingsSection. */
+@Composable
+private fun KpiCard(icon: ImageVector, title: String, value: Map<Currency, BigDecimal>, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(Dimens.space20),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        Column(modifier = Modifier.padding(Dimens.space16)) {
+            Box(
+                modifier = Modifier.size(Dimens.space40).clip(CircleShape).background(MaterialTheme.debtAccentColors.debt.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(icon, contentDescription = null, tint = MaterialTheme.debtAccentColors.debt, modifier = Modifier.size(Dimens.space20))
+            }
+            Spacer(Modifier.height(Dimens.space12))
+            Text(title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                value.formatTotals(),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.debtAccentColors.debt,
+            )
+        }
+    }
+}
+
+/** Рядок топ-списку з номером місця у tonal-колі замість голого тексту. */
+@Composable
+private fun TopRow(rank: Int, name: String, balance: BigDecimal, currency: Currency) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.space16, vertical = Dimens.space12),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier.size(Dimens.space28).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("$rank", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
+            Spacer(Modifier.width(Dimens.space12))
+            Text(name, style = MaterialTheme.typography.bodyLarge)
+        }
+        Text(balance.formatMoney(currency), color = MaterialTheme.debtAccentColors.debt)
+    }
+}
+
+@Composable
+private fun MonthlyBars(points: List<MonthlyPoint>, modifier: Modifier = Modifier) {
+    if (points.isEmpty()) return
+    val maxAbs = points.maxOf { it.amount.abs().toStringExpanded().toDoubleOrNull() ?: 0.0 }.coerceAtLeast(1.0)
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(Dimens.space8)) {
+        points.forEach { point ->
+            val amountDouble = point.amount.toStringExpanded().toDoubleOrNull() ?: 0.0
+            val targetFraction = (kotlin.math.abs(amountDouble) / maxAbs).toFloat().coerceIn(0f, 1f)
+            val fraction by animateFloatAsState(targetFraction.coerceAtLeast(0.02f), label = "trend-bar")
+            val color = if (amountDouble >= 0) MaterialTheme.debtAccentColors.debt else MaterialTheme.debtAccentColors.repay
+
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Text(point.label, modifier = Modifier.width(Dimens.space56), style = MaterialTheme.typography.labelSmall)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(Dimens.space14)
+                        .clip(RoundedCornerShape(Dimens.space8))
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(fraction)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(Dimens.space8))
+                            .background(color),
+                    )
+                }
+                Spacer(Modifier.width(Dimens.space8))
+                Text(point.amount.toStringExpanded(), style = MaterialTheme.typography.labelSmall)
+            }
+        }
+    }
+}
