@@ -33,8 +33,4 @@ replay_pid*.log
 node_modules/
 supabase/.branches/
 supabase/.temp/
-debt-tracker-kmp-spec.md
-debt-tracker-start-prompt.md
-debt-tracker-test-tor.md
-STEPS.md
 /release.bat

@@ -7,6 +7,10 @@ with optional cloud sync via Supabase.
 Built with **Compose Multiplatform** — one shared UI codebase targets
 Android, iOS, Desktop (JVM), and Web (JS/Wasm).
 
+**Live web app:** https://bobadronov.github.io/debt-tracker/
+(double-click [`web-page.html`](web-page.html) for a local shortcut that
+opens it in your default browser).
+
 ## Features
 
 - **Two mirrored directions** — "Мені винні" (people who owe me) and "Я
@@ -106,12 +110,15 @@ access happens when rendering a preview.
 
 ## Getting started
 
-1. Create a Supabase project and run the SQL migration(s) in `supabase/` (see
-   `debt-tracker-kmp-spec.md` §9 for the schema this app expects: `profiles`,
-   `debtors`, `debt_transactions`, `creditors`, `creditor_transactions`, RLS
-   policies).
-2. Put your project's URL and anon key into `sharedUI/build.gradle.kts`
-   (`buildConfig { ... }` block) — the anon key is safe to keep client-side
+1. Create a Supabase project and run `supabase/full_backup.sql` once (SQL
+   Editor or `psql -f`) — a single, ready-to-run snapshot of the full schema
+   (`profiles`, `debtors`, `debt_transactions`, `creditors`,
+   `creditor_transactions`, triggers, RLS policies). `supabase/migrations/`
+   holds the same schema as incremental, versioned steps instead, if you'd
+   rather apply it via `supabase db push`.
+2. Copy `secrets.properties.example` to `secrets.properties` and fill in your
+   project's URL and anon key — read by `sharedUI/build.gradle.kts`'s
+   `buildConfig { ... }` block. The anon key is safe to keep client-side
    since RLS enforces per-user data isolation.
 3. Build/run one of the targets below.
 
@@ -153,15 +160,20 @@ Production distribution:
 ./gradlew :webApp:composeCompatibilityBrowserDistribution
 ```
 Deploy `webApp/build/dist/composeWebCompatibility/productionExecutable` to
-any static web server.
+any static web server. The `release.yml` workflow deploys it automatically to
+GitHub Pages at https://bobadronov.github.io/debt-tracker/ on every tagged
+release.
 
 > Web currently ships the KMP scaffold only — the app's screens are not yet
-> wired up for Web (see `debt-tracker-kmp-spec.md` §1 for the planned
-> online-only, Account+Sync-required design for this target).
+> wired up for Web; it's designed to be online-only, Account+Sync-required
+> on this target (see `debt-tracker-start-prompt.md` §5).
 
-## Project conventions
+## Project conventions & rebuilding
 
-See `AGENTS.MD` for the conventions this codebase follows (module structure,
-expect/actual placement, dependency management via the version catalog).
-`debt-tracker-kmp-spec.md` is the original design spec the app was built
-against, including the full Supabase schema.
+See [`debt-tracker-start-prompt.md`](debt-tracker-start-prompt.md) — a
+single, self-contained document covering the full feature list, tech stack,
+architecture, database schema, build/release setup, and conventions
+(module structure, expect/actual placement, MVI screen pattern, dependency
+management via the version catalog). It's written so that, together with
+[`supabase/full_backup.sql`](supabase/full_backup.sql), it's enough on its
+own to rebuild this project from scratch if the repository were ever lost.

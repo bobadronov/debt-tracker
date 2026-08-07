@@ -36,7 +36,7 @@ concurrency:
 
 env:
   # The anon key is intentionally public. RLS protects the data, not the key.
-  # See STEPS.md Phase 0.
+  # See debt-tracker-start-prompt.md §8 (Configuration & secrets).
   #
   # Both values are required by sharedUI/build.gradle.kts during Gradle
   # configuration because they are used by the BuildConfig block.
