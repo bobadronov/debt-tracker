@@ -111,6 +111,13 @@ Notes for the form:
 - **Can users request data deletion?** Yes — describe the in-app
   Settings → "Delete all data" flow, plus the contact email for full account
   deletion.
+- **Account deletion link** (separate field in the Data safety form, not the
+  privacy policy URL field): use
+  `https://bobadronov.github.io/debt-tracker/privacy-policy.html#data-deletion`.
+  That section states the app/developer name, spells out both deletion paths
+  (in-app data-only vs. email for full account) as numbered steps, and lists
+  what's deleted vs. retained with timing — the three things Play requires
+  this link to cover.
 - **Is data shared with third parties?** Supabase hosts the backend as your
   data processor (not a separate company using the data for its own
   purposes), which Play's model generally treats as *not* "sharing" — the
@@ -122,8 +129,11 @@ Notes for the form:
 
 ## 5. Release setup in Play Console
 
-1. **Production** (or start with **Internal testing** to try it privately
-   first — recommended for a first submission).
+**First release ever (must be done by hand — the Play Developer API can't
+create an app or do its first release):**
+
+1. Start with **Internal testing** to try it privately first — recommended
+   for a first submission.
 2. Upload the `.aab` from the `debt-tracker-aab` artifact on your latest
    GitHub Release (built by `release.yml`'s `android-aab` job).
 3. Play Console will offer **Play App Signing** — accept it (Google then
@@ -133,15 +143,43 @@ Notes for the form:
 4. Fill in the release notes, save, and **Submit for review**. First review
    typically takes anywhere from a few hours to a few days.
 
+**Every release after that — automated via GitHub Actions:**
+
+Once the app exists in Play Console, `release.yml` has a `play-store` job
+that uploads the `.aab` for you on every tagged release (or via
+`workflow_dispatch`, where you can pick the target track). It's skipped
+until you set it up, one time:
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), create (or
+   pick) a project, then create a **service account** for Play publishing.
+2. Enable the **Google Play Android Developer API** for that project.
+3. Generate a JSON key for the service account and download it.
+4. In Play Console → **Users and permissions**, invite the service
+   account's email, and grant it release permissions for this app (at
+   minimum: view app info, manage releases to the tracks you'll use).
+5. Copy the full contents of the JSON key file into a new repo secret named
+   `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` (GitHub → Settings → Secrets and
+   variables → Actions).
+
+After that, every `vX.Y.Z` tag push builds the `.aab` and uploads it to the
+`internal` track by default (change via the `play_track` input when running
+the workflow manually). You'll still need to promote internal → production
+in Play Console yourself, at least until you're comfortable automating that
+too.
+
 ## 6. Recap: what's already done vs. what's left
 
 **Done (this repo):**
 - Signed `.aab` build wired into CI (`android-aab` job in `release.yml`)
+- Automated Play Store upload (`play-store` job in `release.yml`), gated on
+  the `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secret being configured
 - Privacy policy page, deployed to GitHub Pages alongside the web app
 - This packet: listing text, content rating guidance, data safety mapping
 
 **Left for you:**
-- Play Console account + app creation
+- Play Console account + app creation, and the manual first upload (§5)
+- Service account + `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secret, to turn on
+  automated uploads for every release after the first (§5)
 - App icon, feature graphic, and real device screenshots
 - Walking through the content rating and data safety questionnaires in the
   live Play Console UI (I've drafted the answers, but only you can click

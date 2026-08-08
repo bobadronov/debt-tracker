@@ -92,14 +92,37 @@
   not just by the app.
 </p>
 
-<h2>Deleting your data</h2>
+<h2 id="data-deletion">Deleting your data — DebtTracker (developer: Bohdan Dronov)</h2>
+
+<h3>Option 1 — delete your data, keep your account</h3>
 <p>
-  In-app: <strong>Settings → Delete all data</strong> (with a double
-  confirmation) permanently deletes all of your debtors, creditors, and
-  transactions from our servers. Signing out at any time stops syncing;
-  uninstalling the app removes everything stored locally on that device.
-  To delete your account entirely, email
-  <a href="mailto:bobadronov@gmail.com">bobadronov@gmail.com</a>.
+  In the app, go to <strong>Settings → Delete all data</strong> and confirm
+  twice. This immediately and permanently deletes every debtor, creditor,
+  and transaction you've synced to our servers. Your account (email/login)
+  stays active so you can keep using the app afterward.
+</p>
+
+<h3>Option 2 — delete your account entirely</h3>
+<p>
+  Email <a href="mailto:bobadronov@gmail.com">bobadronov@gmail.com</a> from
+  the address registered to your account with the subject
+  "Delete my account", or simply state your request. We verify the request
+  and delete your account, typically within a few business days, and confirm
+  by reply once it's done.
+</p>
+
+<h3>What gets deleted, and what's retained</h3>
+<table>
+  <tr><th>Data</th><th>Deleted?</th><th>When</th></tr>
+  <tr><td>Debtors, creditors, transaction records</td><td>Deleted</td><td>Immediately (Option 1 or 2)</td></tr>
+  <tr><td>Display name, avatar photo</td><td>Deleted</td><td>Immediately on account deletion (Option 2)</td></tr>
+  <tr><td>Account/login (email, password hash)</td><td>Deleted</td><td>Immediately on account deletion (Option 2)</td></tr>
+  <tr><td>Data stored only locally on your device</td><td>Deleted</td><td>Whenever you uninstall the app — this is outside our servers entirely</td></tr>
+  <tr><td>Residual copies in routine infrastructure backups</td><td>Purged</td><td>On our hosting provider's normal backup rotation, not immediately, but not kept indefinitely</td></tr>
+</table>
+<p>
+  We don't retain any of your data beyond what's described above — no
+  analytics, no marketing lists, no long-term archive.
 </p>
 
 <h2>Children's privacy</h2>
