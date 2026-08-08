@@ -105,7 +105,7 @@ fun ProtectionOnboardingScreen(onDone: () -> Unit) {
         PinSetupDialog(
             onDismiss = { showPinSetupDialog = false },
             onConfirm = { pin ->
-                settings.pinCode = pin
+                settings.setPinCode(pin)
                 settings.protectionEnabled = true
                 showPinSetupDialog = false
                 finish()

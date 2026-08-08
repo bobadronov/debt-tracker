@@ -104,7 +104,7 @@ fun AuthGateScreen(onUnlocked: () -> Unit) {
             )
             Spacer(Modifier.height(Dimens.space16))
             Button(onClick = {
-                if (pinInput.isNotEmpty() && pinInput == settings.pinCode) {
+                if (pinInput.isNotEmpty() && settings.verifyPinCode(pinInput)) {
                     onUnlocked()
                 } else {
                     error = strings.authGateWrongPin

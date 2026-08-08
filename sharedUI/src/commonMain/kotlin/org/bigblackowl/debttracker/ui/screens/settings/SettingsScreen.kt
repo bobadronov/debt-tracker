@@ -265,7 +265,7 @@ fun SettingsScreen(
                                     onCheckedChange = { checked ->
                                         protectionConfirmError = null
                                         when (currentPlatform) {
-                                            AppPlatform.DESKTOP -> if (checked && settings.pinCode == null) {
+                                            AppPlatform.DESKTOP -> if (checked && !settings.hasPinCode) {
                                                 showPinSetupDialog = true
                                             } else {
                                                 settings.protectionEnabled = checked
@@ -447,7 +447,7 @@ fun SettingsScreen(
         PinSetupDialog(
             onDismiss = { showPinSetupDialog = false },
             onConfirm = { pin ->
-                settings.pinCode = pin
+                settings.setPinCode(pin)
                 settings.protectionEnabled = true
                 showPinSetupDialog = false
             },
