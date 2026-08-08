@@ -15,7 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Money
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -254,7 +254,7 @@ fun AddEditDebtorScreen(
                 modifier = Modifier.widthIn(max = Dimens.contentMaxWidth),
             ) {
                 if (state.isSaving)
-                    CircularProgressIndicator(modifier = Modifier.padding(end = Dimens.space8))
+                    CircularWavyProgressIndicator(modifier = Modifier.padding(end = Dimens.space8))
                 else
                     Text(strings.save)
             }

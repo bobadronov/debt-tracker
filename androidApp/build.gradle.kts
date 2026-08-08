@@ -47,7 +47,7 @@ android {
     if (hasReleaseSigning) {
         signingConfigs {
             create("release") {
-                storeFile = file(releaseKeystorePath!!)
+                storeFile = file(releaseKeystorePath)
                 storePassword = releaseKeystorePassword
                 keyAlias = releaseKeyAlias
                 keyPassword = releaseKeyPassword
@@ -59,6 +59,13 @@ android {
         release {
             if (hasReleaseSigning) {
                 signingConfig = signingConfigs.getByName("release")
+            } else if (System.getenv("CI") == "true") {
+                throw GradleException(
+                    "Release signing is required in CI. " +
+                            "Configure ANDROID_KEYSTORE_PATH, " +
+                            "ANDROID_KEYSTORE_PASSWORD, " +
+                            "ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD."
+                )
             }
         }
     }
@@ -73,5 +80,7 @@ dependencies {
     implementation(libs.androidx.activityCompose)
     implementation(libs.koin.android)
     implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.preview) // @Preview для WidgetUi у Android Studio
+    debugImplementation(libs.compose.ui.tooling) // ComposeViewAdapter — потрібен рендереру Preview-панелі в IDE
     implementation(libs.bignum) // DebtSummaryWidget рахує BigDecimal-суми напряму
 }

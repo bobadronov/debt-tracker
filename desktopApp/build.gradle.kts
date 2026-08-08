@@ -39,11 +39,13 @@ compose.desktop {
             packageName = "Debt Tracker"
             packageVersion = appVersionName
 
+
             linux {
                 iconFile.set(project.file("appIcons/LinuxIcon.png"))
             }
             windows {
                 iconFile.set(project.file("appIcons/WindowsIcon.ico"))
+                shortcut = true
             }
             macOS {
                 iconFile.set(project.file("appIcons/MacosIcon.icns"))

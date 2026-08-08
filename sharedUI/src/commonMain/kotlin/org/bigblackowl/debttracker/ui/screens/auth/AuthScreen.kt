@@ -13,7 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -119,7 +119,7 @@ fun AuthScreen(
                     modifier = Modifier.fillMaxWidth(.8f),
                 ) {
                     if (state.isLoading)
-                        CircularProgressIndicator(modifier = Modifier.padding(end = Dimens.space8))
+                        CircularWavyProgressIndicator(modifier = Modifier.padding(end = Dimens.space8))
                     else
                         Text(if (state.isSignUpMode) strings.authSubmitSignUp else strings.authSubmitSignIn)
                 }

@@ -12,7 +12,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -200,7 +200,7 @@ fun ExportScreen(onBack: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 if (isExporting) {
-                    CircularProgressIndicator(modifier = Modifier.padding(end = Dimens.space8))
+                    CircularWavyProgressIndicator(modifier = Modifier.padding(end = Dimens.space8))
                 } else {
                     Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.padding(end = Dimens.space8))
                     Text(strings.exportSubmit)

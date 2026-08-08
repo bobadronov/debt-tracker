@@ -1,7 +1,6 @@
 package org.bigblackowl.debttracker.data.sync
 
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
-import kotlinx.datetime.Instant
 import org.bigblackowl.debttracker.data.local.entity.CreditorEntity
 import org.bigblackowl.debttracker.data.local.entity.CreditorTransactionEntity
 import org.bigblackowl.debttracker.data.local.entity.DebtTransactionEntity
@@ -47,8 +46,8 @@ fun DebtorDto.toEntity() = DebtorEntity(
     email = email,
     avatarUrl = avatarUrl,
     comment = comment,
-    createdAt = Instant.parse(createdAt),
-    updatedAt = Instant.parse(updatedAt),
+    createdAt = kotlin.time.Instant.parse(createdAt),
+    updatedAt = kotlin.time.Instant.parse(updatedAt),
     status = DebtStatus.valueOf(status),
     syncStatus = SyncStatus.SYNCED,
     currency = Currency.valueOf(currency),
@@ -78,10 +77,10 @@ fun DebtTransactionDto.toEntity(): DebtTransactionEntity {
         type = parsedAmount.toDebtTransactionType(),
         method = PaymentMethod.valueOf(method),
         cardLastDigits = cardLastDigits,
-        date = Instant.parse(transactionDate),
+        date = kotlin.time.Instant.parse(transactionDate),
         comment = comment,
-        createdAt = Instant.parse(createdAt),
-        updatedAt = Instant.parse(updatedAt),
+        createdAt = kotlin.time.Instant.parse(createdAt),
+        updatedAt = kotlin.time.Instant.parse(updatedAt),
         syncStatus = SyncStatus.SYNCED,
         isDeleted = isDeleted,
     )
@@ -109,8 +108,8 @@ fun CreditorDto.toEntity() = CreditorEntity(
     email = email,
     avatarUrl = avatarUrl,
     comment = comment,
-    createdAt = Instant.parse(createdAt),
-    updatedAt = Instant.parse(updatedAt),
+    createdAt = kotlin.time.Instant.parse(createdAt),
+    updatedAt = kotlin.time.Instant.parse(updatedAt),
     status = DebtStatus.valueOf(status),
     syncStatus = SyncStatus.SYNCED,
     currency = Currency.valueOf(currency),
@@ -140,10 +139,10 @@ fun CreditorTransactionDto.toEntity(): CreditorTransactionEntity {
         type = parsedAmount.toCreditorTransactionType(),
         method = PaymentMethod.valueOf(method),
         cardLastDigits = cardLastDigits,
-        date = Instant.parse(transactionDate),
+        date = kotlin.time.Instant.parse(transactionDate),
         comment = comment,
-        createdAt = Instant.parse(createdAt),
-        updatedAt = Instant.parse(updatedAt),
+        createdAt = kotlin.time.Instant.parse(createdAt),
+        updatedAt = kotlin.time.Instant.parse(updatedAt),
         syncStatus = SyncStatus.SYNCED,
         isDeleted = isDeleted,
     )

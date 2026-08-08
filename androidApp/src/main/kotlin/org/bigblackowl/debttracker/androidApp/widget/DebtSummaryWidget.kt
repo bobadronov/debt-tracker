@@ -2,9 +2,12 @@ package org.bigblackowl.debttracker.androidApp.widget
 
 import android.annotation.SuppressLint
 import android.content.Context
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.glance.GlanceComposable
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.appwidget.GlanceAppWidget
@@ -65,60 +68,75 @@ class DebtSummaryWidget : GlanceAppWidget() {
         val creditorsTotal = creditorRepository.observeCreditors().first()
             .sumByCurrency({ it.creditor.currency }, { it.balance })
 
+        val appName = strings.appName
         val debtorsLine = strings.widgetDebtorsTotal(debtorsTotal.formatTotals())
         val creditorsLine = strings.widgetCreditorsTotal(creditorsTotal.formatTotals())
 
         provideContent {
+            WidgetUi(
+                appName = appName,
+                debtorsLine = debtorsLine,
+                creditorsLine = creditorsLine,
+            )
+        }
+    }
+}
+
+/**
+ * Чиста, без сайд-ефектів composable-функція — дані приходять готовими з [DebtSummaryWidget.provideGlance],
+ * бо suspend-виклики (Koin, Flow.first) не можна робити напряму всередині @Composable.
+ * Значення параметрів за замовчуванням дають змогу рендерити @Preview в Android Studio.
+ */
+@SuppressLint("RestrictedApi")
+@Preview
+@Composable
+@GlanceComposable
+fun WidgetUi(
+    appName: String = "DebtTracker",
+    debtorsLine: String = "Мені винні: 1 250,00 ₴",
+    creditorsLine: String = "Я винен: 430,00 ₴",
+) {
+
+    Box(
+        modifier = GlanceModifier
+            .fillMaxSize()
+            .background(CyberPanel)
+            .cornerRadius(16.dp)
+            .padding(12.dp),
+    ) {
+        Column(modifier = GlanceModifier.fillMaxSize()) {
+            Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
+                Text(
+                    text = "▮",
+                    style = TextStyle(
+                        color = ColorProvider(CyberCyan),
+                        fontWeight = FontWeight.Bold,
+                    ),
+                )
+                Spacer(modifier = GlanceModifier.width(6.dp))
+                Text(
+                    text = appName.uppercase(),
+                    style = TextStyle(
+                        color = ColorProvider(CyberCyan),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        fontFamily = FontFamily.Monospace,
+                    ),
+                )
+            }
+
+            Spacer(modifier = GlanceModifier.height(6.dp))
             Box(
                 modifier = GlanceModifier
-                    .fillMaxSize()
-                    .background(CyberMagenta)
-                    .cornerRadius(18.dp)
-                    .padding(2.dp),
-            ) {
-                Box(
-                    modifier = GlanceModifier
-                        .fillMaxSize()
-                        .background(CyberPanel)
-                        .cornerRadius(16.dp)
-                        .padding(12.dp),
-                ) {
-                    Column(modifier = GlanceModifier.fillMaxSize()) {
-                        Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
-                            Text(
-                                text = "▮",
-                                style = TextStyle(
-                                    color = ColorProvider(CyberCyan),
-                                    fontWeight = FontWeight.Bold,
-                                ),
-                            )
-                            Spacer(modifier = GlanceModifier.width(6.dp))
-                            Text(
-                                text = strings.appName.uppercase(),
-                                style = TextStyle(
-                                    color = ColorProvider(CyberCyan),
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp,
-                                    fontFamily = FontFamily.Monospace,
-                                ),
-                            )
-                        }
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(CyberMagenta),
+            ) {}
+            Spacer(modifier = GlanceModifier.height(10.dp))
 
-                        Spacer(modifier = GlanceModifier.height(6.dp))
-                        Box(
-                            modifier = GlanceModifier
-                                .fillMaxWidth()
-                                .height(1.dp)
-                                .background(CyberMagenta),
-                        ) {}
-                        Spacer(modifier = GlanceModifier.height(10.dp))
-
-                        StatLine(line = debtorsLine, valueColor = CyberGreen)
-                        Spacer(modifier = GlanceModifier.height(6.dp))
-                        StatLine(line = creditorsLine, valueColor = CyberPink)
-                    }
-                }
-            }
+            StatLine(line = debtorsLine, valueColor = CyberGreen)
+            Spacer(modifier = GlanceModifier.height(6.dp))
+            StatLine(line = creditorsLine, valueColor = CyberPink)
         }
     }
 }

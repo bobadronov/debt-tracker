@@ -5,7 +5,6 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
-import kotlinx.datetime.Instant
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.domain.model.SyncStatus
 import org.bigblackowl.debttracker.domain.model.TransactionType
@@ -30,10 +29,10 @@ data class DebtTransactionEntity(
     val type: TransactionType,
     val method: PaymentMethod,
     val cardLastDigits: String?,
-    val date: Instant,
+    val date: kotlin.time.Instant,
     val comment: String?,
-    val createdAt: Instant,
-    val updatedAt: Instant,
+    val createdAt: kotlin.time.Instant,
+    val updatedAt: kotlin.time.Instant,
     val syncStatus: SyncStatus,
     val isDeleted: Boolean = false
 )

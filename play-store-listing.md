@@ -46,6 +46,31 @@ Your data stays on your device unless you choose to create an account for
 sync — see the privacy policy for exactly what that involves.
 ```
 
+**Короткий опис** (uk-UA, 80 символів макс, 74 використано):
+```
+Стежте, хто винен вам і кому винні ви — офлайн, синхронізація за бажанням.
+```
+
+**Повний опис** (uk-UA, 4000 символів макс, 922 використано):
+```
+DebtTracker веде облік грошей в обидва боки — хто винен вам, і кому винні ви, — не згортаючи одне в інше.
+
+ОСНОВНІ МОЖЛИВОСТІ
+• Два незалежні списки: люди, які винні вам, і люди, яким винні ви
+• Кожна позика та повернення — окрема транзакція з поточним балансом
+• Мультивалютність: UAH, USD, PLN, EUR — окремо для кожного контакту
+• Повністю офлайн — акаунт не обов'язковий
+• Безкоштовний акаунт за бажанням для синхронізації між пристроями в реальному часі
+• Блокування застосунку відбитком пальця, обличчям або PIN-кодом
+• Екран статистики: загальні суми, топ боржників/кредиторів, тренд за 6 місяців
+• Експорт історії транзакцій у CSV або PDF
+• Віджет на головному екрані з двома поточними сумами
+• Пошук, сортування, фільтри, свайп для видалення
+• Без реклами. Без трекерів. Без аналітичних SDK.
+
+Ваші дані залишаються на пристрої, якщо ви не створите акаунт для синхронізації — детальніше в політиці конфіденційності.
+```
+
 **App category:** Finance
 
 **Contact email:** bobadronov@gmail.com *(using the account email as a
@@ -58,20 +83,42 @@ published this is visible to every user)*
 *(now wired into `release.yml`'s web job — goes live on the next tagged
 release; until then this URL 404s)*
 
-## 2. Graphic assets — you'll need to produce these
+## 2. Graphic assets
 
-I can't generate real device screenshots or original artwork. Play requires:
+| Asset | Spec | Status |
+|---|---|---|
+| App icon | 512×512 PNG, 32-bit with alpha, <1MB | Done — [`webApp/src/commonMain/resources/android-chrome-512x512.png`](webApp/src/commonMain/resources/android-chrome-512x512.png) |
+| Feature graphic | 1024×500 PNG/JPG (no alpha) | Done — [`store-assets/feature-graphic.png`](store-assets/feature-graphic.png), 371 KB |
+| Phone screenshots | 2–8 images, PNG/JPEG, 16:9 or 9:16, side 320–3840px | Done — [`store-assets/phone/`](store-assets/phone), 1080×1920, 5 images |
+| 7" tablet screenshots | up to 8 images, same format, side 320–3840px | Done — [`store-assets/tablet-7in/`](store-assets/tablet-7in), 1440×2560, 5 images |
+| 10" tablet screenshots | up to 9 images, same format, side 1080–7680px | Done — [`store-assets/tablet-10in/`](store-assets/tablet-10in), 2160×3840, 5 images |
 
-| Asset | Spec |
-|---|---|
-| App icon | 512×512 PNG, 32-bit with alpha, <1MB |
-| Feature graphic | 1024×500 PNG/JPG (no alpha) |
-| Phone screenshots | 2–8 images, JPG/PNG, 16:9 or 9:16, each side 320–3840px |
+Both the feature graphic and the screenshots are generated, not hand-drawn or
+device-captured — this machine has no Android SDK/emulator to capture real
+screens from. `store-assets/screens.html` recreates 5 screens (debtor list,
+creditor list, stats, a debtor's transaction history, settings) using the
+app's actual strings (`core/i18n/Strings.kt`), colors
+(`sharedUI/.../theme/Color.kt` dark scheme), and layout structure read
+straight from each screen's Compose source, with placeholder demo data. The
+same HTML is rendered at all three device sizes — `render-screens.mjs` swaps
+the outer canvas size and toggles which `<section>` is visible, so the
+"device" column stays a fixed pixel width and centers itself on wider
+canvases, mirroring the real app's actual responsive behavior
+(`Modifier.width(Dimens.contentMaxWidth)`, centered).
 
-Easiest path for screenshots: run the debug APK on a device or emulator
-(`./gradlew :androidApp:installDebug`) and capture the debtor list, a
-detail screen, stats, and settings. Android Studio's emulator has a
-built-in screenshot button that saves at a Play-ready resolution.
+To tweak wording/data and re-render everything (feature graphic + all 15
+screenshots):
+```
+cd store-assets
+npm install playwright --no-save   # one-time, downloads a local Chromium
+npx playwright install chromium    # one-time, ~115 MB browser binary
+node render.mjs                    # feature-graphic.png
+node render-screens.mjs            # phone/, tablet-7in/, tablet-10in/
+```
+
+If you'd rather have real device captures instead of recreations, that's
+still an option — run the debug APK (`./gradlew :androidApp:installDebug`)
+on a physical device or emulator and capture there instead.
 
 ## 3. Content rating questionnaire (IARC, inside Play Console)
 
@@ -180,7 +227,9 @@ too.
 - Play Console account + app creation, and the manual first upload (§5)
 - Service account + `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secret, to turn on
   automated uploads for every release after the first (§5)
-- App icon, feature graphic, and real device screenshots
+- All graphic assets (icon, feature graphic, phone/7"/10" screenshots) are
+  done, generated from the app's real design tokens — see §2. Swap in real
+  device captures instead if you'd prefer that over the recreations.
 - Walking through the content rating and data safety questionnaires in the
   live Play Console UI (I've drafted the answers, but only you can click
   through the actual forms)

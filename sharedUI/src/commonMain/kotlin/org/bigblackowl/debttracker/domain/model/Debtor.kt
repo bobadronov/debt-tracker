@@ -1,7 +1,6 @@
 package org.bigblackowl.debttracker.domain.model
 
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
-import kotlinx.datetime.Instant
 
 /** Боржник: людина, якій я дав у борг (мені винні). */
 data class Debtor(
@@ -11,8 +10,8 @@ data class Debtor(
     val email: String?,           // якщо збігається з профілем зареєстрованого користувача — джерело автозаповнення (§ProfileLookup)
     val avatarUrl: String?,       // null → ініціали на кольоровому фоні (детермінований колір з hash(id))
     val comment: String?,
-    val createdAt: Instant,
-    val updatedAt: Instant,
+    val createdAt: kotlin.time.Instant,
+    val updatedAt: kotlin.time.Instant,
     val status: DebtStatus,
     val syncStatus: SyncStatus,
     val currency: Currency = Currency.UAH,
@@ -26,10 +25,10 @@ data class DebtTransaction(
     val type: TransactionType,    // денормалізовано для зручності запитів/індексів; type = if (amount.isPositive) REPAY else LEND
     val method: PaymentMethod,
     val cardLastDigits: String?,  // якщо method == CARD
-    val date: Instant,
+    val date: kotlin.time.Instant,
     val comment: String?,
-    val createdAt: Instant,
-    val updatedAt: Instant,
+    val createdAt: kotlin.time.Instant,
+    val updatedAt: kotlin.time.Instant,
     val syncStatus: SyncStatus,
     val isDeleted: Boolean = false
 )

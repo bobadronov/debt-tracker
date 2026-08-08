@@ -163,17 +163,3 @@ Deploy `webApp/build/dist/composeWebCompatibility/productionExecutable` to
 any static web server. The `release.yml` workflow deploys it automatically to
 GitHub Pages at https://bobadronov.github.io/debt-tracker/ on every tagged
 release.
-
-> Web currently ships the KMP scaffold only — the app's screens are not yet
-> wired up for Web; it's designed to be online-only, Account+Sync-required
-> on this target (see `debt-tracker-start-prompt.md` §5).
-
-## Project conventions & rebuilding
-
-See [`debt-tracker-start-prompt.md`](debt-tracker-start-prompt.md) — a
-single, self-contained document covering the full feature list, tech stack,
-architecture, database schema, build/release setup, and conventions
-(module structure, expect/actual placement, MVI screen pattern, dependency
-management via the version catalog). It's written so that, together with
-[`supabase/full_backup.sql`](supabase/full_backup.sql), it's enough on its
-own to rebuild this project from scratch if the repository were ever lost.

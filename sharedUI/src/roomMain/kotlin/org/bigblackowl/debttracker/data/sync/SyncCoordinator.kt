@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Instant
 import org.bigblackowl.debttracker.data.local.dao.CreditorDao
 import org.bigblackowl.debttracker.data.local.dao.CreditorTransactionDao
 import org.bigblackowl.debttracker.data.local.dao.DebtTransactionDao
@@ -135,7 +134,7 @@ class SyncCoordinator(
             .collectLatest { remoteRows ->
                 remoteRows.forEach { dto ->
                     val local = debtorDao.getById(dto.id)
-                    val remoteUpdatedAt = Instant.parse(dto.updatedAt)
+                    val remoteUpdatedAt = kotlin.time.Instant.parse(dto.updatedAt)
                     if (local == null || local.syncStatus != SyncStatus.PENDING || local.updatedAt <= remoteUpdatedAt) {
                         debtorDao.upsert(dto.toEntity())
                     }
@@ -158,7 +157,7 @@ class SyncCoordinator(
             .collectLatest { remoteRows ->
                 remoteRows.forEach { dto ->
                     val local = creditorDao.getById(dto.id)
-                    val remoteUpdatedAt = Instant.parse(dto.updatedAt)
+                    val remoteUpdatedAt = kotlin.time.Instant.parse(dto.updatedAt)
                     if (local == null || local.syncStatus != SyncStatus.PENDING || local.updatedAt <= remoteUpdatedAt) {
                         creditorDao.upsert(dto.toEntity())
                     }
