@@ -4,24 +4,26 @@
 -- Це НЕ ще одна міграція — не кладіть цей файл у supabase/migrations/ і не
 -- викликайте його через `supabase db push`. Це знімок кінцевого стану схеми
 -- (еквівалент послідовного застосування 0001_init.sql → 0004_contact_email_
--- lookup.sql на порожньому проєкті + ручного `profiles.avatar_url`, який на
--- проді додано поза версійованими міграціями), призначений для АВАРІЙНОГО
--- відновлення: якщо Supabase-проєкт втрачено/видалено, створіть новий проєкт
--- і виконайте увесь цей файл один раз (SQL Editor або `psql -f`) — отримаєте
--- ідентичну робочу схему.
+-- lookup.sql на порожньому проєкті + ручного `profiles.avatar_url` і бакета
+-- Storage `avatars`, які на проді додано поза версійованими міграціями),
+-- призначений для АВАРІЙНОГО відновлення: якщо Supabase-проєкт втрачено/
+-- видалено, створіть новий проєкт і виконайте увесь цей файл один раз
+-- (SQL Editor або `psql -f`) — отримаєте ідентичну робочу схему.
 --
 -- This is NOT another migration — do not put this file in supabase/migrations/
 -- or run it via `supabase db push`. It is a point-in-time snapshot of the
 -- final schema (equivalent to applying 0001_init.sql → 0004_contact_email_
 -- lookup.sql in order on an empty project, plus the manual `profiles.
--- avatar_url` column that was added on production outside versioned
--- migrations). It exists for DISASTER RECOVERY: if the Supabase project is
--- ever lost/deleted, create a fresh project and run this whole file once
--- (SQL Editor or `psql -f`) to get back an identical, working schema.
+-- avatar_url` column and the `avatars` Storage bucket, both added on
+-- production outside versioned migrations). It exists for DISASTER RECOVERY:
+-- if the Supabase project is ever lost/deleted, create a fresh project and
+-- run this whole file once (SQL Editor or `psql -f`) to get back an
+-- identical, working schema.
 --
 -- Verified against the live `debt-tracker` project (ref nywvasgnbgnixfjzadbu)
--- via the Supabase MCP `list_tables`/`list_migrations` tools on 2026-08-08 —
--- table/column/function/policy definitions below match production exactly.
+-- via the Supabase MCP `list_tables`/`list_migrations`/`execute_sql` tools on
+-- 2026-08-08 — table/column/function/policy/storage definitions below match
+-- production exactly.
 --
 -- What this file does NOT contain: user data (auth.users, profiles/debtors/
 -- creditors rows, transactions). This app is offline-first — every device
@@ -345,8 +347,42 @@ revoke all on function public.delete_all_user_data(uuid) from public, anon, auth
 grant execute on function public.delete_all_user_data(uuid) to authenticated;
 
 -- -----------------------------------------------------------------------------
--- 11. Row Level Security — жорстка ізоляція між користувачами
--- 11. Row Level Security — strict per-user isolation
+-- 11. Storage — бакет "avatars" для фото акаунта (SettingsScreen.AccountAvatar)
+-- 11. Storage — "avatars" bucket for the account photo (SettingsScreen.AccountAvatar)
+-- Клієнт (SupabaseAuthRepository.updateAvatar) вантажить на шлях
+-- "avatars/{auth.uid()}/avatar.{ext}" і зберігає публічний URL у
+-- profiles.avatar_url. Публічний бакет (аватарки не є секретом), але
+-- запис/зміна/видалення дозволені лише у власну "теку" (perша частина шляху
+-- == auth.uid()).
+-- The client (SupabaseAuthRepository.updateAvatar) uploads to
+-- "avatars/{auth.uid()}/avatar.{ext}" and stores the public URL in
+-- profiles.avatar_url. Public bucket (avatars aren't secret), but writes/
+-- updates/deletes are only allowed inside the caller's own "folder" (first
+-- path segment == auth.uid()).
+-- -----------------------------------------------------------------------------
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+create policy "Avatar images are publicly accessible" on storage.objects
+    for select
+    using (bucket_id = 'avatars');
+
+create policy "Users can upload their own avatar" on storage.objects
+    for insert
+    with check (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+create policy "Users can update their own avatar" on storage.objects
+    for update
+    using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+create policy "Users can delete their own avatar" on storage.objects
+    for delete
+    using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+-- -----------------------------------------------------------------------------
+-- 12. Row Level Security — жорстка ізоляція між користувачами
+-- 12. Row Level Security — strict per-user isolation
 -- -----------------------------------------------------------------------------
 alter table public.profiles              enable row level security;
 alter table public.debtors                enable row level security;
@@ -380,7 +416,7 @@ create policy "creditor_transactions_owner_all" on public.creditor_transactions
     with check (user_id = auth.uid());
 
 -- -----------------------------------------------------------------------------
--- 12. Індекси / Indexes
+-- 13. Індекси / Indexes
 -- -----------------------------------------------------------------------------
 create index idx_debtors_user_deleted_status
     on public.debtors (user_id, is_deleted, status);
@@ -395,8 +431,8 @@ create index idx_creditor_transactions_creditor_deleted_date
     on public.creditor_transactions (creditor_id, is_deleted, transaction_date desc);
 
 -- -----------------------------------------------------------------------------
--- 13. Realtime — підписка з клієнта (supabase-kt realtime-kt)
--- 13. Realtime — client-side subscription (supabase-kt realtime-kt)
+-- 14. Realtime — підписка з клієнта (supabase-kt realtime-kt)
+-- 14. Realtime — client-side subscription (supabase-kt realtime-kt)
 -- -----------------------------------------------------------------------------
 alter publication supabase_realtime add table
     public.debtors,

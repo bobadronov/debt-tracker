@@ -71,9 +71,11 @@ one shot on a fresh Supabase project) to recover both the app and its backend.
 - **Runtime language switcher** — System / Українська / English, switchable
   without restarting the app (see §6 "Localization" — this is *not* done via
   `compose.resources`).
-- **Search, sort, filter, swipe-to-delete**, sound feedback on key actions,
-  and Desktop keyboard shortcuts (`Ctrl+N` new debtor, `Ctrl+Shift+N` new
-  creditor, `Ctrl+F` search, `Esc` back).
+- **Search, sort, filter, swipe-to-delete**, sound + haptic feedback on key
+  actions (both independently toggleable in Settings; the haptic toggle only
+  shows on Android/iOS, since Desktop/Web have no vibration motor behind
+  `LocalHapticFeedback`), and Desktop keyboard shortcuts (`Ctrl+N` new
+  debtor, `Ctrl+Shift+N` new creditor, `Ctrl+F` search, `Esc` back).
 
 ## 3. Tech stack
 
@@ -244,6 +246,14 @@ incremental history: `supabase/migrations/0001..0004`). Summary:
 - `debtors`/`creditors`/`debt_transactions`/`creditor_transactions` are added
   to the `supabase_realtime` publication for client-side realtime
   subscriptions.
+- Storage bucket `avatars` (public read) — the account photo picked in
+  Settings (`AccountAvatar` → `AuthRepository.updateAvatar`) uploads to
+  `avatars/{auth.uid()}/avatar.{ext}` and stores the resulting public URL in
+  `profiles.avatar_url`, reloaded into `avatarUrl` (`StateFlow`) whenever
+  `client.auth.sessionStatus` becomes `Authenticated` — including right after
+  sign-in, so the photo shows up without extra plumbing. `storage.objects`
+  RLS restricts insert/update/delete to the caller's own folder (first path
+  segment must equal `auth.uid()`).
 
 Setting up a fresh backend: create a Supabase project, run
 `supabase/full_backup.sql` once (SQL Editor or `psql -f`), then wire the new

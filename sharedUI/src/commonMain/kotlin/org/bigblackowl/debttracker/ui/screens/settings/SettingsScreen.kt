@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
@@ -123,6 +124,12 @@ fun SettingsScreen(onBack: () -> Unit, onExport: () -> Unit, onOpenAuth: () -> U
     }
     val protectionIcon =
         if (currentPlatform == AppPlatform.DESKTOP) Icons.Filled.Password else Icons.Filled.Fingerprint
+
+    // Тільки Android/iOS мають реальний віброзвінок під керуванням LocalHapticFeedback —
+    // на Desktop/Web це або no-op, або взагалі не підтримується, тож перемикач там ховаємо.
+    // Only Android/iOS have a real vibration motor behind LocalHapticFeedback — on Desktop/Web
+    // it's either a no-op or unsupported, so the toggle is hidden there.
+    val showHapticRow = currentPlatform == AppPlatform.ANDROID || currentPlatform == AppPlatform.IOS
 
     PlaceholderScreen(title = strings.settingsTitle, onBack = onBack) {
 
@@ -232,6 +239,19 @@ fun SettingsScreen(onBack: () -> Unit, onExport: () -> Unit, onOpenAuth: () -> U
                         },
                     )
                     SettingsRowDivider()
+
+                    if (showHapticRow) {
+                        SettingsRow(
+                            icon = Icons.Filled.Vibration,
+                            title = strings.settingsHaptic,
+                            trailing = {
+                                Switch(
+                                    checked = settings.hapticEnabled,
+                                    onCheckedChange = { settings.hapticEnabled = it })
+                            },
+                        )
+                        SettingsRowDivider()
+                    }
 
                     Column(modifier = Modifier.fillMaxWidth().padding(Dimens.space16)) {
                         Text(strings.settingsTheme, style = MaterialTheme.typography.bodyLarge)
