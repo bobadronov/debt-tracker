@@ -21,9 +21,23 @@ import org.bigblackowl.debttracker.domain.repository.AuthRepository
 private const val AVATAR_BUCKET = "avatars"
 
 @Serializable
-private data class ProfileAvatarDto(
+private data class ProfileDto(
     val id: String,
     @SerialName("avatar_url") val avatarUrl: String? = null,
+    @SerialName("display_name") val displayName: String? = null,
+    val phone: String? = null,
+)
+
+/**
+ * No defaults on any field (unlike [ProfileDto]) so kotlinx.serialization always emits them —
+ * needed here because supabase-kt's Postgrest Json drops default-valued (including null) fields,
+ * which would otherwise make it impossible to explicitly clear [phone] back to null via upsert.
+ */
+@Serializable
+private data class ProfileUpdateDto(
+    val id: String,
+    @SerialName("display_name") val displayName: String,
+    val phone: String?,
 )
 
 /** [AuthRepository] backed by Supabase Auth (email/password) + `profiles.avatar_url` (Storage bucket `avatars`). */
@@ -39,28 +53,40 @@ class SupabaseAuthRepository(
     override val currentUserId: String?
         get() = client.auth.currentUserOrNull()?.id
 
+    override val email: StateFlow<String?> = client.auth.sessionStatus
+        .map { (it as? SessionStatus.Authenticated)?.session?.user?.email }
+        .stateIn(scope, SharingStarted.Eagerly, null)
+
     private val _avatarUrl = MutableStateFlow<String?>(null)
     override val avatarUrl: StateFlow<String?> = _avatarUrl.asStateFlow()
+
+    private val _displayName = MutableStateFlow<String?>(null)
+    override val displayName: StateFlow<String?> = _displayName.asStateFlow()
+
+    private val _phone = MutableStateFlow<String?>(null)
+    override val phone: StateFlow<String?> = _phone.asStateFlow()
 
     init {
         scope.launch {
             client.auth.sessionStatus.collect { status ->
-                _avatarUrl.value = if (status is SessionStatus.Authenticated) {
-                    fetchAvatarUrl(status.session.user?.id)
+                val profile = if (status is SessionStatus.Authenticated) {
+                    fetchProfile(status.session.user?.id)
                 } else {
                     null
                 }
+                _avatarUrl.value = profile?.avatarUrl
+                _displayName.value = profile?.displayName
+                _phone.value = profile?.phone
             }
         }
     }
 
-    private suspend fun fetchAvatarUrl(userId: String?): String? {
+    private suspend fun fetchProfile(userId: String?): ProfileDto? {
         if (userId == null) return null
         return runCatching {
             client.from("profiles")
                 .select { filter { eq("id", userId) } }
-                .decodeSingleOrNull<ProfileAvatarDto>()
-                ?.avatarUrl
+                .decodeSingleOrNull<ProfileDto>()
         }.getOrNull()
     }
 
@@ -88,8 +114,18 @@ class SupabaseAuthRepository(
         client.storage.from(AVATAR_BUCKET).upload(path, bytes) { upsert = true }
         // Cache-bust the public URL so Coil/browsers don't keep showing a stale image at the same path.
         val url = "${client.storage.from(AVATAR_BUCKET).publicUrl(path)}?t=${kotlin.time.Clock.System.now().toEpochMilliseconds()}"
-        client.from("profiles").upsert(ProfileAvatarDto(id = userId, avatarUrl = url))
+        client.from("profiles").upsert(ProfileDto(id = userId, avatarUrl = url))
         _avatarUrl.value = url
         url
+    }
+
+    override suspend fun updateProfile(displayName: String, phone: String?): Result<Unit> = runCatching {
+        val userId = currentUserId ?: error("updateProfile called while signed out")
+        val normalizedPhone = phone?.trim()?.ifBlank { null }
+        client.from("profiles").upsert(
+            ProfileUpdateDto(id = userId, displayName = displayName, phone = normalizedPhone)
+        )
+        _displayName.value = displayName
+        _phone.value = normalizedPhone
     }
 }

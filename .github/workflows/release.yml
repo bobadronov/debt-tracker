@@ -166,13 +166,17 @@ jobs:
   # ============================================================
   # Google Play — upload the .aab
   #
-  # Skipped entirely (via the `if:`) until GOOGLE_PLAY_SERVICE_ACCOUNT_JSON
-  # is configured as a repo secret. See the prerequisites in the comment
-  # block at the top of this file and play-store-listing.md §5.
+  # The upload step is skipped (via its own `if:`) until
+  # GOOGLE_PLAY_SERVICE_ACCOUNT_JSON is configured as a repo secret. See the
+  # prerequisites in the comment block at the top of this file and
+  # play-store-listing.md §5.
+  #
+  # Note: the `secrets` context can't be used in a job-level `if:` — GitHub
+  # Actions only exposes it to step-level `if:`/`env:`/`with:`, so the
+  # job runs unconditionally and only the upload step gates on the secret.
   # ============================================================
   play-store:
     needs: android-aab
-    if: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != '' }}
 
     runs-on: ubuntu-latest
 
@@ -184,6 +188,7 @@ jobs:
           path: aab
 
       - name: Upload to Google Play
+        if: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != '' }}
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}

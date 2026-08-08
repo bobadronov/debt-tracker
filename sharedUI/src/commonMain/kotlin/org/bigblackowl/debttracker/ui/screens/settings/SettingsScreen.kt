@@ -26,10 +26,13 @@ import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Vibration
@@ -94,7 +97,12 @@ import org.koin.compose.koinInject
  * Account+Sync (спек §1.1, Фаза 6).
  */
 @Composable
-fun SettingsScreen(onBack: () -> Unit, onExport: () -> Unit, onOpenAuth: () -> Unit) {
+fun SettingsScreen(
+    onBack: () -> Unit,
+    onExport: () -> Unit,
+    onOpenAuth: () -> Unit,
+    onEditAccount: () -> Unit,
+) {
     val settings = koinInject<AppSettings>()
     val deleteAllData = koinInject<DeleteAllDataUseCase>()
     val authRepository = koinInject<AuthRepository>()
@@ -103,6 +111,9 @@ fun SettingsScreen(onBack: () -> Unit, onExport: () -> Unit, onOpenAuth: () -> U
     val scope = rememberCoroutineScope()
     val isAuthenticated by authRepository.isAuthenticated.collectAsState()
     val avatarUrl by authRepository.avatarUrl.collectAsState()
+    val accountEmail by authRepository.email.collectAsState()
+    val accountName by authRepository.displayName.collectAsState()
+    val accountPhone by authRepository.phone.collectAsState()
 
     var biometricHardwareAvailable by remember { mutableStateOf(false) }
     var showPinSetupDialog by remember { mutableStateOf(false) }
@@ -214,14 +225,33 @@ fun SettingsScreen(onBack: () -> Unit, onExport: () -> Unit, onOpenAuth: () -> U
                             }
                         }
                     }
-                    SettingsRowDivider()
                     if (isAuthenticated) {
+                        accountName?.takeIf(String::isNotBlank)?.let {
+                            SettingsRowDivider()
+                            SettingsRow(icon = Icons.Default.Person, title = strings.fullName, subtitle = it)
+                        }
+                        accountEmail?.takeIf(String::isNotBlank)?.let {
+                            SettingsRowDivider()
+                            SettingsRow(icon = Icons.Default.Email, title = strings.email, subtitle = it)
+                        }
+                        accountPhone?.takeIf(String::isNotBlank)?.let {
+                            SettingsRowDivider()
+                            SettingsRow(icon = Icons.Default.Phone, title = strings.phone, subtitle = it)
+                        }
+                        SettingsRowDivider()
+                        SettingsRow(
+                            icon = Icons.Default.Edit,
+                            title = strings.settingsEditAccount,
+                            onClick = onEditAccount,
+                        )
+                        SettingsRowDivider()
                         SettingsRow(
                             icon = Icons.AutoMirrored.Filled.Logout,
                             title = strings.settingsSignOut,
                             onClick = { scope.launch { authRepository.signOut() } },
                         )
                     } else {
+                        SettingsRowDivider()
                         SettingsRow(
                             icon = Icons.AutoMirrored.Filled.Login,
                             title = strings.settingsSignIn,
@@ -361,10 +391,39 @@ fun SettingsScreen(onBack: () -> Unit, onExport: () -> Unit, onOpenAuth: () -> U
 
                 // --- About ---
                 SettingsSection(strings.settingsAbout) {
+                    val versionLine = "${BuildConfig.APP_VERSION} (${BuildConfig.APP_VERSION_CODE})"
+                    val versionSubtitle = when (val s = updateState) {
+                        UpdateCheckState.Idle -> versionLine
+                        UpdateCheckState.Checking -> "$versionLine · ${strings.settingsCheckingForUpdates}"
+                        UpdateCheckState.UpToDate -> "$versionLine · ${strings.settingsUpToDate}"
+                        is UpdateCheckState.Available -> strings.updateAvailableMessage(s.info.version)
+                        is UpdateCheckState.Downloading -> strings.updateDownloading
+                        is UpdateCheckState.Failed -> strings.updateFailed
+                    }
                     SettingsRow(
                         icon = Icons.Filled.Info,
                         title = strings.settingsAboutVersion,
-                        subtitle = "${BuildConfig.APP_VERSION} (${BuildConfig.APP_VERSION_CODE})",
+                        subtitle = versionSubtitle,
+                        trailing = if (appUpdateSupported) {
+                            {
+                                when (val s = updateState) {
+                                    UpdateCheckState.Checking, is UpdateCheckState.Downloading ->
+                                        CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
+
+                                    is UpdateCheckState.Available -> IconButton(onClick = { startUpdateDownload(s.info) }) {
+                                        Icon(Icons.Filled.Download, contentDescription = strings.updateDownloadInstall)
+                                    }
+
+                                    is UpdateCheckState.Failed -> IconButton(onClick = { startUpdateDownload(s.info) }) {
+                                        Icon(Icons.Filled.Refresh, contentDescription = strings.updateRetry)
+                                    }
+
+                                    UpdateCheckState.Idle, UpdateCheckState.UpToDate -> IconButton(onClick = { startUpdateCheck() }) {
+                                        Icon(Icons.Filled.Refresh, contentDescription = strings.settingsCheckForUpdates)
+                                    }
+                                }
+                            }
+                        } else null,
                     )
                     SettingsRowDivider()
                     SettingsRow(
@@ -372,31 +431,6 @@ fun SettingsScreen(onBack: () -> Unit, onExport: () -> Unit, onOpenAuth: () -> U
                         title = strings.settingsAboutAuthor,
                         subtitle = BuildConfig.APP_AUTHOR,
                     )
-                    if (appUpdateSupported) {
-                        SettingsRowDivider()
-                        val (rowTitle, rowSubtitle) = when (val s = updateState) {
-                            UpdateCheckState.Idle -> strings.settingsCheckForUpdates to null
-                            UpdateCheckState.Checking -> strings.settingsCheckForUpdates to strings.settingsCheckingForUpdates
-                            UpdateCheckState.UpToDate -> strings.settingsCheckForUpdates to strings.settingsUpToDate
-                            is UpdateCheckState.Available -> strings.updateDownloadInstall to strings.updateAvailableMessage(s.info.version)
-                            is UpdateCheckState.Downloading -> strings.updateDownloading to null
-                            is UpdateCheckState.Failed -> strings.updateRetry to strings.updateFailed
-                        }
-                        SettingsRow(
-                            icon = if (updateState is UpdateCheckState.Available) Icons.Filled.Download else Icons.Filled.Refresh,
-                            title = rowTitle,
-                            subtitle = rowSubtitle,
-                            onClick = when (val s = updateState) {
-                                UpdateCheckState.Checking, is UpdateCheckState.Downloading -> null
-                                is UpdateCheckState.Available -> ({ startUpdateDownload(s.info) })
-                                is UpdateCheckState.Failed -> ({ startUpdateDownload(s.info) })
-                                else -> ({ startUpdateCheck() })
-                            },
-                            trailing = if (updateState is UpdateCheckState.Checking || updateState is UpdateCheckState.Downloading) {
-                                { CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20)) }
-                            } else null,
-                        )
-                    }
                 }
             }
         }
@@ -467,13 +501,13 @@ private sealed interface UpdateCheckState {
 @Preview
 @Composable
 private fun SettingsScreenPreview() = DebtTrackerPreview {
-    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {})
+    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun SettingsScreenPreview2() = DebtTrackerPreview {
-    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {})
+    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {})
 }
 
 /** Кругле фото акаунта (ініціали-заглушка через [Icons.Default.Person] поки фото немає) з кнопкою редагування. */

@@ -355,12 +355,16 @@ class FakeCreditorRepository(
 class FakeAuthRepository : AuthRepository {
     override val isAuthenticated: StateFlow<Boolean> = MutableStateFlow(false)
     override val currentUserId: String? = null
+    override val email: StateFlow<String?> = MutableStateFlow(null)
+    override val displayName: StateFlow<String?> = MutableStateFlow(null)
+    override val phone: StateFlow<String?> = MutableStateFlow(null)
     override val avatarUrl: StateFlow<String?> = MutableStateFlow(null)
 
     override suspend fun signUp(email: String, password: String): Result<Unit> = Result.success(Unit)
     override suspend fun signIn(email: String, password: String): Result<Unit> = Result.success(Unit)
     override suspend fun signOut() = Unit
     override suspend fun updateAvatar(bytes: ByteArray, fileExtension: String): Result<String> = Result.success("")
+    override suspend fun updateProfile(displayName: String, phone: String?): Result<Unit> = Result.success(Unit)
 }
 
 class FakeSyncStatusProvider : SyncStatusProvider {

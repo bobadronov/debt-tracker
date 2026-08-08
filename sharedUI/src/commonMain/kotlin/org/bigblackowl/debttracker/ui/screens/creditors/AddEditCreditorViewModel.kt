@@ -28,6 +28,7 @@ import org.bigblackowl.debttracker.domain.model.SyncStatus
 import org.bigblackowl.debttracker.domain.usecase.FindProfileByEmailUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddCreditorTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddOrUpdateCreditorUseCase
+import org.bigblackowl.debttracker.domain.usecase.creditor.DeleteCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorUseCase
 import org.bigblackowl.debttracker.domain.validation.isValidEmail
 import org.bigblackowl.debttracker.domain.validation.isValidFullName
@@ -47,6 +48,7 @@ class AddEditCreditorViewModel(
     private val observeCreditor: ObserveCreditorUseCase,
     private val addOrUpdateCreditor: AddOrUpdateCreditorUseCase,
     private val addTransaction: AddCreditorTransactionUseCase,
+    private val deleteCreditor: DeleteCreditorUseCase,
     private val appSettings: AppSettings,
     private val soundPlayer: SoundPlayer,
     private val findProfileByEmail: FindProfileByEmailUseCase,
@@ -143,38 +145,44 @@ class AddEditCreditorViewModel(
             parsedAmount = parsed
         }
 
+        val isNew = !(current.isEditing && loadedCreditor != null)
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true) }
-            runCatching {
-                val now = Clock.System.now()
-                val creditor = if (current.isEditing && loadedCreditor != null) {
-                    loadedCreditor!!.copy(
-                        fullName = current.fullName.trim(),
-                        phone = current.phone.trim().ifBlank { null },
-                        email = current.email.trim().ifBlank { null },
-                        avatarUrl = current.suggestedAvatarUrl ?: loadedCreditor!!.avatarUrl,
-                        comment = current.comment.trim().ifBlank { null },
-                        updatedAt = now,
-                    )
-                } else {
-                    Creditor(
-                        id = Uuid.random().toString(),
-                        fullName = current.fullName.trim(),
-                        phone = current.phone.trim().ifBlank { null },
-                        email = current.email.trim().ifBlank { null },
-                        avatarUrl = current.suggestedAvatarUrl,
-                        comment = current.comment.trim().ifBlank { null },
-                        createdAt = now,
-                        updatedAt = now,
-                        status = DebtStatus.ACTIVE,
-                        syncStatus = SyncStatus.PENDING,
-                        currency = current.currency,
-                    )
-                }
-                addOrUpdateCreditor(creditor)
+            val now = Clock.System.now()
+            val creditor = if (current.isEditing && loadedCreditor != null) {
+                loadedCreditor!!.copy(
+                    fullName = current.fullName.trim(),
+                    phone = current.phone.trim().ifBlank { null },
+                    email = current.email.trim().ifBlank { null },
+                    avatarUrl = current.suggestedAvatarUrl ?: loadedCreditor!!.avatarUrl,
+                    comment = current.comment.trim().ifBlank { null },
+                    updatedAt = now,
+                )
+            } else {
+                Creditor(
+                    id = Uuid.random().toString(),
+                    fullName = current.fullName.trim(),
+                    phone = current.phone.trim().ifBlank { null },
+                    email = current.email.trim().ifBlank { null },
+                    avatarUrl = current.suggestedAvatarUrl,
+                    comment = current.comment.trim().ifBlank { null },
+                    createdAt = now,
+                    updatedAt = now,
+                    status = DebtStatus.ACTIVE,
+                    syncStatus = SyncStatus.PENDING,
+                    currency = current.currency,
+                )
+            }
 
-                val amount = parsedAmount
-                if (amount != null) {
+            runCatching { addOrUpdateCreditor(creditor) }.onFailure { error ->
+                _state.update { it.copy(isSaving = false) }
+                effectsChannel.send(AddEditCreditorEffect.Error(error.message ?: strings.saveError))
+                return@launch
+            }
+
+            val amount = parsedAmount
+            if (amount != null) {
+                runCatching {
                     addTransaction(
                         CreditorTransaction(
                             id = Uuid.random().toString(),
@@ -190,15 +198,19 @@ class AddEditCreditorViewModel(
                             syncStatus = SyncStatus.PENDING,
                         )
                     )
+                }.onFailure { error ->
+                    // The creditor write already committed but its opening transaction didn't —
+                    // don't leave an orphaned 0-balance creditor behind; undo the half-finished save.
+                    if (isNew) runCatching { deleteCreditor(creditor.id) }
+                    _state.update { it.copy(isSaving = false) }
+                    effectsChannel.send(AddEditCreditorEffect.Error(error.message ?: strings.saveError))
+                    return@launch
                 }
-            }.onSuccess {
-                _state.update { it.copy(isSaving = false) }
-                if (appSettings.soundEnabled) soundPlayer.play(SoundEffect.ADD)
-                effectsChannel.send(AddEditCreditorEffect.Saved)
-            }.onFailure { error ->
-                _state.update { it.copy(isSaving = false) }
-                effectsChannel.send(AddEditCreditorEffect.Error(error.message ?: strings.saveError))
             }
+
+            _state.update { it.copy(isSaving = false) }
+            if (appSettings.soundEnabled) soundPlayer.play(SoundEffect.ADD)
+            effectsChannel.send(AddEditCreditorEffect.Saved)
         }
     }
 }

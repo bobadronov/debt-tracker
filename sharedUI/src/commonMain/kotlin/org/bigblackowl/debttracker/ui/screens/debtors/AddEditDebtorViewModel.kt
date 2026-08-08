@@ -28,6 +28,7 @@ import org.bigblackowl.debttracker.domain.model.TransactionType
 import org.bigblackowl.debttracker.domain.usecase.FindProfileByEmailUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.AddDebtTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.AddOrUpdateDebtorUseCase
+import org.bigblackowl.debttracker.domain.usecase.debtor.DeleteDebtorUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorUseCase
 import org.bigblackowl.debttracker.domain.validation.isValidEmail
 import org.bigblackowl.debttracker.domain.validation.isValidFullName
@@ -47,6 +48,7 @@ class AddEditDebtorViewModel(
     private val observeDebtor: ObserveDebtorUseCase,
     private val addOrUpdateDebtor: AddOrUpdateDebtorUseCase,
     private val addTransaction: AddDebtTransactionUseCase,
+    private val deleteDebtor: DeleteDebtorUseCase,
     private val appSettings: AppSettings,
     private val soundPlayer: SoundPlayer,
     private val findProfileByEmail: FindProfileByEmailUseCase,
@@ -143,38 +145,44 @@ class AddEditDebtorViewModel(
             parsedAmount = parsed
         }
 
+        val isNew = !(current.isEditing && loadedDebtor != null)
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true) }
-            runCatching {
-                val now = Clock.System.now()
-                val debtor = if (current.isEditing && loadedDebtor != null) {
-                    loadedDebtor!!.copy(
-                        fullName = current.fullName.trim(),
-                        phone = current.phone.trim().ifBlank { null },
-                        email = current.email.trim().ifBlank { null },
-                        avatarUrl = current.suggestedAvatarUrl ?: loadedDebtor!!.avatarUrl,
-                        comment = current.comment.trim().ifBlank { null },
-                        updatedAt = now,
-                    )
-                } else {
-                    Debtor(
-                        id = Uuid.random().toString(),
-                        fullName = current.fullName.trim(),
-                        phone = current.phone.trim().ifBlank { null },
-                        email = current.email.trim().ifBlank { null },
-                        avatarUrl = current.suggestedAvatarUrl,
-                        comment = current.comment.trim().ifBlank { null },
-                        createdAt = now,
-                        updatedAt = now,
-                        status = DebtStatus.ACTIVE,
-                        syncStatus = SyncStatus.PENDING,
-                        currency = current.currency,
-                    )
-                }
-                addOrUpdateDebtor(debtor)
+            val now = Clock.System.now()
+            val debtor = if (current.isEditing && loadedDebtor != null) {
+                loadedDebtor!!.copy(
+                    fullName = current.fullName.trim(),
+                    phone = current.phone.trim().ifBlank { null },
+                    email = current.email.trim().ifBlank { null },
+                    avatarUrl = current.suggestedAvatarUrl ?: loadedDebtor!!.avatarUrl,
+                    comment = current.comment.trim().ifBlank { null },
+                    updatedAt = now,
+                )
+            } else {
+                Debtor(
+                    id = Uuid.random().toString(),
+                    fullName = current.fullName.trim(),
+                    phone = current.phone.trim().ifBlank { null },
+                    email = current.email.trim().ifBlank { null },
+                    avatarUrl = current.suggestedAvatarUrl,
+                    comment = current.comment.trim().ifBlank { null },
+                    createdAt = now,
+                    updatedAt = now,
+                    status = DebtStatus.ACTIVE,
+                    syncStatus = SyncStatus.PENDING,
+                    currency = current.currency,
+                )
+            }
 
-                val amount = parsedAmount
-                if (amount != null) {
+            runCatching { addOrUpdateDebtor(debtor) }.onFailure { error ->
+                _state.update { it.copy(isSaving = false) }
+                effectsChannel.send(AddEditDebtorEffect.Error(error.message ?: strings.saveError))
+                return@launch
+            }
+
+            val amount = parsedAmount
+            if (amount != null) {
+                runCatching {
                     addTransaction(
                         DebtTransaction(
                             id = Uuid.random().toString(),
@@ -190,15 +198,19 @@ class AddEditDebtorViewModel(
                             syncStatus = SyncStatus.PENDING,
                         )
                     )
+                }.onFailure { error ->
+                    // The debtor write already committed but its opening transaction didn't —
+                    // don't leave an orphaned 0-balance debtor behind; undo the half-finished save.
+                    if (isNew) runCatching { deleteDebtor(debtor.id) }
+                    _state.update { it.copy(isSaving = false) }
+                    effectsChannel.send(AddEditDebtorEffect.Error(error.message ?: strings.saveError))
+                    return@launch
                 }
-            }.onSuccess {
-                _state.update { it.copy(isSaving = false) }
-                if (appSettings.soundEnabled) soundPlayer.play(SoundEffect.ADD)
-                effectsChannel.send(AddEditDebtorEffect.Saved)
-            }.onFailure { error ->
-                _state.update { it.copy(isSaving = false) }
-                effectsChannel.send(AddEditDebtorEffect.Error(error.message ?: strings.saveError))
             }
+
+            _state.update { it.copy(isSaving = false) }
+            if (appSettings.soundEnabled) soundPlayer.play(SoundEffect.ADD)
+            effectsChannel.send(AddEditDebtorEffect.Saved)
         }
     }
 }

@@ -31,6 +31,7 @@ import org.bigblackowl.debttracker.ui.screens.creditors.CreditorDetailScreen
 import org.bigblackowl.debttracker.ui.screens.debtors.AddEditDebtorScreen
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorDetailScreen
 import org.bigblackowl.debttracker.ui.screens.export.ExportScreen
+import org.bigblackowl.debttracker.ui.screens.settings.EditAccountScreen
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsScreen
 import org.bigblackowl.debttracker.ui.screens.stats.StatsScreen
 import org.koin.compose.koinInject
@@ -149,7 +150,11 @@ fun DebtTrackerNavGraph(
                     onBack = { back() },
                     onExport = { navigate(Screen.Export) },
                     onOpenAuth = { navigate(Screen.Auth()) },
+                    onEditAccount = { navigate(Screen.EditAccount) },
                 )
+            }
+            entry<Screen.EditAccount> {
+                EditAccountScreen(onBack = { back() })
             }
             entry<Screen.Export> {
                 ExportScreen(onBack = { back() })

@@ -145,6 +145,7 @@ data class Strings(
     val settingsSignOut: String,
     val settingsLocalOnly: String,
     val settingsSignIn: String,
+    val settingsEditAccount: String,
     val settingsPreferences: String,
     val settingsData: String,
     val settingsProtection: String,
@@ -175,6 +176,10 @@ data class Strings(
     val settingsCheckForUpdates: String,
     val settingsCheckingForUpdates: String,
     val settingsUpToDate: String,
+
+    // edit account
+    val editAccountTitle: String,
+    val editAccountEmailReadOnly: String,
 
     // update (Desktop-only, see core/update/AppUpdateChecker)
     val updateAvailableTitle: String,
@@ -330,6 +335,7 @@ val UkStrings = Strings(
     settingsSignOut = "Вийти (перейти в Local-only)",
     settingsLocalOnly = "Local-only — дані лише на цьому пристрої",
     settingsSignIn = "Увійти / зареєструватись",
+    settingsEditAccount = "Редагувати дані акаунта",
     settingsPreferences = "Параметри",
     settingsData = "Дані",
     settingsProtection = "Захист входу",
@@ -360,6 +366,9 @@ val UkStrings = Strings(
     settingsCheckForUpdates = "Перевірити оновлення",
     settingsCheckingForUpdates = "Перевірка…",
     settingsUpToDate = "Ви використовуєте останню версію",
+
+    editAccountTitle = "Редагування акаунта",
+    editAccountEmailReadOnly = "Пошту не можна змінити тут",
 
     updateAvailableTitle = "Доступне оновлення",
     updateAvailableMessage = { version -> "Версія $version готова до завантаження." },
@@ -510,6 +519,7 @@ val EnStrings = Strings(
     settingsSignOut = "Sign out (switch to Local-only)",
     settingsLocalOnly = "Local-only — data stays on this device",
     settingsSignIn = "Sign in / sign up",
+    settingsEditAccount = "Edit account info",
     settingsPreferences = "Preferences",
     settingsData = "Data",
     settingsProtection = "App lock",
@@ -540,6 +550,9 @@ val EnStrings = Strings(
     settingsCheckForUpdates = "Check for updates",
     settingsCheckingForUpdates = "Checking…",
     settingsUpToDate = "You're up to date",
+
+    editAccountTitle = "Edit Account",
+    editAccountEmailReadOnly = "Email can't be changed here",
 
     updateAvailableTitle = "Update available",
     updateAvailableMessage = { version -> "Version $version is ready to download." },

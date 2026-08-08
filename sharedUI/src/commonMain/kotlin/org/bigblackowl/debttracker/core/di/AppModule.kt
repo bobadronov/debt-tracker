@@ -32,6 +32,7 @@ import org.bigblackowl.debttracker.ui.screens.debtors.AddEditDebtorViewModel
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorDetailViewModel
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorListViewModel
 import org.bigblackowl.debttracker.ui.screens.auth.AuthViewModel
+import org.bigblackowl.debttracker.ui.screens.settings.EditAccountViewModel
 import org.bigblackowl.debttracker.ui.screens.stats.StatsViewModel
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.viewModel
@@ -70,10 +71,11 @@ val appModule = module {
 
     viewModelOf(::DebtorListViewModel)
     viewModelOf(::CreditorListViewModel)
-    viewModel { (debtorId: String?) -> AddEditDebtorViewModel(debtorId, get(), get(), get(), get(), get(), get()) }
-    viewModel { (creditorId: String?) -> AddEditCreditorViewModel(creditorId, get(), get(), get(), get(), get(), get()) }
+    viewModel { (debtorId: String?) -> AddEditDebtorViewModel(debtorId, get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { (creditorId: String?) -> AddEditCreditorViewModel(creditorId, get(), get(), get(), get(), get(), get(), get()) }
     viewModel { (debtorId: String) -> DebtorDetailViewModel(debtorId, get(), get(), get(), get()) }
     viewModel { (creditorId: String) -> CreditorDetailViewModel(creditorId, get(), get(), get(), get()) }
     viewModelOf(::AuthViewModel)
+    viewModelOf(::EditAccountViewModel)
     viewModelOf(::StatsViewModel)
 }
