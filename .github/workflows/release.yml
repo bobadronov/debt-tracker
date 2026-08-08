@@ -6,12 +6,13 @@ name: Release
 # Builds:
 #   - Android APK
 #   - Android App Bundle (.aab, for Google Play)
-#   - Windows .exe
+#   - Windows .msi
 #   - Linux .deb
 #   - Web build
 #
 # Then:
-#   - publishes APK/.aab/.exe/.deb as a GitHub Release
+#   - publishes APK/.msi/.deb as a GitHub Release (the .aab is Play-Store-only —
+#     it's not directly installable, so it isn't attached to the release page)
 #   - deploys the web build to GitHub Pages
 #   - uploads the .aab to Google Play (play-store job — only runs once the
 #     GOOGLE_PLAY_SERVICE_ACCOUNT_JSON secret is configured, see below)
@@ -29,8 +30,8 @@ name: Release
 #      on every tagged release.
 #
 # Windows code signing (optional — avoids SmartScreen/App Control flagging
-# the .exe as from an unknown publisher; without it the build still succeeds
-# and produces an unsigned exe):
+# the .msi as from an unknown publisher; without it the build still succeeds
+# and produces an unsigned installer):
 #   1. Obtain a code-signing certificate (.pfx/.p12) from a CA.
 #   2. Base64-encode it and add it as the WINDOWS_CODE_SIGN_CERT_BASE64 repo
 #      secret; add its password as WINDOWS_CODE_SIGN_CERT_PASSWORD.
@@ -210,16 +211,16 @@ jobs:
 
 
   # ============================================================
-  # Windows EXE
+  # Windows MSI
   # ============================================================
-  windows-exe:
+  windows-msi:
     runs-on: windows-latest
 
     env:
       # Optional code-signing certificate — if unset, the build continues
-      # and produces an unsigned exe (Windows SmartScreen/App Control will
-      # flag it as from an unknown publisher until it's signed or builds up
-      # enough download reputation on its own).
+      # and produces an unsigned installer (Windows SmartScreen/App Control
+      # will flag it as from an unknown publisher until it's signed or builds
+      # up enough download reputation on its own).
       WINDOWS_CODE_SIGN_CERT_BASE64: ${{ secrets.WINDOWS_CODE_SIGN_CERT_BASE64 }}
       WINDOWS_CODE_SIGN_CERT_PASSWORD: ${{ secrets.WINDOWS_CODE_SIGN_CERT_PASSWORD }}
 
@@ -237,9 +238,9 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       # Compose Desktop downloads WiX Toolset automatically when
-      # packageExe requires it.
-      - name: Package Windows executable
-        run: ./gradlew :desktopApp:packageExe --stacktrace
+      # packageMsi requires it.
+      - name: Package Windows installer
+        run: ./gradlew :desktopApp:packageMsi --stacktrace
 
       - name: Decode code-signing certificate
         if: ${{ env.WINDOWS_CODE_SIGN_CERT_BASE64 != '' }}
@@ -248,23 +249,23 @@ jobs:
           $bytes = [Convert]::FromBase64String($env:WINDOWS_CODE_SIGN_CERT_BASE64)
           [IO.File]::WriteAllBytes("$env:RUNNER_TEMP\codesign.pfx", $bytes)
 
-      - name: Sign Windows executable
+      - name: Sign Windows installer
         if: ${{ env.WINDOWS_CODE_SIGN_CERT_BASE64 != '' }}
         shell: pwsh
         run: |
           $signtool = Get-ChildItem -Path "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" |
             Sort-Object FullName -Descending | Select-Object -First 1 -ExpandProperty FullName
-          $exe = Get-ChildItem -Path "desktopApp/build/compose/binaries/main/exe" -Filter *.exe |
+          $msi = Get-ChildItem -Path "desktopApp/build/compose/binaries/main/msi" -Filter *.msi |
             Select-Object -First 1 -ExpandProperty FullName
           & $signtool sign /f "$env:RUNNER_TEMP\codesign.pfx" /p "$env:WINDOWS_CODE_SIGN_CERT_PASSWORD" `
-            /fd sha256 /tr http://timestamp.digicert.com /td sha256 "$exe"
-          & $signtool verify /pa "$exe"
+            /fd sha256 /tr http://timestamp.digicert.com /td sha256 "$msi"
+          & $signtool verify /pa "$msi"
 
-      - name: Upload Windows executable
+      - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
-          name: debt-tracker-exe
-          path: desktopApp/build/compose/binaries/main/exe/*.exe
+          name: debt-tracker-msi
+          path: desktopApp/build/compose/binaries/main/msi/*.msi
           if-no-files-found: error
 
 
@@ -371,8 +372,7 @@ jobs:
   github-release:
     needs:
       - android-apk
-      - android-aab
-      - windows-exe
+      - windows-msi
       - linux-deb
 
     runs-on: ubuntu-latest
@@ -400,6 +400,5 @@ jobs:
           generate_release_notes: true
           files: |
             artifacts/debt-tracker-apk/*.apk
-            artifacts/debt-tracker-aab/*.aab
-            artifacts/debt-tracker-exe/*.exe
+            artifacts/debt-tracker-msi/*.msi
             artifacts/debt-tracker-deb/*.deb

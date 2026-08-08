@@ -313,14 +313,15 @@ verification by assuming it's unreachable:
 ## 10. CI/CD
 
 `.github/workflows/release.yml` — triggered by pushing a `v*` tag (or manual
-`workflow_dispatch`). Jobs: `android-apk` (ubuntu), `windows-exe` (Windows —
+`workflow_dispatch`). Jobs: `android-apk` (ubuntu), `windows-msi` (Windows —
 Compose Desktop downloads WiX automatically), `linux-deb` (ubuntu, needs
 `fakeroot dpkg-dev`), `web` (Windows — `wasm-opt`/Binaryen crashes on the
 Ubuntu runner for this project's wasmJs production optimization, Windows
 avoids it), `deploy-pages` (publishes the web build to GitHub Pages), then
-`github-release` (attaches APK/.exe/.deb to a GitHub Release with generated
-notes). `SUPABASE_URL`/`SUPABASE_ANON_KEY` and the four `ANDROID_*` signing
-secrets are wired in via repo/Actions secrets — see §8.
+`github-release` (attaches APK/.msi/.deb to a GitHub Release with generated
+notes — the `.aab` is Play-Store-only and isn't attached). `SUPABASE_URL`/
+`SUPABASE_ANON_KEY` and the four `ANDROID_*` signing secrets are wired in via
+repo/Actions secrets — see §8.
 
 A local convenience script, `release.bat` (gitignored, Windows-only), bumps
 `version.properties`, commits, tags, and pushes to trigger the workflow —
