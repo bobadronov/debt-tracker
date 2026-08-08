@@ -13,6 +13,18 @@ val versionProps = Properties().apply {
 val appVersionName: String = versionProps.getProperty("VERSION_NAME")
 val appVersionCode: Int = versionProps.getProperty("VERSION_CODE").toInt()
 
+// Release signing comes from env vars (CI secrets) — never hardcoded/committed.
+// Missing/blank env vars → release build stays unsigned locally, but fails fast in CI
+// (see the task-execution check below `android {}`) instead of silently shipping unsigned.
+val releaseKeystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+val releaseKeystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+val releaseKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
+val releaseKeyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+val hasReleaseSigning = !releaseKeystorePath.isNullOrBlank() &&
+    !releaseKeystorePassword.isNullOrBlank() &&
+    !releaseKeyAlias.isNullOrBlank() &&
+    !releaseKeyPassword.isNullOrBlank()
+
 android {
     namespace = "org.bigblackowl.debttracker.androidApp"
     compileSdk = 37
@@ -31,19 +43,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    // Release signing comes from env vars (CI secrets) — never hardcoded/committed.
-    // Missing/blank env vars → release build stays unsigned, it just doesn't fail
-    // the build (matches Android Gradle Plugin's default behavior for `assembleRelease`
-    // with no signingConfig).
-    val releaseKeystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
-    val releaseKeystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-    val releaseKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
-    val releaseKeyPassword = System.getenv("ANDROID_KEY_PASSWORD")
-    val hasReleaseSigning = !releaseKeystorePath.isNullOrBlank() &&
-        !releaseKeystorePassword.isNullOrBlank() &&
-        !releaseKeyAlias.isNullOrBlank() &&
-        !releaseKeyPassword.isNullOrBlank()
-
     if (hasReleaseSigning) {
         signingConfigs {
             create("release") {
@@ -59,14 +58,24 @@ android {
         release {
             if (hasReleaseSigning) {
                 signingConfig = signingConfigs.getByName("release")
-            } else if (System.getenv("CI") == "true") {
-                throw GradleException(
-                    "Release signing is required in CI. " +
-                            "Configure ANDROID_KEYSTORE_PATH, " +
-                            "ANDROID_KEYSTORE_PASSWORD, " +
-                            "ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD."
-                )
             }
+        }
+    }
+}
+
+// Checked at task-execution time (not above, during `android {}` configuration) because Gradle
+// configures every module in this multi-project build regardless of which task was requested —
+// an eager check there would fail CI builds of desktopApp/webApp too, which never touch Android
+// signing at all.
+if (!hasReleaseSigning && System.getenv("CI") == "true") {
+    tasks.matching { it.name == "assembleRelease" || it.name == "bundleRelease" }.configureEach {
+        doFirst {
+            throw GradleException(
+                "Release signing is required in CI. " +
+                        "Configure ANDROID_KEYSTORE_PATH, " +
+                        "ANDROID_KEYSTORE_PASSWORD, " +
+                        "ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD."
+            )
         }
     }
 }
