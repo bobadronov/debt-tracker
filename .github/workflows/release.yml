@@ -27,6 +27,13 @@ name: Release
 #   4. Add the JSON key's contents as the GOOGLE_PLAY_SERVICE_ACCOUNT_JSON
 #      repo secret. Once set, this workflow uploads the .aab automatically
 #      on every tagged release.
+#
+# Windows code signing (optional — avoids SmartScreen/App Control flagging
+# the .exe as from an unknown publisher; without it the build still succeeds
+# and produces an unsigned exe):
+#   1. Obtain a code-signing certificate (.pfx/.p12) from a CA.
+#   2. Base64-encode it and add it as the WINDOWS_CODE_SIGN_CERT_BASE64 repo
+#      secret; add its password as WINDOWS_CODE_SIGN_CERT_PASSWORD.
 
 on:
   push:
@@ -208,6 +215,14 @@ jobs:
   windows-exe:
     runs-on: windows-latest
 
+    env:
+      # Optional code-signing certificate — if unset, the build continues
+      # and produces an unsigned exe (Windows SmartScreen/App Control will
+      # flag it as from an unknown publisher until it's signed or builds up
+      # enough download reputation on its own).
+      WINDOWS_CODE_SIGN_CERT_BASE64: ${{ secrets.WINDOWS_CODE_SIGN_CERT_BASE64 }}
+      WINDOWS_CODE_SIGN_CERT_PASSWORD: ${{ secrets.WINDOWS_CODE_SIGN_CERT_PASSWORD }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -225,6 +240,25 @@ jobs:
       # packageExe requires it.
       - name: Package Windows executable
         run: ./gradlew :desktopApp:packageExe --stacktrace
+
+      - name: Decode code-signing certificate
+        if: ${{ env.WINDOWS_CODE_SIGN_CERT_BASE64 != '' }}
+        shell: pwsh
+        run: |
+          $bytes = [Convert]::FromBase64String($env:WINDOWS_CODE_SIGN_CERT_BASE64)
+          [IO.File]::WriteAllBytes("$env:RUNNER_TEMP\codesign.pfx", $bytes)
+
+      - name: Sign Windows executable
+        if: ${{ env.WINDOWS_CODE_SIGN_CERT_BASE64 != '' }}
+        shell: pwsh
+        run: |
+          $signtool = Get-ChildItem -Path "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" |
+            Sort-Object FullName -Descending | Select-Object -First 1 -ExpandProperty FullName
+          $exe = Get-ChildItem -Path "desktopApp/build/compose/binaries/main/exe" -Filter *.exe |
+            Select-Object -First 1 -ExpandProperty FullName
+          & $signtool sign /f "$env:RUNNER_TEMP\codesign.pfx" /p "$env:WINDOWS_CODE_SIGN_CERT_PASSWORD" `
+            /fd sha256 /tr http://timestamp.digicert.com /td sha256 "$exe"
+          & $signtool verify /pa "$exe"
 
       - name: Upload Windows executable
         uses: actions/upload-artifact@v4
