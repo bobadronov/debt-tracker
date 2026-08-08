@@ -3,6 +3,7 @@ package org.bigblackowl.debttracker.navigation
 /** Типізовані маршрути навігаційного графа (спек §6). */
 sealed interface Screen {
     data object Splash : Screen
+    data object Onboarding : Screen
     data object AuthGate : Screen
     data object Home : Screen
     data class AddEditDebtor(val debtorId: String? = null) : Screen

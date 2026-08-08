@@ -56,8 +56,8 @@ class EditAccountViewModel(
                     _state.update { it.copy(isSaving = false) }
                     effectsChannel.send(EditAccountEffect.Saved)
                 }
-                .onFailure { error ->
-                    _state.update { it.copy(isSaving = false, error = error.message ?: strings.saveError) }
+                .onFailure {
+                    _state.update { it.copy(isSaving = false, error = strings.saveError) }
                 }
         }
     }

@@ -26,10 +26,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
+import org.bigblackowl.debttracker.domain.validation.isValidFullName
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.BackButton
+import org.bigblackowl.debttracker.ui.components.ClipboardPasteHint
 import org.bigblackowl.debttracker.ui.components.UkrainianPhoneVisualTransformation
+import org.bigblackowl.debttracker.ui.components.rememberClipboardText
 import org.koin.compose.viewmodel.koinViewModel
 
 /** Edit-my-account form reached from [org.bigblackowl.debttracker.ui.screens.settings.SettingsScreen]'s Account section. */
@@ -41,6 +44,7 @@ fun EditAccountScreen(
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val strings = LocalStrings.current
+    val clipboardText by rememberClipboardText()
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -89,6 +93,12 @@ fun EditAccountScreen(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                ClipboardPasteHint(
+                    clipboardText = clipboardText,
+                    fieldValue = state.fullName,
+                    isRelevant = ::isValidFullName,
+                    onPaste = { viewModel.onIntent(EditAccountIntent.FullNameChanged(it)) },
+                )
                 OutlinedTextField(
                     value = state.phone,
                     onValueChange = {
@@ -99,6 +109,14 @@ fun EditAccountScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     visualTransformation = remember { UkrainianPhoneVisualTransformation() },
                     modifier = Modifier.fillMaxWidth(),
+                )
+                ClipboardPasteHint(
+                    clipboardText = clipboardText,
+                    fieldValue = state.phone,
+                    isRelevant = { it.filter(Char::isDigit).length >= 9 },
+                    onPaste = {
+                        viewModel.onIntent(EditAccountIntent.PhoneChanged(it.filter(Char::isDigit).take(10)))
+                    },
                 )
 
                 Button(

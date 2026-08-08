@@ -190,9 +190,9 @@ fun ExportScreen(onBack: () -> Unit) {
                         }.onSuccess {
                             isExporting = false
                             success = true
-                        }.onFailure { e ->
+                        }.onFailure {
                             isExporting = false
-                            error = e.message ?: strings.exportError
+                            error = strings.exportError
                         }
                     }
                 },

@@ -41,15 +41,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
+import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
+import org.bigblackowl.debttracker.domain.validation.isValidEmail
+import org.bigblackowl.debttracker.domain.validation.isValidFullName
 import org.bigblackowl.debttracker.domain.validation.sanitizeAmountInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.BackButton
+import org.bigblackowl.debttracker.ui.components.ClipboardPasteHint
 import org.bigblackowl.debttracker.ui.components.ProfileSuggestionCard
 import org.bigblackowl.debttracker.ui.components.UkrainianPhoneVisualTransformation
+import org.bigblackowl.debttracker.ui.components.rememberClipboardText
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -65,6 +70,7 @@ fun AddEditDebtorScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val strings = LocalStrings.current
     var currencyMenuExpanded by remember { mutableStateOf(false) }
+    val clipboardText by rememberClipboardText()
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -107,6 +113,12 @@ fun AddEditDebtorScreen(
                     supportingText = { state.fullNameError?.let { Text(it) } },
                     modifier = Modifier.fillMaxWidth(),
                 )
+                ClipboardPasteHint(
+                    clipboardText = clipboardText,
+                    fieldValue = state.fullName,
+                    isRelevant = ::isValidFullName,
+                    onPaste = { viewModel.onIntent(AddEditDebtorIntent.FullNameChanged(it)) },
+                )
                 OutlinedTextField(
                     value = state.phone,
                     onValueChange = {
@@ -118,6 +130,14 @@ fun AddEditDebtorScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     visualTransformation = remember { UkrainianPhoneVisualTransformation() },
                 )
+                ClipboardPasteHint(
+                    clipboardText = clipboardText,
+                    fieldValue = state.phone,
+                    isRelevant = { it.filter(Char::isDigit).length >= 9 },
+                    onPaste = {
+                        viewModel.onIntent(AddEditDebtorIntent.PhoneChanged(it.filter(Char::isDigit).take(10)))
+                    },
+                )
                 OutlinedTextField(
                     value = state.email,
                     onValueChange = { viewModel.onIntent(AddEditDebtorIntent.EmailChanged(it)) },
@@ -125,6 +145,12 @@ fun AddEditDebtorScreen(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                )
+                ClipboardPasteHint(
+                    clipboardText = clipboardText,
+                    fieldValue = state.email,
+                    isRelevant = ::isValidEmail,
+                    onPaste = { viewModel.onIntent(AddEditDebtorIntent.EmailChanged(it)) },
                 )
                 state.profileSuggestion?.let { suggestion ->
                     ProfileSuggestionCard(
@@ -138,6 +164,12 @@ fun AddEditDebtorScreen(
                     onValueChange = { viewModel.onIntent(AddEditDebtorIntent.CommentChanged(it)) },
                     label = { Text(strings.comment) },
                     modifier = Modifier.fillMaxWidth(),
+                )
+                ClipboardPasteHint(
+                    clipboardText = clipboardText,
+                    fieldValue = state.comment,
+                    isRelevant = { it.trim().length in 1..500 },
+                    onPaste = { viewModel.onIntent(AddEditDebtorIntent.CommentChanged(it)) },
                 )
 
                 if (!state.isEditing) {
@@ -161,6 +193,19 @@ fun AddEditDebtorScreen(
                             supportingText = { state.amountError?.let { Text(it) } },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                        ClipboardPasteHint(
+                            clipboardText = clipboardText,
+                            fieldValue = state.initialAmountText,
+                            isRelevant = { text ->
+                                val sanitized = sanitizeAmountInput(text)
+                                sanitized.isNotBlank() &&
+                                    runCatching { BigDecimal.parseString(sanitized) }.getOrNull()
+                                        ?.let { it > BigDecimal.ZERO } == true
+                            },
+                            onPaste = {
+                                viewModel.onIntent(AddEditDebtorIntent.InitialAmountChanged(sanitizeAmountInput(it)))
+                            },
                         )
                         ExposedDropdownMenuBox(
                             expanded = currencyMenuExpanded,
@@ -243,6 +288,12 @@ fun AddEditDebtorScreen(
                             },
                             label = { Text(strings.cardLastDigits) },
                             modifier = Modifier.fillMaxWidth(),
+                        )
+                        ClipboardPasteHint(
+                            clipboardText = clipboardText,
+                            fieldValue = state.cardLastDigits,
+                            isRelevant = { it.filter(Char::isDigit).length in 3..6 },
+                            onPaste = { viewModel.onIntent(AddEditDebtorIntent.CardLastDigitsChanged(it)) },
                         )
                     }
                 }

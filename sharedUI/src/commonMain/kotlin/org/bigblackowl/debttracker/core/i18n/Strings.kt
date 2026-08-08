@@ -29,6 +29,8 @@ data class Strings(
     val deleteError: String,
     val contactSuggestionFound: String,
     val contactSuggestionUse: String,
+    val clipboardPasteFound: String,
+    val clipboardPasteUse: String,
 
     // app
     val appName: String,
@@ -65,8 +67,17 @@ data class Strings(
     val authGateBiometricFailed: String,
     val authGateWrongPin: String,
     val biometricUnlockReason: String,
+    val biometricEnableReason: String,
     val showPin: String,
     val hidePin: String,
+
+    // protection onboarding (first launch only)
+    val onboardingProtectionTitle: String,
+    val onboardingProtectionBody: String,
+    val onboardingProtectionEnableBiometric: String,
+    val onboardingProtectionEnablePin: String,
+    val onboardingProtectionSkip: String,
+    val onboardingProtectionConfirmFailed: String,
 
     // add/edit creditor
     val addEditCreditorTitleEdit: String,
@@ -169,6 +180,7 @@ data class Strings(
     val settingsPinSetupConfirm: String,
     val settingsPinTooShort: String,
     val settingsPinMismatch: String,
+    val settingsProtectionConfirmFailed: String,
     val settingsAvatarUploadError: String,
     val settingsAbout: String,
     val settingsAboutVersion: String,
@@ -231,6 +243,8 @@ val UkStrings = Strings(
     deleteError = "Помилка видалення",
     contactSuggestionFound = "Знайдено користувача застосунку з таким email",
     contactSuggestionUse = "Використати",
+    clipboardPasteFound = "Скопійовано в буфер обміну",
+    clipboardPasteUse = "Вставити",
 
     appName = "DebtTracker",
 
@@ -263,8 +277,15 @@ val UkStrings = Strings(
     authGateBiometricFailed = "Не вдалося підтвердити",
     authGateWrongPin = "Невірний PIN",
     biometricUnlockReason = "Розблокування DebtTracker",
+    biometricEnableReason = "Підтвердіть, щоб увімкнути захист входу",
     showPin = "Показати PIN",
     hidePin = "Приховати PIN",
+    onboardingProtectionTitle = "Захистіть свої дані",
+    onboardingProtectionBody = "Увімкніть біометрію або PIN-код, щоб відкривати DebtTracker могли лише ви — навіть якщо телефон чи ноутбук потрапить у чужі руки.",
+    onboardingProtectionEnableBiometric = "Увімкнути біометрію",
+    onboardingProtectionEnablePin = "Встановити PIN-код",
+    onboardingProtectionSkip = "Пропустити",
+    onboardingProtectionConfirmFailed = "Не вдалося підтвердити — спробуйте ще раз",
 
     addEditCreditorTitleEdit = "Редагувати кредитора",
     addEditCreditorTitleNew = "Новий кредитор",
@@ -331,9 +352,9 @@ val UkStrings = Strings(
 
     settingsTitle = "Налаштування",
     settingsAccount = "Обліковий запис",
-    settingsAccountSynced = "Account+Sync — синхронізація увімкнена",
-    settingsSignOut = "Вийти (перейти в Local-only)",
-    settingsLocalOnly = "Local-only — дані лише на цьому пристрої",
+    settingsAccountSynced = "Синхронізація увімкнена",
+    settingsSignOut = "Вийти",
+    settingsLocalOnly = "Локальний акаунт",
     settingsSignIn = "Увійти / зареєструватись",
     settingsEditAccount = "Редагувати дані акаунта",
     settingsPreferences = "Параметри",
@@ -359,6 +380,7 @@ val UkStrings = Strings(
     settingsPinSetupConfirm = "Повторіть PIN",
     settingsPinTooShort = "Мінімум 4 цифри",
     settingsPinMismatch = "PIN-коди не збігаються",
+    settingsProtectionConfirmFailed = "Не вдалося підтвердити — захист не увімкнено",
     settingsAvatarUploadError = "Не вдалося завантажити фото",
     settingsAbout = "Про застосунок",
     settingsAboutVersion = "Версія",
@@ -415,6 +437,8 @@ val EnStrings = Strings(
     deleteError = "Failed to delete",
     contactSuggestionFound = "Found an app user with this email",
     contactSuggestionUse = "Use",
+    clipboardPasteFound = "Copied to clipboard",
+    clipboardPasteUse = "Paste",
 
     appName = "DebtTracker",
 
@@ -447,8 +471,15 @@ val EnStrings = Strings(
     authGateBiometricFailed = "Couldn't verify",
     authGateWrongPin = "Wrong PIN",
     biometricUnlockReason = "Unlock DebtTracker",
+    biometricEnableReason = "Confirm to enable app lock",
     showPin = "Show PIN",
     hidePin = "Hide PIN",
+    onboardingProtectionTitle = "Protect your data",
+    onboardingProtectionBody = "Turn on biometric unlock or a PIN so only you can open DebtTracker — even if your phone or laptop ends up in someone else's hands.",
+    onboardingProtectionEnableBiometric = "Enable biometric unlock",
+    onboardingProtectionEnablePin = "Set a PIN",
+    onboardingProtectionSkip = "Skip",
+    onboardingProtectionConfirmFailed = "Couldn't verify — try again",
 
     addEditCreditorTitleEdit = "Edit creditor",
     addEditCreditorTitleNew = "New creditor",
@@ -515,9 +546,9 @@ val EnStrings = Strings(
 
     settingsTitle = "Settings",
     settingsAccount = "Account",
-    settingsAccountSynced = "Account+Sync — sync enabled",
-    settingsSignOut = "Sign out (switch to Local-only)",
-    settingsLocalOnly = "Local-only — data stays on this device",
+    settingsAccountSynced = "Sync enabled",
+    settingsSignOut = "Sign out",
+    settingsLocalOnly = "Local account",
     settingsSignIn = "Sign in / sign up",
     settingsEditAccount = "Edit account info",
     settingsPreferences = "Preferences",
@@ -543,6 +574,7 @@ val EnStrings = Strings(
     settingsPinSetupConfirm = "Repeat PIN",
     settingsPinTooShort = "At least 4 digits",
     settingsPinMismatch = "PINs don't match",
+    settingsProtectionConfirmFailed = "Couldn't verify — app lock not enabled",
     settingsAvatarUploadError = "Couldn't upload photo",
     settingsAbout = "About",
     settingsAboutVersion = "Version",

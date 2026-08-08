@@ -15,6 +15,8 @@ class AppSettings(private val settings: Settings) {
 
     var protectionEnabled: Boolean by SettingsBooleanState(settings, KEY_PROTECTION_ENABLED, false)
     var biometricEnabled: Boolean by SettingsBooleanState(settings, KEY_BIOMETRIC_ENABLED, false)
+    /** Whether the first-launch "enable protection" onboarding screen has already been shown. */
+    var hasSeenProtectionOnboarding: Boolean by SettingsBooleanState(settings, KEY_PROTECTION_ONBOARDING_SEEN, false)
     var soundEnabled: Boolean by SettingsBooleanState(settings, KEY_SOUND_ENABLED, true)
     var hapticEnabled: Boolean by SettingsBooleanState(settings, KEY_HAPTIC_ENABLED, true)
     var theme: String by SettingsStringState(settings, KEY_THEME, "system")
@@ -30,6 +32,7 @@ class AppSettings(private val settings: Settings) {
     private companion object {
         const val KEY_PROTECTION_ENABLED = "protection_enabled"
         const val KEY_BIOMETRIC_ENABLED = "biometric_enabled"
+        const val KEY_PROTECTION_ONBOARDING_SEEN = "protection_onboarding_seen"
         const val KEY_PIN_CODE = "pin_code"
         const val KEY_SOUND_ENABLED = "sound_enabled"
         const val KEY_HAPTIC_ENABLED = "haptic_enabled"

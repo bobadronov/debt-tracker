@@ -174,9 +174,9 @@ class AddEditCreditorViewModel(
                 )
             }
 
-            runCatching { addOrUpdateCreditor(creditor) }.onFailure { error ->
+            runCatching { addOrUpdateCreditor(creditor) }.onFailure {
                 _state.update { it.copy(isSaving = false) }
-                effectsChannel.send(AddEditCreditorEffect.Error(error.message ?: strings.saveError))
+                effectsChannel.send(AddEditCreditorEffect.Error(strings.saveError))
                 return@launch
             }
 
@@ -198,12 +198,12 @@ class AddEditCreditorViewModel(
                             syncStatus = SyncStatus.PENDING,
                         )
                     )
-                }.onFailure { error ->
+                }.onFailure {
                     // The creditor write already committed but its opening transaction didn't —
                     // don't leave an orphaned 0-balance creditor behind; undo the half-finished save.
                     if (isNew) runCatching { deleteCreditor(creditor.id) }
                     _state.update { it.copy(isSaving = false) }
-                    effectsChannel.send(AddEditCreditorEffect.Error(error.message ?: strings.saveError))
+                    effectsChannel.send(AddEditCreditorEffect.Error(strings.saveError))
                     return@launch
                 }
             }

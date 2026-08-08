@@ -1,8 +1,6 @@
 package org.bigblackowl.debttracker.ui.screens.settings
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,8 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Login
@@ -36,8 +32,6 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Vibration
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.FilledIconButton
@@ -61,11 +55,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import coil3.compose.AsyncImage
@@ -75,6 +65,7 @@ import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.media.rememberImagePicker
 import org.bigblackowl.debttracker.core.platform.AppPlatform
 import org.bigblackowl.debttracker.core.platform.currentPlatform
+import org.bigblackowl.debttracker.core.security.BiometricResult
 import org.bigblackowl.debttracker.core.security.rememberBiometricAuthenticator
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.update.AppUpdateInfo
@@ -85,6 +76,7 @@ import org.bigblackowl.debttracker.domain.usecase.DeleteAllDataUseCase
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
+import org.bigblackowl.debttracker.ui.components.PinSetupDialog
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
 import org.bigblackowl.debttracker.ui.components.SettingsRow
 import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
@@ -117,6 +109,7 @@ fun SettingsScreen(
 
     var biometricHardwareAvailable by remember { mutableStateOf(false) }
     var showPinSetupDialog by remember { mutableStateOf(false) }
+    var protectionConfirmError by remember { mutableStateOf<String?>(null) }
     var showDeleteConfirm1 by remember { mutableStateOf(false) }
     var showDeleteConfirm2 by remember { mutableStateOf(false) }
     var deleteDone by remember { mutableStateOf(false) }
@@ -201,8 +194,7 @@ fun SettingsScreen(
                                             picked.fileExtension
                                         )
                                             .onFailure {
-                                                avatarError =
-                                                    it.message ?: strings.settingsAvatarUploadError
+                                                avatarError = strings.settingsAvatarUploadError
                                             }
                                         isUploadingAvatar = false
                                     }
@@ -266,10 +258,12 @@ fun SettingsScreen(
                         SettingsRow(
                             icon = protectionIcon,
                             title = strings.settingsProtection,
+                            subtitle = protectionConfirmError,
                             trailing = {
                                 Switch(
                                     checked = settings.protectionEnabled,
                                     onCheckedChange = { checked ->
+                                        protectionConfirmError = null
                                         when (currentPlatform) {
                                             AppPlatform.DESKTOP -> if (checked && settings.pinCode == null) {
                                                 showPinSetupDialog = true
@@ -277,9 +271,22 @@ fun SettingsScreen(
                                                 settings.protectionEnabled = checked
                                             }
 
-                                            else -> {
-                                                settings.protectionEnabled = checked
-                                                settings.biometricEnabled = checked
+                                            // Мобільні платформи: увімкнення захисту потребує підтвердження
+                                            // відбитком/обличчям одразу — інакше можна ввімкнути перемикач,
+                                            // маючи чужий палець на сканері, і сам захист виявиться фікцією.
+                                            else -> if (checked) {
+                                                scope.launch {
+                                                    when (biometricAuthenticator.authenticate(strings.biometricEnableReason)) {
+                                                        BiometricResult.SUCCESS -> {
+                                                            settings.protectionEnabled = true
+                                                            settings.biometricEnabled = true
+                                                        }
+                                                        else -> protectionConfirmError = strings.settingsProtectionConfirmFailed
+                                                    }
+                                                }
+                                            } else {
+                                                settings.protectionEnabled = false
+                                                settings.biometricEnabled = false
                                             }
                                         }
                                     },
@@ -553,139 +560,3 @@ private fun AccountAvatar(avatarUrl: String?, isUploading: Boolean, onEditClick:
     }
 }
 
-@Composable
-private fun PinSetupDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
-    var pin by remember { mutableStateOf("") }
-    var confirmPin by remember { mutableStateOf("") }
-    var pinVisible by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
-    val strings = LocalStrings.current
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = { Icon(Icons.Filled.Password, contentDescription = null) },
-        title = { Text(strings.settingsPinSetupTitle) },
-        text = {
-            Column {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(strings.settingsPinSetupNew, style = MaterialTheme.typography.labelLarge)
-                    IconButton(onClick = { pinVisible = !pinVisible }) {
-                        Icon(
-                            if (pinVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (pinVisible) strings.hidePin else strings.showPin,
-                        )
-                    }
-                }
-                PinCodeField(
-                    value = pin,
-                    onValueChange = { pin = it; error = null },
-                    visible = pinVisible,
-                )
-
-                Spacer(Modifier.height(Dimens.space16))
-
-                Text(strings.settingsPinSetupConfirm, style = MaterialTheme.typography.labelLarge)
-                Spacer(Modifier.height(Dimens.space4))
-                PinCodeField(
-                    value = confirmPin,
-                    onValueChange = { confirmPin = it; error = null },
-                    visible = pinVisible,
-                )
-
-                error?.let {
-                    Spacer(Modifier.height(Dimens.space8))
-                    Text(it, color = MaterialTheme.debtAccentColors.debt)
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                when {
-                    pin.length < 4 -> error = strings.settingsPinTooShort
-                    pin != confirmPin -> error = strings.settingsPinMismatch
-                    else -> onConfirm(pin)
-                }
-            }) { Text(strings.save) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(strings.cancel) } },
-    )
-}
-
-/** 4-значний PIN-код у вигляді окремих квадратів [_][_][_][_] замість звичайного текстового поля. */
-@Composable
-private fun PinCodeField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    visible: Boolean,
-    modifier: Modifier = Modifier,
-    length: Int = 4,
-) {
-    var isFocused by remember { mutableStateOf(false) }
-
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.space16)) {
-            repeat(length) { index ->
-                PinDot(
-                    char = value.getOrNull(index),
-                    highlighted = isFocused && index == value.length,
-                    visible = visible,
-                )
-            }
-        }
-        BasicTextField(
-            value = value,
-            onValueChange = { new ->
-                if (new.length <= length && new.all(Char::isDigit)) onValueChange(
-                    new
-                )
-            },
-            modifier = Modifier.matchParentSize().alpha(0f)
-                .onFocusChanged { isFocused = it.isFocused },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-        )
-    }
-}
-
-/** Індикатор одного розряду PIN — незаповнене коло-контур, заповнене суцільним кольором (Android-style lock dots). */
-@Composable
-private fun PinDot(char: Char?, highlighted: Boolean, visible: Boolean) {
-    val filled = char != null
-    val borderColor by animateColorAsState(
-        if (highlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-        label = "pin-dot-border",
-    )
-    val fillColor by animateColorAsState(
-        if (filled && !visible) MaterialTheme.colorScheme.primary else Color.Transparent,
-        label = "pin-dot-fill",
-    )
-
-    Box(
-        modifier = Modifier
-            .size(Dimens.space40)
-            .clip(CircleShape)
-            .background(fillColor)
-            .border(
-                width = if (highlighted) Dimens.space2 else Dimens.space1,
-                color = borderColor,
-                shape = CircleShape
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (visible && filled) {
-            Text(char.toString(), style = MaterialTheme.typography.titleMedium)
-        }
-    }
-}
-
-@Preview
-@Composable
-private fun PinSetupDialogPreview() = DebtTrackerPreview {
-    Scaffold {
-        PinSetupDialog({}, {})
-    }
-}

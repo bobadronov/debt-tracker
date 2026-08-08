@@ -67,7 +67,7 @@ class CreditorListViewModel(
             is CreditorListIntent.Delete -> viewModelScope.launch {
                 runCatching { deleteCreditor(intent.creditorId) }
                     .onSuccess { if (appSettings.soundEnabled) soundPlayer.play(SoundEffect.DELETE) }
-                    .onFailure { effectsChannel.send(CreditorListEffect.Error(it.message ?: resolveStrings(appSettings.locale).deleteError)) }
+                    .onFailure { effectsChannel.send(CreditorListEffect.Error(resolveStrings(appSettings.locale).deleteError)) }
             }
         }
     }

@@ -35,6 +35,7 @@ import org.bigblackowl.debttracker.domain.validation.sanitizeAmountInput
 import org.bigblackowl.debttracker.theme.Dimens
 import org.koin.compose.koinInject
 
+
 /**
  * Спільний bottom sheet для введення суми/способу оплати — використовується
  * для "Повернути"/"Ще позичив" (Debtor) і "Повернути борг"/"Ще взяв у борг" (Creditor).
@@ -58,6 +59,7 @@ fun AmountBottomSheet(
     val soundPlayer = koinInject<SoundPlayer>()
     val haptics = LocalHapticFeedback.current
     val strings = LocalStrings.current
+    val clipboardText by rememberClipboardText()
 
     LaunchedEffect(Unit) {
         if (appSettings.soundEnabled) soundPlayer.play(SoundEffect.DIALOG_OPEN)
@@ -79,6 +81,17 @@ fun AmountBottomSheet(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             )
+            ClipboardPasteHint(
+                clipboardText = clipboardText,
+                fieldValue = amountText,
+                isRelevant = { text ->
+                    val sanitized = sanitizeAmountInput(text)
+                    sanitized.isNotBlank() &&
+                        runCatching { BigDecimal.parseString(sanitized) }.getOrNull()
+                            ?.let { it > BigDecimal.ZERO } == true
+                },
+                onPaste = { amountText = sanitizeAmountInput(it); error = null },
+            )
             Row(horizontalArrangement = Arrangement.spacedBy(Dimens.space8)) {
                 FilterChip(
                     selected = method == PaymentMethod.CASH,
@@ -97,6 +110,12 @@ fun AmountBottomSheet(
                     onValueChange = { cardLastDigits = it },
                     label = { Text(strings.cardLastDigits) },
                     modifier = Modifier.fillMaxWidth(),
+                )
+                ClipboardPasteHint(
+                    clipboardText = clipboardText,
+                    fieldValue = cardLastDigits,
+                    isRelevant = { it.filter(Char::isDigit).length in 3..6 },
+                    onPaste = { cardLastDigits = it },
                 )
             }
             Button(

@@ -48,8 +48,8 @@ class AuthViewModel(
                     _state.update { it.copy(isLoading = false) }
                     effectsChannel.send(AuthEffect.Success)
                 }
-                .onFailure { error ->
-                    _state.update { it.copy(isLoading = false, error = error.message ?: resolveStrings(appSettings.locale).authError) }
+                .onFailure {
+                    _state.update { it.copy(isLoading = false, error = resolveStrings(appSettings.locale).authError) }
                 }
         }
     }

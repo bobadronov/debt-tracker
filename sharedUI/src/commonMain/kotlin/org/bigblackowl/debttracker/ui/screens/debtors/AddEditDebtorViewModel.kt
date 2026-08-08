@@ -174,9 +174,9 @@ class AddEditDebtorViewModel(
                 )
             }
 
-            runCatching { addOrUpdateDebtor(debtor) }.onFailure { error ->
+            runCatching { addOrUpdateDebtor(debtor) }.onFailure {
                 _state.update { it.copy(isSaving = false) }
-                effectsChannel.send(AddEditDebtorEffect.Error(error.message ?: strings.saveError))
+                effectsChannel.send(AddEditDebtorEffect.Error(strings.saveError))
                 return@launch
             }
 
@@ -198,12 +198,12 @@ class AddEditDebtorViewModel(
                             syncStatus = SyncStatus.PENDING,
                         )
                     )
-                }.onFailure { error ->
+                }.onFailure {
                     // The debtor write already committed but its opening transaction didn't —
                     // don't leave an orphaned 0-balance debtor behind; undo the half-finished save.
                     if (isNew) runCatching { deleteDebtor(debtor.id) }
                     _state.update { it.copy(isSaving = false) }
-                    effectsChannel.send(AddEditDebtorEffect.Error(error.message ?: strings.saveError))
+                    effectsChannel.send(AddEditDebtorEffect.Error(strings.saveError))
                     return@launch
                 }
             }

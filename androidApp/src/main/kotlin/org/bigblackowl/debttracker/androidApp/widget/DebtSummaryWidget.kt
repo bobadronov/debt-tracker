@@ -10,6 +10,8 @@ import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceComposable
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.action.actionStartActivity
+import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
@@ -30,6 +32,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import kotlinx.coroutines.flow.first
+import org.bigblackowl.debttracker.androidApp.AppActivity
 import org.bigblackowl.debttracker.core.i18n.resolveStrings
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.domain.model.formatTotals
@@ -38,15 +41,9 @@ import org.bigblackowl.debttracker.domain.repository.CreditorRepository
 import org.bigblackowl.debttracker.domain.repository.DebtorRepository
 import org.koin.core.context.GlobalContext
 
-/**
- * Android Glance widget (спек §6, §8, Фаза 7): сумарні "Мені винні"/"Я винен".
- * Дані читаються напряму з Koin (GlobalContext), бо widget-процес не проходить
- * через звичайний Compose-навігаційний граф застосунку.
- *
- * Оформлення: cyberpunk neon-on-black. Glance не має border-модифікатора, тому
- * рамка симулюється вкладеним Box — зовнішній пофарбований у неон, з відступом
- * у 2dp просвічує тонким кільцем навколо темнішого внутрішнього контейнера.
- */
+// Оформлення: cyberpunk neon-on-black. Glance не має border-модифікатора, тому рамка
+// симулюється вкладеним Box — зовнішній пофарбований у неон, з відступом у 2dp просвічує
+// тонким кільцем навколо темнішого внутрішнього контейнера.
 private val CyberPanel = Color(0xFF0F0B1E)
 private val CyberCyan = Color(0xFF00F0FF)
 private val CyberMagenta = Color(0xFFFF2AD4)
@@ -54,6 +51,11 @@ private val CyberGreen = Color(0xFF39FF14)
 private val CyberPink = Color(0xFFFF2079)
 private val CyberDim = Color(0xFF7C7CA8)
 
+/**
+ * Android Glance widget (спек §6, §8, Фаза 7): сумарні "Мені винні"/"Я винен".
+ * Дані читаються напряму з Koin (GlobalContext), бо widget-процес не проходить
+ * через звичайний Compose-навігаційний граф застосунку.
+ */
 class DebtSummaryWidget : GlanceAppWidget() {
 
     @SuppressLint("RestrictedApi")
@@ -83,9 +85,10 @@ class DebtSummaryWidget : GlanceAppWidget() {
 }
 
 /**
- * Чиста, без сайд-ефектів composable-функція — дані приходять готовими з [DebtSummaryWidget.provideGlance],
- * бо suspend-виклики (Koin, Flow.first) не можна робити напряму всередині @Composable.
- * Значення параметрів за замовчуванням дають змогу рендерити @Preview в Android Studio.
+ * Чиста, без сайд-ефектів composable-функція — дані приходять готовими
+ * з [DebtSummaryWidget.provideGlance], бо suspend-виклики (Koin, Flow.first)
+ * не можна робити напряму всередині @Composable. Значення параметрів за
+ * замовчуванням дають змогу рендерити @Preview в Android Studio.
  */
 @SuppressLint("RestrictedApi")
 @Preview
@@ -96,12 +99,12 @@ fun WidgetUi(
     debtorsLine: String = "Мені винні: 1 250,00 ₴",
     creditorsLine: String = "Я винен: 430,00 ₴",
 ) {
-
     Box(
         modifier = GlanceModifier
             .fillMaxSize()
             .background(CyberPanel)
             .cornerRadius(16.dp)
+            .clickable(actionStartActivity(AppActivity::class.java))
             .padding(12.dp),
     ) {
         Column(modifier = GlanceModifier.fillMaxSize()) {
@@ -143,7 +146,7 @@ fun WidgetUi(
 
 /** Розбиває рядок виду "Мітка: значення" на дві частини, аби виділити суму неоновим кольором. */
 @SuppressLint("RestrictedApi")
-@androidx.compose.runtime.Composable
+@Composable
 private fun StatLine(line: String, valueColor: Color) {
     val separatorIndex = line.indexOf(':')
     if (separatorIndex == -1) {

@@ -72,8 +72,8 @@ class CreditorDetailViewModel(
                         syncStatus = SyncStatus.PENDING,
                     )
                 )
-            }.onFailure { error ->
-                effectsChannel.send(CreditorDetailEffect.Error(error.message ?: resolveStrings(appSettings.locale).saveError))
+            }.onFailure {
+                effectsChannel.send(CreditorDetailEffect.Error(resolveStrings(appSettings.locale).saveError))
             }
         }
     }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
@@ -32,15 +33,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
+import org.bigblackowl.debttracker.domain.validation.isValidEmail
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.BackButton
+import org.bigblackowl.debttracker.ui.components.ClipboardPasteHint
+import org.bigblackowl.debttracker.ui.components.rememberClipboardText
 import org.koin.compose.viewmodel.koinViewModel
 
 /** Account+Sync (спек §1.1) — email/пароль через supabase-kt Auth. */
@@ -55,6 +62,10 @@ fun AuthScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val strings = LocalStrings.current
     var passwordVisible by remember { mutableStateOf(false) }
+
+    val emailFocusRequester = remember { FocusRequester() }
+    val passwordFocusRequester = remember { FocusRequester() }
+    val clipboardText by rememberClipboardText()
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -85,32 +96,84 @@ fun AuthScreen(
                 verticalArrangement = Arrangement.spacedBy(Dimens.space12),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+
                 OutlinedTextField(
                     value = state.email,
-                    onValueChange = { viewModel.onIntent(AuthIntent.EmailChanged(it)) },
+                    onValueChange = {
+                        viewModel.onIntent(AuthIntent.EmailChanged(it))
+                    },
                     label = { Text(strings.authEmail) },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next,
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = {
+                            passwordFocusRequester.requestFocus()
+                        },
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(emailFocusRequester),
                 )
+                ClipboardPasteHint(
+                    clipboardText = clipboardText,
+                    fieldValue = state.email,
+                    isRelevant = ::isValidEmail,
+                    onPaste = { viewModel.onIntent(AuthIntent.EmailChanged(it)) },
+                )
+
                 OutlinedTextField(
                     value = state.password,
-                    onValueChange = { viewModel.onIntent(AuthIntent.PasswordChanged(it)) },
+                    onValueChange = {
+                        viewModel.onIntent(AuthIntent.PasswordChanged(it))
+                    },
                     label = { Text(strings.authPassword) },
                     singleLine = true,
-                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    visualTransformation = if (passwordVisible) {
+                        VisualTransformation.None
+                    } else {
+                        PasswordVisualTransformation()
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done,
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            if (!state.isLoading) {
+                                viewModel.onIntent(AuthIntent.Submit)
+                            }
+                        },
+                    ),
                     isError = state.error != null,
-                    supportingText = { state.error?.let { Text(it) } },
+                    supportingText = {
+                        state.error?.let { Text(it) }
+                    },
                     trailingIcon = {
-                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        IconButton(
+                            onClick = {
+                                passwordVisible = !passwordVisible
+                            },
+                        ) {
                             Icon(
-                                if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = if (passwordVisible) strings.hidePassword else strings.showPassword,
+                                imageVector = if (passwordVisible) {
+                                    Icons.Default.VisibilityOff
+                                } else {
+                                    Icons.Default.Visibility
+                                },
+                                contentDescription = if (passwordVisible) {
+                                    strings.hidePassword
+                                } else {
+                                    strings.showPassword
+                                },
                             )
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(passwordFocusRequester),
                 )
                 Spacer(Modifier.height(Dimens.space30))
                 Button(

@@ -68,7 +68,7 @@ class DebtorListViewModel(
             is DebtorListIntent.Delete -> viewModelScope.launch {
                 runCatching { deleteDebtor(intent.debtorId) }
                     .onSuccess { if (appSettings.soundEnabled) soundPlayer.play(SoundEffect.DELETE) }
-                    .onFailure { effectsChannel.send(DebtorListEffect.Error(it.message ?: resolveStrings(appSettings.locale).deleteError)) }
+                    .onFailure { effectsChannel.send(DebtorListEffect.Error(resolveStrings(appSettings.locale).deleteError)) }
             }
         }
     }

@@ -72,8 +72,8 @@ class DebtorDetailViewModel(
                         syncStatus = SyncStatus.PENDING,
                     )
                 )
-            }.onFailure { error ->
-                effectsChannel.send(DebtorDetailEffect.Error(error.message ?: resolveStrings(appSettings.locale).saveError))
+            }.onFailure {
+                effectsChannel.send(DebtorDetailEffect.Error(resolveStrings(appSettings.locale).saveError))
             }
         }
     }

@@ -24,6 +24,8 @@ import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.ui.screens.AuthGateScreen
 import org.bigblackowl.debttracker.ui.screens.HomeScreen
+import org.bigblackowl.debttracker.ui.screens.ProtectionOnboardingScreen
+import org.bigblackowl.debttracker.ui.screens.SplashDestination
 import org.bigblackowl.debttracker.ui.screens.SplashScreen
 import org.bigblackowl.debttracker.ui.screens.auth.AuthScreen
 import org.bigblackowl.debttracker.ui.screens.creditors.AddEditCreditorScreen
@@ -105,9 +107,18 @@ fun DebtTrackerNavGraph(
             onBack = { back() },
             entryProvider = entryProvider {
             entry<Screen.Splash> {
-                SplashScreen(onFinished = { skipAuthGate ->
-                    replaceStackWith(if (skipAuthGate) screenAfterUnlock() else Screen.AuthGate)
+                SplashScreen(onFinished = { destination ->
+                    replaceStackWith(
+                        when (destination) {
+                            SplashDestination.ONBOARDING -> Screen.Onboarding
+                            SplashDestination.AUTH_GATE -> Screen.AuthGate
+                            SplashDestination.UNLOCKED -> screenAfterUnlock()
+                        }
+                    )
                 })
+            }
+            entry<Screen.Onboarding> {
+                ProtectionOnboardingScreen(onDone = { replaceStackWith(screenAfterUnlock()) })
             }
             entry<Screen.AuthGate> {
                 AuthGateScreen(onUnlocked = { replaceStackWith(screenAfterUnlock()) })
