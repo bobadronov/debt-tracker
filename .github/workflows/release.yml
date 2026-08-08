@@ -5,13 +5,20 @@ name: Release
 #
 # Builds:
 #   - Android APK
+#   - Android App Bundle (.aab, for Google Play — not auto-submitted, see below)
 #   - Windows .exe
 #   - Linux .deb
 #   - Web build
 #
 # Then:
-#   - publishes APK/.exe/.deb as a GitHub Release
+#   - publishes APK/.aab/.exe/.deb as a GitHub Release
 #   - deploys the web build to GitHub Pages
+#
+# The .aab is attached to the GitHub Release for convenience only — actually
+# publishing it to Google Play still requires a human with a Play Console
+# account: download it from the release and upload it there by hand (or wire
+# up a separate `google-github-actions/upload-google-play` step later, which
+# needs its own service-account secret this repo doesn't have configured).
 
 on:
   push:
@@ -89,6 +96,52 @@ jobs:
         with:
           name: debt-tracker-apk
           path: androidApp/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+
+  # ============================================================
+  # Android App Bundle (.aab) — for Google Play Console upload
+  # ============================================================
+  android-aab:
+    runs-on: ubuntu-latest
+
+    env:
+      # Same optional signing config as android-apk — if unset, the build
+      # continues and produces an unsigned bundle (Play Console will reject
+      # an unsigned upload, but this still lets the workflow succeed).
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Decode signing keystore
+        if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}
+        shell: bash
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.keystore"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+
+      - name: Build release App Bundle
+        run: ./gradlew :androidApp:bundleRelease --stacktrace
+
+      - name: Upload App Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: debt-tracker-aab
+          path: androidApp/build/outputs/bundle/release/*.aab
           if-no-files-found: error
 
 
@@ -185,6 +238,10 @@ jobs:
       - name: Build web distribution
         run: ./gradlew :webApp:composeCompatibilityBrowserDistribution --stacktrace
 
+      - name: Add legal pages (privacy policy, for Play Store etc.)
+        shell: bash
+        run: cp legal/*.html webApp/build/dist/composeWebCompatibility/productionExecutable/
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -215,6 +272,7 @@ jobs:
   github-release:
     needs:
       - android-apk
+      - android-aab
       - windows-exe
       - linux-deb
 
@@ -243,5 +301,6 @@ jobs:
           generate_release_notes: true
           files: |
             artifacts/debt-tracker-apk/*.apk
+            artifacts/debt-tracker-aab/*.aab
             artifacts/debt-tracker-exe/*.exe
             artifacts/debt-tracker-deb/*.deb

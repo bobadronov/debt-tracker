@@ -109,6 +109,7 @@ kotlin {
             implementation(libs.koin.android)
             implementation(libs.androidx.biometric)
             implementation(libs.androidx.fragment)
+            implementation(libs.play.app.update.ktx)
         }
 
         jvmMain.dependencies {

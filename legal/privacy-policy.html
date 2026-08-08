@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DebtTracker — Privacy Policy</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 4rem;
+    line-height: 1.6;
+  }
+  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.15rem; margin-top: 2.25rem; }
+  .meta { opacity: 0.7; font-size: 0.9rem; margin-bottom: 2rem; }
+  code { font-size: 0.9em; }
+  ul { padding-left: 1.25rem; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+  th, td { text-align: left; padding: 0.4rem 0.6rem; border: 1px solid currentColor; opacity: 0.9; font-size: 0.92rem; }
+  th { opacity: 1; }
+</style>
+</head>
+<body>
+
+<h1>DebtTracker — Privacy Policy</h1>
+<p class="meta">Last updated: August 8, 2026</p>
+
+<p>
+  DebtTracker ("the app") is a personal debt-tracking app built by Bohdan
+  Dronov ("we", "us"). This policy explains what data the app handles, why,
+  and how to have it deleted. If anything here is unclear, contact
+  <a href="mailto:bobadronov@gmail.com">bobadronov@gmail.com</a>.
+</p>
+
+<h2>Two ways to use the app</h2>
+<p>
+  DebtTracker works in one of two modes, and it's your choice which one you're in:
+</p>
+<ul>
+  <li>
+    <strong>Local-only</strong> (the default): no account, no sign-in. Every
+    debtor, creditor, and transaction you enter is stored only in a local
+    database on your device. Nothing is sent anywhere. If you never sign in,
+    we never receive any of your data.
+  </li>
+  <li>
+    <strong>Account+Sync</strong> (opt-in): you create an account so your
+    data can sync across your own devices in real time. This is where the
+    data described below is collected.
+  </li>
+</ul>
+
+<h2>What we collect in Account+Sync mode</h2>
+<table>
+  <tr><th>Data</th><th>Why</th></tr>
+  <tr><td>Email address &amp; password</td><td>Account sign-in (handled by our backend provider, Supabase — we never see your password in plain text)</td></tr>
+  <tr><td>Display name, profile photo (optional)</td><td>Shown on your own account, and used to auto-fill your name/photo when another DebtTracker user who knows your email adds you as a contact</td></tr>
+  <tr><td>Names, phone numbers, emails of people <em>you</em> add as debtors/creditors</td><td>The core feature of the app — tracking who owes you and who you owe</td></tr>
+  <tr><td>Transaction records (amounts, dates, payment method, notes)</td><td>The core feature of the app</td></tr>
+  <tr><td>App preferences (theme, language, sound/haptics on/off)</td><td>Restoring your settings across devices</td></tr>
+</table>
+
+<p>
+  If a person you add as a debtor/creditor happens to have their own
+  DebtTracker account under the same email, the app can look up their public
+  display name and photo to help you fill in their contact card faster. That
+  lookup only ever returns a name and photo — never anyone's email, password,
+  or financial data — and it never exposes your data to them either.
+</p>
+
+<h2>What we do <em>not</em> do</h2>
+<ul>
+  <li>No advertising, and no ad-tracking SDKs.</li>
+  <li>No analytics or crash-reporting SDKs that phone home to a third party.</li>
+  <li>We do not sell or share your data with third parties for marketing.</li>
+  <li>
+    App-lock (fingerprint/Face ID/PIN) is handled entirely by your device's
+    own operating system. The app only ever receives a yes/no "unlocked"
+    result — it never sees, stores, or transmits any biometric data.
+  </li>
+</ul>
+
+<h2>Where data is stored</h2>
+<p>
+  Account+Sync data is stored with our backend provider,
+  <a href="https://supabase.com" target="_blank" rel="noopener">Supabase</a>,
+  on servers in the EU. Access to your data is restricted to your own signed-in
+  account by row-level security policies enforced by the database itself —
+  not just by the app.
+</p>
+
+<h2>Deleting your data</h2>
+<p>
+  In-app: <strong>Settings → Delete all data</strong> (with a double
+  confirmation) permanently deletes all of your debtors, creditors, and
+  transactions from our servers. Signing out at any time stops syncing;
+  uninstalling the app removes everything stored locally on that device.
+  To delete your account entirely, email
+  <a href="mailto:bobadronov@gmail.com">bobadronov@gmail.com</a>.
+</p>
+
+<h2>Children's privacy</h2>
+<p>
+  DebtTracker is not directed at children under 13, and we do not knowingly
+  collect data from them.
+</p>
+
+<h2>Changes to this policy</h2>
+<p>
+  If this policy changes, the "Last updated" date above will change too. We
+  won't reduce your rights over previously collected data without your
+  consent.
+</p>
+
+<h2>Contact</h2>
+<p>
+  <a href="mailto:bobadronov@gmail.com">bobadronov@gmail.com</a>
+</p>
+
+</body>
+</html>

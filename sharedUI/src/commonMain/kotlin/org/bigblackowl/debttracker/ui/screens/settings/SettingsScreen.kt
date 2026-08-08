@@ -31,11 +31,12 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -73,6 +74,9 @@ import org.bigblackowl.debttracker.core.platform.AppPlatform
 import org.bigblackowl.debttracker.core.platform.currentPlatform
 import org.bigblackowl.debttracker.core.security.rememberBiometricAuthenticator
 import org.bigblackowl.debttracker.core.settings.AppSettings
+import org.bigblackowl.debttracker.core.update.AppUpdateInfo
+import org.bigblackowl.debttracker.core.update.appUpdateSupported
+import org.bigblackowl.debttracker.core.update.rememberAppUpdateChecker
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.usecase.DeleteAllDataUseCase
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
@@ -131,13 +135,39 @@ fun SettingsScreen(onBack: () -> Unit, onExport: () -> Unit, onOpenAuth: () -> U
     // it's either a no-op or unsupported, so the toggle is hidden there.
     val showHapticRow = currentPlatform == AppPlatform.ANDROID || currentPlatform == AppPlatform.IOS
 
+    val updateChecker = rememberAppUpdateChecker()
+    var updateState by remember { mutableStateOf<UpdateCheckState>(UpdateCheckState.Idle) }
+
+    fun startUpdateCheck() {
+        scope.launch {
+            updateState = UpdateCheckState.Checking
+            updateState = updateChecker.checkForUpdate()
+                ?.let { UpdateCheckState.Available(it) }
+                ?: UpdateCheckState.UpToDate
+        }
+    }
+
+    fun startUpdateDownload(info: AppUpdateInfo) {
+        scope.launch {
+            updateState = UpdateCheckState.Downloading(info)
+            runCatching {
+                updateChecker.download(info) { progress -> updateState = UpdateCheckState.Downloading(info, progress) }
+            }.onSuccess { path ->
+                updateChecker.installAndExit(path)
+            }.onFailure {
+                updateState = UpdateCheckState.Failed(info)
+            }
+        }
+    }
+
     PlaceholderScreen(title = strings.settingsTitle, onBack = onBack) {
 
         Column(
-            modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Column(
-                modifier = Modifier.width(Dimens.contentMaxWidth).verticalScroll(rememberScrollState()),
+                modifier = Modifier.width(Dimens.contentMaxWidth),
                 verticalArrangement = Arrangement.spacedBy(Dimens.space24),
             ) {
                 // --- Account ---
@@ -342,6 +372,31 @@ fun SettingsScreen(onBack: () -> Unit, onExport: () -> Unit, onOpenAuth: () -> U
                         title = strings.settingsAboutAuthor,
                         subtitle = BuildConfig.APP_AUTHOR,
                     )
+                    if (appUpdateSupported) {
+                        SettingsRowDivider()
+                        val (rowTitle, rowSubtitle) = when (val s = updateState) {
+                            UpdateCheckState.Idle -> strings.settingsCheckForUpdates to null
+                            UpdateCheckState.Checking -> strings.settingsCheckForUpdates to strings.settingsCheckingForUpdates
+                            UpdateCheckState.UpToDate -> strings.settingsCheckForUpdates to strings.settingsUpToDate
+                            is UpdateCheckState.Available -> strings.updateDownloadInstall to strings.updateAvailableMessage(s.info.version)
+                            is UpdateCheckState.Downloading -> strings.updateDownloading to null
+                            is UpdateCheckState.Failed -> strings.updateRetry to strings.updateFailed
+                        }
+                        SettingsRow(
+                            icon = if (updateState is UpdateCheckState.Available) Icons.Filled.Download else Icons.Filled.Refresh,
+                            title = rowTitle,
+                            subtitle = rowSubtitle,
+                            onClick = when (val s = updateState) {
+                                UpdateCheckState.Checking, is UpdateCheckState.Downloading -> null
+                                is UpdateCheckState.Available -> ({ startUpdateDownload(s.info) })
+                                is UpdateCheckState.Failed -> ({ startUpdateDownload(s.info) })
+                                else -> ({ startUpdateCheck() })
+                            },
+                            trailing = if (updateState is UpdateCheckState.Checking || updateState is UpdateCheckState.Downloading) {
+                                { CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20)) }
+                            } else null,
+                        )
+                    }
                 }
             }
         }
@@ -399,6 +454,16 @@ fun SettingsScreen(onBack: () -> Unit, onExport: () -> Unit, onOpenAuth: () -> U
     }
 }
 
+/** Settings' own on-demand update check — independent of [org.bigblackowl.debttracker.ui.components.UpdateBanner]'s automatic on-launch check. */
+private sealed interface UpdateCheckState {
+    data object Idle : UpdateCheckState
+    data object Checking : UpdateCheckState
+    data object UpToDate : UpdateCheckState
+    data class Available(val info: AppUpdateInfo) : UpdateCheckState
+    data class Downloading(val info: AppUpdateInfo, val progress: Float? = null) : UpdateCheckState
+    data class Failed(val info: AppUpdateInfo) : UpdateCheckState
+}
+
 @Preview
 @Composable
 private fun SettingsScreenPreview() = DebtTrackerPreview {
@@ -437,7 +502,7 @@ private fun AccountAvatar(avatarUrl: String?, isUploading: Boolean, onEditClick:
                 )
             }
             if (isUploading) {
-                CircularProgressIndicator(modifier = Modifier.size(Dimens.space72))
+                CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space72))
             }
         }
         FilledIconButton(
@@ -539,8 +604,13 @@ private fun PinCodeField(
         }
         BasicTextField(
             value = value,
-            onValueChange = { new -> if (new.length <= length && new.all(Char::isDigit)) onValueChange(new) },
-            modifier = Modifier.matchParentSize().alpha(0f).onFocusChanged { isFocused = it.isFocused },
+            onValueChange = { new ->
+                if (new.length <= length && new.all(Char::isDigit)) onValueChange(
+                    new
+                )
+            },
+            modifier = Modifier.matchParentSize().alpha(0f)
+                .onFocusChanged { isFocused = it.isFocused },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
         )
@@ -565,7 +635,11 @@ private fun PinDot(char: Char?, highlighted: Boolean, visible: Boolean) {
             .size(Dimens.space40)
             .clip(CircleShape)
             .background(fillColor)
-            .border(width = if (highlighted) Dimens.space2 else Dimens.space1, color = borderColor, shape = CircleShape),
+            .border(
+                width = if (highlighted) Dimens.space2 else Dimens.space1,
+                color = borderColor,
+                shape = CircleShape
+            ),
         contentAlignment = Alignment.Center,
     ) {
         if (visible && filled) {
@@ -577,7 +651,7 @@ private fun PinDot(char: Char?, highlighted: Boolean, visible: Boolean) {
 @Preview
 @Composable
 private fun PinSetupDialogPreview() = DebtTrackerPreview {
-  Scaffold {
-    PinSetupDialog({}, {})
-  }
+    Scaffold {
+        PinSetupDialog({}, {})
+    }
 }

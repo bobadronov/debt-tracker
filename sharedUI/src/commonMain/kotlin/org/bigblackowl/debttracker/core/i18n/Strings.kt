@@ -172,6 +172,22 @@ data class Strings(
     val settingsAbout: String,
     val settingsAboutVersion: String,
     val settingsAboutAuthor: String,
+    val settingsCheckForUpdates: String,
+    val settingsCheckingForUpdates: String,
+    val settingsUpToDate: String,
+
+    // update (Desktop-only, see core/update/AppUpdateChecker)
+    val updateAvailableTitle: String,
+    val updateAvailableMessage: (version: String) -> String,
+    val updateDownloadInstall: String,
+    val updateLater: String,
+    val updateDownloading: String,
+    val updateFailed: String,
+    val updateRetry: String,
+
+    // update (Android-only, see core/update/InAppUpdateLauncher — Play's own flexible update flow)
+    val updateReadyToInstall: String,
+    val updateRestartNow: String,
 
     // stats
     val statsTitle: String,
@@ -341,6 +357,19 @@ val UkStrings = Strings(
     settingsAbout = "Про застосунок",
     settingsAboutVersion = "Версія",
     settingsAboutAuthor = "Автор",
+    settingsCheckForUpdates = "Перевірити оновлення",
+    settingsCheckingForUpdates = "Перевірка…",
+    settingsUpToDate = "Ви використовуєте останню версію",
+
+    updateAvailableTitle = "Доступне оновлення",
+    updateAvailableMessage = { version -> "Версія $version готова до завантаження." },
+    updateDownloadInstall = "Завантажити і встановити",
+    updateLater = "Пізніше",
+    updateDownloading = "Завантаження оновлення…",
+    updateFailed = "Не вдалося завантажити оновлення",
+    updateRetry = "Повторити",
+    updateReadyToInstall = "Оновлення завантажено — перезапустіть, щоб встановити.",
+    updateRestartNow = "Перезапустити",
 
     statsTitle = "Статистика",
     statsDebtors = "Мені винні",
@@ -508,6 +537,19 @@ val EnStrings = Strings(
     settingsAbout = "About",
     settingsAboutVersion = "Version",
     settingsAboutAuthor = "Author",
+    settingsCheckForUpdates = "Check for updates",
+    settingsCheckingForUpdates = "Checking…",
+    settingsUpToDate = "You're up to date",
+
+    updateAvailableTitle = "Update available",
+    updateAvailableMessage = { version -> "Version $version is ready to download." },
+    updateDownloadInstall = "Download & Install",
+    updateLater = "Later",
+    updateDownloading = "Downloading update…",
+    updateFailed = "Failed to download the update",
+    updateRetry = "Retry",
+    updateReadyToInstall = "Update downloaded — restart to finish installing.",
+    updateRestartNow = "Restart now",
 
     statsTitle = "Stats",
     statsDebtors = "Owed to me",
