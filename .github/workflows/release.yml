@@ -171,14 +171,19 @@ jobs:
   # prerequisites in the comment block at the top of this file and
   # play-store-listing.md §5.
   #
-  # Note: the `secrets` context can't be used in a job-level `if:` — GitHub
-  # Actions only exposes it to step-level `if:`/`env:`/`with:`, so the
-  # job runs unconditionally and only the upload step gates on the secret.
+  # Note: the `secrets` context isn't recognized inside ANY `if:` expression
+  # (job- or step-level) — GitHub Actions rejects the whole workflow file if
+  # it's referenced there. The documented workaround is to copy the secret
+  # into an `env:` var first and gate on `env.*` instead, since `env` (unlike
+  # `secrets`) is a valid context inside `if:`.
   # ============================================================
   play-store:
     needs: android-aab
 
     runs-on: ubuntu-latest
+
+    env:
+      GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
 
     steps:
       - name: Download App Bundle
@@ -188,10 +193,10 @@ jobs:
           path: aab
 
       - name: Upload to Google Play
-        if: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != '' }}
+        if: ${{ env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != '' }}
         uses: r0adkll/upload-google-play@v1
         with:
-          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          serviceAccountJsonPlainText: ${{ env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: org.bigblackowl.debttracker.androidApp
           releaseFiles: aab/*.aab
           track: ${{ inputs.play_track || 'internal' }}
