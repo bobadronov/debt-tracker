@@ -236,7 +236,15 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build web distribution
-        run: ./gradlew :webApp:composeCompatibilityBrowserDistribution --stacktrace
+        # Kotlin/JS's first webpack invocation in a fresh checkout can fail with
+        # "Cannot find node module ... webpack/bin/webpack.js" — a known Kotlin/JS
+        # Gradle plugin race where npm modules are still being materialized. A
+        # second invocation in the same environment (modules now on disk) succeeds.
+        # See https://discuss.kotlinlang.org/t/webpack-issues-on-a-gradle-kotlin-js-project/16470
+        shell: bash
+        run: |
+          ./gradlew :webApp:composeCompatibilityBrowserDistribution --stacktrace ||
+          ./gradlew :webApp:composeCompatibilityBrowserDistribution --stacktrace
 
       - name: Add legal pages (privacy policy, for Play Store etc.)
         shell: bash
