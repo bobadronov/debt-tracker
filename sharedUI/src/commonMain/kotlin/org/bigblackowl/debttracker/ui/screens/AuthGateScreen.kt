@@ -114,8 +114,26 @@ fun AuthGateScreen(onUnlocked: () -> Unit) {
     }
 }
 
+@Preview
+@Composable
+private fun AuthGateScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+    AuthGateScreen(onUnlocked = {})
+}
+
+@Preview
+@Composable
+private fun AuthGateScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
+    AuthGateScreen(onUnlocked = {})
+}
+
 @Preview(device = DESKTOP)
 @Composable
-private fun AuthGateScreenPreview() = DebtTrackerPreview {
+private fun AuthGateScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    AuthGateScreen(onUnlocked = {})
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun AuthGateScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     AuthGateScreen(onUnlocked = {})
 }

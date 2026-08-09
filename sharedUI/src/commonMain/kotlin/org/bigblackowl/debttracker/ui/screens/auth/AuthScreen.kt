@@ -196,12 +196,24 @@ fun AuthScreen(
 
 @Preview
 @Composable
-private fun AuthScreenPreview() = DebtTrackerPreview {
+private fun AuthScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+    AuthScreen(onBack = {}, onAuthenticated = {})
+}
+
+@Preview
+@Composable
+private fun AuthScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
     AuthScreen(onBack = {}, onAuthenticated = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun AuthScreenPreview2() = DebtTrackerPreview {
+private fun AuthScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    AuthScreen(onBack = {}, onAuthenticated = {})
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun AuthScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     AuthScreen(onBack = {}, onAuthenticated = {})
 }

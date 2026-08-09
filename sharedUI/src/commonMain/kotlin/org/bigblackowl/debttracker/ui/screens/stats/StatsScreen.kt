@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
@@ -99,7 +100,25 @@ fun StatsScreen(onBack: () -> Unit, viewModel: StatsViewModel = koinViewModel())
 
 @Preview
 @Composable
-private fun StatsScreenPreview() = DebtTrackerPreview {
+private fun StatsScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+    StatsScreen(onBack = {})
+}
+
+@Preview
+@Composable
+private fun StatsScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
+    StatsScreen(onBack = {})
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun StatsScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    StatsScreen(onBack = {})
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun StatsScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     StatsScreen(onBack = {})
 }
 

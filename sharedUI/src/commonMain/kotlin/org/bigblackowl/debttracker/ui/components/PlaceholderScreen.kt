@@ -14,6 +14,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
@@ -60,6 +61,24 @@ fun PlaceholderScreen(
 
 @Preview
 @Composable
-private fun PlaceholderScreenPreview() = DebtTrackerPreview {
+private fun PlaceholderScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+    PlaceholderScreen(title = "DebtTracker")
+}
+
+@Preview
+@Composable
+private fun PlaceholderScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
+    PlaceholderScreen(title = "DebtTracker")
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun PlaceholderScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    PlaceholderScreen(title = "DebtTracker")
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun PlaceholderScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     PlaceholderScreen(title = "DebtTracker")
 }

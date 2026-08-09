@@ -114,8 +114,26 @@ fun ProtectionOnboardingScreen(onDone: () -> Unit) {
     }
 }
 
+@Preview
+@Composable
+private fun ProtectionOnboardingScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+    ProtectionOnboardingScreen(onDone = {})
+}
+
+@Preview
+@Composable
+private fun ProtectionOnboardingScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
+    ProtectionOnboardingScreen(onDone = {})
+}
+
 @Preview(device = DESKTOP)
 @Composable
-private fun ProtectionOnboardingScreenPreview() = DebtTrackerPreview {
+private fun ProtectionOnboardingScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    ProtectionOnboardingScreen(onDone = {})
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun ProtectionOnboardingScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     ProtectionOnboardingScreen(onDone = {})
 }

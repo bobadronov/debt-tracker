@@ -39,12 +39,24 @@ fun SplashScreen(onFinished: (SplashDestination) -> Unit) {
 
 @Preview
 @Composable
-private fun SplashScreenPreview() = DebtTrackerPreview {
+private fun SplashScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+    SplashScreen(onFinished = {})
+}
+
+@Preview
+@Composable
+private fun SplashScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
     SplashScreen(onFinished = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun SplashScreenPreview2() = DebtTrackerPreview {
+private fun SplashScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    SplashScreen(onFinished = {})
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun SplashScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     SplashScreen(onFinished = {})
 }

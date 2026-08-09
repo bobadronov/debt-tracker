@@ -152,7 +152,7 @@ data class Strings(
     // settings
     val settingsTitle: String,
     val settingsAccount: String,
-    val settingsAccountSynced: String,
+    val settingsAccountSynced: (userName: String) -> String,
     val settingsSignOut: String,
     val settingsLocalOnly: String,
     val settingsSignIn: String,
@@ -352,7 +352,7 @@ val UkStrings = Strings(
 
     settingsTitle = "Налаштування",
     settingsAccount = "Обліковий запис",
-    settingsAccountSynced = "Синхронізація увімкнена",
+    settingsAccountSynced = { userName -> "$userName\nСинхронізація увімкнена" },
     settingsSignOut = "Вийти",
     settingsLocalOnly = "Локальний акаунт",
     settingsSignIn = "Увійти / зареєструватись",
@@ -546,7 +546,7 @@ val EnStrings = Strings(
 
     settingsTitle = "Settings",
     settingsAccount = "Account",
-    settingsAccountSynced = "Sync enabled",
+    settingsAccountSynced = { userName -> "$userName\nSync enabled"},
     settingsSignOut = "Sign out",
     settingsLocalOnly = "Local account",
     settingsSignIn = "Sign in / sign up",

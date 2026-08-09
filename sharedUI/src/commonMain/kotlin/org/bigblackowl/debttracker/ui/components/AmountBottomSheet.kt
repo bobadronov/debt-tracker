@@ -24,6 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Devices.DESKTOP
+import androidx.compose.ui.tooling.preview.Preview
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.settings.AppSettings
@@ -32,6 +34,7 @@ import org.bigblackowl.debttracker.core.sound.SoundPlayer
 import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.domain.validation.sanitizeAmountInput
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.koin.compose.koinInject
 
@@ -132,4 +135,48 @@ fun AmountBottomSheet(
             ) { Text(strings.confirm) }
         }
     }
+}
+
+@Preview
+@Composable
+private fun AmountBottomSheetLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+    AmountBottomSheet(
+        title = "Repay debt",
+        currency = Currency.UAH,
+        onDismiss = {},
+        onConfirm = { _, _, _ -> },
+    )
+}
+
+@Preview
+@Composable
+private fun AmountBottomSheetDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
+    AmountBottomSheet(
+        title = "Repay debt",
+        currency = Currency.UAH,
+        onDismiss = {},
+        onConfirm = { _, _, _ -> },
+    )
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun AmountBottomSheetLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    AmountBottomSheet(
+        title = "Repay debt",
+        currency = Currency.UAH,
+        onDismiss = {},
+        onConfirm = { _, _, _ -> },
+    )
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun AmountBottomSheetDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
+    AmountBottomSheet(
+        title = "Repay debt",
+        currency = Currency.UAH,
+        onDismiss = {},
+        onConfirm = { _, _, _ -> },
+    )
 }

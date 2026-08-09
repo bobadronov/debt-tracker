@@ -163,14 +163,26 @@ fun CreditorDetailScreen(
 
 @Preview
 @Composable
-private fun CreditorDetailScreenPreview() = DebtTrackerPreview {
+private fun CreditorDetailScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+    CreditorDetailScreen(creditorId = PreviewIds.CREDITOR, onBack = {}, onExport = {})
+}
+
+@Preview
+@Composable
+private fun CreditorDetailScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
     CreditorDetailScreen(creditorId = PreviewIds.CREDITOR, onBack = {}, onExport = {})
 }
 
 @Preview(device = Devices.DESKTOP)
 @Composable
-private fun CreditorDetailScreenPreview2() = DebtTrackerPreview {
-    CreditorDetailScreen(creditorId = PreviewIds.DEBTOR, onBack = {}, onExport = {})
+private fun CreditorDetailScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    CreditorDetailScreen(creditorId = PreviewIds.CREDITOR, onBack = {}, onExport = {})
+}
+
+@Preview(device = Devices.DESKTOP)
+@Composable
+private fun CreditorDetailScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
+    CreditorDetailScreen(creditorId = PreviewIds.CREDITOR, onBack = {}, onExport = {})
 }
 
 @Composable

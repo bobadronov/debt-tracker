@@ -229,13 +229,25 @@ fun ExportScreen(onBack: () -> Unit) {
 
 @Preview
 @Composable
-private fun ExportScreenPreview() = DebtTrackerPreview {
+private fun ExportScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+    ExportScreen(onBack = {})
+}
+
+@Preview
+@Composable
+private fun ExportScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
     ExportScreen(onBack = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun ExportScreenPreview2() = DebtTrackerPreview {
+private fun ExportScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    ExportScreen(onBack = {})
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun ExportScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     ExportScreen(onBack = {})
 }
 

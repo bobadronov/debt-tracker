@@ -28,11 +28,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Devices.DESKTOP
+import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.update.AppUpdateInfo
 import org.bigblackowl.debttracker.core.update.appUpdateSupported
 import org.bigblackowl.debttracker.core.update.rememberAppUpdateChecker
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
 
@@ -66,78 +69,123 @@ fun UpdateBanner() {
 
     val visibleState = state
     AnimatedVisibility(visible = visibleState != UpdateBannerState.Hidden && !dismissed) {
-        Box(modifier = Modifier.fillMaxWidth().padding(Dimens.space16), contentAlignment = Alignment.BottomCenter) {
-            Card(
-                modifier = Modifier.widthIn(max = Dimens.contentMaxWidth),
-                elevation = CardDefaults.cardElevation(defaultElevation = Dimens.space8),
-            ) {
-                Column(modifier = Modifier.padding(Dimens.space16)) {
-                    when (val s = visibleState) {
-                        is UpdateBannerState.Hidden -> Unit
+        UpdateBannerCard(
+            state = visibleState,
+            onDismiss = { dismissed = true },
+            onDownload = { info ->
+                scope.launch {
+                    state = UpdateBannerState.Downloading(info, null)
+                    runCatching {
+                        updateChecker.download(info) { progress ->
+                            state = UpdateBannerState.Downloading(info, progress)
+                        }
+                    }.onSuccess { path ->
+                        updateChecker.installAndExit(path)
+                    }.onFailure {
+                        state = UpdateBannerState.Failed(info)
+                    }
+                }
+            },
+            onRetry = { info -> state = UpdateBannerState.Available(info) },
+        )
+    }
+}
 
-                        is UpdateBannerState.Available -> {
-                            Text(strings.updateAvailableTitle, style = MaterialTheme.typography.titleMedium)
-                            Spacer(Modifier.height(Dimens.space4))
-                            Text(
-                                strings.updateAvailableMessage(s.info.version),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+/** The card's visuals, pulled out of [UpdateBanner] so @Preview can render each [UpdateBannerState] without a real [rememberAppUpdateChecker]. */
+@Composable
+private fun UpdateBannerCard(
+    state: UpdateBannerState,
+    onDismiss: () -> Unit,
+    onDownload: (AppUpdateInfo) -> Unit,
+    onRetry: (AppUpdateInfo) -> Unit,
+) {
+    val strings = LocalStrings.current
+    Box(modifier = Modifier.fillMaxWidth().padding(Dimens.space16), contentAlignment = Alignment.BottomCenter) {
+        Card(
+            modifier = Modifier.widthIn(max = Dimens.contentMaxWidth),
+            elevation = CardDefaults.cardElevation(defaultElevation = Dimens.space8),
+        ) {
+            Column(modifier = Modifier.padding(Dimens.space16)) {
+                when (state) {
+                    is UpdateBannerState.Hidden -> Unit
+
+                    is UpdateBannerState.Available -> {
+                        Text(strings.updateAvailableTitle, style = MaterialTheme.typography.titleMedium)
+                        Spacer(Modifier.height(Dimens.space4))
+                        Text(
+                            strings.updateAvailableMessage(state.info.version),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(Modifier.height(Dimens.space8))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End,
+                        ) {
+                            TextButton(onClick = onDismiss) { Text(strings.updateLater) }
+                            TextButton(onClick = { onDownload(state.info) }) { Text(strings.updateDownloadInstall) }
+                        }
+                    }
+
+                    is UpdateBannerState.Downloading -> {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
+                            Spacer(Modifier.width(Dimens.space12))
+                            Text(strings.updateDownloading, style = MaterialTheme.typography.bodyMedium)
+                        }
+                        if (state.progress != null) {
                             Spacer(Modifier.height(Dimens.space8))
-                            Row(
+                            LinearWavyProgressIndicator(
+                                progress = { state.progress },
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End,
-                            ) {
-                                TextButton(onClick = { dismissed = true }) { Text(strings.updateLater) }
-                                TextButton(onClick = {
-                                    scope.launch {
-                                        state = UpdateBannerState.Downloading(s.info, null)
-                                        runCatching {
-                                            updateChecker.download(s.info) { progress ->
-                                                state = UpdateBannerState.Downloading(s.info, progress)
-                                            }
-                                        }.onSuccess { path ->
-                                            updateChecker.installAndExit(path)
-                                        }.onFailure {
-                                            state = UpdateBannerState.Failed(s.info)
-                                        }
-                                    }
-                                }) { Text(strings.updateDownloadInstall) }
-                            }
-                        }
-
-                        is UpdateBannerState.Downloading -> {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
-                                Spacer(Modifier.width(Dimens.space12))
-                                Text(strings.updateDownloading, style = MaterialTheme.typography.bodyMedium)
-                            }
-                            if (s.progress != null) {
-                                Spacer(Modifier.height(Dimens.space8))
-                                LinearWavyProgressIndicator(
-                                    progress = { s.progress },
-                                    modifier = Modifier.fillMaxWidth(),
-                                )
-                            }
-                        }
-
-                        is UpdateBannerState.Failed -> {
-                            Text(
-                                strings.updateFailed,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.debtAccentColors.debt,
                             )
-                            Spacer(Modifier.height(Dimens.space8))
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                                TextButton(onClick = { dismissed = true }) { Text(strings.updateLater) }
-                                TextButton(onClick = { state = UpdateBannerState.Available(s.info) }) {
-                                    Text(strings.updateRetry)
-                                }
-                            }
+                        }
+                    }
+
+                    is UpdateBannerState.Failed -> {
+                        Text(
+                            strings.updateFailed,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.debtAccentColors.debt,
+                        )
+                        Spacer(Modifier.height(Dimens.space8))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            TextButton(onClick = onDismiss) { Text(strings.updateLater) }
+                            TextButton(onClick = { onRetry(state.info) }) { Text(strings.updateRetry) }
                         }
                     }
                 }
             }
         }
     }
+}
+
+private val previewUpdateInfo = AppUpdateInfo(
+    version = "1.2.0",
+    downloadUrl = "https://example.com/debt-tracker-1.2.0.msi",
+    releaseUrl = "https://example.com/releases/1.2.0",
+)
+
+@Preview
+@Composable
+private fun UpdateBannerLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+    UpdateBannerCard(UpdateBannerState.Available(previewUpdateInfo), onDismiss = {}, onDownload = {}, onRetry = {})
+}
+
+@Preview
+@Composable
+private fun UpdateBannerDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
+    UpdateBannerCard(UpdateBannerState.Available(previewUpdateInfo), onDismiss = {}, onDownload = {}, onRetry = {})
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun UpdateBannerLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    UpdateBannerCard(UpdateBannerState.Available(previewUpdateInfo), onDismiss = {}, onDownload = {}, onRetry = {})
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun UpdateBannerDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
+    UpdateBannerCard(UpdateBannerState.Available(previewUpdateInfo), onDismiss = {}, onDownload = {}, onRetry = {})
 }

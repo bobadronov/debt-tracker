@@ -1,7 +1,9 @@
 package org.bigblackowl.debttracker.ui.screens.settings
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -76,15 +78,6 @@ fun EditAccountScreen(
                 verticalArrangement = Arrangement.spacedBy(Dimens.space12),
             ) {
                 OutlinedTextField(
-                    value = state.email,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text(strings.email) },
-                    supportingText = { Text(strings.editAccountEmailReadOnly) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
                     value = state.fullName,
                     onValueChange = { viewModel.onIntent(EditAccountIntent.FullNameChanged(it)) },
                     label = { Text(strings.fullName) },
@@ -93,16 +86,33 @@ fun EditAccountScreen(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
+
                 ClipboardPasteHint(
                     clipboardText = clipboardText,
                     fieldValue = state.fullName,
                     isRelevant = ::isValidFullName,
                     onPaste = { viewModel.onIntent(EditAccountIntent.FullNameChanged(it)) },
                 )
+
+                OutlinedTextField(
+                    value = state.email,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(strings.email) },
+                    supportingText = { Text(strings.editAccountEmailReadOnly) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+
                 OutlinedTextField(
                     value = state.phone,
                     onValueChange = {
-                        viewModel.onIntent(EditAccountIntent.PhoneChanged(it.filter(Char::isDigit).take(10)))
+                        viewModel.onIntent(
+                            EditAccountIntent.PhoneChanged(
+                                it.filter(Char::isDigit).take(10)
+                            )
+                        )
                     },
                     label = { Text(strings.phone) },
                     singleLine = true,
@@ -115,19 +125,25 @@ fun EditAccountScreen(
                     fieldValue = state.phone,
                     isRelevant = { it.filter(Char::isDigit).length >= 9 },
                     onPaste = {
-                        viewModel.onIntent(EditAccountIntent.PhoneChanged(it.filter(Char::isDigit).take(10)))
+                        viewModel.onIntent(
+                            EditAccountIntent.PhoneChanged(
+                                it.filter(Char::isDigit).take(10)
+                            )
+                        )
                     },
                 )
-
+                Spacer(Modifier.weight(1f))
                 Button(
                     onClick = { viewModel.onIntent(EditAccountIntent.Save) },
                     enabled = !state.isSaving,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    if (state.isSaving) {
-                        CircularWavyProgressIndicator(modifier = Modifier.padding(end = Dimens.space8))
-                    } else {
-                        Text(strings.save)
+                    Crossfade(state.isSaving) {
+                        if (state.isSaving) {
+                            CircularWavyProgressIndicator(modifier = Modifier.padding(end = Dimens.space8))
+                        } else {
+                            Text(strings.save)
+                        }
                     }
                 }
             }
@@ -137,12 +153,24 @@ fun EditAccountScreen(
 
 @Preview
 @Composable
-private fun EditAccountScreenPreview() = DebtTrackerPreview {
+private fun EditAccountScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+    EditAccountScreen(onBack = {})
+}
+
+@Preview
+@Composable
+private fun EditAccountScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
     EditAccountScreen(onBack = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun EditAccountScreenPreview2() = DebtTrackerPreview {
+private fun EditAccountScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    EditAccountScreen(onBack = {})
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun EditAccountScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     EditAccountScreen(onBack = {})
 }

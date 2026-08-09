@@ -315,11 +315,24 @@ fun AddEditDebtorScreen(
 
 @Preview
 @Composable
-private fun AddEditDebtorScreenPreview() = DebtTrackerPreview {
+private fun AddEditDebtorScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
     AddEditDebtorScreen(debtorId = null, onDone = {})
 }
+
+@Preview
+@Composable
+private fun AddEditDebtorScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
+    AddEditDebtorScreen(debtorId = null, onDone = {})
+}
+
 @Preview(device = DESKTOP)
 @Composable
-private fun AddEditDebtorScreenPreview1() = DebtTrackerPreview {
+private fun AddEditDebtorScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    AddEditDebtorScreen(debtorId = null, onDone = {})
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun AddEditDebtorScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     AddEditDebtorScreen(debtorId = null, onDone = {})
 }

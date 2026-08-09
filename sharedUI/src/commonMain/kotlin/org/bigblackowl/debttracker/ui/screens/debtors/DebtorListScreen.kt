@@ -211,13 +211,25 @@ fun DebtorListScreen(
 
 @Preview
 @Composable
-private fun DebtorListScreenPreview() = DebtTrackerPreview {
+private fun DebtorListScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+    DebtorListScreen(onAddDebtor = {}, onOpenDebtor = {})
+}
+
+@Preview
+@Composable
+private fun DebtorListScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
     DebtorListScreen(onAddDebtor = {}, onOpenDebtor = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun DebtorListScreenPreview2() = DebtTrackerPreview {
+private fun DebtorListScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    DebtorListScreen(onAddDebtor = {}, onOpenDebtor = {})
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun DebtorListScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     DebtorListScreen(onAddDebtor = {}, onOpenDebtor = {})
 }
 

@@ -1,5 +1,11 @@
 package org.bigblackowl.debttracker.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -18,6 +24,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.NavDisplay
 import org.bigblackowl.debttracker.core.di.requiresRemoteAuthGate
 import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
@@ -34,9 +41,24 @@ import org.bigblackowl.debttracker.ui.screens.debtors.AddEditDebtorScreen
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorDetailScreen
 import org.bigblackowl.debttracker.ui.screens.export.ExportScreen
 import org.bigblackowl.debttracker.ui.screens.settings.EditAccountScreen
+import org.bigblackowl.debttracker.ui.screens.settings.LanguageScreen
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsScreen
 import org.bigblackowl.debttracker.ui.screens.stats.StatsScreen
 import org.koin.compose.koinInject
+
+private const val NAV_TRANSITION_DURATION_MILLIS = 300
+
+/** iOS already gets a native-feeling slide from Navigation 3's platform default; Desktop/Web get
+ * none at all out of the box. Setting this explicitly gives every platform the same slide+fade
+ * for every screen change instead of an inconsistent (or missing) default. */
+private fun <T : Any> navTransitionSpec(): AnimatedContentTransitionScope<Scene<T>>.() -> ContentTransform = {
+    (slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(NAV_TRANSITION_DURATION_MILLIS)) + fadeIn(tween(NAV_TRANSITION_DURATION_MILLIS))) togetherWith
+        (slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(NAV_TRANSITION_DURATION_MILLIS)) + fadeOut(tween(NAV_TRANSITION_DURATION_MILLIS)))
+}
+private fun <T : Any> navPopTransitionSpec(): AnimatedContentTransitionScope<Scene<T>>.() -> ContentTransform = {
+    (slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(NAV_TRANSITION_DURATION_MILLIS)) + fadeIn(tween(NAV_TRANSITION_DURATION_MILLIS))) togetherWith
+        (slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(NAV_TRANSITION_DURATION_MILLIS)) + fadeOut(tween(NAV_TRANSITION_DURATION_MILLIS)))
+}
 
 /**
  * Навігаційний граф з усіма екранами зі спека §6 (Navigation 3). Desktop
@@ -105,6 +127,8 @@ fun DebtTrackerNavGraph(
         NavDisplay(
             backStack = backStack,
             onBack = { back() },
+            transitionSpec = navTransitionSpec(),
+            popTransitionSpec = navPopTransitionSpec(),
             entryProvider = entryProvider {
             entry<Screen.Splash> {
                 SplashScreen(onFinished = { destination ->
@@ -162,7 +186,11 @@ fun DebtTrackerNavGraph(
                     onExport = { navigate(Screen.Export) },
                     onOpenAuth = { navigate(Screen.Auth()) },
                     onEditAccount = { navigate(Screen.EditAccount) },
+                    onOpenLanguage = { navigate(Screen.Language) },
                 )
+            }
+            entry<Screen.Language> {
+                LanguageScreen(onBack = { back() })
             }
             entry<Screen.EditAccount> {
                 EditAccountScreen(onBack = { back() })

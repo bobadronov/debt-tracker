@@ -15,15 +15,19 @@ import org.koin.compose.KoinApplicationPreview
  * викликів) замість глобального Koin-контексту застосунку, і власний
  * [ViewModelStoreOwner], бо Preview-рендерер не завжди надає його через
  * [LocalViewModelStoreOwner] (потрібен для koinViewModel()).
+ *
+ * @param darkTheme forces [AppSettings.theme] to "dark"/"light" so Light/Dark @Preview variants
+ *   render deterministically instead of following the IDE's own dark-mode setting. Null keeps the
+ *   default ("system").
  */
 @Composable
-fun DebtTrackerPreview(content: @Composable () -> Unit) {
+fun DebtTrackerPreview(darkTheme: Boolean? = null, content: @Composable () -> Unit) {
     val viewModelStoreOwner = remember {
         object : ViewModelStoreOwner {
             override val viewModelStore = ViewModelStore()
         }
     }
-    KoinApplicationPreview(application = { modules(previewModule()) }) {
+    KoinApplicationPreview(application = { modules(previewModule(darkTheme)) }) {
         CompositionLocalProvider(LocalViewModelStoreOwner provides viewModelStoreOwner) {
             AppTheme(onThemeChanged = {}, content = content)
         }

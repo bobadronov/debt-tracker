@@ -27,7 +27,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Devices.DESKTOP
+import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 
 /**
@@ -104,4 +107,48 @@ fun ClipboardPasteHint(
             }
         }
     }
+}
+
+@Preview
+@Composable
+private fun ClipboardPasteHintLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+    ClipboardPasteHint(
+        clipboardText = "1234.56",
+        fieldValue = "",
+        isRelevant = { true },
+        onPaste = {},
+    )
+}
+
+@Preview
+@Composable
+private fun ClipboardPasteHintDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
+    ClipboardPasteHint(
+        clipboardText = "1234.56",
+        fieldValue = "",
+        isRelevant = { true },
+        onPaste = {},
+    )
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun ClipboardPasteHintLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    ClipboardPasteHint(
+        clipboardText = "1234.56",
+        fieldValue = "",
+        isRelevant = { true },
+        onPaste = {},
+    )
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun ClipboardPasteHintDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
+    ClipboardPasteHint(
+        clipboardText = "1234.56",
+        fieldValue = "",
+        isRelevant = { true },
+        onPaste = {},
+    )
 }

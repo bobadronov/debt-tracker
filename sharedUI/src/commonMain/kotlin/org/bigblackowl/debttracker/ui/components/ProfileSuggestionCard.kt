@@ -25,9 +25,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.tooling.preview.Devices.DESKTOP
+import androidx.compose.ui.tooling.preview.Preview
 import coil3.compose.AsyncImage
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.ProfileSuggestion
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 
 /**
@@ -90,4 +93,44 @@ fun ProfileSuggestionCard(
             }
         }
     }
+}
+
+@Preview
+@Composable
+private fun ProfileSuggestionCardLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+    ProfileSuggestionCard(
+        suggestion = ProfileSuggestion(displayName = "Олена Ковальчук", avatarUrl = null),
+        onUse = {},
+        onDismiss = {},
+    )
+}
+
+@Preview
+@Composable
+private fun ProfileSuggestionCardDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
+    ProfileSuggestionCard(
+        suggestion = ProfileSuggestion(displayName = "Олена Ковальчук", avatarUrl = null),
+        onUse = {},
+        onDismiss = {},
+    )
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun ProfileSuggestionCardLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    ProfileSuggestionCard(
+        suggestion = ProfileSuggestion(displayName = "Олена Ковальчук", avatarUrl = null),
+        onUse = {},
+        onDismiss = {},
+    )
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun ProfileSuggestionCardDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
+    ProfileSuggestionCard(
+        suggestion = ProfileSuggestion(displayName = "Олена Ковальчук", avatarUrl = null),
+        onUse = {},
+        onDismiss = {},
+    )
 }

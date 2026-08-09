@@ -37,6 +37,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
@@ -175,7 +176,31 @@ private fun PinDot(char: Char?, highlighted: Boolean, visible: Boolean) {
 
 @Preview
 @Composable
-private fun PinSetupDialogPreview() = DebtTrackerPreview {
+private fun PinSetupDialogLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+    Scaffold {
+        PinSetupDialog({}, {})
+    }
+}
+
+@Preview
+@Composable
+private fun PinSetupDialogDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
+    Scaffold {
+        PinSetupDialog({}, {})
+    }
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun PinSetupDialogLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    Scaffold {
+        PinSetupDialog({}, {})
+    }
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun PinSetupDialogDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     Scaffold {
         PinSetupDialog({}, {})
     }

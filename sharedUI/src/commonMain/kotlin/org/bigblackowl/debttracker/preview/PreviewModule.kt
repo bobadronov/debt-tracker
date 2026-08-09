@@ -42,8 +42,12 @@ import org.koin.dsl.module
  * ViewModel біндинги, але репозиторії/AuthRepository/AppSettings — фейкові (in-memory,
  * без Room/Supabase), щоб превʼю рендерились ізольовано й миттєво.
  */
-fun previewModule(): Module = module {
-    single { AppSettings(InMemorySettings()) }
+fun previewModule(darkTheme: Boolean? = null): Module = module {
+    single {
+        AppSettings(InMemorySettings()).apply {
+            if (darkTheme != null) theme = if (darkTheme) "dark" else "light"
+        }
+    }
     single<SoundPlayer> { NoOpSoundPlayer() }
     single { SearchFocusRequests() }
     single<DebtorRepository> { FakeDebtorRepository() }

@@ -1,5 +1,10 @@
 package org.bigblackowl.debttracker.ui.screens.settings
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,12 +25,16 @@ import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.BrightnessAuto
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
@@ -38,10 +47,6 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -94,6 +99,7 @@ fun SettingsScreen(
     onExport: () -> Unit,
     onOpenAuth: () -> Unit,
     onEditAccount: () -> Unit,
+    onOpenLanguage: () -> Unit,
 ) {
     val settings = koinInject<AppSettings>()
     val deleteAllData = koinInject<DeleteAllDataUseCase>()
@@ -155,7 +161,9 @@ fun SettingsScreen(
         scope.launch {
             updateState = UpdateCheckState.Downloading(info)
             runCatching {
-                updateChecker.download(info) { progress -> updateState = UpdateCheckState.Downloading(info, progress) }
+                // Progress isn't rendered here (the trailing spinner is indeterminate either way),
+                // so we don't feed it into state — that would recompose this row on every chunk.
+                updateChecker.download(info) {}
             }.onSuccess { path ->
                 updateChecker.installAndExit(path)
             }.onFailure {
@@ -204,13 +212,49 @@ fun SettingsScreen(
                         Spacer(Modifier.width(Dimens.space16))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                if (isAuthenticated) strings.settingsAccountSynced else strings.settingsLocalOnly,
+                                if (isAuthenticated) strings.settingsAccountSynced(accountName ?: accountEmail.orEmpty()) else strings.settingsLocalOnly,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
-                            avatarError?.let {
+                            if (isAuthenticated) {
+                                accountEmail?.takeIf { it.isNotBlank() }?.let { email ->
+                                    Spacer(Modifier.height(Dimens.space4))
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            Icons.Filled.Email,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(Dimens.space16),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                        Spacer(Modifier.width(Dimens.space4))
+                                        Text(
+                                            email,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                }
+                                accountPhone?.takeIf { it.isNotBlank() }?.let { phone ->
+                                    Spacer(Modifier.height(Dimens.space4))
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            Icons.Filled.Phone,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(Dimens.space16),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                        Spacer(Modifier.width(Dimens.space4))
+                                        Text(
+                                            phone,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                }
+                            }
+                            AnimatedVisibility(visible = avatarError != null, enter = fadeIn(), exit = fadeOut()) {
                                 Text(
-                                    it,
+                                    avatarError.orEmpty(),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.debtAccentColors.debt
                                 )
@@ -218,18 +262,6 @@ fun SettingsScreen(
                         }
                     }
                     if (isAuthenticated) {
-                        accountName?.takeIf(String::isNotBlank)?.let {
-                            SettingsRowDivider()
-                            SettingsRow(icon = Icons.Default.Person, title = strings.fullName, subtitle = it)
-                        }
-                        accountEmail?.takeIf(String::isNotBlank)?.let {
-                            SettingsRowDivider()
-                            SettingsRow(icon = Icons.Default.Email, title = strings.email, subtitle = it)
-                        }
-                        accountPhone?.takeIf(String::isNotBlank)?.let {
-                            SettingsRowDivider()
-                            SettingsRow(icon = Icons.Default.Phone, title = strings.phone, subtitle = it)
-                        }
                         SettingsRowDivider()
                         SettingsRow(
                             icon = Icons.Default.Edit,
@@ -320,52 +352,40 @@ fun SettingsScreen(
                         SettingsRowDivider()
                     }
 
-                    Column(modifier = Modifier.fillMaxWidth().padding(Dimens.space16)) {
-                        Text(strings.settingsTheme, style = MaterialTheme.typography.bodyLarge)
-                        Spacer(Modifier.height(Dimens.space12))
-                        val themeOptions = listOf(
-                            "system" to strings.settingsThemeSystem,
-                            "light" to strings.settingsThemeLight,
-                            "dark" to strings.settingsThemeDark,
-                        )
-                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                            themeOptions.forEachIndexed { index, (value, label) ->
-                                SegmentedButton(
-                                    selected = settings.theme == value,
-                                    onClick = { settings.theme = value },
-                                    shape = SegmentedButtonDefaults.itemShape(
-                                        index = index,
-                                        count = themeOptions.size
-                                    ),
-                                    label = { Text(label) },
-                                )
-                            }
-                        }
-                    }
+                    // Один тап по рядку циклічно перемикає system → light → dark — іконка відображає поточний стан.
+                    val themeOptions = listOf(
+                        "system" to strings.settingsThemeSystem,
+                        "light" to strings.settingsThemeLight,
+                        "dark" to strings.settingsThemeDark,
+                    )
+                    val themeIndex = themeOptions.indexOfFirst { it.first == settings.theme }.coerceAtLeast(0)
+                    SettingsRow(
+                        icon = when (settings.theme) {
+                            "light" -> Icons.Filled.LightMode
+                            "dark" -> Icons.Filled.DarkMode
+                            else -> Icons.Filled.BrightnessAuto
+                        },
+                        title = strings.settingsTheme,
+                        subtitle = themeOptions[themeIndex].second,
+                        onClick = { settings.theme = themeOptions[(themeIndex + 1) % themeOptions.size].first },
+                    )
                     SettingsRowDivider()
 
-                    Column(modifier = Modifier.fillMaxWidth().padding(Dimens.space16)) {
-                        Text(strings.settingsLanguage, style = MaterialTheme.typography.bodyLarge)
-                        Spacer(Modifier.height(Dimens.space12))
-                        val languageOptions = listOf(
-                            "system" to strings.settingsLanguageSystem,
-                            "uk" to "Українська",
-                            "en" to "English",
-                        )
-                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                            languageOptions.forEachIndexed { index, (value, label) ->
-                                SegmentedButton(
-                                    selected = settings.locale == value,
-                                    onClick = { settings.locale = value },
-                                    shape = SegmentedButtonDefaults.itemShape(
-                                        index = index,
-                                        count = languageOptions.size
-                                    ),
-                                    label = { Text(label) },
-                                )
-                            }
-                        }
-                    }
+                    // Full screen instead of a dropdown — the option list (system/uk/en, more to come)
+                    // doesn't fit a small menu well long-term. See LanguageScreen.
+                    val languageOptions = listOf(
+                        "system" to strings.settingsLanguageSystem,
+                        "uk" to "Українська",
+                        "en" to "English",
+                    )
+                    val languageLabel = languageOptions.firstOrNull { it.first == settings.locale }?.second
+                        ?: languageOptions.first().second
+                    SettingsRow(
+                        icon = Icons.Filled.Language,
+                        title = strings.settingsLanguage,
+                        subtitle = languageLabel,
+                        onClick = onOpenLanguage,
+                    )
                 }
 
                 // --- Data ---
@@ -386,7 +406,11 @@ fun SettingsScreen(
                             onClick = { showDeleteConfirm1 = true },
                         )
                     }
-                    if (deleteDone) {
+                    AnimatedVisibility(
+                        visible = deleteDone,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically(),
+                    ) {
                         Text(
                             strings.settingsDeleteAllDataDone,
                             style = MaterialTheme.typography.bodyMedium,
@@ -501,20 +525,32 @@ private sealed interface UpdateCheckState {
     data object Checking : UpdateCheckState
     data object UpToDate : UpdateCheckState
     data class Available(val info: AppUpdateInfo) : UpdateCheckState
-    data class Downloading(val info: AppUpdateInfo, val progress: Float? = null) : UpdateCheckState
+    data class Downloading(val info: AppUpdateInfo) : UpdateCheckState
     data class Failed(val info: AppUpdateInfo) : UpdateCheckState
 }
 
 @Preview
 @Composable
-private fun SettingsScreenPreview() = DebtTrackerPreview {
-    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {})
+private fun SettingsScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {}, onOpenLanguage = {})
+}
+
+@Preview
+@Composable
+private fun SettingsScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
+    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {}, onOpenLanguage = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun SettingsScreenPreview2() = DebtTrackerPreview {
-    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {})
+private fun SettingsScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {}, onOpenLanguage = {})
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun SettingsScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
+    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {}, onOpenLanguage = {})
 }
 
 /** Кругле фото акаунта (ініціали-заглушка через [Icons.Default.Person] поки фото немає) з кнопкою редагування. */

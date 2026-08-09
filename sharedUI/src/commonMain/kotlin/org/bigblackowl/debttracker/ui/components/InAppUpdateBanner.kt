@@ -18,9 +18,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Devices.DESKTOP
+import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.update.inAppUpdateSupported
 import org.bigblackowl.debttracker.core.update.rememberInAppUpdateLauncher
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 
 /**
@@ -40,24 +43,55 @@ fun InAppUpdateBanner() {
     LaunchedEffect(Unit) { launcher.checkForUpdate() }
 
     AnimatedVisibility(visible = readyToInstall) {
-        Box(modifier = Modifier.fillMaxWidth().padding(Dimens.space16), contentAlignment = Alignment.BottomCenter) {
-            Card(
-                modifier = Modifier.widthIn(max = Dimens.contentMaxWidth),
-                elevation = CardDefaults.cardElevation(defaultElevation = Dimens.space8),
+        InAppUpdateBannerCard(onRestart = { launcher.completeUpdate() })
+    }
+}
+
+/** The card's visuals, pulled out of [InAppUpdateBanner] so @Preview can render it without a real [rememberInAppUpdateLauncher]. */
+@Composable
+private fun InAppUpdateBannerCard(onRestart: () -> Unit) {
+    val strings = LocalStrings.current
+    Box(modifier = Modifier.fillMaxWidth().padding(Dimens.space16), contentAlignment = Alignment.BottomCenter) {
+        Card(
+            modifier = Modifier.widthIn(max = Dimens.contentMaxWidth),
+            elevation = CardDefaults.cardElevation(defaultElevation = Dimens.space8),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(Dimens.space16),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(Dimens.space16),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        strings.updateReadyToInstall,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f),
-                    )
-                    TextButton(onClick = { launcher.completeUpdate() }) { Text(strings.updateRestartNow) }
-                }
+                Text(
+                    strings.updateReadyToInstall,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f),
+                )
+                TextButton(onClick = onRestart) { Text(strings.updateRestartNow) }
             }
         }
     }
+}
+
+@Preview
+@Composable
+private fun InAppUpdateBannerLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+    InAppUpdateBannerCard(onRestart = {})
+}
+
+@Preview
+@Composable
+private fun InAppUpdateBannerDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
+    InAppUpdateBannerCard(onRestart = {})
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun InAppUpdateBannerLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    InAppUpdateBannerCard(onRestart = {})
+}
+
+@Preview(device = DESKTOP)
+@Composable
+private fun InAppUpdateBannerDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
+    InAppUpdateBannerCard(onRestart = {})
 }
