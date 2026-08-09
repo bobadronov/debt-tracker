@@ -11,13 +11,19 @@ import androidx.fragment.app.FragmentActivity
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
-/** Wraps [BiometricPrompt], requiring [BiometricManager.Authenticators.BIOMETRIC_STRONG]. */
+/**
+ * Wraps [BiometricPrompt]. Allows [BiometricManager.Authenticators.BIOMETRIC_STRONG] or
+ * [BiometricManager.Authenticators.DEVICE_CREDENTIAL], so devices without (or with unenrolled) fingerprint/face
+ * hardware fall back to the system PIN/pattern/password screen instead of being locked out.
+ */
 private class AndroidBiometricAuthenticator(private val activity: FragmentActivity) : BiometricAuthenticator {
+
+    private val allowedAuthenticators =
+        BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
 
     override suspend fun isAvailable(): Boolean {
         val manager = BiometricManager.from(activity)
-        return manager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) ==
-            BiometricManager.BIOMETRIC_SUCCESS
+        return manager.canAuthenticate(allowedAuthenticators) == BiometricManager.BIOMETRIC_SUCCESS
     }
 
     override suspend fun authenticate(title: String, subtitle: String?): BiometricResult =
@@ -25,7 +31,9 @@ private class AndroidBiometricAuthenticator(private val activity: FragmentActivi
             val promptInfo = BiometricPrompt.PromptInfo.Builder()
                 .setTitle(title)
                 .apply { subtitle?.let { setSubtitle(it) } }
-                .setNegativeButtonText("Скасувати")
+                // setNegativeButtonText() is mutually exclusive with DEVICE_CREDENTIAL in setAllowedAuthenticators() —
+                // the system prompt supplies its own cancel/use-PIN affordance.
+                .setAllowedAuthenticators(allowedAuthenticators)
                 .build()
 
             val prompt = BiometricPrompt(

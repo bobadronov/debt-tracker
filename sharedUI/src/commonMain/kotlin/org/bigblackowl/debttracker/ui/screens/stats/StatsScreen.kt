@@ -173,6 +173,7 @@ private fun TopRow(rank: Int, name: String, balance: BigDecimal, currency: Curre
 @Composable
 private fun MonthlyBars(points: List<MonthlyPoint>, modifier: Modifier = Modifier) {
     if (points.isEmpty()) return
+    val strings = LocalStrings.current
     val maxAbs = points.maxOf { it.amount.abs().toStringExpanded().toDoubleOrNull() ?: 0.0 }.coerceAtLeast(1.0)
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(Dimens.space8)) {
         points.forEach { point ->
@@ -180,9 +181,10 @@ private fun MonthlyBars(points: List<MonthlyPoint>, modifier: Modifier = Modifie
             val targetFraction = (kotlin.math.abs(amountDouble) / maxAbs).toFloat().coerceIn(0f, 1f)
             val fraction by animateFloatAsState(targetFraction.coerceAtLeast(0.02f), label = "trend-bar")
             val color = if (amountDouble >= 0) MaterialTheme.debtAccentColors.debt else MaterialTheme.debtAccentColors.repay
+            val label = "${strings.monthsShort[point.month - 1]} ${point.year % 100}"
 
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                Text(point.label, modifier = Modifier.width(Dimens.space56), style = MaterialTheme.typography.labelSmall)
+                Text(label, modifier = Modifier.width(Dimens.space56), style = MaterialTheme.typography.labelSmall)
                 Box(
                     modifier = Modifier
                         .weight(1f)

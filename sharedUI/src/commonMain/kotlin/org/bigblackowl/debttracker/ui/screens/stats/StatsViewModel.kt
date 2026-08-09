@@ -64,8 +64,8 @@ class StatsViewModel(
         }
 
         _state.value = _state.value.copy(
-            monthlyDebtTrend = months.mapIndexed { i, date -> MonthlyPoint("${date.month.number}.${date.year}", debtSums[i]) },
-            monthlyCreditorTrend = months.mapIndexed { i, date -> MonthlyPoint("${date.month.number}.${date.year}", creditorSums[i]) },
+            monthlyDebtTrend = months.mapIndexed { i, date -> MonthlyPoint(date.month.number, date.year, debtSums[i]) },
+            monthlyCreditorTrend = months.mapIndexed { i, date -> MonthlyPoint(date.month.number, date.year, creditorSums[i]) },
         )
     }
 }

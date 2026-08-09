@@ -221,6 +221,8 @@ data class Strings(
     val statsTopCreditors: String,
     val statsMonthlyDebtTrend: String,
     val statsMonthlyCreditorTrend: String,
+    /** Short month names, index 0 = January, for the monthly trend chart on [org.bigblackowl.debttracker.ui.screens.stats.StatsScreen]. */
+    val monthsShort: List<String>,
 
     // widget
     val widgetDebtorsTotal: (amount: String) -> String,
@@ -421,6 +423,7 @@ val UkStrings = Strings(
     statsTopCreditors = "Топ кредиторів",
     statsMonthlyDebtTrend = "Динаміка за місяць — мені винні (приріст)",
     statsMonthlyCreditorTrend = "Динаміка за місяць — я винен (приріст)",
+    monthsShort = listOf("січ", "лют", "бер", "кві", "тра", "чер", "лип", "сер", "вер", "жов", "лис", "гру"),
 
     widgetDebtorsTotal = { amount -> "Мені винні: $amount" },
     widgetCreditorsTotal = { amount -> "Я винен: $amount" },
@@ -620,6 +623,7 @@ val EnStrings = Strings(
     statsTopCreditors = "Top creditors",
     statsMonthlyDebtTrend = "Monthly trend — owed to me (change)",
     statsMonthlyCreditorTrend = "Monthly trend — I owe (change)",
+    monthsShort = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
 
     widgetDebtorsTotal = { amount -> "Owed to me: $amount" },
     widgetCreditorsTotal = { amount -> "I owe: $amount" },

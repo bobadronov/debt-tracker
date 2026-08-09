@@ -6,8 +6,8 @@ import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.DebtorWithBalance
 import org.bigblackowl.debttracker.domain.model.sumByCurrency
 
-/** One point on the 6-month debt/repay trend chart on [StatsScreen]. */
-data class MonthlyPoint(val label: String, val amount: BigDecimal)
+/** One point on the 6-month debt/repay trend chart on [StatsScreen]. Month name is resolved at render time via [org.bigblackowl.debttracker.core.i18n.Strings]. */
+data class MonthlyPoint(val month: Int, val year: Int, val amount: BigDecimal)
 
 /**
  * Derived stats for [StatsScreen] — computed straight from the live debtor/creditor lists, no separate aggregation query.
