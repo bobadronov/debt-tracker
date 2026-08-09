@@ -12,6 +12,7 @@ object Dimens {
     val space0 = 0.dp
     val space1 = 1.dp
     val space2 = 2.dp
+    val space3 = 3.dp
     val space4 = 4.dp
     val space5 = 5.dp
     val space6 = 6.dp

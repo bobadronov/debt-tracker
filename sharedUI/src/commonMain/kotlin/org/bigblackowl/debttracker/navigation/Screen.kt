@@ -4,6 +4,7 @@ package org.bigblackowl.debttracker.navigation
 sealed interface Screen {
     data object Splash : Screen
     data object Onboarding : Screen
+    data object AccountOnboarding : Screen
     data object AuthGate : Screen
     data object Home : Screen
     data class AddEditDebtor(val debtorId: String? = null) : Screen

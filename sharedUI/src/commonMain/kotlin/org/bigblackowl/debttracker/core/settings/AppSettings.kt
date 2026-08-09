@@ -20,6 +20,8 @@ class AppSettings(private val settings: Settings) {
     var biometricEnabled: Boolean by SettingsBooleanState(settings, KEY_BIOMETRIC_ENABLED, false)
     /** Whether the first-launch "enable protection" onboarding screen has already been shown. */
     var hasSeenProtectionOnboarding: Boolean by SettingsBooleanState(settings, KEY_PROTECTION_ONBOARDING_SEEN, false)
+    /** Whether the first-launch "sign in for Account+Sync" onboarding screen has already been shown. */
+    var hasSeenAccountOnboarding: Boolean by SettingsBooleanState(settings, KEY_ACCOUNT_ONBOARDING_SEEN, false)
     var soundEnabled: Boolean by SettingsBooleanState(settings, KEY_SOUND_ENABLED, true)
     var hapticEnabled: Boolean by SettingsBooleanState(settings, KEY_HAPTIC_ENABLED, true)
     var theme: String by SettingsStringState(settings, KEY_THEME, "system")
@@ -55,6 +57,7 @@ class AppSettings(private val settings: Settings) {
         const val KEY_PROTECTION_ENABLED = "protection_enabled"
         const val KEY_BIOMETRIC_ENABLED = "biometric_enabled"
         const val KEY_PROTECTION_ONBOARDING_SEEN = "protection_onboarding_seen"
+        const val KEY_ACCOUNT_ONBOARDING_SEEN = "account_onboarding_seen"
         const val KEY_PIN_CODE_LEGACY = "pin_code"
         const val KEY_PIN_SALT = "pin_salt"
         const val KEY_PIN_HASH = "pin_hash"

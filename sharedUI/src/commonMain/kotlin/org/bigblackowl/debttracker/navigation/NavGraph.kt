@@ -27,8 +27,10 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.NavDisplay
 import org.bigblackowl.debttracker.core.di.requiresRemoteAuthGate
+import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
+import org.bigblackowl.debttracker.ui.screens.AccountOnboardingScreen
 import org.bigblackowl.debttracker.ui.screens.AuthGateScreen
 import org.bigblackowl.debttracker.ui.screens.HomeScreen
 import org.bigblackowl.debttracker.ui.screens.ProtectionOnboardingScreen
@@ -69,6 +71,7 @@ private fun <T : Any> navSlideTransitionSpec(
 fun DebtTrackerNavGraph(
     searchFocusRequests: SearchFocusRequests = koinInject(),
     authRepository: AuthRepository = koinInject(),
+    settings: AppSettings = koinInject(),
 ) {
     val backStack = remember { mutableStateListOf<Screen>(Screen.Splash) }
     val focusRequester = remember { FocusRequester() }
@@ -88,10 +91,13 @@ fun DebtTrackerNavGraph(
 
     // Web has no local cache (спек §1) — repositories need a signed-in Supabase session to
     // work at all, so it forces the sign-in screen before Home. Other platforms are fully
-    // offline-capable; Supabase auth there is opt-in sync, reached only from Settings.
-    fun screenAfterUnlock(): Screen =
-        if (requiresRemoteAuthGate && !authRepository.isAuthenticated.value) Screen.Auth(isGate = true)
-        else Screen.Home
+    // offline-capable; Supabase auth there is opt-in sync — surfaced once via AccountOnboarding
+    // (skippable), then only reachable from Settings after that.
+    fun screenAfterUnlock(): Screen = when {
+        requiresRemoteAuthGate && !authRepository.isAuthenticated.value -> Screen.Auth(isGate = true)
+        !settings.hasSeenAccountOnboarding && !authRepository.isAuthenticated.value -> Screen.AccountOnboarding
+        else -> Screen.Home
+    }
 
     Box(
         modifier = Modifier
@@ -142,6 +148,15 @@ fun DebtTrackerNavGraph(
             }
             entry<Screen.Onboarding> {
                 ProtectionOnboardingScreen(onDone = { replaceStackWith(screenAfterUnlock()) })
+            }
+            entry<Screen.AccountOnboarding> {
+                // isGate = true here too (not just Web's forced gate): the stack was just replaced,
+                // so a plain back() would have nothing to pop to — reuse the same "hide back, land
+                // on Home after success" handling as the Web gate instead of a second special case.
+                AccountOnboardingScreen(
+                    onSignIn = { replaceStackWith(Screen.Auth(isGate = true)) },
+                    onSkip = { replaceStackWith(Screen.Home) },
+                )
             }
             entry<Screen.AuthGate> {
                 AuthGateScreen(onUnlocked = { replaceStackWith(screenAfterUnlock()) })

@@ -12,6 +12,7 @@ data class Strings(
     val delete: String,
     val deleteForever: String,
     val continueLabel: String,
+    val back: String,
     val cash: String,
     val card: String,
     val cardLastDigits: String,
@@ -78,6 +79,10 @@ data class Strings(
     val onboardingProtectionEnablePin: String,
     val onboardingProtectionSkip: String,
     val onboardingProtectionConfirmFailed: String,
+
+    // account onboarding (first launch only)
+    val onboardingAccountTitle: String,
+    val onboardingAccountBody: String,
 
     // add/edit creditor
     val addEditCreditorTitleEdit: String,
@@ -226,6 +231,7 @@ val UkStrings = Strings(
     delete = "Видалити",
     deleteForever = "Видалити назавжди",
     continueLabel = "Продовжити",
+    back = "Назад",
     cash = "Готівка",
     card = "Картка",
     cardLastDigits = "Останні цифри картки",
@@ -286,6 +292,8 @@ val UkStrings = Strings(
     onboardingProtectionEnablePin = "Встановити PIN-код",
     onboardingProtectionSkip = "Пропустити",
     onboardingProtectionConfirmFailed = "Не вдалося підтвердити — спробуйте ще раз",
+    onboardingAccountTitle = "Не втратьте свої дані",
+    onboardingAccountBody = "Увійдіть, щоб резервувати боржників, кредиторів і транзакції та бачити їх на будь-якому пристрої. Можна пропустити й користуватись лише локально — увійти можна пізніше в Налаштуваннях.",
 
     addEditCreditorTitleEdit = "Редагувати кредитора",
     addEditCreditorTitleNew = "Новий кредитор",
@@ -420,6 +428,7 @@ val EnStrings = Strings(
     delete = "Delete",
     deleteForever = "Delete forever",
     continueLabel = "Continue",
+    back = "Back",
     cash = "Cash",
     card = "Card",
     cardLastDigits = "Card last digits",
@@ -480,6 +489,8 @@ val EnStrings = Strings(
     onboardingProtectionEnablePin = "Set a PIN",
     onboardingProtectionSkip = "Skip",
     onboardingProtectionConfirmFailed = "Couldn't verify — try again",
+    onboardingAccountTitle = "Don't lose your data",
+    onboardingAccountBody = "Sign in to back up your debtors, creditors, and transactions, and see them on any device. You can skip this and stay local-only — sign in later from Settings.",
 
     addEditCreditorTitleEdit = "Edit creditor",
     addEditCreditorTitleNew = "New creditor",
