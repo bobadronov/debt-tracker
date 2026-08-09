@@ -7,9 +7,7 @@ with optional cloud sync via Supabase.
 Built with **Compose Multiplatform** — one shared UI codebase targets
 Android, iOS, Desktop (JVM), and Web (JS/Wasm).
 
-**Live web app:** https://bobadronov.github.io/debt-tracker/
-(double-click [`web-page.html`](web-page.html) for a local shortcut that
-opens it in your default browser).
+**Live web app:** https://bobadronov.github.io/debt-tracker/.
 
 ## Features
 
