@@ -209,9 +209,8 @@ private fun SyncStatusBadge(status: SyncUiStatus, strings: Strings) {
     }
 }
 
-@Preview
 @Composable
-private fun HomeScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+private fun HomeScreenPreviewContent() {
     HomeScreen(
         onAddDebtor = {},
         onOpenDebtor = {},
@@ -224,39 +223,16 @@ private fun HomeScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false
 
 @Preview
 @Composable
-private fun HomeScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    HomeScreen(
-        onAddDebtor = {},
-        onOpenDebtor = {},
-        onAddCreditor = {},
-        onOpenCreditor = {},
-        onOpenStats = {},
-        onOpenSettings = {},
-    )
-}
+private fun HomeScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { HomeScreenPreviewContent() }
+
+@Preview
+@Composable
+private fun HomeScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { HomeScreenPreviewContent() }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun HomeScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    HomeScreen(
-        onAddDebtor = {},
-        onOpenDebtor = {},
-        onAddCreditor = {},
-        onOpenCreditor = {},
-        onOpenStats = {},
-        onOpenSettings = {},
-    )
-}
+private fun HomeScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { HomeScreenPreviewContent() }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun HomeScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    HomeScreen(
-        onAddDebtor = {},
-        onOpenDebtor = {},
-        onAddCreditor = {},
-        onOpenCreditor = {},
-        onOpenStats = {},
-        onOpenSettings = {},
-    )
-}
+private fun HomeScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { HomeScreenPreviewContent() }

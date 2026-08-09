@@ -353,11 +353,13 @@ fun SettingsScreen(
                     }
 
                     // Один тап по рядку циклічно перемикає system → light → dark — іконка відображає поточний стан.
-                    val themeOptions = listOf(
-                        "system" to strings.settingsThemeSystem,
-                        "light" to strings.settingsThemeLight,
-                        "dark" to strings.settingsThemeDark,
-                    )
+                    val themeOptions = remember(strings) {
+                        listOf(
+                            "system" to strings.settingsThemeSystem,
+                            "light" to strings.settingsThemeLight,
+                            "dark" to strings.settingsThemeDark,
+                        )
+                    }
                     val themeIndex = themeOptions.indexOfFirst { it.first == settings.theme }.coerceAtLeast(0)
                     SettingsRow(
                         icon = when (settings.theme) {
@@ -373,11 +375,7 @@ fun SettingsScreen(
 
                     // Full screen instead of a dropdown — the option list (system/uk/en, more to come)
                     // doesn't fit a small menu well long-term. See LanguageScreen.
-                    val languageOptions = listOf(
-                        "system" to strings.settingsLanguageSystem,
-                        "uk" to "Українська",
-                        "en" to "English",
-                    )
+                    val languageOptions = remember(strings) { languageOptions(strings) }
                     val languageLabel = languageOptions.firstOrNull { it.first == settings.locale }?.second
                         ?: languageOptions.first().second
                     SettingsRow(

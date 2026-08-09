@@ -50,14 +50,13 @@ private const val NAV_TRANSITION_DURATION_MILLIS = 300
 
 /** iOS already gets a native-feeling slide from Navigation 3's platform default; Desktop/Web get
  * none at all out of the box. Setting this explicitly gives every platform the same slide+fade
- * for every screen change instead of an inconsistent (or missing) default. */
-private fun <T : Any> navTransitionSpec(): AnimatedContentTransitionScope<Scene<T>>.() -> ContentTransform = {
-    (slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(NAV_TRANSITION_DURATION_MILLIS)) + fadeIn(tween(NAV_TRANSITION_DURATION_MILLIS))) togetherWith
-        (slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(NAV_TRANSITION_DURATION_MILLIS)) + fadeOut(tween(NAV_TRANSITION_DURATION_MILLIS)))
-}
-private fun <T : Any> navPopTransitionSpec(): AnimatedContentTransitionScope<Scene<T>>.() -> ContentTransform = {
-    (slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(NAV_TRANSITION_DURATION_MILLIS)) + fadeIn(tween(NAV_TRANSITION_DURATION_MILLIS))) togetherWith
-        (slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(NAV_TRANSITION_DURATION_MILLIS)) + fadeOut(tween(NAV_TRANSITION_DURATION_MILLIS)))
+ * for every screen change instead of an inconsistent (or missing) default. [towards] is the
+ * direction content slides in from — Left to navigate forward, Right to pop back. */
+private fun <T : Any> navSlideTransitionSpec(
+    towards: AnimatedContentTransitionScope.SlideDirection,
+): AnimatedContentTransitionScope<Scene<T>>.() -> ContentTransform = {
+    (slideIntoContainer(towards, tween(NAV_TRANSITION_DURATION_MILLIS)) + fadeIn(tween(NAV_TRANSITION_DURATION_MILLIS))) togetherWith
+        (slideOutOfContainer(towards, tween(NAV_TRANSITION_DURATION_MILLIS)) + fadeOut(tween(NAV_TRANSITION_DURATION_MILLIS)))
 }
 
 /**
@@ -127,8 +126,8 @@ fun DebtTrackerNavGraph(
         NavDisplay(
             backStack = backStack,
             onBack = { back() },
-            transitionSpec = navTransitionSpec(),
-            popTransitionSpec = navPopTransitionSpec(),
+            transitionSpec = navSlideTransitionSpec(AnimatedContentTransitionScope.SlideDirection.Left),
+            popTransitionSpec = navSlideTransitionSpec(AnimatedContentTransitionScope.SlideDirection.Right),
             entryProvider = entryProvider {
             entry<Screen.Splash> {
                 SplashScreen(onFinished = { destination ->

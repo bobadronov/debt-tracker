@@ -36,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
@@ -68,6 +69,14 @@ fun SettingsSection(title: String, modifier: Modifier = Modifier, content: @Comp
     }
 }
 
+/** Clickable + a subtle press-down scale, skipping the interaction-source/animation setup entirely for rows without a click handler. */
+private fun Modifier.clickablePressScale(onClick: () -> Unit): Modifier = composed {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(if (isPressed) 0.98f else 1f, label = "settingsRowPressScale")
+    scale(pressScale).clickable(interactionSource = interactionSource, indication = LocalIndication.current, onClick = onClick)
+}
+
 /** Один рядок налаштувань: іконка в tonal-колі, заголовок (+опційний підзаголовок), опційний trailing-контрол. */
 @Composable
 fun SettingsRow(
@@ -81,18 +90,11 @@ fun SettingsRow(
     onClick: (() -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val pressScale by animateFloatAsState(if (isPressed) 0.98f else 1f, label = "settingsRowPressScale")
-
     Row(
         modifier = modifier
-            .scale(pressScale)
             .fillMaxWidth()
             .let {
-                if (onClick != null) {
-                    it.clickable(interactionSource = interactionSource, indication = LocalIndication.current, onClick = onClick)
-                } else it
+                if (onClick != null) it.clickablePressScale(onClick) else it
             }
             .padding(horizontal = Dimens.space16, vertical = Dimens.space12),
         verticalAlignment = Alignment.CenterVertically,

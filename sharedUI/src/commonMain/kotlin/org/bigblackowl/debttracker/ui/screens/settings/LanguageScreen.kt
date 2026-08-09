@@ -16,11 +16,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
+import org.bigblackowl.debttracker.core.i18n.Strings
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
@@ -39,12 +41,7 @@ import org.koin.compose.koinInject
 fun LanguageScreen(onBack: () -> Unit) {
     val settings = koinInject<AppSettings>()
     val strings = LocalStrings.current
-
-    val languageOptions = listOf(
-        "system" to strings.settingsLanguageSystem,
-        "uk" to "Українська",
-        "en" to "English",
-    )
+    val languageOptions = remember(strings) { languageOptions(strings) }
 
     PlaceholderScreen(title = strings.settingsLanguage, onBack = onBack) {
         Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -84,6 +81,13 @@ fun LanguageScreen(onBack: () -> Unit) {
         }
     }
 }
+
+/** Shared with [SettingsScreen]'s language row so both stay in sync as languages are added. */
+internal fun languageOptions(strings: Strings) = listOf(
+    "system" to strings.settingsLanguageSystem,
+    "uk" to "Українська",
+    "en" to "English",
+)
 
 @Preview
 @Composable
