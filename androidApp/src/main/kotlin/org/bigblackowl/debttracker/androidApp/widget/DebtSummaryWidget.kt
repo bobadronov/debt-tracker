@@ -3,13 +3,13 @@ package org.bigblackowl.debttracker.androidApp.widget
 import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceComposable
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.GlanceTheme
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
@@ -22,11 +22,9 @@ import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
-import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.width
-import androidx.glance.text.FontFamily
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -40,16 +38,6 @@ import org.bigblackowl.debttracker.domain.model.sumByCurrency
 import org.bigblackowl.debttracker.domain.repository.CreditorRepository
 import org.bigblackowl.debttracker.domain.repository.DebtorRepository
 import org.koin.core.context.GlobalContext
-
-// Оформлення: cyberpunk neon-on-black. Glance не має border-модифікатора, тому рамка
-// симулюється вкладеним Box — зовнішній пофарбований у неон, з відступом у 2dp просвічує
-// тонким кільцем навколо темнішого внутрішнього контейнера.
-private val CyberPanel = Color(0xFF0F0B1E)
-private val CyberCyan = Color(0xFF00F0FF)
-private val CyberMagenta = Color(0xFFFF2AD4)
-private val CyberGreen = Color(0xFF39FF14)
-private val CyberPink = Color(0xFFFF2079)
-private val CyberDim = Color(0xFF7C7CA8)
 
 /**
  * Android Glance widget (спек §6, §8, Фаза 7): сумарні "Мені винні"/"Я винен".
@@ -89,6 +77,10 @@ class DebtSummaryWidget : GlanceAppWidget() {
  * з [DebtSummaryWidget.provideGlance], бо suspend-виклики (Koin, Flow.first)
  * не можна робити напряму всередині @Composable. Значення параметрів за
  * замовчуванням дають змогу рендерити @Preview в Android Studio.
+ *
+ * Стиль: Material You / [GlanceTheme] — той самий "google-style" адаптивний
+ * підхід, що й у системних віджетах (кольори підлаштовуються під шпалери на
+ * Android 12+, інакше під світлу/темну тему), а не власна фіксована палітра.
  */
 @SuppressLint("RestrictedApi")
 @Preview
@@ -99,86 +91,68 @@ fun WidgetUi(
     debtorsLine: String = "Мені винні: 1 250,00 ₴",
     creditorsLine: String = "Я винен: 430,00 ₴",
 ) {
-    Box(
-        modifier = GlanceModifier
-            .fillMaxSize()
-            .background(CyberPanel)
-            .cornerRadius(16.dp)
-            .clickable(actionStartActivity(AppActivity::class.java))
-            .padding(12.dp),
-    ) {
-        Column(modifier = GlanceModifier.fillMaxSize()) {
-            Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
+    GlanceTheme {
+        Box(
+            modifier = GlanceModifier
+                .fillMaxSize()
+                .background(GlanceTheme.colors.widgetBackground)
+                .cornerRadius(24.dp)
+                .clickable(actionStartActivity(AppActivity::class.java))
+                .padding(16.dp),
+        ) {
+            Column(modifier = GlanceModifier.fillMaxSize(), verticalAlignment = Alignment.Vertical.CenterVertically) {
                 Text(
-                    text = "▮",
+                    text = appName,
                     style = TextStyle(
-                        color = ColorProvider(CyberCyan),
-                        fontWeight = FontWeight.Bold,
+                        color = GlanceTheme.colors.onSurfaceVariant,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 12.sp,
                     ),
                 )
-                Spacer(modifier = GlanceModifier.width(6.dp))
-                Text(
-                    text = appName.uppercase(),
-                    style = TextStyle(
-                        color = ColorProvider(CyberCyan),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp,
-                        fontFamily = FontFamily.Monospace,
-                    ),
-                )
+
+                Spacer(modifier = GlanceModifier.height(12.dp))
+
+                StatLine(line = debtorsLine, valueColor = GlanceTheme.colors.primary)
+                Spacer(modifier = GlanceModifier.height(8.dp))
+                StatLine(line = creditorsLine, valueColor = GlanceTheme.colors.error)
             }
-
-            Spacer(modifier = GlanceModifier.height(6.dp))
-            Box(
-                modifier = GlanceModifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(CyberMagenta),
-            ) {}
-            Spacer(modifier = GlanceModifier.height(10.dp))
-
-            StatLine(line = debtorsLine, valueColor = CyberGreen)
-            Spacer(modifier = GlanceModifier.height(6.dp))
-            StatLine(line = creditorsLine, valueColor = CyberPink)
         }
     }
 }
 
-/** Розбиває рядок виду "Мітка: значення" на дві частини, аби виділити суму неоновим кольором. */
+/** Розбиває рядок виду "Мітка: значення" на дві частини, аби виділити суму акцентним кольором. */
 @SuppressLint("RestrictedApi")
 @Composable
-private fun StatLine(line: String, valueColor: Color) {
+private fun StatLine(line: String, valueColor: ColorProvider) {
     val separatorIndex = line.indexOf(':')
     if (separatorIndex == -1) {
         Text(
             text = line,
             style = TextStyle(
-                color = ColorProvider(valueColor),
+                color = valueColor,
                 fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 13.sp,
+                fontSize = 15.sp,
             ),
         )
         return
     }
     val label = line.substring(0, separatorIndex + 1)
     val value = line.substring(separatorIndex + 1)
-    Row {
+    Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
         Text(
             text = label,
             style = TextStyle(
-                color = ColorProvider(CyberDim),
-                fontFamily = FontFamily.Monospace,
-                fontSize = 12.sp,
+                color = GlanceTheme.colors.onSurfaceVariant,
+                fontSize = 13.sp,
             ),
         )
+        Spacer(modifier = GlanceModifier.width(4.dp))
         Text(
             text = value,
             style = TextStyle(
-                color = ColorProvider(valueColor),
+                color = valueColor,
                 fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 13.sp,
+                fontSize = 15.sp,
             ),
         )
     }

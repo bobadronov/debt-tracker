@@ -3,6 +3,7 @@ package org.bigblackowl.debttracker.ui.screens.creditors
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -15,6 +16,7 @@ import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.sound.SoundEffect
 import org.bigblackowl.debttracker.core.sound.SoundPlayer
 import org.bigblackowl.debttracker.domain.model.DebtStatus
+import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
 import org.bigblackowl.debttracker.domain.usecase.creditor.DeleteCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorsUseCase
 
@@ -22,6 +24,7 @@ import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorsUseCa
 class CreditorListViewModel(
     observeCreditors: ObserveCreditorsUseCase,
     private val deleteCreditor: DeleteCreditorUseCase,
+    private val syncStatusProvider: SyncStatusProvider,
     private val appSettings: AppSettings,
     private val soundPlayer: SoundPlayer,
 ) : ViewModel() {
@@ -29,12 +32,13 @@ class CreditorListViewModel(
     private val query = MutableStateFlow("")
     private val sortOrder = MutableStateFlow(CreditorSortOrder.NAME_ASC)
     private val statusFilter = MutableStateFlow(CreditorStatusFilter.ACTIVE)
+    private val isRefreshing = MutableStateFlow(false)
     private val effectsChannel = Channel<CreditorListEffect>()
     val effects = effectsChannel.receiveAsFlow()
 
     val state: StateFlow<CreditorListState> = combine(
-        observeCreditors(), query, sortOrder, statusFilter,
-    ) { creditors, currentQuery, currentSort, currentFilter ->
+        observeCreditors(), query, sortOrder, statusFilter, isRefreshing,
+    ) { creditors, currentQuery, currentSort, currentFilter, refreshing ->
         val byStatus = when (currentFilter) {
             CreditorStatusFilter.ALL -> creditors
             CreditorStatusFilter.ACTIVE -> creditors.filter { it.creditor.status == DebtStatus.ACTIVE }
@@ -52,6 +56,7 @@ class CreditorListViewModel(
         }
         CreditorListState(
             isLoading = false,
+            isRefreshing = refreshing,
             query = currentQuery,
             sortOrder = currentSort,
             statusFilter = currentFilter,
@@ -68,6 +73,12 @@ class CreditorListViewModel(
                 runCatching { deleteCreditor(intent.creditorId) }
                     .onSuccess { if (appSettings.soundEnabled) soundPlayer.play(SoundEffect.DELETE) }
                     .onFailure { effectsChannel.send(CreditorListEffect.Error(resolveStrings(appSettings.locale).deleteError)) }
+            }
+            CreditorListIntent.Refresh -> viewModelScope.launch {
+                isRefreshing.value = true
+                runCatching { syncStatusProvider.refreshNow() }
+                delay(300)
+                isRefreshing.value = false
             }
         }
     }

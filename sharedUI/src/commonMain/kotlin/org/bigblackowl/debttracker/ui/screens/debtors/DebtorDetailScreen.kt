@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -22,6 +23,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -48,6 +50,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 /** Profile + transaction history for one [org.bigblackowl.debttracker.domain.model.Debtor], with "Repay"/"Lend more" actions. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DebtorDetailScreen(
     debtorId: String,
@@ -121,9 +124,15 @@ fun DebtorDetailScreen(
 
                 Spacer(Modifier.height(Dimens.space8))
 
-                LazyColumn(modifier = Modifier.weight(1f).padding(horizontal = Dimens.space16)) {
-                    items(state.transactions, key = { it.id }) { transaction ->
-                        DebtTransactionRow(transaction, state.debtor?.currency ?: Currency.UAH)
+                PullToRefreshBox(
+                    isRefreshing = state.isRefreshing,
+                    onRefresh = { viewModel.onIntent(DebtorDetailIntent.Refresh) },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = Dimens.space16)) {
+                        items(state.transactions, key = { it.id }) { transaction ->
+                            DebtTransactionRow(transaction, state.debtor?.currency ?: Currency.UAH)
+                        }
                     }
                 }
             }

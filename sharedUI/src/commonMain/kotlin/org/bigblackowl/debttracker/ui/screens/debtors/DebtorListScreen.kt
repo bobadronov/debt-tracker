@@ -28,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -173,13 +174,19 @@ fun DebtorListScreen(
                 )
             }
 
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                items(state.debtors, key = { it.debtor.id }) { item ->
-                    DebtorRow(
-                        item = item,
-                        onClick = { onOpenDebtor(item.debtor.id) },
-                        onDelete = { viewModel.onIntent(DebtorListIntent.Delete(item.debtor.id)) },
-                    )
+            PullToRefreshBox(
+                isRefreshing = state.isRefreshing,
+                onRefresh = { viewModel.onIntent(DebtorListIntent.Refresh) },
+                modifier = Modifier.weight(1f),
+            ) {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(state.debtors, key = { it.debtor.id }) { item ->
+                        DebtorRow(
+                            item = item,
+                            onClick = { onOpenDebtor(item.debtor.id) },
+                            onDelete = { viewModel.onIntent(DebtorListIntent.Delete(item.debtor.id)) },
+                        )
+                    }
                 }
             }
 

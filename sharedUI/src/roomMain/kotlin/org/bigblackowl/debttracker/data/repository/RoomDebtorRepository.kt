@@ -46,12 +46,16 @@ class RoomDebtorRepository(
     override suspend fun getDebtor(id: String): Debtor? = debtorDao.getById(id)?.toDomain()
 
     override suspend fun upsertDebtor(debtor: Debtor) {
-        debtorDao.upsert(debtor.copy(syncStatus = SyncStatus.PENDING).toEntity())
+        val entity = debtor.copy(syncStatus = SyncStatus.PENDING).toEntity()
+        // A plain upsert() is "INSERT OR REPLACE", which on an existing PK deletes-then-reinserts
+        // the row in SQLite — that would cascade-delete this debtor's transactions via their
+        // ON DELETE CASCADE FK. Route existing debtors through a genuine UPDATE instead.
+        if (debtorDao.getById(entity.id) != null) debtorDao.update(entity) else debtorDao.upsert(entity)
     }
 
     override suspend fun softDeleteDebtor(id: String) {
         val entity = debtorDao.getById(id) ?: return
-        debtorDao.upsert(
+        debtorDao.update(
             entity.copy(isDeleted = true, syncStatus = SyncStatus.PENDING, updatedAt = kotlin.time.Clock.System.now())
         )
     }
@@ -65,16 +69,16 @@ class RoomDebtorRepository(
         recalcDebtorStatus(normalized.debtorId)
     }
 
-    /** Мірор Postgres-тригера з Фази 0 (recalc_debtor_status): status/updatedAt рахуються з транзакцій. */
     override suspend fun deleteAllData() {
         transactionDao.deleteAll()
         debtorDao.deleteAll()
     }
 
+    /** Мірор Postgres-тригера з Фази 0 (recalc_debtor_status): status/updatedAt рахуються з транзакцій. */
     private suspend fun recalcDebtorStatus(debtorId: String) {
         val entity = debtorDao.getById(debtorId) ?: return
         val balance = transactionDao.getAllForDebtor(debtorId).map { it.toDomain() }.debtorBalance()
-        debtorDao.upsert(
+        debtorDao.update(
             entity.copy(
                 status = balance.toDebtStatus(),
                 syncStatus = SyncStatus.PENDING,

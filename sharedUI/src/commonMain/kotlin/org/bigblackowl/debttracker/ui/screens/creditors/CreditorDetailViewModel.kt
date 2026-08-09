@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -19,6 +21,7 @@ import org.bigblackowl.debttracker.domain.model.CreditorTransaction
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.domain.model.SyncStatus
 import org.bigblackowl.debttracker.domain.model.toCreditorTransactionType
+import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddCreditorTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorTransactionsUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorUseCase
@@ -30,17 +33,20 @@ class CreditorDetailViewModel(
     observeCreditor: ObserveCreditorUseCase,
     observeTransactions: ObserveCreditorTransactionsUseCase,
     private val addTransaction: AddCreditorTransactionUseCase,
+    private val syncStatusProvider: SyncStatusProvider,
     private val appSettings: AppSettings,
 ) : ViewModel() {
 
+    private val isRefreshing = MutableStateFlow(false)
     private val effectsChannel = Channel<CreditorDetailEffect>()
     val effects = effectsChannel.receiveAsFlow()
 
     val state: StateFlow<CreditorDetailState> = combine(
-        observeCreditor(creditorId), observeTransactions(creditorId),
-    ) { creditor, transactions ->
+        observeCreditor(creditorId), observeTransactions(creditorId), isRefreshing,
+    ) { creditor, transactions, refreshing ->
         CreditorDetailState(
             isLoading = false,
+            isRefreshing = refreshing,
             creditor = creditor,
             transactions = transactions.sortedByDescending { it.date },
         )
@@ -50,6 +56,16 @@ class CreditorDetailViewModel(
         when (intent) {
             is CreditorDetailIntent.Return -> record(intent.amount, intent.method, intent.cardLastDigits)
             is CreditorDetailIntent.BorrowMore -> record(intent.amount.negate(), intent.method, intent.cardLastDigits)
+            CreditorDetailIntent.Refresh -> refresh()
+        }
+    }
+
+    private fun refresh() {
+        viewModelScope.launch {
+            isRefreshing.value = true
+            runCatching { syncStatusProvider.refreshNow() }
+            delay(300)
+            isRefreshing.value = false
         }
     }
 

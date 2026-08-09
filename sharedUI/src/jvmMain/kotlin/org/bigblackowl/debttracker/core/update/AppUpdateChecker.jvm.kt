@@ -90,7 +90,7 @@ actual fun rememberAppUpdateChecker(): AppUpdateChecker = remember { DesktopAppU
 private fun currentAssetExtension(): String? {
     val os = System.getProperty("os.name").lowercase()
     return when {
-        os.contains("win") -> ".exe"
+        os.contains("win") -> ".msi"
         os.contains("mac") -> null
         else -> ".deb"
     }

@@ -28,6 +28,7 @@ import org.bigblackowl.debttracker.domain.model.SyncStatus
 import org.bigblackowl.debttracker.domain.model.SyncUiStatus
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Offline-first sync (спек §5): push — цикл раз на 30с відправляє PENDING-рядки
@@ -55,6 +56,10 @@ class SyncCoordinator(
     private val _status = MutableStateFlow<SyncUiStatus>(SyncUiStatus.Synced)
     override val status: StateFlow<SyncUiStatus> = _status.asStateFlow()
 
+    override suspend fun refreshNow() {
+        if (authRepository.currentUserId != null) pushPending()
+    }
+
     fun start() {
         scope.launch {
             authRepository.isAuthenticated.collectLatest { authenticated ->
@@ -81,7 +86,7 @@ class SyncCoordinator(
     private suspend fun pushLoop() {
         while (currentCoroutineContext().isActive) {
             pushPending()
-            delay(30_000)
+            delay(30_000.milliseconds)
         }
     }
 
@@ -103,7 +108,10 @@ class SyncCoordinator(
         pendingDebtors.forEach { entity ->
             runCatching {
                 client.from("debtors").upsert(entity.toDto(userId))
-                debtorDao.upsert(entity.copy(syncStatus = SyncStatus.SYNCED))
+                // These rows already exist locally (read from getPending()) — upsert() is
+                // "INSERT OR REPLACE", which deletes-then-reinserts on a PK conflict and would
+                // cascade-delete this debtor's transactions via their ON DELETE CASCADE FK.
+                debtorDao.update(entity.copy(syncStatus = SyncStatus.SYNCED))
             }.onFailure { failures++ }
         }
         pendingDebtTx.forEach { entity ->
@@ -115,7 +123,7 @@ class SyncCoordinator(
         pendingCreditors.forEach { entity ->
             runCatching {
                 client.from("creditors").upsert(entity.toDto(userId))
-                creditorDao.upsert(entity.copy(syncStatus = SyncStatus.SYNCED))
+                creditorDao.update(entity.copy(syncStatus = SyncStatus.SYNCED))
             }.onFailure { failures++ }
         }
         pendingCreditorTx.forEach { entity ->
@@ -135,8 +143,12 @@ class SyncCoordinator(
                 remoteRows.forEach { dto ->
                     val local = debtorDao.getById(dto.id)
                     val remoteUpdatedAt = kotlin.time.Instant.parse(dto.updatedAt)
-                    if (local == null || local.syncStatus != SyncStatus.PENDING || local.updatedAt <= remoteUpdatedAt) {
+                    if (local == null) {
                         debtorDao.upsert(dto.toEntity())
+                    } else if (local.syncStatus != SyncStatus.PENDING || local.updatedAt <= remoteUpdatedAt) {
+                        // A plain upsert() here would cascade-delete this debtor's transactions
+                        // (see the note in RoomDebtorRepository) since the row already exists.
+                        debtorDao.update(dto.toEntity())
                     }
                 }
             }
@@ -158,8 +170,10 @@ class SyncCoordinator(
                 remoteRows.forEach { dto ->
                     val local = creditorDao.getById(dto.id)
                     val remoteUpdatedAt = kotlin.time.Instant.parse(dto.updatedAt)
-                    if (local == null || local.syncStatus != SyncStatus.PENDING || local.updatedAt <= remoteUpdatedAt) {
+                    if (local == null) {
                         creditorDao.upsert(dto.toEntity())
+                    } else if (local.syncStatus != SyncStatus.PENDING || local.updatedAt <= remoteUpdatedAt) {
+                        creditorDao.update(dto.toEntity())
                     }
                 }
             }

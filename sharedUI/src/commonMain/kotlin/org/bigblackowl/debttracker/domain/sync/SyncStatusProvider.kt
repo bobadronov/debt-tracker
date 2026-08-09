@@ -10,4 +10,7 @@ import org.bigblackowl.debttracker.domain.model.SyncUiStatus
  */
 interface SyncStatusProvider {
     val status: StateFlow<SyncUiStatus>
+
+    /** Pull-to-refresh hook: pushes any PENDING local writes immediately instead of waiting for the next cycle. */
+    suspend fun refreshNow()
 }

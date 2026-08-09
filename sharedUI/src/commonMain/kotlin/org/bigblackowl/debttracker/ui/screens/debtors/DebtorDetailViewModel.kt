@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -19,6 +21,7 @@ import org.bigblackowl.debttracker.domain.model.DebtTransaction
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.domain.model.SyncStatus
 import org.bigblackowl.debttracker.domain.model.toDebtTransactionType
+import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
 import org.bigblackowl.debttracker.domain.usecase.debtor.AddDebtTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorTransactionsUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorUseCase
@@ -30,17 +33,20 @@ class DebtorDetailViewModel(
     observeDebtor: ObserveDebtorUseCase,
     observeTransactions: ObserveDebtorTransactionsUseCase,
     private val addTransaction: AddDebtTransactionUseCase,
+    private val syncStatusProvider: SyncStatusProvider,
     private val appSettings: AppSettings,
 ) : ViewModel() {
 
+    private val isRefreshing = MutableStateFlow(false)
     private val effectsChannel = Channel<DebtorDetailEffect>()
     val effects = effectsChannel.receiveAsFlow()
 
     val state: StateFlow<DebtorDetailState> = combine(
-        observeDebtor(debtorId), observeTransactions(debtorId),
-    ) { debtor, transactions ->
+        observeDebtor(debtorId), observeTransactions(debtorId), isRefreshing,
+    ) { debtor, transactions, refreshing ->
         DebtorDetailState(
             isLoading = false,
+            isRefreshing = refreshing,
             debtor = debtor,
             transactions = transactions.sortedByDescending { it.date },
         )
@@ -50,6 +56,16 @@ class DebtorDetailViewModel(
         when (intent) {
             is DebtorDetailIntent.Repay -> record(intent.amount, intent.method, intent.cardLastDigits)
             is DebtorDetailIntent.LendMore -> record(intent.amount.negate(), intent.method, intent.cardLastDigits)
+            DebtorDetailIntent.Refresh -> refresh()
+        }
+    }
+
+    private fun refresh() {
+        viewModelScope.launch {
+            isRefreshing.value = true
+            runCatching { syncStatusProvider.refreshNow() }
+            delay(300)
+            isRefreshing.value = false
         }
     }
 

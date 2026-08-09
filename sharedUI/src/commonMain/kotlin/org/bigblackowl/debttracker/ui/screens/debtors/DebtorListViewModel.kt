@@ -3,6 +3,7 @@ package org.bigblackowl.debttracker.ui.screens.debtors
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -15,6 +16,7 @@ import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.sound.SoundEffect
 import org.bigblackowl.debttracker.core.sound.SoundPlayer
 import org.bigblackowl.debttracker.domain.model.DebtStatus
+import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
 import org.bigblackowl.debttracker.domain.usecase.debtor.DeleteDebtorUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorsUseCase
 
@@ -22,6 +24,7 @@ import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorsUseCase
 class DebtorListViewModel(
     observeDebtors: ObserveDebtorsUseCase,
     private val deleteDebtor: DeleteDebtorUseCase,
+    private val syncStatusProvider: SyncStatusProvider,
     private val appSettings: AppSettings,
     private val soundPlayer: SoundPlayer,
 ) : ViewModel() {
@@ -30,12 +33,13 @@ class DebtorListViewModel(
     private val query = MutableStateFlow("")
     private val sortOrder = MutableStateFlow(DebtorSortOrder.NAME_ASC)
     private val statusFilter = MutableStateFlow(DebtorStatusFilter.ACTIVE)
+    private val isRefreshing = MutableStateFlow(false)
     private val effectsChannel = Channel<DebtorListEffect>()
     val effects = effectsChannel.receiveAsFlow()
 
     val state: StateFlow<DebtorListState> = combine(
-        observeDebtors(), query, sortOrder, statusFilter,
-    ) { debtors, currentQuery, currentSort, currentFilter ->
+        observeDebtors(), query, sortOrder, statusFilter, isRefreshing,
+    ) { debtors, currentQuery, currentSort, currentFilter, refreshing ->
         val byStatus = when (currentFilter) {
             DebtorStatusFilter.ALL -> debtors
             DebtorStatusFilter.ACTIVE -> debtors.filter { it.debtor.status == DebtStatus.ACTIVE }
@@ -53,6 +57,7 @@ class DebtorListViewModel(
         }
         DebtorListState(
             isLoading = false,
+            isRefreshing = refreshing,
             query = currentQuery,
             sortOrder = currentSort,
             statusFilter = currentFilter,
@@ -69,6 +74,14 @@ class DebtorListViewModel(
                 runCatching { deleteDebtor(intent.debtorId) }
                     .onSuccess { if (appSettings.soundEnabled) soundPlayer.play(SoundEffect.DELETE) }
                     .onFailure { effectsChannel.send(DebtorListEffect.Error(resolveStrings(appSettings.locale).deleteError)) }
+            }
+            DebtorListIntent.Refresh -> viewModelScope.launch {
+                isRefreshing.value = true
+                // The list is already Flow-driven and live — this just flushes pending writes to
+                // the server sooner and gives the pull gesture a visible, deliberate result.
+                runCatching { syncStatusProvider.refreshNow() }
+                delay(300)
+                isRefreshing.value = false
             }
         }
     }

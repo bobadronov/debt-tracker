@@ -369,6 +369,7 @@ class FakeAuthRepository : AuthRepository {
 
 class FakeSyncStatusProvider : SyncStatusProvider {
     override val status: StateFlow<SyncUiStatus> = MutableStateFlow(SyncUiStatus.Synced)
+    override suspend fun refreshNow() {}
 }
 
 /** Ніколи не знаходить збіг — @Preview не робить мережевих викликів. */

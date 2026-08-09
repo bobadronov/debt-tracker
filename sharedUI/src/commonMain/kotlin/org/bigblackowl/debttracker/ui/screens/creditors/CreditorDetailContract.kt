@@ -9,6 +9,7 @@ import org.bigblackowl.debttracker.domain.model.creditorBalance
 /** MVI contract for [CreditorDetailScreen] — a creditor's profile plus their transaction history. */
 data class CreditorDetailState(
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val creditor: Creditor? = null,
     val transactions: List<CreditorTransaction> = emptyList(),
 ) {
@@ -19,6 +20,7 @@ data class CreditorDetailState(
 sealed interface CreditorDetailIntent {
     data class Return(val amount: BigDecimal, val method: PaymentMethod, val cardLastDigits: String?) : CreditorDetailIntent
     data class BorrowMore(val amount: BigDecimal, val method: PaymentMethod, val cardLastDigits: String?) : CreditorDetailIntent
+    data object Refresh : CreditorDetailIntent
 }
 
 sealed interface CreditorDetailEffect {

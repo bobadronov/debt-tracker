@@ -22,6 +22,7 @@ actual fun platformDataModule(): Module = module {
     single<SyncStatusProvider> {
         object : SyncStatusProvider {
             override val status = MutableStateFlow<SyncUiStatus>(SyncUiStatus.Synced)
+            override suspend fun refreshNow() {}
         }
     }
 }

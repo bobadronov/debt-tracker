@@ -43,12 +43,16 @@ class RoomCreditorRepository(
     override suspend fun getCreditor(id: String): Creditor? = creditorDao.getById(id)?.toDomain()
 
     override suspend fun upsertCreditor(creditor: Creditor) {
-        creditorDao.upsert(creditor.copy(syncStatus = SyncStatus.PENDING).toEntity())
+        val entity = creditor.copy(syncStatus = SyncStatus.PENDING).toEntity()
+        // A plain upsert() is "INSERT OR REPLACE", which on an existing PK deletes-then-reinserts
+        // the row in SQLite — that would cascade-delete this creditor's transactions via their
+        // ON DELETE CASCADE FK. Route existing creditors through a genuine UPDATE instead.
+        if (creditorDao.getById(entity.id) != null) creditorDao.update(entity) else creditorDao.upsert(entity)
     }
 
     override suspend fun softDeleteCreditor(id: String) {
         val entity = creditorDao.getById(id) ?: return
-        creditorDao.upsert(
+        creditorDao.update(
             entity.copy(isDeleted = true, syncStatus = SyncStatus.PENDING, updatedAt = kotlin.time.Clock.System.now())
         )
     }
@@ -70,7 +74,7 @@ class RoomCreditorRepository(
     private suspend fun recalcCreditorStatus(creditorId: String) {
         val entity = creditorDao.getById(creditorId) ?: return
         val balance = transactionDao.getAllForCreditor(creditorId).map { it.toDomain() }.creditorBalance()
-        creditorDao.upsert(
+        creditorDao.update(
             entity.copy(
                 status = balance.toDebtStatus(),
                 syncStatus = SyncStatus.PENDING,

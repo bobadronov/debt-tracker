@@ -11,6 +11,7 @@ enum class DebtorStatusFilter { ALL, ACTIVE, CLOSED }
 
 data class DebtorListState(
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val query: String = "",
     val sortOrder: DebtorSortOrder = DebtorSortOrder.NAME_ASC,
     val statusFilter: DebtorStatusFilter = DebtorStatusFilter.ACTIVE,
@@ -26,6 +27,7 @@ sealed interface DebtorListIntent {
     data class ChangeSort(val order: DebtorSortOrder) : DebtorListIntent
     data class ChangeStatusFilter(val filter: DebtorStatusFilter) : DebtorListIntent
     data class Delete(val debtorId: String) : DebtorListIntent
+    data object Refresh : DebtorListIntent
 }
 
 sealed interface DebtorListEffect {

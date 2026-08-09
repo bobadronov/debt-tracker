@@ -9,6 +9,7 @@ import org.bigblackowl.debttracker.domain.model.debtorBalance
 /** MVI contract for [DebtorDetailScreen] — a debtor's profile plus their transaction history. */
 data class DebtorDetailState(
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val debtor: Debtor? = null,
     val transactions: List<DebtTransaction> = emptyList(),
 ) {
@@ -19,6 +20,7 @@ data class DebtorDetailState(
 sealed interface DebtorDetailIntent {
     data class Repay(val amount: BigDecimal, val method: PaymentMethod, val cardLastDigits: String?) : DebtorDetailIntent
     data class LendMore(val amount: BigDecimal, val method: PaymentMethod, val cardLastDigits: String?) : DebtorDetailIntent
+    data object Refresh : DebtorDetailIntent
 }
 
 sealed interface DebtorDetailEffect {

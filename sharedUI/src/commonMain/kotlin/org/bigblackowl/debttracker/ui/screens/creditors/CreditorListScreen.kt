@@ -29,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -174,13 +175,19 @@ fun CreditorListScreen(
                 )
             }
 
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                items(state.creditors, key = { it.creditor.id }) { item ->
-                    CreditorRow(
-                        item = item,
-                        onClick = { onOpenCreditor(item.creditor.id) },
-                        onDelete = { viewModel.onIntent(CreditorListIntent.Delete(item.creditor.id)) },
-                    )
+            PullToRefreshBox(
+                isRefreshing = state.isRefreshing,
+                onRefresh = { viewModel.onIntent(CreditorListIntent.Refresh) },
+                modifier = Modifier.weight(1f),
+            ) {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(state.creditors, key = { it.creditor.id }) { item ->
+                        CreditorRow(
+                            item = item,
+                            onClick = { onOpenCreditor(item.creditor.id) },
+                            onDelete = { viewModel.onIntent(CreditorListIntent.Delete(item.creditor.id)) },
+                        )
+                    }
                 }
             }
 

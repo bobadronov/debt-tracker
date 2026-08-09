@@ -64,6 +64,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.BuildConfig
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
@@ -75,7 +76,9 @@ import org.bigblackowl.debttracker.core.security.rememberBiometricAuthenticator
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.update.AppUpdateInfo
 import org.bigblackowl.debttracker.core.update.appUpdateSupported
+import org.bigblackowl.debttracker.core.update.inAppUpdateSupported
 import org.bigblackowl.debttracker.core.update.rememberAppUpdateChecker
+import org.bigblackowl.debttracker.core.update.rememberInAppUpdateLauncher
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.usecase.DeleteAllDataUseCase
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
@@ -119,6 +122,7 @@ fun SettingsScreen(
     var showDeleteConfirm1 by remember { mutableStateOf(false) }
     var showDeleteConfirm2 by remember { mutableStateOf(false) }
     var deleteDone by remember { mutableStateOf(false) }
+    var showSignOutConfirm by remember { mutableStateOf(false) }
     var isUploadingAvatar by remember { mutableStateOf(false) }
     var avatarError by remember { mutableStateOf<String?>(null) }
     val strings = LocalStrings.current
@@ -147,6 +151,25 @@ fun SettingsScreen(
 
     val updateChecker = rememberAppUpdateChecker()
     var updateState by remember { mutableStateOf<UpdateCheckState>(UpdateCheckState.Idle) }
+
+    // Android updates via Play's in-app update flow (InAppUpdateBanner already checks once on
+    // launch) rather than AppUpdateChecker's GitHub-Releases download, which Play builds can't
+    // use — sideloading a self-downloaded APK over a Play install is blocked by Play Protect.
+    // This just lets "Check for updates" force a re-check on demand instead of waiting.
+    val inAppUpdateLauncher = rememberInAppUpdateLauncher()
+    val inAppUpdateReady by inAppUpdateLauncher.updateReadyToInstall.collectAsState()
+    var isCheckingInAppUpdate by remember { mutableStateOf(false) }
+
+    fun startInAppUpdateCheck() {
+        scope.launch {
+            isCheckingInAppUpdate = true
+            inAppUpdateLauncher.checkForUpdate()
+            // Play's API has no "no update found" signal to await — checkForUpdate() either
+            // starts a background download or does nothing, so just show a brief spinner.
+            delay(2_000)
+            isCheckingInAppUpdate = false
+        }
+    }
 
     fun startUpdateCheck() {
         scope.launch {
@@ -272,7 +295,7 @@ fun SettingsScreen(
                         SettingsRow(
                             icon = Icons.AutoMirrored.Filled.Logout,
                             title = strings.settingsSignOut,
-                            onClick = { scope.launch { authRepository.signOut() } },
+                            onClick = { showSignOutConfirm = true },
                         )
                     } else {
                         SettingsRowDivider()
@@ -421,19 +444,42 @@ fun SettingsScreen(
                 // --- About ---
                 SettingsSection(strings.settingsAbout) {
                     val versionLine = "${BuildConfig.APP_VERSION} (${BuildConfig.APP_VERSION_CODE})"
-                    val versionSubtitle = when (val s = updateState) {
-                        UpdateCheckState.Idle -> versionLine
-                        UpdateCheckState.Checking -> "$versionLine · ${strings.settingsCheckingForUpdates}"
-                        UpdateCheckState.UpToDate -> "$versionLine · ${strings.settingsUpToDate}"
-                        is UpdateCheckState.Available -> strings.updateAvailableMessage(s.info.version)
-                        is UpdateCheckState.Downloading -> strings.updateDownloading
-                        is UpdateCheckState.Failed -> strings.updateFailed
+                    val versionSubtitle = if (currentPlatform == AppPlatform.ANDROID) {
+                        when {
+                            inAppUpdateReady -> strings.updateReadyToInstall
+                            isCheckingInAppUpdate -> "$versionLine · ${strings.settingsCheckingForUpdates}"
+                            else -> versionLine
+                        }
+                    } else {
+                        when (val s = updateState) {
+                            UpdateCheckState.Idle -> versionLine
+                            UpdateCheckState.Checking -> "$versionLine · ${strings.settingsCheckingForUpdates}"
+                            UpdateCheckState.UpToDate -> "$versionLine · ${strings.settingsUpToDate}"
+                            is UpdateCheckState.Available -> strings.updateAvailableMessage(s.info.version)
+                            is UpdateCheckState.Downloading -> strings.updateDownloading
+                            is UpdateCheckState.Failed -> strings.updateFailed
+                        }
                     }
                     SettingsRow(
                         icon = Icons.Filled.Info,
                         title = strings.settingsAboutVersion,
                         subtitle = versionSubtitle,
-                        trailing = if (appUpdateSupported) {
+                        trailing = if (currentPlatform == AppPlatform.ANDROID && inAppUpdateSupported) {
+                            {
+                                when {
+                                    inAppUpdateReady -> IconButton(onClick = { inAppUpdateLauncher.completeUpdate() }) {
+                                        Icon(Icons.Filled.Download, contentDescription = strings.updateRestartNow)
+                                    }
+
+                                    isCheckingInAppUpdate ->
+                                        CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
+
+                                    else -> IconButton(onClick = { startInAppUpdateCheck() }) {
+                                        Icon(Icons.Filled.Refresh, contentDescription = strings.settingsCheckForUpdates)
+                                    }
+                                }
+                            }
+                        } else if (appUpdateSupported) {
                             {
                                 when (val s = updateState) {
                                     UpdateCheckState.Checking, is UpdateCheckState.Downloading ->
@@ -472,6 +518,28 @@ fun SettingsScreen(
                 settings.setPinCode(pin)
                 settings.protectionEnabled = true
                 showPinSetupDialog = false
+            },
+        )
+    }
+
+    if (showSignOutConfirm) {
+        AlertDialog(
+            onDismissRequest = { showSignOutConfirm = false },
+            title = { Text(strings.settingsSignOutConfirmTitle) },
+            text = { Text(strings.settingsSignOutConfirmText) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSignOutConfirm = false
+                    scope.launch {
+                        // Local data belongs to whichever account is signed in — leaving it behind
+                        // would leak into the next account that signs in on this device.
+                        deleteAllData()
+                        authRepository.signOut()
+                    }
+                }) { Text(strings.settingsSignOut) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSignOutConfirm = false }) { Text(strings.cancel) }
             },
         )
     }
