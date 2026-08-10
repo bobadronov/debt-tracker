@@ -68,9 +68,9 @@ one shot on a fresh Supabase project) to recover both the app and its backend.
 - **Delete all data** — a double-confirmation "Delete all data" action that
   hard-deletes everything server-side via a `SECURITY DEFINER` RPC scoped to
   `auth.uid()` (settings/profile row itself is left untouched).
-- **Runtime language switcher** — System / Українська / English, switchable
-  without restarting the app (see §6 "Localization" — this is *not* done via
-  `compose.resources`).
+- **Runtime language switcher** — System / Українська / English / Polski,
+  each with a flag icon in the picker, switchable without restarting the app
+  (see §6 "Localization" — this is *not* done via `compose.resources`).
 - **Search, sort, filter, swipe-to-delete**, sound + haptic feedback on key
   actions (both independently toggleable in Settings; the haptic toggle only
   shows on Android/iOS, since Desktop/Web have no vibration motor behind
@@ -97,7 +97,7 @@ snapshot:
 | Settings | `multiplatform-settings` |
 | Images | Coil 3 (`coil-compose`, `coil-network-ktor3`) |
 | Android widget | AndroidX Glance |
-| PDF export | Apache PDFBox |
+| PDF export | PdfKmp (`io.github.conamobiledev:pdfkmp` + `pdfkmp-viewer`) — vector DSL, Android/Desktop/iOS only |
 
 Android: `compileSdk = 37`, `minSdk = 26` (biometric API stability), `targetSdk = 37`.
 JVM target for Android/JVM source sets: **17**.
@@ -117,7 +117,7 @@ sharedUI/src
 │   │   ├── security/      # expect BiometricAuthenticator
 │   │   ├── export/        # expect FileExporter (CSV/PDF)
 │   │   ├── sound/         # expect SoundPlayer
-│   │   ├── i18n/          # Strings.kt catalog + AppLocale.kt (see §6)
+│   │   ├── i18n/          # Strings.kt catalog + AppLocale.kt + translate/ (see §6)
 │   │   └── shortcuts/     # Desktop hotkey → search-focus bridge
 │   ├── ui/
 │   │   ├── screens/{debtors,creditors,auth,settings,export,stats}/
@@ -128,15 +128,16 @@ sharedUI/src
 │   ├── theme/             # Material 3 color schemes, debt/repay accent colors
 │   └── preview/           # @Preview support: fake in-memory repos + isolated Koin context
 ├── roomMain/               # Entity/DAO/Database + repository impls + sync (Android/iOS/JVM only)
+├── pdfMain/                # PdfKmp vector-DSL PDF report builder (Android/iOS/JVM — not Web)
 ├── androidMain/ iosMain/ jvmMain/ webMain/
 │                           # actual implementations of the expect declarations above
-└── webMain                 # shared JS + Wasm source set (no Room — online-only on Web)
+└── webMain                 # shared JS + Wasm source set (no Room, no PDF export — online-only on Web)
 ```
 
-Note: `roomMain` is a **custom intermediate source set**, which opts KGP out
-of its default hierarchy template project-wide — wire the full
-`commonMain`/`roomMain`/platform hierarchy by hand via explicit `dependsOn(...)`
-in `sharedUI/build.gradle.kts`, and set
+Note: `roomMain` and `pdfMain` are **custom intermediate source sets**, which
+opts KGP out of its default hierarchy template project-wide — wire the full
+`commonMain`/`roomMain`/`pdfMain`/platform hierarchy by hand via explicit
+`dependsOn(...)` in `sharedUI/build.gradle.kts`, and set
 `kotlin.mpp.applyDefaultHierarchyTemplate=false` in `gradle.properties`.
 
 **Screen pattern (MVI):** each screen's `Contract` file defines an immutable
@@ -184,35 +185,47 @@ access should happen when rendering a preview.
 
 ## 6. Localization
 
-The app has a runtime language switcher (System / Українська / English) in
-Settings that intentionally does **not** use `compose.resources`
-(`Res.string.*`). Reason: at the pinned Compose Multiplatform version, the
-`components-resources` library has no public API to override the resolved
-locale independent of the OS locale — `stringResource()` always follows the
-live system locale with no override hook (`ComposeEnvironment`,
-`LocalComposeEnvironment`, `ResourceEnvironment`, `LanguageQualifier` are all
-`internal`). If rebuilding against a newer Compose Multiplatform release,
-re-check whether that library now exposes a public locale override before
-assuming this workaround is still necessary.
+The app has a runtime language switcher (System / Українська / English /
+Polski, each row with a flag icon) in Settings that intentionally does
+**not** use `compose.resources` (`Res.string.*`). Reason: at the pinned
+Compose Multiplatform version, the `components-resources` library has no
+public API to override the resolved locale independent of the OS locale —
+`stringResource()` always follows the live system locale with no override
+hook (`ComposeEnvironment`, `LocalComposeEnvironment`, `ResourceEnvironment`,
+`LanguageQualifier` are all `internal`). If rebuilding against a newer
+Compose Multiplatform release, re-check whether that library now exposes a
+public locale override before assuming this workaround is still necessary.
 
-Instead, build a hand-rolled catalog in
-`core/i18n/`:
+Instead, build a hand-rolled catalog in `core/i18n/`:
 - `Strings.kt` — a `data class Strings` with every user-facing string as a
-  field (interpolated ones as `(Int) -> String` etc.), plus `UkStrings` and
-  `EnStrings` instances.
-- `AppLocale.kt` — `LocalStrings` (a `CompositionLocal<Strings>`),
-  `resolveStrings(localeSetting: String): Strings` (a plain, non-composable
-  function — needed in ViewModels and the Android Glance widget, not just
-  Composables), and a `ProvideAppStrings` composable wrapper.
-- `AppSettings.locale` (`"system" | "uk" | "en"`, default `"system"`) drives
-  it; the app's root theme composable wraps its content in
+  field (interpolated ones as `(Int) -> String` etc.). No language data here
+  — just the field declarations.
+- `core/i18n/translate/{UkStrings,EnStrings,PlStrings}.kt` — one file per
+  language, each a top-level `val` instance of `Strings`. Adding a new
+  language means adding one new file here rather than growing `Strings.kt`
+  itself.
+- `AppLocale.kt` — `LocalStrings` (a `CompositionLocal<Strings>`), a
+  `supportedLanguages: Map<String, Strings>` (`"uk"`/`"en"`/`"pl"` →
+  instance), `resolveStrings(localeSetting: String): Strings` (a plain,
+  non-composable function — needed in ViewModels and the Android Glance
+  widget, not just Composables — that looks up `localeSetting` in the map,
+  then falls back to the OS locale via `Locale.current.language`, then to
+  `UkStrings`), and a `ProvideAppStrings` composable wrapper.
+- `AppSettings.locale` (`"system" | "uk" | "en" | "pl"`, default `"system"`)
+  drives it; the app's root theme composable wraps its content in
   `ProvideAppStrings(settings.locale)`.
 - ViewModels that need a localized fallback string outside Compose take
   `AppSettings` as a constructor param and call `resolveStrings(...)`
   directly, since they can't use a `CompositionLocal`.
+- The language picker (`LanguageScreen.kt`) pairs each language with a flag
+  emoji (`LanguageOption(value, label, flag)`); "System" has no flag and
+  keeps a generic language icon instead.
 
-When adding new user-facing text, add a field to `Strings` (both `UkStrings`
-and `EnStrings`) rather than reaching for `Res.string`.
+When adding new user-facing text, add a field to `Strings` and fill it in on
+every file under `core/i18n/translate/` rather than reaching for
+`Res.string`. When adding a new language, add both a new
+`core/i18n/translate/XxStrings.kt` file and an entry in `AppLocale.kt`'s
+`supportedLanguages` map and the language picker's option list.
 
 ## 7. Database schema (Supabase / Postgres)
 

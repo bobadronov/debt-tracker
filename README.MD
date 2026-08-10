@@ -30,6 +30,8 @@ Android, iOS, Desktop (JVM), and Web (JS/Wasm).
 - **Export** — CSV/PDF export of transaction history, filtered by direction
   and date range, generated natively on each platform.
 - **Android home-screen widget** (Glance) showing the two running totals.
+- **Runtime language switcher** — System / Українська / English / Polski,
+  each with a flag icon, switchable without restarting the app.
 - **Search, sort, filter, swipe-to-delete**, sound feedback on key actions,
   and Desktop keyboard shortcuts (`Ctrl+N` new debtor, `Ctrl+Shift+N` new
   creditor, `Ctrl+F` search, `Esc` back).
@@ -69,6 +71,7 @@ sharedUI/src
 │   │   ├── security/      # expect BiometricAuthenticator
 │   │   ├── export/        # expect FileExporter (CSV/PDF)
 │   │   ├── sound/         # expect SoundPlayer
+│   │   ├── i18n/          # Strings.kt catalog, translate/ (one file per language), AppLocale.kt
 │   │   └── shortcuts/     # Desktop hotkey → search-focus bridge
 │   ├── ui/
 │   │   ├── screens/{debtors,creditors,auth,settings,export,stats}/
@@ -79,9 +82,10 @@ sharedUI/src
 │   ├── theme/             # Material 3 color schemes, debt/repay accent colors
 │   └── preview/           # @Preview support: fake in-memory repos + isolated Koin context
 ├── roomMain/               # Entity/DAO/Database + repository impls + sync (Android/iOS/JVM only)
+├── pdfMain/                # PdfKmp vector-DSL PDF report builder (Android/iOS/JVM — not Web)
 ├── androidMain/ iosMain/ jvmMain/ webMain/
 │                           # actual implementations of the expect declarations above
-└── webMain                 # shared JS + Wasm source set (no Room — online-only on Web)
+└── webMain                 # shared JS + Wasm source set (no Room, no PDF export — online-only on Web)
 ```
 
 **Screen pattern (MVI):** each screen's `Contract` file defines an immutable

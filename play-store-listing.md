@@ -39,6 +39,7 @@ KEY FEATURES
 • Stats screen: totals, top debtors/creditors, 6-month trend
 • Export transaction history to CSV or PDF
 • Home-screen widget showing your two running totals
+• Available in Ukrainian, English, and Polish
 • Search, sort, filter, swipe-to-delete
 • No ads. No trackers. No analytics SDKs.
 
@@ -65,10 +66,37 @@ DebtTracker веде облік грошей в обидва боки — хто
 • Екран статистики: загальні суми, топ боржників/кредиторів, тренд за 6 місяців
 • Експорт історії транзакцій у CSV або PDF
 • Віджет на головному екрані з двома поточними сумами
+• Доступно українською, англійською та польською мовами
 • Пошук, сортування, фільтри, свайп для видалення
 • Без реклами. Без трекерів. Без аналітичних SDK.
 
 Ваші дані залишаються на пристрої, якщо ви не створите акаунт для синхронізації — детальніше в політиці конфіденційності.
+```
+
+**Krótki opis** (pl-PL, 80 znaków maks., 79 użyto):
+```
+Śledź, kto jest winien Tobie i komu winien Ty — offline, synchronizacja online.
+```
+
+**Pełny opis** (pl-PL, 4000 znaków maks., 1013 użyto):
+```
+Debt Tracker śledzi pieniądze pożyczone w obie strony — kto jest winien Tobie i komu Ty jesteś winien — bez wzajemnego rozliczania.
+
+GŁÓWNE FUNKCJE
+• Dwie niezależne listy: osoby winne Tobie i osoby, którym Ty jesteś winien
+• Każda pożyczka i spłata to osobna transakcja z bieżącym saldem
+• Wiele walut: UAH, USD, PLN, EUR — osobno dla każdego kontaktu
+• Działa całkowicie offline — konto nie jest wymagane
+• Opcjonalne bezpłatne konto do synchronizacji między urządzeniami w czasie rzeczywistym
+• Blokada aplikacji odciskiem palca, twarzą lub kodem PIN
+• Ekran statystyk: sumy, najwięksi dłużnicy/wierzyciele, trend z 6 miesięcy
+• Eksport historii transakcji do CSV lub PDF
+• Widżet na ekranie głównym z dwiema bieżącymi sumami
+• Dostępne w językach: ukraińskim, angielskim i polskim
+• Wyszukiwanie, sortowanie, filtry, przesunięcie do usunięcia
+• Bez reklam. Bez trackerów. Bez SDK analitycznych.
+
+Twoje dane pozostają na urządzeniu, chyba że założysz konto do synchronizacji — szczegóły w polityce prywatności.
 ```
 
 **App category:** Finance
