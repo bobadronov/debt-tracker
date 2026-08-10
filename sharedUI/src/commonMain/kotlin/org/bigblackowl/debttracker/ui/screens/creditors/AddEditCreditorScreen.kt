@@ -40,7 +40,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
@@ -133,7 +136,7 @@ fun AddEditCreditorScreen(
                         viewModel.onIntent(AddEditCreditorIntent.PhoneChanged(it.filter { c -> c.isDigit() }.take(10)))
                     },
                     label = { Text(strings.phone) },
-                    modifier = Modifier.fillMaxWidth().onFocusChanged { phoneFocused = it.isFocused },
+                    modifier = Modifier.fillMaxWidth().onFocusChanged { phoneFocused = it.isFocused }.semantics { contentType = ContentType.PhoneNumber },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     visualTransformation = remember { UkrainianPhoneVisualTransformation() },
@@ -152,7 +155,7 @@ fun AddEditCreditorScreen(
                     value = state.email,
                     onValueChange = { viewModel.onIntent(AddEditCreditorIntent.EmailChanged(it)) },
                     label = { Text(strings.email) },
-                    modifier = Modifier.fillMaxWidth().onFocusChanged { emailFocused = it.isFocused },
+                    modifier = Modifier.fillMaxWidth().onFocusChanged { emailFocused = it.isFocused }.semantics { contentType = ContentType.EmailAddress },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 )
