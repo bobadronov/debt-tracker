@@ -5,7 +5,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Login
@@ -29,7 +28,6 @@ import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Info
@@ -38,12 +36,10 @@ import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularWavyProgressIndicator
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -60,15 +56,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
-import coil3.compose.AsyncImage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.BuildConfig
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
-import org.bigblackowl.debttracker.core.media.rememberImagePicker
 import org.bigblackowl.debttracker.core.platform.AppPlatform
 import org.bigblackowl.debttracker.core.platform.currentPlatform
 import org.bigblackowl.debttracker.core.security.BiometricResult
@@ -84,6 +77,7 @@ import org.bigblackowl.debttracker.domain.usecase.DeleteAllDataUseCase
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
+import org.bigblackowl.debttracker.ui.components.AccountAvatar
 import org.bigblackowl.debttracker.ui.components.PinSetupDialog
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
 import org.bigblackowl.debttracker.ui.components.SettingsRow
@@ -108,7 +102,6 @@ fun SettingsScreen(
     val deleteAllData = koinInject<DeleteAllDataUseCase>()
     val authRepository = koinInject<AuthRepository>()
     val biometricAuthenticator = rememberBiometricAuthenticator()
-    val imagePicker = rememberImagePicker()
     val scope = rememberCoroutineScope()
     val isAuthenticated by authRepository.isAuthenticated.collectAsState()
     val avatarUrl by authRepository.avatarUrl.collectAsState()
@@ -123,8 +116,6 @@ fun SettingsScreen(
     var showDeleteConfirm2 by remember { mutableStateOf(false) }
     var deleteDone by remember { mutableStateOf(false) }
     var showSignOutConfirm by remember { mutableStateOf(false) }
-    var isUploadingAvatar by remember { mutableStateOf(false) }
-    var avatarError by remember { mutableStateOf<String?>(null) }
     val strings = LocalStrings.current
 
     LaunchedEffect(Unit) {
@@ -206,31 +197,20 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(Dimens.space24),
             ) {
                 // --- Account ---
+                // Tapping the card opens the account detail screen (avatar upload + name/phone
+                // edit all live there now) instead of a separate "Edit account" row.
                 SettingsSection(strings.settingsAccount) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(Dimens.space16),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .let { if (isAuthenticated) it.clickable(onClick = onEditAccount) else it }
+                            .padding(Dimens.space16),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         AccountAvatar(
                             avatarUrl = avatarUrl,
-                            isUploading = isUploadingAvatar,
-                            onEditClick = {
-                                imagePicker.pickImage { picked ->
-                                    if (picked == null) return@pickImage
-                                    scope.launch {
-                                        isUploadingAvatar = true
-                                        avatarError = null
-                                        authRepository.updateAvatar(
-                                            picked.bytes,
-                                            picked.fileExtension
-                                        )
-                                            .onFailure {
-                                                avatarError = strings.settingsAvatarUploadError
-                                            }
-                                        isUploadingAvatar = false
-                                    }
-                                }
-                            },
+                            isUploading = false,
+                            onEditClick = onEditAccount,
                         )
                         Spacer(Modifier.width(Dimens.space16))
                         Column(modifier = Modifier.weight(1f)) {
@@ -275,22 +255,9 @@ fun SettingsScreen(
                                     }
                                 }
                             }
-                            AnimatedVisibility(visible = avatarError != null, enter = fadeIn(), exit = fadeOut()) {
-                                Text(
-                                    avatarError.orEmpty(),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.debtAccentColors.debt
-                                )
-                            }
                         }
                     }
                     if (isAuthenticated) {
-                        SettingsRowDivider()
-                        SettingsRow(
-                            icon = Icons.Default.Edit,
-                            title = strings.settingsEditAccount,
-                            onClick = onEditAccount,
-                        )
                         SettingsRowDivider()
                         SettingsRow(
                             icon = Icons.AutoMirrored.Filled.Logout,
@@ -351,16 +318,18 @@ fun SettingsScreen(
                         SettingsRowDivider()
                     }
 
-                    SettingsRow(
-                        icon = if (settings.soundEnabled) Icons.AutoMirrored.Filled.VolumeUp else Icons.AutoMirrored.Filled.VolumeOff,
-                        title = strings.settingsSound,
-                        trailing = {
-                            Switch(
-                                checked = settings.soundEnabled,
-                                onCheckedChange = { settings.soundEnabled = it })
-                        },
-                    )
-                    SettingsRowDivider()
+                    if (BuildConfig.SOUND_ENABLED) {
+                        SettingsRow(
+                            icon = if (settings.soundEnabled) Icons.AutoMirrored.Filled.VolumeUp else Icons.AutoMirrored.Filled.VolumeOff,
+                            title = strings.settingsSound,
+                            trailing = {
+                                Switch(
+                                    checked = settings.soundEnabled,
+                                    onCheckedChange = { settings.soundEnabled = it })
+                            },
+                        )
+                        SettingsRowDivider()
+                    }
 
                     if (showHapticRow) {
                         SettingsRow(
@@ -619,46 +588,4 @@ private fun SettingsScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = 
     SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {}, onOpenLanguage = {})
 }
 
-/** Кругле фото акаунта (ініціали-заглушка через [Icons.Default.Person] поки фото немає) з кнопкою редагування. */
-@Composable
-private fun AccountAvatar(avatarUrl: String?, isUploading: Boolean, onEditClick: () -> Unit) {
-    Box(modifier = Modifier.size(Dimens.space72)) {
-        Box(
-            modifier = Modifier
-                .size(Dimens.space72)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (avatarUrl != null) {
-                AsyncImage(
-                    model = avatarUrl,
-                    contentDescription = null,
-                    modifier = Modifier.size(Dimens.space72).clip(CircleShape),
-                )
-            } else {
-                Icon(
-                    Icons.Default.Person,
-                    contentDescription = null,
-                    modifier = Modifier.size(Dimens.space40),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            if (isUploading) {
-                CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space72))
-            }
-        }
-        FilledIconButton(
-            onClick = onEditClick,
-            enabled = !isUploading,
-            modifier = Modifier.align(Alignment.BottomEnd).size(Dimens.space28),
-        ) {
-            Icon(
-                Icons.Default.PhotoCamera,
-                contentDescription = null,
-                modifier = Modifier.size(Dimens.space16)
-            )
-        }
-    }
-}
 

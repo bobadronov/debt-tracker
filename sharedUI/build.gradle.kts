@@ -175,6 +175,7 @@ buildConfig {
     buildConfigField("APP_VERSION", versionProps.getProperty("VERSION_NAME"))
     buildConfigField("APP_VERSION_CODE", versionProps.getProperty("VERSION_CODE").toInt())
     buildConfigField("APP_AUTHOR", "BigBlackOwl")
+    buildConfigField("SOUND_ENABLED", false)
 }
 
 room {

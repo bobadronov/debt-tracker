@@ -13,16 +13,26 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.SortByAlpha
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -86,6 +96,7 @@ fun CreditorListScreen(
             Row(
                 modifier = Modifier.fillMaxWidth().padding(Dimens.space12),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.space8),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 OutlinedTextField(
                     value = state.query,
@@ -93,86 +104,76 @@ fun CreditorListScreen(
                     modifier = Modifier.weight(1f).focusRequester(searchFocusRequester),
                     singleLine = true,
                     placeholder = { Text(strings.creditorListSearchPlaceholder) },
+                    trailingIcon = if (state.query.isNotEmpty()) {
+                        {
+                            IconButton(onClick = { viewModel.onIntent(CreditorListIntent.Search("")) }) {
+                                Icon(Icons.Filled.Close, strings.clearSearch)
+                            }
+                        }
+                    } else null,
                 )
-                var sortMenuOpen by remember { mutableStateOf(false) }
+
+                // All sort + status options live in one menu instead of separate chip rows.
+                // Sort items are single-click toggles: tapping the active one flips its direction
+                // (shown by the trailing arrow) instead of just re-selecting it.
+                var filterMenuOpen by remember { mutableStateOf(false) }
                 Box {
-                    IconButton(onClick = {
-                        sortMenuOpen = true
-                    }) { Icon(Icons.AutoMirrored.Filled.Sort, null) }
+                    IconButton(onClick = { filterMenuOpen = true }) {
+                        Icon(Icons.Filled.FilterList, strings.creditorListSort)
+                    }
                     DropdownMenu(
-                        expanded = sortMenuOpen,
-                        onDismissRequest = { sortMenuOpen = false }) {
-                        DropdownMenuItem(
-                            text = { Text(strings.creditorListSortByName) },
-                            onClick = {
-                                viewModel.onIntent(
-                                    CreditorListIntent.ChangeSort(
-                                        CreditorSortOrder.NAME_ASC
-                                    )
-                                ); sortMenuOpen = false
-                            }
+                        expanded = filterMenuOpen,
+                        onDismissRequest = { filterMenuOpen = false },
+                    ) {
+                        val sortOptions = listOf(
+                            Triple(CreditorSortOrder.NAME_ASC, strings.creditorListSortByName, Icons.Filled.SortByAlpha),
+                            Triple(CreditorSortOrder.BALANCE_DESC, strings.creditorListSortByBalance, Icons.Filled.Payments),
+                            Triple(CreditorSortOrder.RECENT, strings.creditorListSortRecent, Icons.Filled.History),
                         )
-                        DropdownMenuItem(
-                            text = { Text(strings.creditorListSortByBalance) },
-                            onClick = {
-                                viewModel.onIntent(
-                                    CreditorListIntent.ChangeSort(
-                                        CreditorSortOrder.BALANCE_DESC
+                        sortOptions.forEach { (order, label, icon) ->
+                            val isActive = state.sortOrder == order
+                            DropdownMenuItem(
+                                leadingIcon = { Icon(icon, null) },
+                                text = { Text(label) },
+                                trailingIcon = if (isActive) {
+                                    {
+                                        Icon(
+                                            if (state.sortAscending) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward,
+                                            strings.creditorListSortReverse,
+                                        )
+                                    }
+                                } else null,
+                                onClick = {
+                                    viewModel.onIntent(
+                                        if (isActive) CreditorListIntent.ToggleSortDirection
+                                        else CreditorListIntent.ChangeSort(order)
                                     )
-                                ); sortMenuOpen = false
-                            }
+                                    filterMenuOpen = false
+                                },
+                            )
+                        }
+                        HorizontalDivider()
+                        val statusOptions = listOf(
+                            Triple(CreditorStatusFilter.ACTIVE, strings.creditorListFilterActive, Icons.Filled.HourglassEmpty),
+                            Triple(CreditorStatusFilter.CLOSED, strings.creditorListFilterClosed, Icons.Filled.CheckCircle),
+                            Triple(CreditorStatusFilter.ALL, strings.creditorListFilterAll, Icons.AutoMirrored.Filled.List),
                         )
-                        DropdownMenuItem(
-                            text = { Text(strings.creditorListSortRecent) },
-                            onClick = {
-                                viewModel.onIntent(
-                                    CreditorListIntent.ChangeSort(
-                                        CreditorSortOrder.RECENT
-                                    )
-                                ); sortMenuOpen = false
-                            }
-                        )
+                        statusOptions.forEach { (filter, label, icon) ->
+                            val isSelected = state.statusFilter == filter
+                            DropdownMenuItem(
+                                leadingIcon = { Icon(icon, null) },
+                                text = { Text(label) },
+                                trailingIcon = if (isSelected) {
+                                    { Icon(Icons.Filled.Check, null) }
+                                } else null,
+                                onClick = {
+                                    viewModel.onIntent(CreditorListIntent.ChangeStatusFilter(filter))
+                                    filterMenuOpen = false
+                                },
+                            )
+                        }
                     }
                 }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.space12),
-                horizontalArrangement = Arrangement.spacedBy(Dimens.space8),
-            ) {
-                FilterChip(
-                    selected = state.statusFilter == CreditorStatusFilter.ACTIVE,
-                    onClick = {
-                        viewModel.onIntent(
-                            CreditorListIntent.ChangeStatusFilter(
-                                CreditorStatusFilter.ACTIVE
-                            )
-                        )
-                    },
-                    label = { Text(strings.creditorListFilterActive) },
-                )
-                FilterChip(
-                    selected = state.statusFilter == CreditorStatusFilter.CLOSED,
-                    onClick = {
-                        viewModel.onIntent(
-                            CreditorListIntent.ChangeStatusFilter(
-                                CreditorStatusFilter.CLOSED
-                            )
-                        )
-                    },
-                    label = { Text(strings.creditorListFilterClosed) },
-                )
-                FilterChip(
-                    selected = state.statusFilter == CreditorStatusFilter.ALL,
-                    onClick = {
-                        viewModel.onIntent(
-                            CreditorListIntent.ChangeStatusFilter(
-                                CreditorStatusFilter.ALL
-                            )
-                        )
-                    },
-                    label = { Text(strings.creditorListFilterAll) },
-                )
             }
 
             PullToRefreshBox(

@@ -11,7 +11,13 @@ import androidx.compose.runtime.Composable
  */
 interface FileExporter {
     suspend fun saveCsv(fileName: String, content: String)
-    suspend fun savePdf(fileName: String, title: String, rows: List<ExportRow>)
+
+    /**
+     * [title] is the program header, [description] a one-line explainer of what the document is —
+     * both drawn above the table. [headers] labels the table's columns (same order as [ExportRow]'s
+     * date/createdAt/label/amount/comment fields).
+     */
+    suspend fun savePdf(fileName: String, title: String, description: String, headers: List<String>, rows: List<ExportRow>)
 }
 
 @Composable

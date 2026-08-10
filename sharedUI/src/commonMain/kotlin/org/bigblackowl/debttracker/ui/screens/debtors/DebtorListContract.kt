@@ -14,6 +14,7 @@ data class DebtorListState(
     val isRefreshing: Boolean = false,
     val query: String = "",
     val sortOrder: DebtorSortOrder = DebtorSortOrder.NAME_ASC,
+    val sortAscending: Boolean = true,
     val statusFilter: DebtorStatusFilter = DebtorStatusFilter.ACTIVE,
     val debtors: List<DebtorWithBalance> = emptyList(),
 ) {
@@ -25,6 +26,7 @@ data class DebtorListState(
 sealed interface DebtorListIntent {
     data class Search(val query: String) : DebtorListIntent
     data class ChangeSort(val order: DebtorSortOrder) : DebtorListIntent
+    data object ToggleSortDirection : DebtorListIntent
     data class ChangeStatusFilter(val filter: DebtorStatusFilter) : DebtorListIntent
     data class Delete(val debtorId: String) : DebtorListIntent
     data object Refresh : DebtorListIntent

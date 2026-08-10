@@ -24,3 +24,8 @@ interface SoundPlayer {
 
 /** Creates the platform's real [SoundPlayer] (Android `SoundPool`, iOS `AVAudioPlayer`, desktop `Clip`, web `Audio`). */
 expect fun createSoundPlayer(): SoundPlayer
+
+/** No-op [SoundPlayer] bound app-wide when [org.bigblackowl.debttracker.BuildConfig.SOUND_ENABLED] is off. */
+internal object NoopSoundPlayer : SoundPlayer {
+    override fun play(sound: SoundEffect) = Unit
+}

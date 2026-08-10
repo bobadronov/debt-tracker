@@ -14,6 +14,7 @@ data class CreditorListState(
     val isRefreshing: Boolean = false,
     val query: String = "",
     val sortOrder: CreditorSortOrder = CreditorSortOrder.NAME_ASC,
+    val sortAscending: Boolean = true,
     val statusFilter: CreditorStatusFilter = CreditorStatusFilter.ACTIVE,
     val creditors: List<CreditorWithBalance> = emptyList(),
 ) {
@@ -25,6 +26,7 @@ data class CreditorListState(
 sealed interface CreditorListIntent {
     data class Search(val query: String) : CreditorListIntent
     data class ChangeSort(val order: CreditorSortOrder) : CreditorListIntent
+    data object ToggleSortDirection : CreditorListIntent
     data class ChangeStatusFilter(val filter: CreditorStatusFilter) : CreditorListIntent
     data class Delete(val creditorId: String) : CreditorListIntent
     data object Refresh : CreditorListIntent

@@ -6,6 +6,9 @@ import kotlinx.coroutines.CoroutineScope
 import org.bigblackowl.debttracker.core.remote.createAppSupabaseClient
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
+import org.bigblackowl.debttracker.BuildConfig
+import org.bigblackowl.debttracker.core.sound.NoopSoundPlayer
+import org.bigblackowl.debttracker.core.sound.SoundPlayer
 import org.bigblackowl.debttracker.core.sound.createSoundPlayer
 import org.bigblackowl.debttracker.data.remote.SupabaseAuthRepository
 import org.bigblackowl.debttracker.data.remote.SupabaseProfileLookupRepository
@@ -46,7 +49,7 @@ import org.koin.dsl.module
  */
 val appModule = module {
     single { AppSettings(Settings()) }
-    single { createSoundPlayer() }
+    single<SoundPlayer> { if (BuildConfig.SOUND_ENABLED) createSoundPlayer() else NoopSoundPlayer }
     single<CoroutineScope> { ApplicationScope() }
     single { SearchFocusRequests() }
     single<SupabaseClient> { createAppSupabaseClient() }

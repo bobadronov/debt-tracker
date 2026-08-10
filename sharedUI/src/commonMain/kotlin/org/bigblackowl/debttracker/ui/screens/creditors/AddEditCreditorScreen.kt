@@ -40,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
@@ -107,6 +108,7 @@ fun AddEditCreditorScreen(
                 verticalArrangement = Arrangement.spacedBy(Dimens.space12),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+                var fullNameFocused by remember { mutableStateOf(false) }
                 OutlinedTextField(
                     value = state.fullName,
                     onValueChange = { viewModel.onIntent(AddEditCreditorIntent.FullNameChanged(it)) },
@@ -114,22 +116,24 @@ fun AddEditCreditorScreen(
                     placeholder = { Text(strings.fullNamePlaceholder) },
                     isError = state.fullNameError != null,
                     supportingText = { state.fullNameError?.let { Text(it) } },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().onFocusChanged { fullNameFocused = it.isFocused },
                     singleLine = true,
                 )
                 ClipboardPasteHint(
                     clipboardText = clipboardText,
                     fieldValue = state.fullName,
+                    isFieldFocused = fullNameFocused,
                     isRelevant = ::isValidFullName,
                     onPaste = { viewModel.onIntent(AddEditCreditorIntent.FullNameChanged(it)) },
                 )
+                var phoneFocused by remember { mutableStateOf(false) }
                 OutlinedTextField(
                     value = state.phone,
                     onValueChange = {
                         viewModel.onIntent(AddEditCreditorIntent.PhoneChanged(it.filter { c -> c.isDigit() }.take(10)))
                     },
                     label = { Text(strings.phone) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().onFocusChanged { phoneFocused = it.isFocused },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     visualTransformation = remember { UkrainianPhoneVisualTransformation() },
@@ -137,22 +141,25 @@ fun AddEditCreditorScreen(
                 ClipboardPasteHint(
                     clipboardText = clipboardText,
                     fieldValue = state.phone,
+                    isFieldFocused = phoneFocused,
                     isRelevant = { it.filter(Char::isDigit).length >= 9 },
                     onPaste = {
                         viewModel.onIntent(AddEditCreditorIntent.PhoneChanged(it.filter(Char::isDigit).take(10)))
                     },
                 )
+                var emailFocused by remember { mutableStateOf(false) }
                 OutlinedTextField(
                     value = state.email,
                     onValueChange = { viewModel.onIntent(AddEditCreditorIntent.EmailChanged(it)) },
                     label = { Text(strings.email) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().onFocusChanged { emailFocused = it.isFocused },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 )
                 ClipboardPasteHint(
                     clipboardText = clipboardText,
                     fieldValue = state.email,
+                    isFieldFocused = emailFocused,
                     isRelevant = ::isValidEmail,
                     onPaste = { viewModel.onIntent(AddEditCreditorIntent.EmailChanged(it)) },
                 )
@@ -163,21 +170,24 @@ fun AddEditCreditorScreen(
                         onDismiss = { viewModel.onIntent(AddEditCreditorIntent.DismissProfileSuggestion) },
                     )
                 }
+                var commentFocused by remember { mutableStateOf(false) }
                 OutlinedTextField(
                     value = state.comment,
                     onValueChange = { viewModel.onIntent(AddEditCreditorIntent.CommentChanged(it)) },
                     label = { Text(strings.comment) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().onFocusChanged { commentFocused = it.isFocused },
                     maxLines = 4,
                 )
                 ClipboardPasteHint(
                     clipboardText = clipboardText,
                     fieldValue = state.comment,
+                    isFieldFocused = commentFocused,
                     isRelevant = { it.trim().length in 1..500 },
                     onPaste = { viewModel.onIntent(AddEditCreditorIntent.CommentChanged(it)) },
                 )
 
                 if (!state.isEditing) {
+                    var initialAmountFocused by remember { mutableStateOf(false) }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth(),
@@ -195,7 +205,7 @@ fun AddEditCreditorScreen(
                             label = { Text(strings.addEditCreditorInitialAmount) },
                             isError = state.amountError != null,
                             supportingText = { state.amountError?.let { Text(it) } },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).onFocusChanged { initialAmountFocused = it.isFocused },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
@@ -237,6 +247,7 @@ fun AddEditCreditorScreen(
                     ClipboardPasteHint(
                         clipboardText = clipboardText,
                         fieldValue = state.initialAmountText,
+                        isFieldFocused = initialAmountFocused,
                         isRelevant = { text ->
                             val sanitized = sanitizeAmountInput(text)
                             sanitized.isNotBlank() &&
@@ -281,6 +292,7 @@ fun AddEditCreditorScreen(
                         )
                     }
                     if (state.method == PaymentMethod.CARD) {
+                        var cardLastDigitsFocused by remember { mutableStateOf(false) }
                         OutlinedTextField(
                             value = state.cardLastDigits,
                             onValueChange = {
@@ -291,11 +303,12 @@ fun AddEditCreditorScreen(
                                 )
                             },
                             label = { Text(strings.cardLastDigits) },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().onFocusChanged { cardLastDigitsFocused = it.isFocused },
                         )
                         ClipboardPasteHint(
                             clipboardText = clipboardText,
                             fieldValue = state.cardLastDigits,
+                            isFieldFocused = cardLastDigitsFocused,
                             isRelevant = { it.filter(Char::isDigit).length in 3..6 },
                             onPaste = { viewModel.onIntent(AddEditCreditorIntent.CardLastDigitsChanged(it)) },
                         )

@@ -50,19 +50,21 @@ fun rememberClipboardText(): State<String?> {
 
 /**
  * Dismissible chip suggesting to paste [clipboardText] into a currently-blank field, shown
- * only when [isRelevant] accepts the clipboard content. Mirrors [ProfileSuggestionCard]'s
+ * only while the field is focused (so it doesn't clutter screens with several empty fields)
+ * and only when [isRelevant] accepts the clipboard content. Mirrors [ProfileSuggestionCard]'s
  * use/dismiss interaction for visual consistency.
  */
 @Composable
 fun ClipboardPasteHint(
     clipboardText: String?,
     fieldValue: String,
+    isFieldFocused: Boolean,
     isRelevant: (String) -> Boolean,
     onPaste: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (clipboardText.isNullOrBlank()) return
-    if (fieldValue.isNotBlank() || !isRelevant(clipboardText)) return
+    if (!isFieldFocused || fieldValue.isNotBlank() || !isRelevant(clipboardText)) return
     var dismissed by remember(clipboardText) { mutableStateOf(false) }
     if (dismissed) return
 
@@ -115,6 +117,7 @@ private fun ClipboardPasteHintLightPhonePreview() = DebtTrackerPreview(darkTheme
     ClipboardPasteHint(
         clipboardText = "1234.56",
         fieldValue = "",
+        isFieldFocused = true,
         isRelevant = { true },
         onPaste = {},
     )
@@ -126,6 +129,7 @@ private fun ClipboardPasteHintDarkPhonePreview() = DebtTrackerPreview(darkTheme 
     ClipboardPasteHint(
         clipboardText = "1234.56",
         fieldValue = "",
+        isFieldFocused = true,
         isRelevant = { true },
         onPaste = {},
     )
@@ -137,6 +141,7 @@ private fun ClipboardPasteHintLightDesktopPreview() = DebtTrackerPreview(darkThe
     ClipboardPasteHint(
         clipboardText = "1234.56",
         fieldValue = "",
+        isFieldFocused = true,
         isRelevant = { true },
         onPaste = {},
     )
@@ -148,6 +153,7 @@ private fun ClipboardPasteHintDarkDesktopPreview() = DebtTrackerPreview(darkThem
     ClipboardPasteHint(
         clipboardText = "1234.56",
         fieldValue = "",
+        isFieldFocused = true,
         isRelevant = { true },
         onPaste = {},
     )

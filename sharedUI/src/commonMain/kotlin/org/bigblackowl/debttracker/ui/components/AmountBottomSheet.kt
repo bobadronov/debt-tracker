@@ -22,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.input.KeyboardType
@@ -55,8 +56,10 @@ fun AmountBottomSheet(
     onConfirm: (amount: BigDecimal, method: PaymentMethod, cardLastDigits: String?) -> Unit,
 ) {
     var amountText by remember { mutableStateOf(prefillAmount) }
+    var amountFocused by remember { mutableStateOf(false) }
     var method by remember { mutableStateOf(PaymentMethod.CASH) }
     var cardLastDigits by remember { mutableStateOf("") }
+    var cardLastDigitsFocused by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     val sheetState = rememberModalBottomSheetState()
     val appSettings = koinInject<AppSettings>()
@@ -81,13 +84,14 @@ fun AmountBottomSheet(
                 label = { Text("${strings.amount} (${currency.symbol})") },
                 isError = error != null,
                 supportingText = { error?.let { Text(it) } },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().onFocusChanged { amountFocused = it.isFocused },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             )
             ClipboardPasteHint(
                 clipboardText = clipboardText,
                 fieldValue = amountText,
+                isFieldFocused = amountFocused,
                 isRelevant = { text ->
                     val sanitized = sanitizeAmountInput(text)
                     sanitized.isNotBlank() &&
@@ -113,11 +117,12 @@ fun AmountBottomSheet(
                     value = cardLastDigits,
                     onValueChange = { cardLastDigits = it },
                     label = { Text(strings.cardLastDigits) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().onFocusChanged { cardLastDigitsFocused = it.isFocused },
                 )
                 ClipboardPasteHint(
                     clipboardText = clipboardText,
                     fieldValue = cardLastDigits,
+                    isFieldFocused = cardLastDigitsFocused,
                     isRelevant = { it.filter(Char::isDigit).length in 3..6 },
                     onPaste = { cardLastDigits = it },
                 )

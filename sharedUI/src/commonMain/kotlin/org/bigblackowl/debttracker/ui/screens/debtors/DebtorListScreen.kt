@@ -12,16 +12,26 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.SortByAlpha
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -85,6 +95,7 @@ fun DebtorListScreen(
             Row(
                 modifier = Modifier.fillMaxWidth().padding(Dimens.space12),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.space8),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 OutlinedTextField(
                     value = state.query,
@@ -92,86 +103,76 @@ fun DebtorListScreen(
                     modifier = Modifier.weight(1f).focusRequester(searchFocusRequester),
                     singleLine = true,
                     placeholder = { Text(strings.debtorListSearchPlaceholder) },
+                    trailingIcon = if (state.query.isNotEmpty()) {
+                        {
+                            IconButton(onClick = { viewModel.onIntent(DebtorListIntent.Search("")) }) {
+                                Icon(Icons.Filled.Close, strings.clearSearch)
+                            }
+                        }
+                    } else null,
                 )
-                var sortMenuOpen by remember { mutableStateOf(false) }
+
+                // All sort + status options live in one menu instead of separate chip rows.
+                // Sort items are single-click toggles: tapping the active one flips its direction
+                // (shown by the trailing arrow) instead of just re-selecting it.
+                var filterMenuOpen by remember { mutableStateOf(false) }
                 Box {
-                    IconButton(onClick = {
-                        sortMenuOpen = true
-                    }) { Icon(Icons.AutoMirrored.Filled.Sort, null) }
+                    IconButton(onClick = { filterMenuOpen = true }) {
+                        Icon(Icons.Filled.FilterList, strings.debtorListSort)
+                    }
                     DropdownMenu(
-                        expanded = sortMenuOpen,
-                        onDismissRequest = { sortMenuOpen = false }) {
-                        DropdownMenuItem(
-                            text = { Text(strings.debtorListSortByName) },
-                            onClick = {
-                                viewModel.onIntent(
-                                    DebtorListIntent.ChangeSort(
-                                        DebtorSortOrder.NAME_ASC
-                                    )
-                                ); sortMenuOpen = false
-                            }
+                        expanded = filterMenuOpen,
+                        onDismissRequest = { filterMenuOpen = false },
+                    ) {
+                        val sortOptions = listOf(
+                            Triple(DebtorSortOrder.NAME_ASC, strings.debtorListSortByName, Icons.Filled.SortByAlpha),
+                            Triple(DebtorSortOrder.BALANCE_DESC, strings.debtorListSortByBalance, Icons.Filled.Payments),
+                            Triple(DebtorSortOrder.RECENT, strings.debtorListSortRecent, Icons.Filled.History),
                         )
-                        DropdownMenuItem(
-                            text = { Text(strings.debtorListSortByBalance) },
-                            onClick = {
-                                viewModel.onIntent(
-                                    DebtorListIntent.ChangeSort(
-                                        DebtorSortOrder.BALANCE_DESC
+                        sortOptions.forEach { (order, label, icon) ->
+                            val isActive = state.sortOrder == order
+                            DropdownMenuItem(
+                                leadingIcon = { Icon(icon, null) },
+                                text = { Text(label) },
+                                trailingIcon = if (isActive) {
+                                    {
+                                        Icon(
+                                            if (state.sortAscending) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward,
+                                            strings.debtorListSortReverse,
+                                        )
+                                    }
+                                } else null,
+                                onClick = {
+                                    viewModel.onIntent(
+                                        if (isActive) DebtorListIntent.ToggleSortDirection
+                                        else DebtorListIntent.ChangeSort(order)
                                     )
-                                ); sortMenuOpen = false
-                            }
+                                    filterMenuOpen = false
+                                },
+                            )
+                        }
+                        HorizontalDivider()
+                        val statusOptions = listOf(
+                            Triple(DebtorStatusFilter.ACTIVE, strings.debtorListFilterActive, Icons.Filled.HourglassEmpty),
+                            Triple(DebtorStatusFilter.CLOSED, strings.debtorListFilterClosed, Icons.Filled.CheckCircle),
+                            Triple(DebtorStatusFilter.ALL, strings.debtorListFilterAll, Icons.AutoMirrored.Filled.List),
                         )
-                        DropdownMenuItem(
-                            text = { Text(strings.debtorListSortRecent) },
-                            onClick = {
-                                viewModel.onIntent(
-                                    DebtorListIntent.ChangeSort(
-                                        DebtorSortOrder.RECENT
-                                    )
-                                ); sortMenuOpen = false
-                            }
-                        )
+                        statusOptions.forEach { (filter, label, icon) ->
+                            val isSelected = state.statusFilter == filter
+                            DropdownMenuItem(
+                                leadingIcon = { Icon(icon, null) },
+                                text = { Text(label) },
+                                trailingIcon = if (isSelected) {
+                                    { Icon(Icons.Filled.Check, null) }
+                                } else null,
+                                onClick = {
+                                    viewModel.onIntent(DebtorListIntent.ChangeStatusFilter(filter))
+                                    filterMenuOpen = false
+                                },
+                            )
+                        }
                     }
                 }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.space12),
-                horizontalArrangement = Arrangement.spacedBy(Dimens.space8),
-            ) {
-                FilterChip(
-                    selected = state.statusFilter == DebtorStatusFilter.ACTIVE,
-                    onClick = {
-                        viewModel.onIntent(
-                            DebtorListIntent.ChangeStatusFilter(
-                                DebtorStatusFilter.ACTIVE
-                            )
-                        )
-                    },
-                    label = { Text(strings.debtorListFilterActive) },
-                )
-                FilterChip(
-                    selected = state.statusFilter == DebtorStatusFilter.CLOSED,
-                    onClick = {
-                        viewModel.onIntent(
-                            DebtorListIntent.ChangeStatusFilter(
-                                DebtorStatusFilter.CLOSED
-                            )
-                        )
-                    },
-                    label = { Text(strings.debtorListFilterClosed) },
-                )
-                FilterChip(
-                    selected = state.statusFilter == DebtorStatusFilter.ALL,
-                    onClick = {
-                        viewModel.onIntent(
-                            DebtorListIntent.ChangeStatusFilter(
-                                DebtorStatusFilter.ALL
-                            )
-                        )
-                    },
-                    label = { Text(strings.debtorListFilterAll) },
-                )
             }
 
             PullToRefreshBox(

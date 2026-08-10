@@ -31,14 +31,18 @@ class CreditorListViewModel(
 
     private val query = MutableStateFlow("")
     private val sortOrder = MutableStateFlow(CreditorSortOrder.NAME_ASC)
+    private val sortAscending = MutableStateFlow(true)
     private val statusFilter = MutableStateFlow(CreditorStatusFilter.ACTIVE)
     private val isRefreshing = MutableStateFlow(false)
     private val effectsChannel = Channel<CreditorListEffect>()
     val effects = effectsChannel.receiveAsFlow()
 
+    // combine() tops out at 5 flows, so sort order + its direction are paired into one flow first.
+    private val sortState = combine(sortOrder, sortAscending) { order, ascending -> order to ascending }
+
     val state: StateFlow<CreditorListState> = combine(
-        observeCreditors(), query, sortOrder, statusFilter, isRefreshing,
-    ) { creditors, currentQuery, currentSort, currentFilter, refreshing ->
+        observeCreditors(), query, sortState, statusFilter, isRefreshing,
+    ) { creditors, currentQuery, (currentSort, ascending), currentFilter, refreshing ->
         val byStatus = when (currentFilter) {
             CreditorStatusFilter.ALL -> creditors
             CreditorStatusFilter.ACTIVE -> creditors.filter { it.creditor.status == DebtStatus.ACTIVE }
@@ -49,16 +53,18 @@ class CreditorListViewModel(
         } else {
             byStatus.filter { it.creditor.fullName.contains(currentQuery, ignoreCase = true) }
         }
-        val sorted = when (currentSort) {
+        val sortedBase = when (currentSort) {
             CreditorSortOrder.NAME_ASC -> filtered.sortedBy { it.creditor.fullName.lowercase() }
             CreditorSortOrder.BALANCE_DESC -> filtered.sortedWith { a, b -> b.balance.compareTo(a.balance) }
             CreditorSortOrder.RECENT -> filtered.sortedByDescending { it.creditor.updatedAt }
         }
+        val sorted = if (ascending) sortedBase else sortedBase.reversed()
         CreditorListState(
             isLoading = false,
             isRefreshing = refreshing,
             query = currentQuery,
             sortOrder = currentSort,
+            sortAscending = ascending,
             statusFilter = currentFilter,
             creditors = sorted,
         )
@@ -68,6 +74,7 @@ class CreditorListViewModel(
         when (intent) {
             is CreditorListIntent.Search -> query.value = intent.query
             is CreditorListIntent.ChangeSort -> sortOrder.value = intent.order
+            CreditorListIntent.ToggleSortDirection -> sortAscending.value = !sortAscending.value
             is CreditorListIntent.ChangeStatusFilter -> statusFilter.value = intent.filter
             is CreditorListIntent.Delete -> viewModelScope.launch {
                 runCatching { deleteCreditor(intent.creditorId) }

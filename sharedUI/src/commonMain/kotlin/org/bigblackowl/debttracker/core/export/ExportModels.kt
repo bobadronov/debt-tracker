@@ -5,6 +5,7 @@ enum class ExportDirection { DEBTORS, CREDITORS, BOTH }
 
 data class ExportRow(
     val date: String,
+    val createdAt: String,
     val label: String,
     val amount: String,
     val comment: String?,

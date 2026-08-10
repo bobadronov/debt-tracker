@@ -210,6 +210,14 @@ fun ExportScreen(onBack: () -> Unit, debtorId: String? = null, creditorId: Strin
                                 ExportFormat.PDF -> fileExporter.savePdf(
                                     "debt_tracker_export.pdf",
                                     "${strings.appName} — ${strings.exportTitle}",
+                                    strings.exportPdfDescription,
+                                    listOf(
+                                        strings.csvHeaderDate,
+                                        strings.csvHeaderCreatedAt,
+                                        strings.csvHeaderContact,
+                                        strings.csvHeaderAmount,
+                                        strings.csvHeaderComment,
+                                    ),
                                     rows
                                 )
                             }
@@ -302,7 +310,15 @@ private suspend fun collectExportRows(
             observeDebtorTransactions(debtorId).first().forEach { tx ->
                 val date = tx.date.toLocalDateTime(timeZone).date
                 if (inRange(date)) {
-                    rows.add(ExportRow(date.toString(), debtor.fullName, tx.amount.formatMoney(debtor.currency), tx.comment))
+                    rows.add(
+                        ExportRow(
+                            date.toString(),
+                            tx.createdAt.toLocalDateTime(timeZone).date.toString(),
+                            debtor.fullName,
+                            tx.amount.formatMoney(debtor.currency),
+                            tx.comment,
+                        )
+                    )
                 }
             }
         }
@@ -312,7 +328,15 @@ private suspend fun collectExportRows(
             observeCreditorTransactions(creditorId).first().forEach { tx ->
                 val date = tx.date.toLocalDateTime(timeZone).date
                 if (inRange(date)) {
-                    rows.add(ExportRow(date.toString(), creditor.fullName, tx.amount.formatMoney(creditor.currency), tx.comment))
+                    rows.add(
+                        ExportRow(
+                            date.toString(),
+                            tx.createdAt.toLocalDateTime(timeZone).date.toString(),
+                            creditor.fullName,
+                            tx.amount.formatMoney(creditor.currency),
+                            tx.comment,
+                        )
+                    )
                 }
             }
         }
@@ -326,6 +350,7 @@ private suspend fun collectExportRows(
                             rows.add(
                                 ExportRow(
                                     date.toString(),
+                                    tx.createdAt.toLocalDateTime(timeZone).date.toString(),
                                     item.debtor.fullName,
                                     tx.amount.formatMoney(item.debtor.currency),
                                     tx.comment
@@ -343,6 +368,7 @@ private suspend fun collectExportRows(
                             rows.add(
                                 ExportRow(
                                     date.toString(),
+                                    tx.createdAt.toLocalDateTime(timeZone).date.toString(),
                                     item.creditor.fullName,
                                     tx.amount.formatMoney(item.creditor.currency),
                                     tx.comment

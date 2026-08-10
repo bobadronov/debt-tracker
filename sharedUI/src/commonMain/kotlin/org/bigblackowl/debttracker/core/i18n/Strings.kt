@@ -32,6 +32,7 @@ data class Strings(
     val contactSuggestionUse: String,
     val clipboardPasteFound: String,
     val clipboardPasteUse: String,
+    val clearSearch: String,
 
     // app
     val appName: String,
@@ -118,6 +119,7 @@ data class Strings(
     val creditorListSortByName: String,
     val creditorListSortByBalance: String,
     val creditorListSortRecent: String,
+    val creditorListSortReverse: String,
     val creditorListFilterActive: String,
     val creditorListFilterClosed: String,
     val creditorListFilterAll: String,
@@ -129,6 +131,7 @@ data class Strings(
     val debtorListSortByName: String,
     val debtorListSortByBalance: String,
     val debtorListSortRecent: String,
+    val debtorListSortReverse: String,
     val debtorListFilterActive: String,
     val debtorListFilterClosed: String,
     val debtorListFilterAll: String,
@@ -153,6 +156,8 @@ data class Strings(
     val csvHeaderContact: String,
     val csvHeaderAmount: String,
     val csvHeaderComment: String,
+    val csvHeaderCreatedAt: String,
+    val exportPdfDescription: String,
 
     // settings
     val settingsTitle: String,
@@ -163,7 +168,6 @@ data class Strings(
     val settingsSignOutConfirmText: String,
     val settingsLocalOnly: String,
     val settingsSignIn: String,
-    val settingsEditAccount: String,
     val settingsPreferences: String,
     val settingsData: String,
     val settingsProtection: String,
@@ -255,6 +259,7 @@ val UkStrings = Strings(
     contactSuggestionUse = "Використати",
     clipboardPasteFound = "Скопійовано в буфер обміну",
     clipboardPasteUse = "Вставити",
+    clearSearch = "Очистити пошук",
 
     appName = "DebtTracker",
 
@@ -328,6 +333,7 @@ val UkStrings = Strings(
     creditorListSortByName = "За іменем",
     creditorListSortByBalance = "За сумою",
     creditorListSortRecent = "Нещодавні",
+    creditorListSortReverse = "Обернути порядок сортування",
     creditorListFilterActive = "Активні",
     creditorListFilterClosed = "Закриті",
     creditorListFilterAll = "Всі",
@@ -338,6 +344,7 @@ val UkStrings = Strings(
     debtorListSortByName = "За іменем",
     debtorListSortByBalance = "За сумою",
     debtorListSortRecent = "Нещодавні",
+    debtorListSortReverse = "Обернути порядок сортування",
     debtorListFilterActive = "Активні",
     debtorListFilterClosed = "Закриті",
     debtorListFilterAll = "Всі",
@@ -361,6 +368,8 @@ val UkStrings = Strings(
     csvHeaderContact = "Контакт",
     csvHeaderAmount = "Сума",
     csvHeaderComment = "Коментар",
+    csvHeaderCreatedAt = "Створено",
+    exportPdfDescription = "Автоматично згенерований звіт транзакцій із Debt Tracker.",
 
     settingsTitle = "Налаштування",
     settingsAccount = "Обліковий запис",
@@ -370,7 +379,6 @@ val UkStrings = Strings(
     settingsSignOutConfirmText = "Усі локальні дані цього акаунта (боржники, кредитори, транзакції) буде видалено з цього пристрою. Синхронізовані дані залишаться в акаунті — ви зможете завантажити їх знову, увійшовши повторно.",
     settingsLocalOnly = "Локальний акаунт",
     settingsSignIn = "Увійти / зареєструватись",
-    settingsEditAccount = "Редагувати дані акаунта",
     settingsPreferences = "Параметри",
     settingsData = "Дані",
     settingsProtection = "Захист входу",
@@ -403,7 +411,7 @@ val UkStrings = Strings(
     settingsCheckingForUpdates = "Перевірка…",
     settingsUpToDate = "Ви використовуєте останню версію",
 
-    editAccountTitle = "Редагування акаунта",
+    editAccountTitle = "Обліковий запис",
     editAccountEmailReadOnly = "Пошту не можна змінити тут",
 
     updateAvailableTitle = "Доступне оновлення",
@@ -455,6 +463,7 @@ val EnStrings = Strings(
     contactSuggestionUse = "Use",
     clipboardPasteFound = "Copied to clipboard",
     clipboardPasteUse = "Paste",
+    clearSearch = "Clear search",
 
     appName = "DebtTracker",
 
@@ -528,6 +537,7 @@ val EnStrings = Strings(
     creditorListSortByName = "By name",
     creditorListSortByBalance = "By amount",
     creditorListSortRecent = "Recent",
+    creditorListSortReverse = "Reverse sort order",
     creditorListFilterActive = "Active",
     creditorListFilterClosed = "Closed",
     creditorListFilterAll = "All",
@@ -538,6 +548,7 @@ val EnStrings = Strings(
     debtorListSortByName = "By name",
     debtorListSortByBalance = "By amount",
     debtorListSortRecent = "Recent",
+    debtorListSortReverse = "Reverse sort order",
     debtorListFilterActive = "Active",
     debtorListFilterClosed = "Closed",
     debtorListFilterAll = "All",
@@ -561,6 +572,8 @@ val EnStrings = Strings(
     csvHeaderContact = "Contact",
     csvHeaderAmount = "Amount",
     csvHeaderComment = "Comment",
+    csvHeaderCreatedAt = "Created",
+    exportPdfDescription = "Automatically generated Debt Tracker transaction report.",
 
     settingsTitle = "Settings",
     settingsAccount = "Account",
@@ -570,7 +583,6 @@ val EnStrings = Strings(
     settingsSignOutConfirmText = "All local data for this account (debtors, creditors, transactions) will be deleted from this device. Synced data stays in your account — you can download it again by signing back in.",
     settingsLocalOnly = "Local account",
     settingsSignIn = "Sign in / sign up",
-    settingsEditAccount = "Edit account info",
     settingsPreferences = "Preferences",
     settingsData = "Data",
     settingsProtection = "App lock",
@@ -603,7 +615,7 @@ val EnStrings = Strings(
     settingsCheckingForUpdates = "Checking…",
     settingsUpToDate = "You're up to date",
 
-    editAccountTitle = "Edit Account",
+    editAccountTitle = "Account",
     editAccountEmailReadOnly = "Email can't be changed here",
 
     updateAvailableTitle = "Update available",

@@ -10,7 +10,13 @@ private class NoOpFileExporter : FileExporter {
         Napier.d(tag = "FileExporter") { "saveCsv($fileName): Web-експорт ще не реалізовано (Фаза 10)" }
     }
 
-    override suspend fun savePdf(fileName: String, title: String, rows: List<ExportRow>) {
+    override suspend fun savePdf(
+        fileName: String,
+        title: String,
+        description: String,
+        headers: List<String>,
+        rows: List<ExportRow>,
+    ) {
         Napier.d(tag = "FileExporter") { "savePdf($fileName): Web-експорт ще не реалізовано (Фаза 10)" }
     }
 }
