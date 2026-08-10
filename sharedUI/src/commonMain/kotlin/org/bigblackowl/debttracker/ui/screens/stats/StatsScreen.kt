@@ -56,43 +56,65 @@ fun StatsScreen(onBack: () -> Unit, viewModel: StatsViewModel = koinViewModel())
     PlaceholderScreen(title = strings.statsTitle, onBack = onBack) {
         Column(
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(Dimens.space24),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Dimens.space12)) {
-                KpiCard(
-                    icon = Icons.AutoMirrored.Filled.TrendingDown,
-                    title = strings.statsDebtors,
-                    value = state.totalDebtorsByCurrency,
-                    modifier = Modifier.weight(1f),
-                )
-                KpiCard(
-                    icon = Icons.AutoMirrored.Filled.TrendingUp,
-                    title = strings.statsCreditors,
-                    value = state.totalCreditorsByCurrency,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-
-            SettingsSection(strings.statsTopDebtors) {
-                state.topDebtors.forEachIndexed { index, item ->
-                    TopRow(rank = index + 1, name = item.debtor.fullName, balance = item.balance, currency = item.debtor.currency)
-                    if (index != state.topDebtors.lastIndex) SettingsRowDivider()
+            Column(
+                modifier = Modifier.width(Dimens.contentMaxWidth),
+                verticalArrangement = Arrangement.spacedBy(Dimens.space12),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.space12)
+                ) {
+                    KpiCard(
+                        icon = Icons.AutoMirrored.Filled.TrendingDown,
+                        title = strings.statsDebtors,
+                        value = state.totalDebtorsByCurrency,
+                        modifier = Modifier.weight(1f),
+                    )
+                    KpiCard(
+                        icon = Icons.AutoMirrored.Filled.TrendingUp,
+                        title = strings.statsCreditors,
+                        value = state.totalCreditorsByCurrency,
+                        modifier = Modifier.weight(1f),
+                    )
                 }
-            }
 
-            SettingsSection(strings.statsTopCreditors) {
-                state.topCreditors.forEachIndexed { index, item ->
-                    TopRow(rank = index + 1, name = item.creditor.fullName, balance = item.balance, currency = item.creditor.currency)
-                    if (index != state.topCreditors.lastIndex) SettingsRowDivider()
+                SettingsSection(strings.statsTopDebtors) {
+                    state.topDebtors.forEachIndexed { index, item ->
+                        TopRow(
+                            rank = index + 1,
+                            name = item.debtor.fullName,
+                            balance = item.balance,
+                            currency = item.debtor.currency
+                        )
+                        if (index != state.topDebtors.lastIndex) SettingsRowDivider()
+                    }
                 }
-            }
 
-            SettingsSection(strings.statsMonthlyDebtTrend) {
-                MonthlyBars(state.monthlyDebtTrend, modifier = Modifier.padding(Dimens.space16))
-            }
+                SettingsSection(strings.statsTopCreditors) {
+                    state.topCreditors.forEachIndexed { index, item ->
+                        TopRow(
+                            rank = index + 1,
+                            name = item.creditor.fullName,
+                            balance = item.balance,
+                            currency = item.creditor.currency
+                        )
+                        if (index != state.topCreditors.lastIndex) SettingsRowDivider()
+                    }
+                }
 
-            SettingsSection(strings.statsMonthlyCreditorTrend) {
-                MonthlyBars(state.monthlyCreditorTrend, modifier = Modifier.padding(Dimens.space16))
+                SettingsSection(strings.statsMonthlyDebtTrend) {
+                    MonthlyBars(state.monthlyDebtTrend, modifier = Modifier.padding(Dimens.space16))
+                }
+
+                SettingsSection(strings.statsMonthlyCreditorTrend) {
+                    MonthlyBars(
+                        state.monthlyCreditorTrend,
+                        modifier = Modifier.padding(Dimens.space16)
+                    )
+                }
             }
         }
     }
@@ -124,7 +146,12 @@ private fun StatsScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = tru
 
 /** Tonal-картка KPI з іконкою в колі — той самий візуальний словник, що й SettingsRow/SettingsSection. */
 @Composable
-private fun KpiCard(icon: ImageVector, title: String, value: Map<Currency, BigDecimal>, modifier: Modifier = Modifier) {
+private fun KpiCard(
+    icon: ImageVector,
+    title: String,
+    value: Map<Currency, BigDecimal>,
+    modifier: Modifier = Modifier
+) {
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(Dimens.space20),
@@ -132,13 +159,23 @@ private fun KpiCard(icon: ImageVector, title: String, value: Map<Currency, BigDe
     ) {
         Column(modifier = Modifier.padding(Dimens.space16)) {
             Box(
-                modifier = Modifier.size(Dimens.space40).clip(CircleShape).background(MaterialTheme.debtAccentColors.debt.copy(alpha = 0.12f)),
+                modifier = Modifier.size(Dimens.space40).clip(CircleShape)
+                    .background(MaterialTheme.debtAccentColors.debt.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.debtAccentColors.debt, modifier = Modifier.size(Dimens.space20))
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.debtAccentColors.debt,
+                    modifier = Modifier.size(Dimens.space20)
+                )
             }
             Spacer(Modifier.height(Dimens.space12))
-            Text(title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                title,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Text(
                 value.formatTotals(),
                 style = MaterialTheme.typography.titleLarge,
@@ -152,16 +189,22 @@ private fun KpiCard(icon: ImageVector, title: String, value: Map<Currency, BigDe
 @Composable
 private fun TopRow(rank: Int, name: String, balance: BigDecimal, currency: Currency) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.space16, vertical = Dimens.space12),
+        modifier = Modifier.fillMaxWidth()
+            .padding(horizontal = Dimens.space16, vertical = Dimens.space12),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
-                modifier = Modifier.size(Dimens.space28).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
+                modifier = Modifier.size(Dimens.space28).clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("$rank", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Text(
+                    "$rank",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             }
             Spacer(Modifier.width(Dimens.space12))
             Text(name, style = MaterialTheme.typography.bodyLarge)
@@ -174,17 +217,29 @@ private fun TopRow(rank: Int, name: String, balance: BigDecimal, currency: Curre
 private fun MonthlyBars(points: List<MonthlyPoint>, modifier: Modifier = Modifier) {
     if (points.isEmpty()) return
     val strings = LocalStrings.current
-    val maxAbs = points.maxOf { it.amount.abs().toStringExpanded().toDoubleOrNull() ?: 0.0 }.coerceAtLeast(1.0)
+    val maxAbs = points.maxOf { it.amount.abs().toStringExpanded().toDoubleOrNull() ?: 0.0 }
+        .coerceAtLeast(1.0)
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(Dimens.space8)) {
         points.forEach { point ->
             val amountDouble = point.amount.toStringExpanded().toDoubleOrNull() ?: 0.0
             val targetFraction = (kotlin.math.abs(amountDouble) / maxAbs).toFloat().coerceIn(0f, 1f)
-            val fraction by animateFloatAsState(targetFraction.coerceAtLeast(0.02f), label = "trend-bar")
-            val color = if (amountDouble >= 0) MaterialTheme.debtAccentColors.debt else MaterialTheme.debtAccentColors.repay
+            val fraction by animateFloatAsState(
+                targetFraction.coerceAtLeast(0.02f),
+                label = "trend-bar"
+            )
+            val color =
+                if (amountDouble >= 0) MaterialTheme.debtAccentColors.debt else MaterialTheme.debtAccentColors.repay
             val label = "${strings.monthsShort[point.month - 1]} ${point.year % 100}"
 
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                Text(label, modifier = Modifier.width(Dimens.space56), style = MaterialTheme.typography.labelSmall)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    label,
+                    modifier = Modifier.width(Dimens.space56),
+                    style = MaterialTheme.typography.labelSmall
+                )
                 Box(
                     modifier = Modifier
                         .weight(1f)

@@ -89,6 +89,7 @@ fun SettingsRow(
     iconContainerColor: Color = MaterialTheme.colorScheme.surfaceVariant,
     onClick: (() -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
+    leadingContent: (@Composable () -> Unit)? = null,
 ) {
     Row(
         modifier = modifier
@@ -103,7 +104,11 @@ fun SettingsRow(
             modifier = Modifier.size(Dimens.space40).clip(CircleShape).background(iconContainerColor),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(Dimens.space20))
+            if (leadingContent != null) {
+                leadingContent()
+            } else {
+                Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(Dimens.space20))
+            }
         }
         Spacer(Modifier.width(Dimens.space16))
         Column(modifier = Modifier.weight(1f)) {

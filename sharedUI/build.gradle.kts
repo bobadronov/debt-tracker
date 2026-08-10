@@ -42,17 +42,35 @@ kotlin {
         val commonTest by getting
 
         val roomMain by creating { dependsOn(commonMain) }
+        // PdfKmp + pdfkmp-viewer publish no js/wasmJs artifacts (viewer is Android/iOS/Desktop-only,
+        // core adds wasm-js but not plain js) — same android/jvm/iosMain membership as roomMain above,
+        // so the PDF-building DSL code lives here once instead of copy-pasted per platform.
+        val pdfMain by creating { dependsOn(commonMain) }
 
-        val androidMain by getting { dependsOn(roomMain) }
-        val jvmMain by getting { dependsOn(roomMain) }
+        val androidMain by getting {
+            dependsOn(roomMain)
+            dependsOn(pdfMain)
+        }
+        val jvmMain by getting {
+            dependsOn(roomMain)
+            dependsOn(pdfMain)
+        }
 
-        val iosMain by creating { dependsOn(roomMain) }
+        val iosMain by creating {
+            dependsOn(roomMain)
+            dependsOn(pdfMain)
+        }
         val iosArm64Main by getting { dependsOn(iosMain) }
         val iosSimulatorArm64Main by getting { dependsOn(iosMain) }
 
         val webMain by creating { dependsOn(commonMain) }
         val jsMain by getting { dependsOn(webMain) }
         val wasmJsMain by getting { dependsOn(webMain) }
+
+        pdfMain.dependencies {
+            implementation(libs.pdfkmp) // PDF export (спек §6, п.8) — vector DSL
+            implementation(libs.pdfkmp.viewer) // in-app viewer screen (search/share/download)
+        }
 
         roomMain.dependencies {
             implementation(libs.room.runtime)
@@ -116,7 +134,6 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.ktor.client.okhttp)
-            implementation(libs.pdfbox) // Desktop PDF export (спек §6, п.8) — растеризація сторінки, без embedding шрифтів
         }
 
         webMain.dependencies {

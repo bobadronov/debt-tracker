@@ -3,19 +3,19 @@ package org.bigblackowl.debttracker.core.export
 import androidx.compose.runtime.Composable
 
 /**
- * Android/iOS: share sheet, локальна генерація. Desktop: збереження у файл
- * (спек §6, п.8). PDF рендериться нативно на кожній платформі (Canvas/
- * UIGraphicsPDFContext/растеризація+PDFBox на Desktop) — Unicode/кирилиця
- * коректні без embedding шрифтів, бо кожна платформа використовує системний
- * текстовий рендер.
+ * CSV: share sheet (Android/iOS) or a Save As dialog (Desktop), локальна генерація (спек §6, п.8).
+ * PDF: built with the PdfKmp vector DSL ([org.bigblackowl.debttracker.core.export.buildReportDocument],
+ * `pdfMain` source set) and opened in PdfKmp's own in-app viewer instead of an immediate share/save —
+ * see [savePdf].
  */
 interface FileExporter {
     suspend fun saveCsv(fileName: String, content: String)
 
     /**
-     * [title] is the program header, [description] a one-line explainer of what the document is —
-     * both drawn above the table. [headers] labels the table's columns (same order as [ExportRow]'s
-     * date/createdAt/label/amount/comment fields).
+     * Builds a PDF report and opens it in an in-app viewer (search, share, download) rather than
+     * saving/sharing immediately. [title] is the program header, [description] a one-line explainer
+     * of what the document is — both drawn above the table. [headers] labels the table's columns
+     * (same order as [ExportRow]'s date/label/amount/comment fields).
      */
     suspend fun savePdf(fileName: String, title: String, description: String, headers: List<String>, rows: List<ExportRow>)
 }

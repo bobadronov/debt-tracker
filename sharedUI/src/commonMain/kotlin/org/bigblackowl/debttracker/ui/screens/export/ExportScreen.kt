@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -25,13 +26,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.flow.first
@@ -46,6 +50,7 @@ import org.bigblackowl.debttracker.core.export.buildCsvContent
 import org.bigblackowl.debttracker.core.export.rememberFileExporter
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.formatMoney
+import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorTransactionsUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorsUseCase
@@ -59,6 +64,7 @@ import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
 import org.bigblackowl.debttracker.ui.components.SettingsRow
 import org.bigblackowl.debttracker.ui.components.SettingsSection
 import org.koin.compose.koinInject
+import kotlin.time.Clock
 
 /** ExportScreen: формат (PDF/CSV) + діапазон дат + напрямок (спек §6, п. 8). */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,6 +77,7 @@ fun ExportScreen(onBack: () -> Unit, debtorId: String? = null, creditorId: Strin
     val observeCreditors = koinInject<ObserveCreditorsUseCase>()
     val observeCreditorTransactions = koinInject<ObserveCreditorTransactionsUseCase>()
     val fileExporter = rememberFileExporter()
+    val authRepository = koinInject<AuthRepository>()
     val scope = rememberCoroutineScope()
 
     // Reached from a Debtor/Creditor detail screen — export only that one contact's history
@@ -92,6 +99,9 @@ fun ExportScreen(onBack: () -> Unit, debtorId: String? = null, creditorId: Strin
     var error by remember { mutableStateOf<String?>(null) }
     var success by remember { mutableStateOf(false) }
     val strings = LocalStrings.current
+    val accountName by authRepository.displayName.collectAsState()
+    val accountEmail by authRepository.email.collectAsState()
+    val exportUserName = accountName ?: accountEmail ?: strings.settingsLocalOnly
 
     // DateRangePickerState тримає межі в UTC-мілісекундах (стандарт M3) — конвертуємо в LocalDate тут один раз.
     val fromDate = dateRangePickerState.selectedStartDateMillis?.let {
@@ -104,140 +114,171 @@ fun ExportScreen(onBack: () -> Unit, debtorId: String? = null, creditorId: Strin
     PlaceholderScreen(title = strings.exportTitle, onBack = onBack) {
         Column(
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(Dimens.space24),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            if (isScoped) {
-                Text(
-                    scopedContactName ?: "…",
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.space16),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-            }
-
-            SettingsSection(strings.exportFormat) {
-                Column(modifier = Modifier.fillMaxWidth().padding(Dimens.space16)) {
-                    val formatOptions = listOf(
-                        ExportFormat.CSV to strings.exportFormatCsv,
-                        ExportFormat.PDF to strings.exportFormatPdf,
+            Column(
+                modifier = Modifier.width(Dimens.contentMaxWidth),
+                verticalArrangement = Arrangement.spacedBy(Dimens.space12),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                if (isScoped) {
+                    Text(
+                        scopedContactName ?: "…",
+                        modifier = Modifier.fillMaxWidth(),
+                        style = MaterialTheme.typography.titleMedium,
+                        textAlign = TextAlign.Center
                     )
-                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                        formatOptions.forEachIndexed { index, (value, label) ->
-                            SegmentedButton(
-                                selected = format == value,
-                                onClick = { format = value },
-                                shape = SegmentedButtonDefaults.itemShape(index = index, count = formatOptions.size),
-                                label = { Text(label) },
-                            )
-                        }
-                    }
                 }
-            }
 
-            if (!isScoped) {
-                SettingsSection(strings.exportDirection) {
+                SettingsSection(strings.exportFormat) {
                     Column(modifier = Modifier.fillMaxWidth().padding(Dimens.space16)) {
-                        val directionOptions = listOf(
-                            ExportDirection.DEBTORS to strings.exportDirectionDebtors,
-                            ExportDirection.CREDITORS to strings.exportDirectionCreditors,
-                            ExportDirection.BOTH to strings.exportDirectionBoth,
+                        val formatOptions = listOf(
+                            ExportFormat.CSV to strings.exportFormatCsv,
+                            ExportFormat.PDF to strings.exportFormatPdf,
                         )
                         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                            directionOptions.forEachIndexed { index, (value, label) ->
+                            formatOptions.forEachIndexed { index, (value, label) ->
                                 SegmentedButton(
-                                    selected = direction == value,
-                                    onClick = { direction = value },
-                                    shape = SegmentedButtonDefaults.itemShape(index = index, count = directionOptions.size),
+                                    selected = format == value,
+                                    onClick = { format = value },
+                                    shape = SegmentedButtonDefaults.itemShape(
+                                        index = index,
+                                        count = formatOptions.size
+                                    ),
                                     label = { Text(label) },
                                 )
                             }
                         }
                     }
                 }
-            }
 
-            SettingsSection(strings.exportDateRangeHint) {
-                SettingsRow(
-                    icon = Icons.Filled.CalendarMonth,
-                    title = if (fromDate != null || toDate != null) {
-                        "${fromDate?.toString() ?: strings.exportFrom} — ${toDate?.toString() ?: strings.exportTo}"
-                    } else {
-                        "${strings.exportFrom} — ${strings.exportTo}"
-                    },
-                    onClick = { showDateRangePicker = true },
-                    trailing = {
-                        Icon(
-                            Icons.Filled.ChevronRight,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    },
-                )
-            }
-
-            error?.let {
-                Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.debtAccentColors.debt)
-            }
-            if (success) {
-                Text(strings.exportDone, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.debtAccentColors.repay)
-            }
-
-            Button(
-                onClick = {
-                    error = null
-                    success = false
-                    isExporting = true
-                    scope.launch {
-                        runCatching {
-                            val rows = collectExportRows(
-                                direction, fromDate, toDate, debtorId, creditorId,
-                                observeDebtor, observeDebtors, observeDebtorTransactions,
-                                observeCreditor, observeCreditors, observeCreditorTransactions,
+                if (!isScoped) {
+                    SettingsSection(strings.exportDirection) {
+                        Column(modifier = Modifier.fillMaxWidth().padding(Dimens.space16)) {
+                            val directionOptions = listOf(
+                                ExportDirection.DEBTORS to strings.exportDirectionDebtors,
+                                ExportDirection.CREDITORS to strings.exportDirectionCreditors,
+                                ExportDirection.BOTH to strings.exportDirectionBoth,
                             )
-                            when (format) {
-                                ExportFormat.CSV -> fileExporter.saveCsv(
-                                    "debt_tracker_export.csv",
-                                    buildCsvContent(
-                                        rows,
+                            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                                directionOptions.forEachIndexed { index, (value, label) ->
+                                    SegmentedButton(
+                                        selected = direction == value,
+                                        onClick = { direction = value },
+                                        shape = SegmentedButtonDefaults.itemShape(
+                                            index = index,
+                                            count = directionOptions.size
+                                        ),
+                                        label = { Text(label) },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                SettingsSection(strings.exportDateRangeHint) {
+                    SettingsRow(
+                        icon = Icons.Filled.CalendarMonth,
+                        title = if (fromDate != null || toDate != null) {
+                            "${fromDate?.toString() ?: strings.exportFrom} — ${toDate?.toString() ?: strings.exportTo}"
+                        } else {
+                            "${strings.exportFrom} — ${strings.exportTo}"
+                        },
+                        onClick = { showDateRangePicker = true },
+                        trailing = {
+                            Icon(
+                                Icons.Filled.ChevronRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        },
+                    )
+                }
+
+                error?.let {
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.debtAccentColors.debt
+                    )
+                }
+                if (success) {
+                    Text(
+                        strings.exportDone,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.debtAccentColors.repay
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        error = null
+                        success = false
+                        isExporting = true
+                        scope.launch {
+                            runCatching {
+                                val rows = collectExportRows(
+                                    direction, fromDate, toDate, debtorId, creditorId,
+                                    observeDebtor, observeDebtors, observeDebtorTransactions,
+                                    observeCreditor, observeCreditors, observeCreditorTransactions,
+                                )
+                                when (format) {
+                                    ExportFormat.CSV -> fileExporter.saveCsv(
+                                        "${strings.appName}_${exportUserName}_${
+                                            Clock.System.now()
+                                                .toLocalDateTime(TimeZone.currentSystemDefault()).date
+                                        }.csv",
+                                        buildCsvContent(
+                                            rows,
+                                            listOf(
+                                                strings.csvHeaderDate,
+                                                strings.csvHeaderContact,
+                                                strings.csvHeaderAmount,
+                                                strings.csvHeaderComment
+                                            ),
+                                        ),
+                                    )
+
+                                    ExportFormat.PDF -> fileExporter.savePdf(
+                                        "${strings.appName}_${exportUserName}_${
+                                            Clock.System.now().toLocalDateTime(
+                                                TimeZone.currentSystemDefault()
+                                            ).date
+                                        }.pdf",
+                                        strings.appName,
+                                        strings.exportPdfDescription(exportUserName),
                                         listOf(
                                             strings.csvHeaderDate,
                                             strings.csvHeaderContact,
                                             strings.csvHeaderAmount,
-                                            strings.csvHeaderComment
+                                            strings.csvHeaderComment,
                                         ),
-                                    ),
-                                )
-
-                                ExportFormat.PDF -> fileExporter.savePdf(
-                                    "debt_tracker_export.pdf",
-                                    "${strings.appName} — ${strings.exportTitle}",
-                                    strings.exportPdfDescription,
-                                    listOf(
-                                        strings.csvHeaderDate,
-                                        strings.csvHeaderCreatedAt,
-                                        strings.csvHeaderContact,
-                                        strings.csvHeaderAmount,
-                                        strings.csvHeaderComment,
-                                    ),
-                                    rows
-                                )
+                                        rows
+                                    )
+                                }
+                            }.onSuccess {
+                                isExporting = false
+                                success = true
+                            }.onFailure {
+                                isExporting = false
+                                error = strings.exportError
                             }
-                        }.onSuccess {
-                            isExporting = false
-                            success = true
-                        }.onFailure {
-                            isExporting = false
-                            error = strings.exportError
                         }
+                    },
+                    enabled = !isExporting,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    if (isExporting) {
+                        CircularWavyProgressIndicator(modifier = Modifier.padding(end = Dimens.space8))
+                    } else {
+                        Icon(
+                            Icons.Filled.Download,
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = Dimens.space8)
+                        )
+                        Text(strings.exportSubmit)
                     }
-                },
-                enabled = !isExporting,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                if (isExporting) {
-                    CircularWavyProgressIndicator(modifier = Modifier.padding(end = Dimens.space8))
-                } else {
-                    Icon(Icons.Filled.Download, contentDescription = null, modifier = Modifier.padding(end = Dimens.space8))
-                    Text(strings.exportSubmit)
                 }
             }
         }
@@ -313,7 +354,6 @@ private suspend fun collectExportRows(
                     rows.add(
                         ExportRow(
                             date.toString(),
-                            tx.createdAt.toLocalDateTime(timeZone).date.toString(),
                             debtor.fullName,
                             tx.amount.formatMoney(debtor.currency),
                             tx.comment,
@@ -331,7 +371,6 @@ private suspend fun collectExportRows(
                     rows.add(
                         ExportRow(
                             date.toString(),
-                            tx.createdAt.toLocalDateTime(timeZone).date.toString(),
                             creditor.fullName,
                             tx.amount.formatMoney(creditor.currency),
                             tx.comment,
@@ -350,7 +389,6 @@ private suspend fun collectExportRows(
                             rows.add(
                                 ExportRow(
                                     date.toString(),
-                                    tx.createdAt.toLocalDateTime(timeZone).date.toString(),
                                     item.debtor.fullName,
                                     tx.amount.formatMoney(item.debtor.currency),
                                     tx.comment
@@ -368,7 +406,6 @@ private suspend fun collectExportRows(
                             rows.add(
                                 ExportRow(
                                     date.toString(),
-                                    tx.createdAt.toLocalDateTime(timeZone).date.toString(),
                                     item.creditor.fullName,
                                     tx.amount.formatMoney(item.creditor.currency),
                                     tx.comment

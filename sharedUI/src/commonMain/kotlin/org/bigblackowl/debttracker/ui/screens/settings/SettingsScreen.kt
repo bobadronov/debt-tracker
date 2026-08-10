@@ -368,8 +368,8 @@ fun SettingsScreen(
                     // Full screen instead of a dropdown — the option list (system/uk/en, more to come)
                     // doesn't fit a small menu well long-term. See LanguageScreen.
                     val languageOptions = remember(strings) { languageOptions(strings) }
-                    val languageLabel = languageOptions.firstOrNull { it.first == settings.locale }?.second
-                        ?: languageOptions.first().second
+                    val languageLabel = languageOptions.firstOrNull { it.value == settings.locale }?.label
+                        ?: languageOptions.first().label
                     SettingsRow(
                         icon = Icons.Filled.Language,
                         title = strings.settingsLanguage,

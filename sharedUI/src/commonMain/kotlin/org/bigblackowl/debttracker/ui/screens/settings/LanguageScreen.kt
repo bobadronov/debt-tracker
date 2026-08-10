@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -21,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 import org.bigblackowl.debttracker.core.settings.AppSettings
@@ -47,7 +49,8 @@ fun LanguageScreen(onBack: () -> Unit) {
         Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
             Column(modifier = Modifier.width(Dimens.contentMaxWidth)) {
                 SettingsSection(strings.settingsLanguage) {
-                    languageOptions.forEachIndexed { index, (value, label) ->
+                    languageOptions.forEachIndexed { index, option ->
+                        val (value, label, flag) = option
                         val selected = settings.locale == value
                         val containerColor by animateColorAsState(
                             if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
@@ -60,6 +63,7 @@ fun LanguageScreen(onBack: () -> Unit) {
                             title = label,
                             iconContainerColor = containerColor,
                             iconTint = tintColor,
+                            leadingContent = flag?.let { { Text(it, fontSize = 20.sp) } },
                             trailing = {
                                 AnimatedVisibility(
                                     visible = selected,
@@ -82,11 +86,15 @@ fun LanguageScreen(onBack: () -> Unit) {
     }
 }
 
+/** One row in the language picker: the [AppSettings.locale] value, its display label, and an optional flag emoji. */
+internal data class LanguageOption(val value: String, val label: String, val flag: String? = null)
+
 /** Shared with [SettingsScreen]'s language row so both stay in sync as languages are added. */
 internal fun languageOptions(strings: Strings) = listOf(
-    "system" to strings.settingsLanguageSystem,
-    "uk" to "Українська",
-    "en" to "English",
+    LanguageOption("system", strings.settingsLanguageSystem),
+    LanguageOption("uk", "Українська", flag = "🇺🇦"),
+    LanguageOption("en", "English", flag = "🇬🇧"),
+    LanguageOption("pl", "Polski", flag = "🇵🇱"),
 )
 
 @Preview

@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
@@ -39,6 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.DebtTransaction
@@ -207,11 +208,25 @@ private fun DebtTransactionRow(transaction: DebtTransaction, currency: Currency)
     OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(Dimens.space16),
-        border = BorderStroke(Dimens.space1, color.copy(alpha = .4f)),
+        border = BorderStroke(Dimens.space2, color.copy(alpha = .4f)),
     ) {
-        ListItem(
-            headlineContent = { Text(transaction.amount.formatMoney(currency), color = color) },
-            supportingContent = { Text(transaction.comment ?: transaction.method.name) },
-        )
+        Column(
+            modifier = Modifier.padding(Dimens.space20).fillMaxSize(),
+        ) {
+            Text(transaction.amount.formatMoney(currency), color = color)
+            transaction.comment?.let { Text(it) }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(transaction.method.name)
+                Text(
+                    transaction.createdAt.toLocalDateTime(
+                        TimeZone.currentSystemDefault()
+                    ).date.toString()
+                )
+            }
+        }
+
     }
 }
