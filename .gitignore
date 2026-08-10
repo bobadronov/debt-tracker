@@ -34,5 +34,7 @@ node_modules/
 supabase/.branches/
 supabase/.temp/
 /release.bat
+/release-production.bat
+/release-beta.bat
 /androidApp/release/
 screenshots/
