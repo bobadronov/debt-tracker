@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -70,7 +71,7 @@ fun AmountBottomSheet(
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(Dimens.space16),
+            modifier = Modifier.fillMaxWidth().imePadding().padding(Dimens.space16),
             verticalArrangement = Arrangement.spacedBy(Dimens.space12),
         ) {
             Text(title, style = MaterialTheme.typography.titleMedium)

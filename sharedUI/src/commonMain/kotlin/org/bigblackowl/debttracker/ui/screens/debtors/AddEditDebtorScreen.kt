@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -94,6 +95,7 @@ fun AddEditDebtorScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .imePadding()
                 .padding(Dimens.space16)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.SpaceBetween,
@@ -194,19 +196,6 @@ fun AddEditDebtorScreen(
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
-                        ClipboardPasteHint(
-                            clipboardText = clipboardText,
-                            fieldValue = state.initialAmountText,
-                            isRelevant = { text ->
-                                val sanitized = sanitizeAmountInput(text)
-                                sanitized.isNotBlank() &&
-                                    runCatching { BigDecimal.parseString(sanitized) }.getOrNull()
-                                        ?.let { it > BigDecimal.ZERO } == true
-                            },
-                            onPaste = {
-                                viewModel.onIntent(AddEditDebtorIntent.InitialAmountChanged(sanitizeAmountInput(it)))
-                            },
-                        )
                         ExposedDropdownMenuBox(
                             expanded = currencyMenuExpanded,
                             onExpandedChange = { currencyMenuExpanded = it },
@@ -241,6 +230,19 @@ fun AddEditDebtorScreen(
                             }
                         }
                     }
+                    ClipboardPasteHint(
+                        clipboardText = clipboardText,
+                        fieldValue = state.initialAmountText,
+                        isRelevant = { text ->
+                            val sanitized = sanitizeAmountInput(text)
+                            sanitized.isNotBlank() &&
+                                runCatching { BigDecimal.parseString(sanitized) }.getOrNull()
+                                    ?.let { it > BigDecimal.ZERO } == true
+                        },
+                        onPaste = {
+                            viewModel.onIntent(AddEditDebtorIntent.InitialAmountChanged(sanitizeAmountInput(it)))
+                        },
+                    )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(

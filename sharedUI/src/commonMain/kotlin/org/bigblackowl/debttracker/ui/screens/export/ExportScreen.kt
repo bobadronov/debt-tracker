@@ -27,6 +27,7 @@ import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -46,8 +47,10 @@ import org.bigblackowl.debttracker.core.export.rememberFileExporter
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.formatMoney
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorTransactionsUseCase
+import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorsUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorTransactionsUseCase
+import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorsUseCase
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
@@ -60,13 +63,26 @@ import org.koin.compose.koinInject
 /** ExportScreen: формат (PDF/CSV) + діапазон дат + напрямок (спек §6, п. 8). */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExportScreen(onBack: () -> Unit) {
+fun ExportScreen(onBack: () -> Unit, debtorId: String? = null, creditorId: String? = null) {
+    val observeDebtor = koinInject<ObserveDebtorUseCase>()
     val observeDebtors = koinInject<ObserveDebtorsUseCase>()
     val observeDebtorTransactions = koinInject<ObserveDebtorTransactionsUseCase>()
+    val observeCreditor = koinInject<ObserveCreditorUseCase>()
     val observeCreditors = koinInject<ObserveCreditorsUseCase>()
     val observeCreditorTransactions = koinInject<ObserveCreditorTransactionsUseCase>()
     val fileExporter = rememberFileExporter()
     val scope = rememberCoroutineScope()
+
+    // Reached from a Debtor/Creditor detail screen — export only that one contact's history
+    // instead of everyone's, since that's what "Export" meant to the user there.
+    val isScoped = debtorId != null || creditorId != null
+    val scopedContactName by produceState<String?>(null, debtorId, creditorId) {
+        value = when {
+            debtorId != null -> observeDebtor(debtorId).first()?.fullName
+            creditorId != null -> observeCreditor(creditorId).first()?.fullName
+            else -> null
+        }
+    }
 
     var format by remember { mutableStateOf(ExportFormat.CSV) }
     var direction by remember { mutableStateOf(ExportDirection.BOTH) }
@@ -90,6 +106,14 @@ fun ExportScreen(onBack: () -> Unit) {
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(Dimens.space24),
         ) {
+            if (isScoped) {
+                Text(
+                    scopedContactName ?: "…",
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.space16),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+
             SettingsSection(strings.exportFormat) {
                 Column(modifier = Modifier.fillMaxWidth().padding(Dimens.space16)) {
                     val formatOptions = listOf(
@@ -109,21 +133,23 @@ fun ExportScreen(onBack: () -> Unit) {
                 }
             }
 
-            SettingsSection(strings.exportDirection) {
-                Column(modifier = Modifier.fillMaxWidth().padding(Dimens.space16)) {
-                    val directionOptions = listOf(
-                        ExportDirection.DEBTORS to strings.exportDirectionDebtors,
-                        ExportDirection.CREDITORS to strings.exportDirectionCreditors,
-                        ExportDirection.BOTH to strings.exportDirectionBoth,
-                    )
-                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                        directionOptions.forEachIndexed { index, (value, label) ->
-                            SegmentedButton(
-                                selected = direction == value,
-                                onClick = { direction = value },
-                                shape = SegmentedButtonDefaults.itemShape(index = index, count = directionOptions.size),
-                                label = { Text(label) },
-                            )
+            if (!isScoped) {
+                SettingsSection(strings.exportDirection) {
+                    Column(modifier = Modifier.fillMaxWidth().padding(Dimens.space16)) {
+                        val directionOptions = listOf(
+                            ExportDirection.DEBTORS to strings.exportDirectionDebtors,
+                            ExportDirection.CREDITORS to strings.exportDirectionCreditors,
+                            ExportDirection.BOTH to strings.exportDirectionBoth,
+                        )
+                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                            directionOptions.forEachIndexed { index, (value, label) ->
+                                SegmentedButton(
+                                    selected = direction == value,
+                                    onClick = { direction = value },
+                                    shape = SegmentedButtonDefaults.itemShape(index = index, count = directionOptions.size),
+                                    label = { Text(label) },
+                                )
+                            }
                         }
                     }
                 }
@@ -163,9 +189,9 @@ fun ExportScreen(onBack: () -> Unit) {
                     scope.launch {
                         runCatching {
                             val rows = collectExportRows(
-                                direction, fromDate, toDate,
-                                observeDebtors, observeDebtorTransactions,
-                                observeCreditors, observeCreditorTransactions,
+                                direction, fromDate, toDate, debtorId, creditorId,
+                                observeDebtor, observeDebtors, observeDebtorTransactions,
+                                observeCreditor, observeCreditors, observeCreditorTransactions,
                             )
                             when (format) {
                                 ExportFormat.CSV -> fileExporter.saveCsv(
@@ -255,8 +281,12 @@ private suspend fun collectExportRows(
     direction: ExportDirection,
     fromDate: LocalDate?,
     toDate: LocalDate?,
+    debtorId: String?,
+    creditorId: String?,
+    observeDebtor: ObserveDebtorUseCase,
     observeDebtors: ObserveDebtorsUseCase,
     observeDebtorTransactions: ObserveDebtorTransactionsUseCase,
+    observeCreditor: ObserveCreditorUseCase,
     observeCreditors: ObserveCreditorsUseCase,
     observeCreditorTransactions: ObserveCreditorTransactionsUseCase,
 ): List<ExportRow> {
@@ -266,36 +296,60 @@ private suspend fun collectExportRows(
     fun inRange(localDate: LocalDate) =
         (fromDate == null || localDate >= fromDate) && (toDate == null || localDate <= toDate)
 
-    if (direction == ExportDirection.DEBTORS || direction == ExportDirection.BOTH) {
-        observeDebtors().first().forEach { item ->
-            observeDebtorTransactions(item.debtor.id).first().forEach { tx ->
+    when {
+        debtorId != null -> {
+            val debtor = observeDebtor(debtorId).first() ?: return emptyList()
+            observeDebtorTransactions(debtorId).first().forEach { tx ->
                 val date = tx.date.toLocalDateTime(timeZone).date
                 if (inRange(date)) {
-                    rows.add(
-                        ExportRow(
-                            date.toString(),
-                            item.debtor.fullName,
-                            tx.amount.formatMoney(item.debtor.currency),
-                            tx.comment
-                        )
-                    )
+                    rows.add(ExportRow(date.toString(), debtor.fullName, tx.amount.formatMoney(debtor.currency), tx.comment))
                 }
             }
         }
-    }
-    if (direction == ExportDirection.CREDITORS || direction == ExportDirection.BOTH) {
-        observeCreditors().first().forEach { item ->
-            observeCreditorTransactions(item.creditor.id).first().forEach { tx ->
+
+        creditorId != null -> {
+            val creditor = observeCreditor(creditorId).first() ?: return emptyList()
+            observeCreditorTransactions(creditorId).first().forEach { tx ->
                 val date = tx.date.toLocalDateTime(timeZone).date
                 if (inRange(date)) {
-                    rows.add(
-                        ExportRow(
-                            date.toString(),
-                            item.creditor.fullName,
-                            tx.amount.formatMoney(item.creditor.currency),
-                            tx.comment
-                        )
-                    )
+                    rows.add(ExportRow(date.toString(), creditor.fullName, tx.amount.formatMoney(creditor.currency), tx.comment))
+                }
+            }
+        }
+
+        else -> {
+            if (direction == ExportDirection.DEBTORS || direction == ExportDirection.BOTH) {
+                observeDebtors().first().forEach { item ->
+                    observeDebtorTransactions(item.debtor.id).first().forEach { tx ->
+                        val date = tx.date.toLocalDateTime(timeZone).date
+                        if (inRange(date)) {
+                            rows.add(
+                                ExportRow(
+                                    date.toString(),
+                                    item.debtor.fullName,
+                                    tx.amount.formatMoney(item.debtor.currency),
+                                    tx.comment
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+            if (direction == ExportDirection.CREDITORS || direction == ExportDirection.BOTH) {
+                observeCreditors().first().forEach { item ->
+                    observeCreditorTransactions(item.creditor.id).first().forEach { tx ->
+                        val date = tx.date.toLocalDateTime(timeZone).date
+                        if (inRange(date)) {
+                            rows.add(
+                                ExportRow(
+                                    date.toString(),
+                                    item.creditor.fullName,
+                                    tx.amount.formatMoney(item.creditor.currency),
+                                    tx.comment
+                                )
+                            )
+                        }
+                    }
                 }
             }
         }

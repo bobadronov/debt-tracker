@@ -23,7 +23,9 @@ import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.NavDisplay
 import org.bigblackowl.debttracker.core.di.requiresRemoteAuthGate
@@ -132,6 +134,15 @@ fun DebtTrackerNavGraph(
         NavDisplay(
             backStack = backStack,
             onBack = { back() },
+            // NavDisplay's own default entryDecorators only restores rememberSaveable state per
+            // entry, not ViewModels — without rememberViewModelStoreNavEntryDecorator() every
+            // koinViewModel() call resolves against the single app-wide ViewModelStoreOwner, so
+            // e.g. reopening "Add Debtor" after backing out reuses the same instance and shows
+            // whatever was typed last time instead of a blank form.
+            entryDecorators = listOf(
+                rememberSaveableStateHolderNavEntryDecorator(),
+                rememberViewModelStoreNavEntryDecorator(),
+            ),
             transitionSpec = navSlideTransitionSpec(AnimatedContentTransitionScope.SlideDirection.Left),
             popTransitionSpec = navSlideTransitionSpec(AnimatedContentTransitionScope.SlideDirection.Right),
             entryProvider = entryProvider {
@@ -178,7 +189,7 @@ fun DebtTrackerNavGraph(
                 DebtorDetailScreen(
                     debtorId = screen.debtorId,
                     onBack = { back() },
-                    onExport = { navigate(Screen.Export) }
+                    onExport = { navigate(Screen.Export(debtorId = screen.debtorId)) }
                 )
             }
             entry<Screen.AddEditCreditor> { screen ->
@@ -188,7 +199,7 @@ fun DebtTrackerNavGraph(
                 CreditorDetailScreen(
                     creditorId = screen.creditorId,
                     onBack = { back() },
-                    onExport = { navigate(Screen.Export) }
+                    onExport = { navigate(Screen.Export(creditorId = screen.creditorId)) }
                 )
             }
             entry<Screen.Stats> {
@@ -197,7 +208,7 @@ fun DebtTrackerNavGraph(
             entry<Screen.Settings> {
                 SettingsScreen(
                     onBack = { back() },
-                    onExport = { navigate(Screen.Export) },
+                    onExport = { navigate(Screen.Export()) },
                     onOpenAuth = { navigate(Screen.Auth()) },
                     onEditAccount = { navigate(Screen.EditAccount) },
                     onOpenLanguage = { navigate(Screen.Language) },
@@ -209,8 +220,8 @@ fun DebtTrackerNavGraph(
             entry<Screen.EditAccount> {
                 EditAccountScreen(onBack = { back() })
             }
-            entry<Screen.Export> {
-                ExportScreen(onBack = { back() })
+            entry<Screen.Export> { screen ->
+                ExportScreen(onBack = { back() }, debtorId = screen.debtorId, creditorId = screen.creditorId)
             }
             entry<Screen.Auth> { screen ->
                 AuthScreen(

@@ -15,6 +15,6 @@ sealed interface Screen {
     data object Settings : Screen
     data object Language : Screen
     data object EditAccount : Screen
-    data object Export : Screen
+    data class Export(val debtorId: String? = null, val creditorId: String? = null) : Screen
     data class Auth(val isGate: Boolean = false) : Screen
 }
