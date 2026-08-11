@@ -336,8 +336,10 @@ notes — the `.aab` is Play-Store-only and isn't attached). `SUPABASE_URL`/
 `SUPABASE_ANON_KEY` and the four `ANDROID_*` signing secrets are wired in via
 repo/Actions secrets — see §8.
 
-A local convenience script, `release.bat` (gitignored, Windows-only), bumps
-`version.properties`, commits, tags, and pushes to trigger the workflow —
+A local convenience script, `release.bat` (gitignored, Windows-only),
+interactively prompts for the new version number and the Play Store track
+(internal/alpha/beta/production), then bumps `version.properties`, commits,
+pushes to main, and dispatches the Release workflow via `gh workflow run` —
 not required to rebuild the project, just a personal shortcut worth
 recreating if useful.
 

@@ -2,8 +2,8 @@ package org.bigblackowl.debttracker.androidApp.widget
 
 import android.annotation.SuppressLint
 import android.content.Context
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceComposable
@@ -22,6 +22,7 @@ import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
+import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.width
@@ -83,11 +84,10 @@ class DebtSummaryWidget : GlanceAppWidget() {
  * Android 12+, інакше під світлу/темну тему), а не власна фіксована палітра.
  */
 @SuppressLint("RestrictedApi")
-@Preview
 @Composable
 @GlanceComposable
 fun WidgetUi(
-    appName: String = "DebtTracker",
+    appName: String = "Debt Tracker",
     debtorsLine: String = "Мені винні: 1 250,00 ₴",
     creditorsLine: String = "Я винен: 430,00 ₴",
 ) {
@@ -100,20 +100,20 @@ fun WidgetUi(
                 .clickable(actionStartActivity(AppActivity::class.java))
                 .padding(16.dp),
         ) {
-            Column(modifier = GlanceModifier.fillMaxSize(), verticalAlignment = Alignment.Vertical.CenterVertically) {
+            Column(
+                modifier = GlanceModifier.fillMaxSize(),
+                verticalAlignment = Alignment.Top
+            ) {
                 Text(
                     text = appName,
                     style = TextStyle(
                         color = GlanceTheme.colors.onSurfaceVariant,
                         fontWeight = FontWeight.Medium,
-                        fontSize = 12.sp,
+                        fontSize = 16.sp,
                     ),
                 )
-
-                Spacer(modifier = GlanceModifier.height(12.dp))
-
+                Box(GlanceModifier.fillMaxWidth().height(2.dp).background(MaterialTheme.colorScheme.primary)){}
                 StatLine(line = debtorsLine, valueColor = GlanceTheme.colors.primary)
-                Spacer(modifier = GlanceModifier.height(8.dp))
                 StatLine(line = creditorsLine, valueColor = GlanceTheme.colors.error)
             }
         }
@@ -141,9 +141,10 @@ private fun StatLine(line: String, valueColor: ColorProvider) {
     Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
         Text(
             text = label,
+            modifier = GlanceModifier.defaultWeight(),
             style = TextStyle(
                 color = GlanceTheme.colors.onSurfaceVariant,
-                fontSize = 13.sp,
+                fontSize = 15.sp,
             ),
         )
         Spacer(modifier = GlanceModifier.width(4.dp))
@@ -152,7 +153,7 @@ private fun StatLine(line: String, valueColor: ColorProvider) {
             style = TextStyle(
                 color = valueColor,
                 fontWeight = FontWeight.Bold,
-                fontSize = 15.sp,
+                fontSize = 17.sp,
             ),
         )
     }
