@@ -11,6 +11,7 @@ data class AuthState(
     val phone: String = "",
     val avatarPicked: PickedImage? = null,
     val isSignUpMode: Boolean = false,
+    val isEmailStepDone: Boolean = false,
     val isLoading: Boolean = false,
     val error: String? = null,
     val fullNameError: String? = null,
@@ -25,6 +26,8 @@ sealed interface AuthIntent {
     data class PhoneChanged(val value: String) : AuthIntent
     data class AvatarPicked(val picked: PickedImage) : AuthIntent
     data object ToggleMode : AuthIntent
+    data object ContinueFromEmailStep : AuthIntent
+    data object EditEmail : AuthIntent
     data object Submit : AuthIntent
 }
 

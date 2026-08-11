@@ -28,6 +28,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.NavDisplay
+import kotlinx.coroutines.flow.drop
 import org.bigblackowl.debttracker.core.di.requiresRemoteAuthGate
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
@@ -114,6 +115,18 @@ fun DebtTrackerNavGraph(
         sessionRepository.revokedElsewhere.collect {
             forceSignOut()
             replaceStackWith(Screen.Auth(isGate = true))
+        }
+    }
+
+    // Web has no local cache (see screenAfterUnlock() above) — signing out from Settings there
+    // must land back on the sign-in screen, since every other screen needs a live session to
+    // render anything. Other platforms stay put after sign-out (they're fully offline-capable).
+    // drop(1) skips the replay of whatever isAuthenticated already was when this collector
+    // started — Splash/screenAfterUnlock() already decided the first screen for that.
+    LaunchedEffect(Unit) {
+        if (!requiresRemoteAuthGate) return@LaunchedEffect
+        authRepository.isAuthenticated.drop(1).collect { authenticated ->
+            if (!authenticated) replaceStackWith(Screen.Auth(isGate = true))
         }
     }
 
@@ -219,7 +232,11 @@ fun DebtTrackerNavGraph(
                 )
             }
             entry<Screen.Stats> {
-                StatsScreen(onBack = { back() })
+                StatsScreen(
+                    onBack = { back() },
+                    onOpenDebtor = { id -> navigate(Screen.DebtorDetail(id)) },
+                    onOpenCreditor = { id -> navigate(Screen.CreditorDetail(id)) },
+                )
             }
             entry<Screen.Settings> {
                 SettingsScreen(

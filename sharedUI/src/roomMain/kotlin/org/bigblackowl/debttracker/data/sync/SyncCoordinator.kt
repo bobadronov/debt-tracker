@@ -6,6 +6,7 @@ import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.filter.FilterOperation
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.selectAsFlow
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
@@ -76,10 +77,31 @@ class SyncCoordinator(
         val userId = authRepository.currentUserId ?: return
         coroutineScope {
             launch { pushLoop() }
-            launch { pullDebtors(userId) }
-            launch { pullDebtTransactions(userId) }
-            launch { pullCreditors(userId) }
-            launch { pullCreditorTransactions(userId) }
+            launch { resilient { pullDebtors(userId) } }
+            launch { resilient { pullDebtTransactions(userId) } }
+            launch { resilient { pullCreditors(userId) } }
+            launch { resilient { pullCreditorTransactions(userId) } }
+        }
+    }
+
+    /**
+     * Realtime pull-функції теоретично мають висіти вічно (доки їх не скасують), але
+     * supabase-kt має відомий race: якщо вебсокет розірветься саме між перевіркою статусу
+     * каналу та відправкою LEAVE-повідомлення в unsubscribe(), кидається
+     * IllegalStateException("Websocket not yet initialized"). ApplicationScope — це
+     * SupervisorJob без CoroutineExceptionHandler, тож без цієї обгортки будь-яка
+     * необроблена помилка тут (ця гонка, розрив мережі тощо) валить увесь застосунок.
+     * Перепідписка через новий канал — найпростіший спосіб відновитись.
+     */
+    private suspend fun resilient(block: suspend () -> Unit) {
+        while (currentCoroutineContext().isActive) {
+            try {
+                block()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                delay(5_000.milliseconds)
+            }
         }
     }
 
@@ -97,7 +119,8 @@ class SyncCoordinator(
         val pendingDebtTx = debtTransactionDao.getPending()
         val pendingCreditors = creditorDao.getPending()
         val pendingCreditorTx = creditorTransactionDao.getPending()
-        val totalPending = pendingDebtors.size + pendingDebtTx.size + pendingCreditors.size + pendingCreditorTx.size
+        val totalPending =
+            pendingDebtors.size + pendingDebtTx.size + pendingCreditors.size + pendingCreditorTx.size
         if (totalPending == 0) {
             _status.value = SyncUiStatus.Synced
             return
@@ -133,12 +156,16 @@ class SyncCoordinator(
             }.onFailure { failures++ }
         }
 
-        _status.value = if (failures > 0) SyncUiStatus.OfflinePending(failures) else SyncUiStatus.Synced
+        _status.value =
+            if (failures > 0) SyncUiStatus.OfflinePending(failures) else SyncUiStatus.Synced
     }
 
     private suspend fun pullDebtors(userId: String) {
         client.from("debtors")
-            .selectAsFlow(DebtorDto::id, filter = FilterOperation("user_id", FilterOperator.EQ, userId))
+            .selectAsFlow(
+                DebtorDto::id,
+                filter = FilterOperation("user_id", FilterOperator.EQ, userId)
+            )
             .collectLatest { remoteRows ->
                 remoteRows.forEach { dto ->
                     val local = debtorDao.getById(dto.id)
@@ -156,7 +183,10 @@ class SyncCoordinator(
 
     private suspend fun pullDebtTransactions(userId: String) {
         client.from("debt_transactions")
-            .selectAsFlow(DebtTransactionDto::id, filter = FilterOperation("user_id", FilterOperator.EQ, userId))
+            .selectAsFlow(
+                DebtTransactionDto::id,
+                filter = FilterOperation("user_id", FilterOperator.EQ, userId)
+            )
             .collectLatest { remoteRows ->
                 // Транзакції не мерджаться (спек §5) — прямий upsert по id.
                 remoteRows.forEach { dto -> debtTransactionDao.upsert(dto.toEntity()) }
@@ -165,7 +195,10 @@ class SyncCoordinator(
 
     private suspend fun pullCreditors(userId: String) {
         client.from("creditors")
-            .selectAsFlow(CreditorDto::id, filter = FilterOperation("user_id", FilterOperator.EQ, userId))
+            .selectAsFlow(
+                CreditorDto::id,
+                filter = FilterOperation("user_id", FilterOperator.EQ, userId)
+            )
             .collectLatest { remoteRows ->
                 remoteRows.forEach { dto ->
                     val local = creditorDao.getById(dto.id)
@@ -181,7 +214,10 @@ class SyncCoordinator(
 
     private suspend fun pullCreditorTransactions(userId: String) {
         client.from("creditor_transactions")
-            .selectAsFlow(CreditorTransactionDto::id, filter = FilterOperation("user_id", FilterOperator.EQ, userId))
+            .selectAsFlow(
+                CreditorTransactionDto::id,
+                filter = FilterOperation("user_id", FilterOperator.EQ, userId)
+            )
             .collectLatest { remoteRows ->
                 remoteRows.forEach { dto -> creditorTransactionDao.upsert(dto.toEntity()) }
             }

@@ -124,6 +124,9 @@ class SupabaseDebtorRepository(
         client.from("debtors").delete { filter { eq("user_id", userId) } }
     }
 
+    // No local cache on web (see class doc) — nothing to clear on sign-out.
+    override suspend fun clearLocalCache() {}
+
     /** Мірор Room-репозиторію: status рахується з транзакцій, а не приходить з Postgres-тригера напряму сюди. */
     private suspend fun recalcDebtorStatus(debtorId: String, userId: String) {
         val debtor = client.from("debtors")

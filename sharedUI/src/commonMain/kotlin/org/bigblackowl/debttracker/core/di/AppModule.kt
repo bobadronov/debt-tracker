@@ -16,6 +16,7 @@ import org.bigblackowl.debttracker.data.remote.SupabaseSessionRepository
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.ProfileLookupRepository
 import org.bigblackowl.debttracker.domain.repository.SessionRepository
+import org.bigblackowl.debttracker.domain.usecase.ClearLocalCacheUseCase
 import org.bigblackowl.debttracker.domain.usecase.DeleteAllDataUseCase
 import org.bigblackowl.debttracker.domain.usecase.FindProfileByEmailUseCase
 import org.bigblackowl.debttracker.domain.usecase.ForceSignOutUseCase
@@ -68,6 +69,7 @@ val appModule = module {
     single<ProfileLookupRepository> { SupabaseProfileLookupRepository(get(), get()) }
     single<SessionRepository> { SupabaseSessionRepository(get(), get()) }
     factoryOf(::DeleteAllDataUseCase)
+    factoryOf(::ClearLocalCacheUseCase)
     factoryOf(::FindProfileByEmailUseCase)
     factoryOf(::ForceSignOutUseCase)
 

@@ -1,74 +1,34 @@
 package org.bigblackowl.debttracker.ui.screens.creditors
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.HourglassEmpty
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.SortByAlpha
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material3.Card
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
-import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
-import org.bigblackowl.debttracker.domain.model.CreditorWithBalance
 import org.bigblackowl.debttracker.domain.model.formatMoney
 import org.bigblackowl.debttracker.domain.model.formatTotals
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
-import org.bigblackowl.debttracker.theme.Dimens
-import org.bigblackowl.debttracker.theme.debtAccentColors
+import org.bigblackowl.debttracker.ui.components.ContactListScaffold
+import org.bigblackowl.debttracker.ui.components.ContactRow
+import org.bigblackowl.debttracker.ui.components.ListSearchBar
+import org.bigblackowl.debttracker.ui.components.ListTotalBar
+import org.bigblackowl.debttracker.ui.components.MenuOption
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /** "Я винен" tab: searchable/filterable/sortable list of creditors with an overflow-menu delete and a running total. */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreditorListScreen(
     onAddCreditor: () -> Unit,
@@ -84,137 +44,56 @@ fun CreditorListScreen(
         searchFocusRequests.events.collect { searchFocusRequester.requestFocus() }
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Column(
-            modifier = Modifier.width(Dimens.contentMaxWidth).fillMaxHeight(),
-            verticalArrangement = Arrangement.spacedBy(Dimens.space5),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(Dimens.space12),
-                horizontalArrangement = Arrangement.spacedBy(Dimens.space8),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                OutlinedTextField(
-                    value = state.query,
-                    onValueChange = { viewModel.onIntent(CreditorListIntent.Search(it)) },
-                    modifier = Modifier.weight(1f).focusRequester(searchFocusRequester),
-                    singleLine = true,
-                    placeholder = { Text(strings.creditorListSearchPlaceholder) },
-                    trailingIcon = if (state.query.isNotEmpty()) {
-                        {
-                            IconButton(onClick = { viewModel.onIntent(CreditorListIntent.Search("")) }) {
-                                Icon(Icons.Filled.Close, strings.clearSearch)
-                            }
-                        }
-                    } else null,
-                )
-
-                // All sort + status options live in one menu instead of separate chip rows.
-                // Sort items are single-click toggles: tapping the active one flips its direction
-                // (shown by the trailing arrow) instead of just re-selecting it.
-                var filterMenuOpen by remember { mutableStateOf(false) }
-                Box {
-                    IconButton(onClick = { filterMenuOpen = true }) {
-                        Icon(Icons.Filled.FilterList, strings.creditorListSort)
-                    }
-                    DropdownMenu(
-                        expanded = filterMenuOpen,
-                        onDismissRequest = { filterMenuOpen = false },
-                    ) {
-                        val sortOptions = listOf(
-                            Triple(CreditorSortOrder.NAME_ASC, strings.creditorListSortByName, Icons.Filled.SortByAlpha),
-                            Triple(CreditorSortOrder.BALANCE_DESC, strings.creditorListSortByBalance, Icons.Filled.Payments),
-                            Triple(CreditorSortOrder.RECENT, strings.creditorListSortRecent, Icons.Filled.History),
-                        )
-                        sortOptions.forEach { (order, label, icon) ->
-                            val isActive = state.sortOrder == order
-                            DropdownMenuItem(
-                                leadingIcon = { Icon(icon, null) },
-                                text = { Text(label) },
-                                trailingIcon = if (isActive) {
-                                    {
-                                        Icon(
-                                            if (state.sortAscending) Icons.Filled.ArrowUpward else Icons.Filled.ArrowDownward,
-                                            strings.creditorListSortReverse,
-                                        )
-                                    }
-                                } else null,
-                                onClick = {
-                                    viewModel.onIntent(
-                                        if (isActive) CreditorListIntent.ToggleSortDirection
-                                        else CreditorListIntent.ChangeSort(order)
-                                    )
-                                    filterMenuOpen = false
-                                },
-                            )
-                        }
-                        HorizontalDivider()
-                        val statusOptions = listOf(
-                            Triple(CreditorStatusFilter.ACTIVE, strings.creditorListFilterActive, Icons.Filled.HourglassEmpty),
-                            Triple(CreditorStatusFilter.CLOSED, strings.creditorListFilterClosed, Icons.Filled.CheckCircle),
-                            Triple(CreditorStatusFilter.ALL, strings.creditorListFilterAll, Icons.AutoMirrored.Filled.List),
-                        )
-                        statusOptions.forEach { (filter, label, icon) ->
-                            val isSelected = state.statusFilter == filter
-                            DropdownMenuItem(
-                                leadingIcon = { Icon(icon, null) },
-                                text = { Text(label) },
-                                trailingIcon = if (isSelected) {
-                                    { Icon(Icons.Filled.Check, null) }
-                                } else null,
-                                onClick = {
-                                    viewModel.onIntent(CreditorListIntent.ChangeStatusFilter(filter))
-                                    filterMenuOpen = false
-                                },
-                            )
-                        }
-                    }
-                }
-            }
-
-            PullToRefreshBox(
-                isRefreshing = state.isRefreshing,
-                onRefresh = { viewModel.onIntent(CreditorListIntent.Refresh) },
-                modifier = Modifier.weight(1f),
-            ) {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(state.creditors, key = { it.creditor.id }) { item ->
-                        CreditorRow(
-                            item = item,
-                            onClick = { onOpenCreditor(item.creditor.id) },
-                            onDelete = { viewModel.onIntent(CreditorListIntent.Delete(item.creditor.id)) },
-                        )
-                    }
-                }
-            }
-
-            Card(modifier = Modifier.fillMaxWidth().padding(Dimens.space12)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(Dimens.space16),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(strings.creditorListTotal)
-                        Text(
-                            state.totalsByCurrency.formatTotals(),
-                            color = MaterialTheme.debtAccentColors.debt
-                        )
-                    }
-                    FloatingActionButton(
-                        onClick = onAddCreditor,
-                        modifier = Modifier.padding(start = Dimens.space12),
-                    ) { Icon(Icons.Default.Add, null) }
-                }
-            }
-        }
+    ContactListScaffold(
+        items = state.creditors,
+        key = { it.creditor.id },
+        isRefreshing = state.isRefreshing,
+        onRefresh = { viewModel.onIntent(CreditorListIntent.Refresh) },
+        searchBar = {
+            ListSearchBar(
+                query = state.query,
+                onQueryChange = { viewModel.onIntent(CreditorListIntent.Search(it)) },
+                searchPlaceholder = strings.creditorListSearchPlaceholder,
+                clearSearchDescription = strings.clearSearch,
+                searchFocusRequester = searchFocusRequester,
+                filterDescription = strings.creditorListSort,
+                sortOptions = listOf(
+                    MenuOption(CreditorSortOrder.NAME_ASC, strings.creditorListSortByName, Icons.Filled.SortByAlpha),
+                    MenuOption(CreditorSortOrder.BALANCE_DESC, strings.creditorListSortByBalance, Icons.Filled.Payments),
+                    MenuOption(CreditorSortOrder.RECENT, strings.creditorListSortRecent, Icons.Filled.History),
+                ),
+                currentSort = state.sortOrder,
+                sortAscending = state.sortAscending,
+                sortReverseDescription = strings.creditorListSortReverse,
+                onToggleSortDirection = { viewModel.onIntent(CreditorListIntent.ToggleSortDirection) },
+                onChangeSort = { viewModel.onIntent(CreditorListIntent.ChangeSort(it)) },
+                statusOptions = listOf(
+                    MenuOption(CreditorStatusFilter.ACTIVE, strings.creditorListFilterActive, Icons.Filled.HourglassEmpty),
+                    MenuOption(CreditorStatusFilter.CLOSED, strings.creditorListFilterClosed, Icons.Filled.CheckCircle),
+                    MenuOption(CreditorStatusFilter.ALL, strings.creditorListFilterAll, Icons.AutoMirrored.Filled.List),
+                ),
+                currentStatus = state.statusFilter,
+                onChangeStatus = { viewModel.onIntent(CreditorListIntent.ChangeStatusFilter(it)) },
+            )
+        },
+        totalBar = {
+            ListTotalBar(
+                label = strings.creditorListTotal,
+                totalText = state.totalsByCurrency.formatTotals(),
+                onAdd = onAddCreditor,
+            )
+        },
+    ) { item ->
+        ContactRow(
+            id = item.creditor.id,
+            name = item.creditor.fullName,
+            phone = item.creditor.phone,
+            avatarUrl = item.creditor.avatarUrl,
+            balanceText = item.balance.formatMoney(item.creditor.currency),
+            deleteLabel = strings.delete,
+            onClick = { onOpenCreditor(item.creditor.id) },
+            onDelete = { viewModel.onIntent(CreditorListIntent.Delete(item.creditor.id)) },
+        )
     }
 }
 
@@ -240,55 +119,4 @@ private fun CreditorListScreenLightDesktopPreview() = DebtTrackerPreview(darkThe
 @Composable
 private fun CreditorListScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     CreditorListScreen(onAddCreditor = {}, onOpenCreditor = {})
-}
-
-
-@Composable
-private fun CreditorRow(
-    item: CreditorWithBalance,
-    onClick: () -> Unit,
-    onDelete: () -> Unit,
-) {
-    val appSettings = koinInject<AppSettings>()
-    val haptics = LocalHapticFeedback.current
-    var menuOpen by remember { mutableStateOf(false) }
-
-    OutlinedCard(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.space12, vertical = Dimens.space4),
-        border = BorderStroke(Dimens.space1, MaterialTheme.colorScheme.primary),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(start = Dimens.space16, top = Dimens.space16, bottom = Dimens.space16, end = Dimens.space4),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column {
-                Text(item.creditor.fullName, style = MaterialTheme.typography.bodyLarge)
-                item.creditor.phone?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    item.balance.formatMoney(item.creditor.currency),
-                    color = MaterialTheme.debtAccentColors.debt
-                )
-                Box {
-                    IconButton(onClick = { menuOpen = true }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = null)
-                    }
-                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                        DropdownMenuItem(
-                            text = { Text(LocalStrings.current.delete) },
-                            leadingIcon = { Icon(Icons.Default.DeleteOutline, contentDescription = null) },
-                            onClick = {
-                                menuOpen = false
-                                if (appSettings.hapticEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onDelete()
-                            },
-                        )
-                    }
-                }
-            }
-        }
-    }
 }

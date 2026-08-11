@@ -1,31 +1,21 @@
 package org.bigblackowl.debttracker.ui.screens.settings
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PhoneIphone
 import androidx.compose.material.icons.filled.Public
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -33,7 +23,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
@@ -46,7 +35,8 @@ import org.bigblackowl.debttracker.domain.model.DeviceSession
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
-import org.bigblackowl.debttracker.ui.components.BackButton
+import org.bigblackowl.debttracker.ui.components.ConfirmDialog
+import org.bigblackowl.debttracker.ui.components.SettingsDetailScaffold
 import org.bigblackowl.debttracker.ui.components.SettingsRow
 import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
 import org.bigblackowl.debttracker.ui.components.SettingsSection
@@ -72,110 +62,87 @@ fun ActiveSessionsScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(strings.activeSessionsTitle) },
-                navigationIcon = { BackButton(onClick = onBack) },
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-    ) { padding ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Column(
-                modifier = Modifier.width(Dimens.contentMaxWidth).padding(Dimens.space16),
-                verticalArrangement = Arrangement.spacedBy(Dimens.space16),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                if (state.isLoading) {
-                    CircularWavyProgressIndicator(modifier = Modifier.padding(Dimens.space16))
-                } else {
-                    SettingsSection(strings.activeSessionsTitle) {
-                        state.sessions.forEachIndexed { index, session ->
-                            SettingsRow(
-                                icon = session.platform.icon(),
-                                title = session.deviceName,
-                                subtitle = if (session.isCurrentDevice) {
-                                    strings.activeSessionsCurrentDevice
-                                } else {
-                                    strings.activeSessionsLastActive(
-                                        session.lastSeenAt.toLocalDateTime(TimeZone.currentSystemDefault()).let { dt ->
-                                            "${dt.date} ${dt.hour.toString().padStart(2, '0')}:${dt.minute.toString().padStart(2, '0')}"
-                                        }
-                                    )
-                                },
-                                trailing = if (!session.isCurrentDevice) {
-                                    {
-                                        if (state.revokingId == session.id) {
-                                            CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
-                                        } else {
-                                            TextButton(onClick = { pendingRevoke = session }) {
-                                                Text(strings.activeSessionsLogOut, color = MaterialTheme.debtAccentColors.debt)
-                                            }
-                                        }
-                                    }
-                                } else null,
+    SettingsDetailScaffold(
+        title = strings.activeSessionsTitle,
+        onBack = onBack,
+        snackbarHostState = snackbarHostState,
+    ) {
+        if (state.isLoading) {
+            CircularWavyProgressIndicator(modifier = Modifier.padding(Dimens.space16))
+        } else {
+            SettingsSection(strings.activeSessionsTitle) {
+                state.sessions.forEachIndexed { index, session ->
+                    SettingsRow(
+                        icon = session.platform.icon(),
+                        title = session.deviceName,
+                        subtitle = if (session.isCurrentDevice) {
+                            strings.activeSessionsCurrentDevice
+                        } else {
+                            strings.activeSessionsLastActive(
+                                session.lastSeenAt.toLocalDateTime(TimeZone.currentSystemDefault()).let { dt ->
+                                    "${dt.date} ${dt.hour.toString().padStart(2, '0')}:${dt.minute.toString().padStart(2, '0')}"
+                                }
                             )
-                            if (index != state.sessions.lastIndex) SettingsRowDivider()
-                        }
-                    }
-
-                    if (state.sessions.count { !it.isCurrentDevice } > 0) {
-                        OutlinedCard(
-                            shape = RoundedCornerShape(Dimens.space16),
-                            border = BorderStroke(Dimens.space2, color = MaterialTheme.colorScheme.primary),
-                            ) {
-                        TextButton(
-                            onClick = { showRevokeAllConfirm = true },
-                            enabled = !state.isRevokingAll,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            if (state.isRevokingAll) {
-                                CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
-                            } else {
-                                Text(strings.activeSessionsLogOutAllOthers, color = MaterialTheme.debtAccentColors.debt)
+                        },
+                        trailing = if (!session.isCurrentDevice) {
+                            {
+                                if (state.revokingId == session.id) {
+                                    CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
+                                } else {
+                                    TextButton(onClick = { pendingRevoke = session }) {
+                                        Text(strings.activeSessionsLogOut, color = MaterialTheme.debtAccentColors.debt)
+                                    }
+                                }
                             }
-                        }}
-                    }
+                        } else null,
+                    )
+                    if (index != state.sessions.lastIndex) SettingsRowDivider()
                 }
+            }
+
+            if (state.sessions.count { !it.isCurrentDevice } > 0) {
+                OutlinedCard(
+                    shape = RoundedCornerShape(Dimens.space16),
+                    border = BorderStroke(Dimens.space2, color = MaterialTheme.colorScheme.primary),
+                    ) {
+                TextButton(
+                    onClick = { showRevokeAllConfirm = true },
+                    enabled = !state.isRevokingAll,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    if (state.isRevokingAll) {
+                        CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
+                    } else {
+                        Text(strings.activeSessionsLogOutAllOthers, color = MaterialTheme.debtAccentColors.debt)
+                    }
+                }}
             }
         }
     }
 
     pendingRevoke?.let { session ->
-        AlertDialog(
-            onDismissRequest = { pendingRevoke = null },
-            title = { Text(strings.activeSessionsRevokeConfirmTitle) },
-            text = { Text(strings.activeSessionsRevokeConfirmText(session.deviceName)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    pendingRevoke = null
-                    viewModel.onIntent(ActiveSessionsIntent.RevokeSession(session.id))
-                }) { Text(strings.activeSessionsLogOut) }
+        ConfirmDialog(
+            title = strings.activeSessionsRevokeConfirmTitle,
+            text = strings.activeSessionsRevokeConfirmText(session.deviceName),
+            confirmLabel = strings.activeSessionsLogOut,
+            onConfirm = {
+                pendingRevoke = null
+                viewModel.onIntent(ActiveSessionsIntent.RevokeSession(session.id))
             },
-            dismissButton = {
-                TextButton(onClick = { pendingRevoke = null }) { Text(strings.cancel) }
-            },
+            onDismiss = { pendingRevoke = null },
         )
     }
 
     if (showRevokeAllConfirm) {
-        AlertDialog(
-            onDismissRequest = { showRevokeAllConfirm = false },
-            title = { Text(strings.activeSessionsLogOutAllOthersConfirmTitle) },
-            text = { Text(strings.activeSessionsLogOutAllOthersConfirmText) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showRevokeAllConfirm = false
-                    viewModel.onIntent(ActiveSessionsIntent.RevokeAllOthers)
-                }) { Text(strings.activeSessionsLogOutAllOthers) }
+        ConfirmDialog(
+            title = strings.activeSessionsLogOutAllOthersConfirmTitle,
+            text = strings.activeSessionsLogOutAllOthersConfirmText,
+            confirmLabel = strings.activeSessionsLogOutAllOthers,
+            onConfirm = {
+                showRevokeAllConfirm = false
+                viewModel.onIntent(ActiveSessionsIntent.RevokeAllOthers)
             },
-            dismissButton = {
-                TextButton(onClick = { showRevokeAllConfirm = false }) { Text(strings.cancel) }
-            },
+            onDismiss = { showRevokeAllConfirm = false },
         )
     }
 }

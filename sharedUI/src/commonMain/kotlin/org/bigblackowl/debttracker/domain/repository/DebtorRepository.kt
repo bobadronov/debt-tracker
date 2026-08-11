@@ -19,4 +19,6 @@ interface DebtorRepository {
     suspend fun softDeleteDebtor(id: String)
     suspend fun addTransaction(transaction: DebtTransaction)
     suspend fun deleteAllData()
+    /** Wipes this device's local cache only, leaving Supabase data untouched — Room: clears Room; Web: no-op (no local cache). */
+    suspend fun clearLocalCache()
 }

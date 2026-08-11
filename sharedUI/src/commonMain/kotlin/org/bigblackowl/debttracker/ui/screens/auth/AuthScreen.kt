@@ -16,12 +16,11 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -30,7 +29,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -43,7 +41,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -61,8 +58,9 @@ import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.AccountAvatar
-import org.bigblackowl.debttracker.ui.components.BackButton
-import org.bigblackowl.debttracker.ui.components.ClipboardPasteHint
+import org.bigblackowl.debttracker.ui.components.BackTopAppBar
+import org.bigblackowl.debttracker.ui.components.LoadingButton
+import org.bigblackowl.debttracker.ui.components.PasteableOutlinedTextField
 import org.bigblackowl.debttracker.ui.components.UkrainianPhoneVisualTransformation
 import org.bigblackowl.debttracker.ui.components.rememberClipboardText
 import org.koin.compose.viewmodel.koinViewModel
@@ -80,15 +78,13 @@ fun AuthScreen(
     val strings = LocalStrings.current
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
-    var emailFocused by remember { mutableStateOf(false) }
-    var fullNameFocused by remember { mutableStateOf(false) }
-    var phoneFocused by remember { mutableStateOf(false) }
     val imagePicker = rememberImagePicker()
 
     val fullNameFocusRequester = remember { FocusRequester() }
     val emailFocusRequester = remember { FocusRequester() }
     val passwordFocusRequester = remember { FocusRequester() }
     val confirmPasswordFocusRequester = remember { FocusRequester() }
+    val phoneFocusRequester = remember { FocusRequester() }
     val clipboardText by rememberClipboardText()
 
     LaunchedEffect(Unit) {
@@ -98,14 +94,15 @@ fun AuthScreen(
             }
         }
     }
+    LaunchedEffect(state.isEmailStepDone) {
+        if (state.isEmailStepDone) passwordFocusRequester.requestFocus()
+    }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(if (state.isSignUpMode) strings.authTitleSignUp else strings.authTitleSignIn) },
-                navigationIcon = {
-                    if (showBackButton) BackButton(onClick = onBack)
-                },
+            BackTopAppBar(
+                title = if (state.isSignUpMode) strings.authTitleSignUp else strings.authTitleSignIn,
+                onBack = if (showBackButton) onBack else null,
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -133,142 +130,93 @@ fun AuthScreen(
                         },
                     )
 
-                    OutlinedTextField(
+                    PasteableOutlinedTextField(
                         value = state.fullName,
                         onValueChange = { viewModel.onIntent(AuthIntent.FullNameChanged(it)) },
-                        label = { Text(strings.fullName) },
+                        label = strings.fullName,
                         leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
                         isError = state.fullNameError != null,
-                        supportingText = { state.fullNameError?.let { Text(it) } },
-                        singleLine = true,
+                        supportingText = state.fullNameError,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                         keyboardActions = KeyboardActions(onNext = { emailFocusRequester.requestFocus() }),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .focusRequester(fullNameFocusRequester)
-                            .onFocusChanged { fullNameFocused = it.isFocused },
-                    )
-                    ClipboardPasteHint(
+                        modifier = Modifier.focusRequester(fullNameFocusRequester),
                         clipboardText = clipboardText,
-                        fieldValue = state.fullName,
-                        isFieldFocused = fullNameFocused,
-                        isRelevant = ::isValidFullName,
-                        onPaste = { viewModel.onIntent(AuthIntent.FullNameChanged(it)) },
+                        isPasteRelevant = ::isValidFullName,
                     )
                 }
 
-                OutlinedTextField(
+                PasteableOutlinedTextField(
                     value = state.email,
                     onValueChange = {
                         viewModel.onIntent(AuthIntent.EmailChanged(it))
                     },
-                    label = { Text(strings.authEmail) },
-                    singleLine = true,
+                    label = strings.authEmail,
+                    readOnly = state.isEmailStepDone,
+                    trailingIcon = if (state.isEmailStepDone) {
+                        {
+                            IconButton(onClick = { viewModel.onIntent(AuthIntent.EditEmail) }) {
+                                Icon(Icons.Filled.Edit, contentDescription = strings.back)
+                            }
+                        }
+                    } else null,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email,
                         imeAction = ImeAction.Next,
                     ),
                     keyboardActions = KeyboardActions(
                         onNext = {
-                            passwordFocusRequester.requestFocus()
+                            viewModel.onIntent(AuthIntent.ContinueFromEmailStep)
                         },
                     ),
                     modifier = Modifier
-                        .fillMaxWidth()
                         .focusRequester(emailFocusRequester)
-                        .onFocusChanged { emailFocused = it.isFocused }
-                        .semantics { contentType = ContentType.Username }
-                    ,
-                )
-                ClipboardPasteHint(
+                        .semantics { contentType = ContentType.Username },
                     clipboardText = clipboardText,
-                    fieldValue = state.email,
-                    isFieldFocused = emailFocused,
-                    isRelevant = ::isValidEmail,
-                    onPaste = { viewModel.onIntent(AuthIntent.EmailChanged(it)) },
+                    isPasteRelevant = ::isValidEmail,
                 )
 
-                OutlinedTextField(
-                    value = state.password,
-                    onValueChange = {
-                        viewModel.onIntent(AuthIntent.PasswordChanged(it))
-                    },
-                    label = { Text(strings.authPassword) },
-                    singleLine = true,
-                    visualTransformation = if (passwordVisible) {
-                        VisualTransformation.None
-                    } else {
-                        PasswordVisualTransformation()
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
-                        imeAction = if (state.isSignUpMode) ImeAction.Next else ImeAction.Done,
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onNext = { confirmPasswordFocusRequester.requestFocus() },
-                        onDone = {
-                            if (!state.isLoading) {
-                                viewModel.onIntent(AuthIntent.Submit)
-                            }
-                        },
-                    ),
-                    isError = state.error != null,
-                    supportingText = {
-                        state.error?.let { Text(it) }
-                    },
-                    trailingIcon = {
-                        IconButton(
-                            onClick = {
-                                passwordVisible = !passwordVisible
-                            },
-                        ) {
-                            Icon(
-                                imageVector = if (passwordVisible) {
-                                    Icons.Default.VisibilityOff
-                                } else {
-                                    Icons.Default.Visibility
-                                },
-                                contentDescription = if (passwordVisible) {
-                                    strings.hidePassword
-                                } else {
-                                    strings.showPassword
-                                },
-                            )
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusRequester(passwordFocusRequester)
-                        .semantics { contentType = if (state.isSignUpMode) ContentType.NewPassword else ContentType.Password },
-                )
-
-                SignUpOnlyFields(visible = state.isSignUpMode) {
+                SignUpOnlyFields(visible = state.isEmailStepDone) {
                     OutlinedTextField(
-                        value = state.confirmPassword,
-                        onValueChange = { viewModel.onIntent(AuthIntent.ConfirmPasswordChanged(it)) },
-                        label = { Text(strings.authConfirmPassword) },
+                        value = state.password,
+                        onValueChange = {
+                            viewModel.onIntent(AuthIntent.PasswordChanged(it))
+                        },
+                        label = { Text(strings.authPassword) },
                         singleLine = true,
-                        visualTransformation = if (confirmPasswordVisible) {
+                        visualTransformation = if (passwordVisible) {
                             VisualTransformation.None
                         } else {
                             PasswordVisualTransformation()
                         },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Next,
+                            imeAction = if (state.isSignUpMode) ImeAction.Next else ImeAction.Done,
                         ),
-                        keyboardActions = KeyboardActions(onNext = { phoneFocused = true }),
-                        isError = state.confirmPasswordError != null,
-                        supportingText = { state.confirmPasswordError?.let { Text(it) } },
+                        keyboardActions = KeyboardActions(
+                            onNext = { confirmPasswordFocusRequester.requestFocus() },
+                            onDone = {
+                                if (!state.isLoading) {
+                                    viewModel.onIntent(AuthIntent.Submit)
+                                }
+                            },
+                        ),
+                        isError = state.error != null,
+                        supportingText = {
+                            state.error?.let { Text(it) }
+                        },
                         trailingIcon = {
-                            IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                            IconButton(
+                                onClick = {
+                                    passwordVisible = !passwordVisible
+                                },
+                            ) {
                                 Icon(
-                                    imageVector = if (confirmPasswordVisible) {
+                                    imageVector = if (passwordVisible) {
                                         Icons.Default.VisibilityOff
                                     } else {
                                         Icons.Default.Visibility
                                     },
-                                    contentDescription = if (confirmPasswordVisible) {
+                                    contentDescription = if (passwordVisible) {
                                         strings.hidePassword
                                     } else {
                                         strings.showPassword
@@ -278,50 +226,90 @@ fun AuthScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .focusRequester(confirmPasswordFocusRequester)
-                            .semantics { contentType = ContentType.NewPassword },
+                            .focusRequester(passwordFocusRequester)
+                            .semantics { contentType = if (state.isSignUpMode) ContentType.NewPassword else ContentType.Password },
                     )
 
-                    OutlinedTextField(
-                        value = state.phone,
-                        onValueChange = { viewModel.onIntent(AuthIntent.PhoneChanged(sanitizePhoneInput(it))) },
-                        label = { Text(strings.phone) },
-                        leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null) },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Phone,
-                            imeAction = ImeAction.Done,
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                if (!state.isLoading) {
-                                    viewModel.onIntent(AuthIntent.Submit)
+                    SignUpOnlyFields(visible = state.isSignUpMode) {
+                        OutlinedTextField(
+                            value = state.confirmPassword,
+                            onValueChange = { viewModel.onIntent(AuthIntent.ConfirmPasswordChanged(it)) },
+                            label = { Text(strings.authConfirmPassword) },
+                            singleLine = true,
+                            visualTransformation = if (confirmPasswordVisible) {
+                                VisualTransformation.None
+                            } else {
+                                PasswordVisualTransformation()
+                            },
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Password,
+                                imeAction = ImeAction.Next,
+                            ),
+                            keyboardActions = KeyboardActions(onNext = { phoneFocusRequester.requestFocus() }),
+                            isError = state.confirmPasswordError != null,
+                            supportingText = { state.confirmPasswordError?.let { Text(it) } },
+                            trailingIcon = {
+                                IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                                    Icon(
+                                        imageVector = if (confirmPasswordVisible) {
+                                            Icons.Default.VisibilityOff
+                                        } else {
+                                            Icons.Default.Visibility
+                                        },
+                                        contentDescription = if (confirmPasswordVisible) {
+                                            strings.hidePassword
+                                        } else {
+                                            strings.showPassword
+                                        },
+                                    )
                                 }
                             },
-                        ),
-                        visualTransformation = remember { UkrainianPhoneVisualTransformation() },
-                        modifier = Modifier.fillMaxWidth().onFocusChanged { phoneFocused = it.isFocused }
-                            .semantics { contentType = ContentType.PhoneNumber },
-                    )
-                    ClipboardPasteHint(
-                        clipboardText = clipboardText,
-                        fieldValue = state.phone,
-                        isFieldFocused = phoneFocused,
-                        isRelevant = ::isPhonePasteRelevant,
-                        onPaste = { viewModel.onIntent(AuthIntent.PhoneChanged(sanitizePhoneInput(it))) },
-                    )
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .focusRequester(confirmPasswordFocusRequester)
+                                .semantics { contentType = ContentType.NewPassword },
+                        )
+
+                        PasteableOutlinedTextField(
+                            value = state.phone,
+                            onValueChange = { viewModel.onIntent(AuthIntent.PhoneChanged(sanitizePhoneInput(it))) },
+                            label = strings.phone,
+                            leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null) },
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Phone,
+                                imeAction = ImeAction.Done,
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    if (!state.isLoading) {
+                                        viewModel.onIntent(AuthIntent.Submit)
+                                    }
+                                },
+                            ),
+                            visualTransformation = remember { UkrainianPhoneVisualTransformation() },
+                            modifier = Modifier.focusRequester(phoneFocusRequester).semantics { contentType = ContentType.PhoneNumber },
+                            clipboardText = clipboardText,
+                            isPasteRelevant = ::isPhonePasteRelevant,
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(Dimens.space30))
-                Button(
-                    onClick = { viewModel.onIntent(AuthIntent.Submit) },
-                    enabled = !state.isLoading,
-                    modifier = Modifier.fillMaxWidth(.8f),
-                ) {
-                    if (state.isLoading)
-                        CircularWavyProgressIndicator(modifier = Modifier.padding(end = Dimens.space8))
-                    else
-                        Text(if (state.isSignUpMode) strings.authSubmitSignUp else strings.authSubmitSignIn)
+                if (state.isEmailStepDone) {
+                    LoadingButton(
+                        onClick = { viewModel.onIntent(AuthIntent.Submit) },
+                        isLoading = state.isLoading,
+                        modifier = Modifier.fillMaxWidth(.8f),
+                        label = { Text(if (state.isSignUpMode) strings.authSubmitSignUp else strings.authSubmitSignIn) },
+                    )
+                } else {
+                    LoadingButton(
+                        onClick = { viewModel.onIntent(AuthIntent.ContinueFromEmailStep) },
+                        isLoading = false,
+                        enabled = state.email.trim().isNotBlank(),
+                        modifier = Modifier.fillMaxWidth(.8f),
+                        label = { Text(strings.continueLabel) },
+                    )
                 }
                 TextButton(onClick = { viewModel.onIntent(AuthIntent.ToggleMode) }) {
                     Text(if (state.isSignUpMode) strings.authToggleToSignIn else strings.authToggleToSignUp)

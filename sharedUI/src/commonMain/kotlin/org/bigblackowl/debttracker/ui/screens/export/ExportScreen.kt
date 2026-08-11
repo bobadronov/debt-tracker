@@ -12,8 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Download
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,6 +43,7 @@ import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
+import org.bigblackowl.debttracker.ui.components.LoadingButton
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
 import org.bigblackowl.debttracker.ui.components.SettingsRow
 import org.bigblackowl.debttracker.ui.components.SettingsSection
@@ -179,22 +178,19 @@ fun ExportScreen(
                     )
                 }
 
-                Button(
+                LoadingButton(
                     onClick = { viewModel.onIntent(ExportIntent.Export(fileExporter, fromDate, toDate)) },
-                    enabled = !state.isExporting,
+                    isLoading = state.isExporting,
                     modifier = Modifier.fillMaxWidth(),
-                ) {
-                    if (state.isExporting) {
-                        CircularWavyProgressIndicator(modifier = Modifier.padding(end = Dimens.space8))
-                    } else {
+                    leadingIcon = {
                         Icon(
                             Icons.Filled.Download,
                             contentDescription = null,
                             modifier = Modifier.padding(end = Dimens.space8)
                         )
-                        Text(strings.exportSubmit)
-                    }
-                }
+                    },
+                    label = { Text(strings.exportSubmit) },
+                )
             }
         }
     }

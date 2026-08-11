@@ -74,6 +74,11 @@ class RoomDebtorRepository(
         debtorDao.deleteAll()
     }
 
+    override suspend fun clearLocalCache() {
+        transactionDao.deleteAll()
+        debtorDao.deleteAll()
+    }
+
     /** Мірор Postgres-тригера з Фази 0 (recalc_debtor_status): status/updatedAt рахуються з транзакцій. */
     private suspend fun recalcDebtorStatus(debtorId: String) {
         val entity = debtorDao.getById(debtorId) ?: return

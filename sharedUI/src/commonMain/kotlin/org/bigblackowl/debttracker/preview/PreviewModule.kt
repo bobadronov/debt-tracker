@@ -9,6 +9,7 @@ import org.bigblackowl.debttracker.domain.repository.DebtorRepository
 import org.bigblackowl.debttracker.domain.repository.ProfileLookupRepository
 import org.bigblackowl.debttracker.domain.repository.SessionRepository
 import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
+import org.bigblackowl.debttracker.domain.usecase.ClearLocalCacheUseCase
 import org.bigblackowl.debttracker.domain.usecase.DeleteAllDataUseCase
 import org.bigblackowl.debttracker.domain.usecase.FindProfileByEmailUseCase
 import org.bigblackowl.debttracker.domain.usecase.ForceSignOutUseCase
@@ -25,11 +26,8 @@ import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorTransactio
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorsUseCase
 import org.bigblackowl.debttracker.ui.screens.accountonboarding.AccountOnboardingViewModel
-import org.bigblackowl.debttracker.ui.screens.authgate.AuthGateViewModel
-import org.bigblackowl.debttracker.ui.screens.home.HomeViewModel
-import org.bigblackowl.debttracker.ui.screens.protectiononboarding.ProtectionOnboardingViewModel
-import org.bigblackowl.debttracker.ui.screens.splash.SplashViewModel
 import org.bigblackowl.debttracker.ui.screens.auth.AuthViewModel
+import org.bigblackowl.debttracker.ui.screens.authgate.AuthGateViewModel
 import org.bigblackowl.debttracker.ui.screens.creditors.AddEditCreditorViewModel
 import org.bigblackowl.debttracker.ui.screens.creditors.CreditorDetailViewModel
 import org.bigblackowl.debttracker.ui.screens.creditors.CreditorListViewModel
@@ -37,9 +35,12 @@ import org.bigblackowl.debttracker.ui.screens.debtors.AddEditDebtorViewModel
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorDetailViewModel
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorListViewModel
 import org.bigblackowl.debttracker.ui.screens.export.ExportViewModel
+import org.bigblackowl.debttracker.ui.screens.home.HomeViewModel
+import org.bigblackowl.debttracker.ui.screens.protectiononboarding.ProtectionOnboardingViewModel
 import org.bigblackowl.debttracker.ui.screens.settings.ActiveSessionsViewModel
 import org.bigblackowl.debttracker.ui.screens.settings.EditAccountViewModel
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsViewModel
+import org.bigblackowl.debttracker.ui.screens.splash.SplashViewModel
 import org.bigblackowl.debttracker.ui.screens.stats.StatsViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
@@ -56,6 +57,7 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     single {
         AppSettings(InMemorySettings()).apply {
             if (darkTheme != null) theme = if (darkTheme) "dark" else "light"
+            locale = "uk"
         }
     }
     single<SoundPlayer> { NoOpSoundPlayer() }
@@ -67,6 +69,7 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     single<ProfileLookupRepository> { FakeProfileLookupRepository() }
     single<SessionRepository> { FakeSessionRepository() }
     factoryOf(::DeleteAllDataUseCase)
+    factoryOf(::ClearLocalCacheUseCase)
     factoryOf(::FindProfileByEmailUseCase)
     factoryOf(::ForceSignOutUseCase)
 

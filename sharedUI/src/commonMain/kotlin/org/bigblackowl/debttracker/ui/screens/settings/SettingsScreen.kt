@@ -38,14 +38,12 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Vibration
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -72,6 +70,7 @@ import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.AccountAvatar
+import org.bigblackowl.debttracker.ui.components.ConfirmDialog
 import org.bigblackowl.debttracker.ui.components.PinSetupDialog
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
 import org.bigblackowl.debttracker.ui.components.SettingsRow
@@ -450,56 +449,40 @@ fun SettingsScreen(
     }
 
     if (showSignOutConfirm) {
-        AlertDialog(
-            onDismissRequest = { showSignOutConfirm = false },
-            title = { Text(strings.settingsSignOutConfirmTitle) },
-            text = { Text(strings.settingsSignOutConfirmText) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showSignOutConfirm = false
-                    viewModel.onIntent(SettingsIntent.SignOut)
-                }) { Text(strings.settingsSignOut) }
+        ConfirmDialog(
+            title = strings.settingsSignOutConfirmTitle,
+            text = strings.settingsSignOutConfirmText,
+            confirmLabel = strings.settingsSignOut,
+            onConfirm = {
+                showSignOutConfirm = false
+                viewModel.onIntent(SettingsIntent.SignOut)
             },
-            dismissButton = {
-                TextButton(onClick = { showSignOutConfirm = false }) { Text(strings.cancel) }
-            },
+            onDismiss = { showSignOutConfirm = false },
         )
     }
 
     if (showDeleteConfirm1) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm1 = false },
-            title = { Text(strings.settingsDeleteConfirm1Title) },
-            text = { Text(strings.settingsDeleteConfirm1Text) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showDeleteConfirm1 = false; showDeleteConfirm2 = true
-                }) { Text(strings.continueLabel) }
+        ConfirmDialog(
+            title = strings.settingsDeleteConfirm1Title,
+            text = strings.settingsDeleteConfirm1Text,
+            confirmLabel = strings.continueLabel,
+            onConfirm = {
+                showDeleteConfirm1 = false; showDeleteConfirm2 = true
             },
-            dismissButton = {
-                TextButton(onClick = {
-                    showDeleteConfirm1 = false
-                }) { Text(strings.cancel) }
-            },
+            onDismiss = { showDeleteConfirm1 = false },
         )
     }
 
     if (showDeleteConfirm2) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm2 = false },
-            title = { Text(strings.settingsDeleteConfirm2Title) },
-            text = { Text(strings.settingsDeleteConfirm2Text) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showDeleteConfirm2 = false
-                    viewModel.onIntent(SettingsIntent.DeleteAllData)
-                }) { Text(strings.deleteForever) }
+        ConfirmDialog(
+            title = strings.settingsDeleteConfirm2Title,
+            text = strings.settingsDeleteConfirm2Text,
+            confirmLabel = strings.deleteForever,
+            onConfirm = {
+                showDeleteConfirm2 = false
+                viewModel.onIntent(SettingsIntent.DeleteAllData)
             },
-            dismissButton = {
-                TextButton(onClick = {
-                    showDeleteConfirm2 = false
-                }) { Text(strings.cancel) }
-            },
+            onDismiss = { showDeleteConfirm2 = false },
         )
     }
 }

@@ -309,6 +309,11 @@ class FakeDebtorRepository(
         debtors.update { emptyList() }
         transactions.update { emptyList() }
     }
+
+    override suspend fun clearLocalCache() {
+        debtors.update { emptyList() }
+        transactions.update { emptyList() }
+    }
 }
 
 /** In-memory реалізація [CreditorRepository] для @Preview — без Room/Supabase. */
@@ -350,6 +355,11 @@ class FakeCreditorRepository(
     }
 
     override suspend fun deleteAllData() {
+        creditors.update { emptyList() }
+        transactions.update { emptyList() }
+    }
+
+    override suspend fun clearLocalCache() {
         creditors.update { emptyList() }
         transactions.update { emptyList() }
     }

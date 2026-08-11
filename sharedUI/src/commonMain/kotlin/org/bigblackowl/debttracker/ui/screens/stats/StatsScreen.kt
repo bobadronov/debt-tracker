@@ -2,6 +2,7 @@ package org.bigblackowl.debttracker.ui.screens.stats
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,7 +50,12 @@ import org.koin.compose.viewmodel.koinViewModel
 
 /** StatsScreen: два окремих KPI (без взаємозаліку), топи, динаміка за місяць (спек §6, п.6). */
 @Composable
-fun StatsScreen(onBack: () -> Unit, viewModel: StatsViewModel = koinViewModel()) {
+fun StatsScreen(
+    onBack: () -> Unit,
+    onOpenDebtor: (String) -> Unit,
+    onOpenCreditor: (String) -> Unit,
+    viewModel: StatsViewModel = koinViewModel(),
+) {
     val state by viewModel.state.collectAsState()
     val strings = LocalStrings.current
 
@@ -87,7 +93,8 @@ fun StatsScreen(onBack: () -> Unit, viewModel: StatsViewModel = koinViewModel())
                             rank = index + 1,
                             name = item.debtor.fullName,
                             balance = item.balance,
-                            currency = item.debtor.currency
+                            currency = item.debtor.currency,
+                            onClick = { onOpenDebtor(item.debtor.id) },
                         )
                         if (index != state.topDebtors.lastIndex) SettingsRowDivider()
                     }
@@ -99,7 +106,8 @@ fun StatsScreen(onBack: () -> Unit, viewModel: StatsViewModel = koinViewModel())
                             rank = index + 1,
                             name = item.creditor.fullName,
                             balance = item.balance,
-                            currency = item.creditor.currency
+                            currency = item.creditor.currency,
+                            onClick = { onOpenCreditor(item.creditor.id) },
                         )
                         if (index != state.topCreditors.lastIndex) SettingsRowDivider()
                     }
@@ -123,25 +131,25 @@ fun StatsScreen(onBack: () -> Unit, viewModel: StatsViewModel = koinViewModel())
 @Preview
 @Composable
 private fun StatsScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    StatsScreen(onBack = {})
+    StatsScreen(onBack = {}, onOpenDebtor = {}, onOpenCreditor = {})
 }
 
 @Preview
 @Composable
 private fun StatsScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    StatsScreen(onBack = {})
+    StatsScreen(onBack = {}, onOpenDebtor = {}, onOpenCreditor = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun StatsScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    StatsScreen(onBack = {})
+    StatsScreen(onBack = {}, onOpenDebtor = {}, onOpenCreditor = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun StatsScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    StatsScreen(onBack = {})
+    StatsScreen(onBack = {}, onOpenDebtor = {}, onOpenCreditor = {})
 }
 
 /** Tonal-картка KPI з іконкою в колі — той самий візуальний словник, що й SettingsRow/SettingsSection. */
@@ -187,9 +195,10 @@ private fun KpiCard(
 
 /** Рядок топ-списку з номером місця у tonal-колі замість голого тексту. */
 @Composable
-private fun TopRow(rank: Int, name: String, balance: BigDecimal, currency: Currency) {
+private fun TopRow(rank: Int, name: String, balance: BigDecimal, currency: Currency, onClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(horizontal = Dimens.space16, vertical = Dimens.space12),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,

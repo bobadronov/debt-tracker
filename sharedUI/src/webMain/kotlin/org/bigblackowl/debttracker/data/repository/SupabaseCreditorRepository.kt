@@ -120,6 +120,9 @@ class SupabaseCreditorRepository(
         client.from("creditors").delete { filter { eq("user_id", userId) } }
     }
 
+    // No local cache on web (see SupabaseDebtorRepository's class doc) — nothing to clear on sign-out.
+    override suspend fun clearLocalCache() {}
+
     private suspend fun recalcCreditorStatus(creditorId: String, userId: String) {
         val creditor = client.from("creditors")
             .select { filter { eq("id", creditorId); eq("user_id", userId) } }

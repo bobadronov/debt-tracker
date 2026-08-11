@@ -35,13 +35,20 @@ class AuthViewModel(
             is AuthIntent.FullNameChanged -> _state.update { it.copy(fullName = intent.value, fullNameError = null) }
             is AuthIntent.PhoneChanged -> _state.update { it.copy(phone = intent.value) }
             is AuthIntent.AvatarPicked -> _state.update { it.copy(avatarPicked = intent.picked) }
-            AuthIntent.ToggleMode -> _state.update { it.copy(isSignUpMode = !it.isSignUpMode, error = null, fullNameError = null, confirmPasswordError = null) }
+            AuthIntent.ToggleMode -> _state.update {
+                it.copy(isSignUpMode = !it.isSignUpMode, isEmailStepDone = false, error = null, fullNameError = null, confirmPasswordError = null)
+            }
+            AuthIntent.ContinueFromEmailStep -> _state.update {
+                if (it.email.trim().isNotBlank()) it.copy(isEmailStepDone = true) else it
+            }
+            AuthIntent.EditEmail -> _state.update { it.copy(isEmailStepDone = false) }
             AuthIntent.Submit -> submit()
         }
     }
 
     private fun submit() {
         val current = _state.value
+        if (!current.isEmailStepDone) return
         val strings = resolveStrings(appSettings.locale)
 
         if (current.isSignUpMode) {

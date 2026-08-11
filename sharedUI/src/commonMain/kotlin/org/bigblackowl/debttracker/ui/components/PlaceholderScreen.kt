@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,17 +36,7 @@ fun PlaceholderScreen(
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = { Text(title) },
-                navigationIcon = {
-                    if (onBack != null) {
-                        BackButton(onClick = onBack)
-                    }
-                },
-                actions = actions
-            )
-        }
+        topBar = { BackTopAppBar(title = title, onBack = onBack, actions = actions) }
     ) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).padding(Dimens.space16),

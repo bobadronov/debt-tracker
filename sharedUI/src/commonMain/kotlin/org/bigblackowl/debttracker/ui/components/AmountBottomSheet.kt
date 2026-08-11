@@ -1,18 +1,15 @@
 package org.bigblackowl.debttracker.ui.components
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -22,7 +19,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.input.KeyboardType
@@ -56,10 +52,8 @@ fun AmountBottomSheet(
     onConfirm: (amount: BigDecimal, method: PaymentMethod, cardLastDigits: String?) -> Unit,
 ) {
     var amountText by remember { mutableStateOf(prefillAmount) }
-    var amountFocused by remember { mutableStateOf(false) }
     var method by remember { mutableStateOf(PaymentMethod.CASH) }
     var cardLastDigits by remember { mutableStateOf("") }
-    var cardLastDigitsFocused by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     val sheetState = rememberModalBottomSheetState()
     val appSettings = koinInject<AppSettings>()
@@ -78,21 +72,15 @@ fun AmountBottomSheet(
             verticalArrangement = Arrangement.spacedBy(Dimens.space12),
         ) {
             Text(title, style = MaterialTheme.typography.titleMedium)
-            OutlinedTextField(
+            PasteableOutlinedTextField(
                 value = amountText,
                 onValueChange = { amountText = sanitizeAmountInput(it); error = null },
-                label = { Text("${strings.amount} (${currency.symbol})") },
+                label = "${strings.amount} (${currency.symbol})",
                 isError = error != null,
-                supportingText = { error?.let { Text(it) } },
-                modifier = Modifier.fillMaxWidth().onFocusChanged { amountFocused = it.isFocused },
-                singleLine = true,
+                supportingText = error,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            )
-            ClipboardPasteHint(
                 clipboardText = clipboardText,
-                fieldValue = amountText,
-                isFieldFocused = amountFocused,
-                isRelevant = { text ->
+                isPasteRelevant = { text ->
                     val sanitized = sanitizeAmountInput(text)
                     sanitized.isNotBlank() &&
                         runCatching { BigDecimal.parseString(sanitized) }.getOrNull()
@@ -100,31 +88,14 @@ fun AmountBottomSheet(
                 },
                 onPaste = { amountText = sanitizeAmountInput(it); error = null },
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(Dimens.space8)) {
-                FilterChip(
-                    selected = method == PaymentMethod.CASH,
-                    onClick = { method = PaymentMethod.CASH },
-                    label = { Text(strings.cash) },
-                )
-                FilterChip(
-                    selected = method == PaymentMethod.CARD,
-                    onClick = { method = PaymentMethod.CARD },
-                    label = { Text(strings.card) },
-                )
-            }
+            PaymentMethodChipRow(selected = method, onSelect = { method = it })
             if (method == PaymentMethod.CARD) {
-                OutlinedTextField(
+                PasteableOutlinedTextField(
                     value = cardLastDigits,
                     onValueChange = { cardLastDigits = it },
-                    label = { Text(strings.cardLastDigits) },
-                    modifier = Modifier.fillMaxWidth().onFocusChanged { cardLastDigitsFocused = it.isFocused },
-                )
-                ClipboardPasteHint(
+                    label = strings.cardLastDigits,
                     clipboardText = clipboardText,
-                    fieldValue = cardLastDigits,
-                    isFieldFocused = cardLastDigitsFocused,
-                    isRelevant = { it.filter(Char::isDigit).length in 3..6 },
-                    onPaste = { cardLastDigits = it },
+                    isPasteRelevant = { it.filter(Char::isDigit).length in 3..6 },
                 )
             }
             Button(

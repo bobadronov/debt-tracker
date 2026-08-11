@@ -15,4 +15,6 @@ interface CreditorRepository {
     suspend fun softDeleteCreditor(id: String)
     suspend fun addTransaction(transaction: CreditorTransaction)
     suspend fun deleteAllData()
+    /** Wipes this device's local cache only, leaving Supabase data untouched — Room: clears Room; Web: no-op (no local cache). */
+    suspend fun clearLocalCache()
 }

@@ -71,6 +71,11 @@ class RoomCreditorRepository(
         creditorDao.deleteAll()
     }
 
+    override suspend fun clearLocalCache() {
+        transactionDao.deleteAll()
+        creditorDao.deleteAll()
+    }
+
     private suspend fun recalcCreditorStatus(creditorId: String) {
         val entity = creditorDao.getById(creditorId) ?: return
         val balance = transactionDao.getAllForCreditor(creditorId).map { it.toDomain() }.creditorBalance()
