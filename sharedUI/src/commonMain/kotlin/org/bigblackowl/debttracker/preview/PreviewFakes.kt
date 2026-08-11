@@ -20,6 +20,7 @@ import org.bigblackowl.debttracker.domain.model.Debtor
 import org.bigblackowl.debttracker.domain.model.DebtorWithBalance
 import org.bigblackowl.debttracker.domain.model.MyDebtTransactionType
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
+import org.bigblackowl.debttracker.domain.model.DeviceSession
 import org.bigblackowl.debttracker.domain.model.ProfileSuggestion
 import org.bigblackowl.debttracker.domain.model.SyncStatus
 import org.bigblackowl.debttracker.domain.model.SyncUiStatus
@@ -30,7 +31,10 @@ import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.CreditorRepository
 import org.bigblackowl.debttracker.domain.repository.DebtorRepository
 import org.bigblackowl.debttracker.domain.repository.ProfileLookupRepository
+import org.bigblackowl.debttracker.domain.repository.SessionRepository
 import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
+import org.bigblackowl.debttracker.core.platform.AppPlatform
+import kotlinx.coroutines.flow.emptyFlow
 import kotlin.time.Clock
 
 /**
@@ -365,6 +369,33 @@ class FakeAuthRepository : AuthRepository {
     override suspend fun signOut() = Unit
     override suspend fun updateAvatar(bytes: ByteArray, fileExtension: String): Result<String> = Result.success("")
     override suspend fun updateProfile(displayName: String, phone: String?): Result<Unit> = Result.success(Unit)
+}
+
+/** Static two-device list for @Preview — revoke calls are no-ops since nothing observes them back. */
+class FakeSessionRepository : SessionRepository {
+    private val sessions = MutableStateFlow(
+        listOf(
+            DeviceSession(
+                id = "preview-session-1",
+                deviceName = "Pixel 8",
+                platform = AppPlatform.ANDROID,
+                lastSeenAt = previewNow,
+                isCurrentDevice = true,
+            ),
+            DeviceSession(
+                id = "preview-session-2",
+                deviceName = "MacBook Pro",
+                platform = AppPlatform.DESKTOP,
+                lastSeenAt = previewNow,
+                isCurrentDevice = false,
+            ),
+        )
+    )
+
+    override fun observeSessions(): Flow<List<DeviceSession>> = sessions
+    override suspend fun revokeSession(sessionId: String): Result<Unit> = Result.success(Unit)
+    override suspend fun revokeAllOtherSessions(): Result<Unit> = Result.success(Unit)
+    override val revokedElsewhere: Flow<Unit> = emptyFlow()
 }
 
 class FakeSyncStatusProvider : SyncStatusProvider {
