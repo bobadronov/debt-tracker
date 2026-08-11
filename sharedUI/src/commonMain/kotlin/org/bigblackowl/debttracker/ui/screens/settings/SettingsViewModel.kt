@@ -1,0 +1,105 @@
+package org.bigblackowl.debttracker.ui.screens.settings
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import org.bigblackowl.debttracker.core.i18n.resolveStrings
+import org.bigblackowl.debttracker.core.security.BiometricResult
+import org.bigblackowl.debttracker.core.settings.AppSettings
+import org.bigblackowl.debttracker.domain.usecase.DeleteAllDataUseCase
+import org.bigblackowl.debttracker.domain.usecase.ForceSignOutUseCase
+import kotlin.time.Duration.Companion.milliseconds
+
+/**
+ * Owns every async/business flow behind [SettingsScreen]: app-lock enable/disable (biometric or PIN),
+ * sign-out, delete-all-data, and the update-check/download/install pipeline. Simple synchronous
+ * toggles (sound/haptic/theme/locale) stay read/written directly off [AppSettings] in the Screen —
+ * that class is deliberately Compose-reactive (`mutableStateOf`-backed) for exactly that purpose.
+ */
+class SettingsViewModel(
+    private val appSettings: AppSettings,
+    private val deleteAllData: DeleteAllDataUseCase,
+    private val forceSignOut: ForceSignOutUseCase,
+) : ViewModel() {
+
+    private val _state = MutableStateFlow(SettingsState())
+    val state: StateFlow<SettingsState> = _state.asStateFlow()
+
+    fun onIntent(intent: SettingsIntent) {
+        when (intent) {
+            is SettingsIntent.CheckBiometricHardware -> viewModelScope.launch {
+                val available = intent.authenticator.isAvailable()
+                _state.update { it.copy(biometricHardwareAvailable = available) }
+            }
+
+            is SettingsIntent.ToggleDesktopProtection -> {
+                _state.update { it.copy(protectionConfirmError = null) }
+                appSettings.protectionEnabled = intent.enabled
+            }
+
+            is SettingsIntent.SetupPinAndEnableProtection -> {
+                _state.update { it.copy(protectionConfirmError = null) }
+                appSettings.setPinCode(intent.pin)
+                appSettings.protectionEnabled = true
+            }
+
+            is SettingsIntent.EnableMobileProtection -> viewModelScope.launch {
+                _state.update { it.copy(protectionConfirmError = null) }
+                val strings = resolveStrings(appSettings.locale)
+                when (intent.authenticator.authenticate(strings.biometricEnableReason)) {
+                    BiometricResult.SUCCESS -> {
+                        appSettings.protectionEnabled = true
+                        appSettings.biometricEnabled = true
+                    }
+                    else -> _state.update { it.copy(protectionConfirmError = strings.settingsProtectionConfirmFailed) }
+                }
+            }
+
+            SettingsIntent.DisableMobileProtection -> {
+                _state.update { it.copy(protectionConfirmError = null) }
+                appSettings.protectionEnabled = false
+                appSettings.biometricEnabled = false
+            }
+
+            SettingsIntent.SignOut -> viewModelScope.launch { forceSignOut() }
+
+            SettingsIntent.DeleteAllData -> viewModelScope.launch {
+                deleteAllData()
+                _state.update { it.copy(deleteDone = true) }
+            }
+
+            is SettingsIntent.CheckForInAppUpdate -> viewModelScope.launch {
+                _state.update { it.copy(isCheckingInAppUpdate = true) }
+                intent.launcher.checkForUpdate()
+                // Play's API has no "no update found" signal to await — checkForUpdate() either
+                // starts a background download or does nothing, so just show a brief spinner.
+                delay(2_000.milliseconds)
+                _state.update { it.copy(isCheckingInAppUpdate = false) }
+            }
+
+            is SettingsIntent.CheckForUpdate -> viewModelScope.launch {
+                _state.update { it.copy(updateState = UpdateCheckState.Checking) }
+                val info = intent.checker.checkForUpdate()
+                _state.update { it.copy(updateState = info?.let { UpdateCheckState.Available(it) } ?: UpdateCheckState.UpToDate) }
+            }
+
+            is SettingsIntent.DownloadUpdate -> viewModelScope.launch {
+                _state.update { it.copy(updateState = UpdateCheckState.Downloading(intent.info)) }
+                runCatching {
+                    // Progress isn't rendered here (the trailing spinner is indeterminate either way),
+                    // so we don't feed it into state — that would recompose this row on every chunk.
+                    intent.checker.download(intent.info) {}
+                }.onSuccess { path ->
+                    intent.checker.installAndExit(path)
+                }.onFailure {
+                    _state.update { it.copy(updateState = UpdateCheckState.Failed(intent.info)) }
+                }
+            }
+        }
+    }
+}

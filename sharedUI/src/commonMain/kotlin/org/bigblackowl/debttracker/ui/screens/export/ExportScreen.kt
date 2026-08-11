@@ -29,79 +29,47 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.bigblackowl.debttracker.core.export.ExportDirection
 import org.bigblackowl.debttracker.core.export.ExportFormat
-import org.bigblackowl.debttracker.core.export.ExportRow
-import org.bigblackowl.debttracker.core.export.buildCsvContent
 import org.bigblackowl.debttracker.core.export.rememberFileExporter
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
-import org.bigblackowl.debttracker.domain.model.formatMoney
-import org.bigblackowl.debttracker.domain.repository.AuthRepository
-import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorTransactionsUseCase
-import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorUseCase
-import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorsUseCase
-import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorTransactionsUseCase
-import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorUseCase
-import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorsUseCase
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
 import org.bigblackowl.debttracker.ui.components.SettingsRow
 import org.bigblackowl.debttracker.ui.components.SettingsSection
-import org.koin.compose.koinInject
-import kotlin.time.Clock
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
-/** ExportScreen: формат (PDF/CSV) + діапазон дат + напрямок (спек §6, п. 8). */
+/**
+ * ExportScreen: формат (PDF/CSV) + діапазон дат + напрямок (спек §6, п. 8). Selection state and the
+ * CSV/PDF pipeline live in [ExportViewModel] — this screen only owns the composition-scoped
+ * [rememberFileExporter] object and Material3's own [rememberDateRangePickerState].
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExportScreen(onBack: () -> Unit, debtorId: String? = null, creditorId: String? = null) {
-    val observeDebtor = koinInject<ObserveDebtorUseCase>()
-    val observeDebtors = koinInject<ObserveDebtorsUseCase>()
-    val observeDebtorTransactions = koinInject<ObserveDebtorTransactionsUseCase>()
-    val observeCreditor = koinInject<ObserveCreditorUseCase>()
-    val observeCreditors = koinInject<ObserveCreditorsUseCase>()
-    val observeCreditorTransactions = koinInject<ObserveCreditorTransactionsUseCase>()
+fun ExportScreen(
+    onBack: () -> Unit,
+    debtorId: String? = null,
+    creditorId: String? = null,
+    viewModel: ExportViewModel = koinViewModel { parametersOf(debtorId, creditorId) },
+) {
     val fileExporter = rememberFileExporter()
-    val authRepository = koinInject<AuthRepository>()
-    val scope = rememberCoroutineScope()
+    val state by viewModel.state.collectAsState()
 
-    // Reached from a Debtor/Creditor detail screen — export only that one contact's history
-    // instead of everyone's, since that's what "Export" meant to the user there.
-    val isScoped = debtorId != null || creditorId != null
-    val scopedContactName by produceState<String?>(null, debtorId, creditorId) {
-        value = when {
-            debtorId != null -> observeDebtor(debtorId).first()?.fullName
-            creditorId != null -> observeCreditor(creditorId).first()?.fullName
-            else -> null
-        }
-    }
-
-    var format by remember { mutableStateOf(ExportFormat.CSV) }
-    var direction by remember { mutableStateOf(ExportDirection.BOTH) }
     var showDateRangePicker by remember { mutableStateOf(false) }
     val dateRangePickerState = rememberDateRangePickerState()
-    var isExporting by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
-    var success by remember { mutableStateOf(false) }
     val strings = LocalStrings.current
-    val accountName by authRepository.displayName.collectAsState()
-    val accountEmail by authRepository.email.collectAsState()
-    val exportUserName = accountName ?: accountEmail ?: strings.settingsLocalOnly
 
     // DateRangePickerState тримає межі в UTC-мілісекундах (стандарт M3) — конвертуємо в LocalDate тут один раз.
     val fromDate = dateRangePickerState.selectedStartDateMillis?.let {
@@ -121,9 +89,9 @@ fun ExportScreen(onBack: () -> Unit, debtorId: String? = null, creditorId: Strin
                 verticalArrangement = Arrangement.spacedBy(Dimens.space12),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                if (isScoped) {
+                if (viewModel.isScoped) {
                     Text(
-                        scopedContactName ?: "…",
+                        state.scopedContactName ?: "…",
                         modifier = Modifier.fillMaxWidth(),
                         style = MaterialTheme.typography.titleMedium,
                         textAlign = TextAlign.Center
@@ -139,8 +107,8 @@ fun ExportScreen(onBack: () -> Unit, debtorId: String? = null, creditorId: Strin
                         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                             formatOptions.forEachIndexed { index, (value, label) ->
                                 SegmentedButton(
-                                    selected = format == value,
-                                    onClick = { format = value },
+                                    selected = state.format == value,
+                                    onClick = { viewModel.onIntent(ExportIntent.SetFormat(value)) },
                                     shape = SegmentedButtonDefaults.itemShape(
                                         index = index,
                                         count = formatOptions.size
@@ -152,7 +120,7 @@ fun ExportScreen(onBack: () -> Unit, debtorId: String? = null, creditorId: Strin
                     }
                 }
 
-                if (!isScoped) {
+                if (!viewModel.isScoped) {
                     SettingsSection(strings.exportDirection) {
                         Column(modifier = Modifier.fillMaxWidth().padding(Dimens.space16)) {
                             val directionOptions = listOf(
@@ -163,8 +131,8 @@ fun ExportScreen(onBack: () -> Unit, debtorId: String? = null, creditorId: Strin
                             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                                 directionOptions.forEachIndexed { index, (value, label) ->
                                     SegmentedButton(
-                                        selected = direction == value,
-                                        onClick = { direction = value },
+                                        selected = state.direction == value,
+                                        onClick = { viewModel.onIntent(ExportIntent.SetDirection(value)) },
                                         shape = SegmentedButtonDefaults.itemShape(
                                             index = index,
                                             count = directionOptions.size
@@ -196,14 +164,14 @@ fun ExportScreen(onBack: () -> Unit, debtorId: String? = null, creditorId: Strin
                     )
                 }
 
-                error?.let {
+                state.error?.let {
                     Text(
                         it,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.debtAccentColors.debt
                     )
                 }
-                if (success) {
+                if (state.success) {
                     Text(
                         strings.exportDone,
                         style = MaterialTheme.typography.bodyMedium,
@@ -212,64 +180,11 @@ fun ExportScreen(onBack: () -> Unit, debtorId: String? = null, creditorId: Strin
                 }
 
                 Button(
-                    onClick = {
-                        error = null
-                        success = false
-                        isExporting = true
-                        scope.launch {
-                            runCatching {
-                                val rows = collectExportRows(
-                                    direction, fromDate, toDate, debtorId, creditorId,
-                                    observeDebtor, observeDebtors, observeDebtorTransactions,
-                                    observeCreditor, observeCreditors, observeCreditorTransactions,
-                                )
-                                when (format) {
-                                    ExportFormat.CSV -> fileExporter.saveCsv(
-                                        "${strings.appName}_${exportUserName}_${
-                                            Clock.System.now()
-                                                .toLocalDateTime(TimeZone.currentSystemDefault()).date
-                                        }.csv",
-                                        buildCsvContent(
-                                            rows,
-                                            listOf(
-                                                strings.csvHeaderDate,
-                                                strings.csvHeaderContact,
-                                                strings.csvHeaderAmount,
-                                                strings.csvHeaderComment
-                                            ),
-                                        ),
-                                    )
-
-                                    ExportFormat.PDF -> fileExporter.savePdf(
-                                        "${strings.appName}_${exportUserName}_${
-                                            Clock.System.now().toLocalDateTime(
-                                                TimeZone.currentSystemDefault()
-                                            ).date
-                                        }.pdf",
-                                        strings.appName,
-                                        strings.exportPdfDescription(exportUserName),
-                                        listOf(
-                                            strings.csvHeaderDate,
-                                            strings.csvHeaderContact,
-                                            strings.csvHeaderAmount,
-                                            strings.csvHeaderComment,
-                                        ),
-                                        rows
-                                    )
-                                }
-                            }.onSuccess {
-                                isExporting = false
-                                success = true
-                            }.onFailure {
-                                isExporting = false
-                                error = strings.exportError
-                            }
-                        }
-                    },
-                    enabled = !isExporting,
+                    onClick = { viewModel.onIntent(ExportIntent.Export(fileExporter, fromDate, toDate)) },
+                    enabled = !state.isExporting,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    if (isExporting) {
+                    if (state.isExporting) {
                         CircularWavyProgressIndicator(modifier = Modifier.padding(end = Dimens.space8))
                     } else {
                         Icon(
@@ -324,98 +239,4 @@ private fun ExportScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = f
 @Composable
 private fun ExportScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     ExportScreen(onBack = {})
-}
-
-private suspend fun collectExportRows(
-    direction: ExportDirection,
-    fromDate: LocalDate?,
-    toDate: LocalDate?,
-    debtorId: String?,
-    creditorId: String?,
-    observeDebtor: ObserveDebtorUseCase,
-    observeDebtors: ObserveDebtorsUseCase,
-    observeDebtorTransactions: ObserveDebtorTransactionsUseCase,
-    observeCreditor: ObserveCreditorUseCase,
-    observeCreditors: ObserveCreditorsUseCase,
-    observeCreditorTransactions: ObserveCreditorTransactionsUseCase,
-): List<ExportRow> {
-    val timeZone = TimeZone.currentSystemDefault()
-    val rows = mutableListOf<ExportRow>()
-
-    fun inRange(localDate: LocalDate) =
-        (fromDate == null || localDate >= fromDate) && (toDate == null || localDate <= toDate)
-
-    when {
-        debtorId != null -> {
-            val debtor = observeDebtor(debtorId).first() ?: return emptyList()
-            observeDebtorTransactions(debtorId).first().forEach { tx ->
-                val date = tx.date.toLocalDateTime(timeZone).date
-                if (inRange(date)) {
-                    rows.add(
-                        ExportRow(
-                            date.toString(),
-                            debtor.fullName,
-                            tx.amount.formatMoney(debtor.currency),
-                            tx.comment,
-                        )
-                    )
-                }
-            }
-        }
-
-        creditorId != null -> {
-            val creditor = observeCreditor(creditorId).first() ?: return emptyList()
-            observeCreditorTransactions(creditorId).first().forEach { tx ->
-                val date = tx.date.toLocalDateTime(timeZone).date
-                if (inRange(date)) {
-                    rows.add(
-                        ExportRow(
-                            date.toString(),
-                            creditor.fullName,
-                            tx.amount.formatMoney(creditor.currency),
-                            tx.comment,
-                        )
-                    )
-                }
-            }
-        }
-
-        else -> {
-            if (direction == ExportDirection.DEBTORS || direction == ExportDirection.BOTH) {
-                observeDebtors().first().forEach { item ->
-                    observeDebtorTransactions(item.debtor.id).first().forEach { tx ->
-                        val date = tx.date.toLocalDateTime(timeZone).date
-                        if (inRange(date)) {
-                            rows.add(
-                                ExportRow(
-                                    date.toString(),
-                                    item.debtor.fullName,
-                                    tx.amount.formatMoney(item.debtor.currency),
-                                    tx.comment
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-            if (direction == ExportDirection.CREDITORS || direction == ExportDirection.BOTH) {
-                observeCreditors().first().forEach { item ->
-                    observeCreditorTransactions(item.creditor.id).first().forEach { tx ->
-                        val date = tx.date.toLocalDateTime(timeZone).date
-                        if (inRange(date)) {
-                            rows.add(
-                                ExportRow(
-                                    date.toString(),
-                                    item.creditor.fullName,
-                                    tx.amount.formatMoney(item.creditor.currency),
-                                    tx.comment
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return rows.sortedBy { it.date }
 }

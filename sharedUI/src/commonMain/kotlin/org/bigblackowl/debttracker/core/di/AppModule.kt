@@ -12,10 +12,13 @@ import org.bigblackowl.debttracker.core.sound.SoundPlayer
 import org.bigblackowl.debttracker.core.sound.createSoundPlayer
 import org.bigblackowl.debttracker.data.remote.SupabaseAuthRepository
 import org.bigblackowl.debttracker.data.remote.SupabaseProfileLookupRepository
+import org.bigblackowl.debttracker.data.remote.SupabaseSessionRepository
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.ProfileLookupRepository
+import org.bigblackowl.debttracker.domain.repository.SessionRepository
 import org.bigblackowl.debttracker.domain.usecase.DeleteAllDataUseCase
 import org.bigblackowl.debttracker.domain.usecase.FindProfileByEmailUseCase
+import org.bigblackowl.debttracker.domain.usecase.ForceSignOutUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddCreditorTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddOrUpdateCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.DeleteCreditorUseCase
@@ -34,8 +37,16 @@ import org.bigblackowl.debttracker.ui.screens.creditors.CreditorListViewModel
 import org.bigblackowl.debttracker.ui.screens.debtors.AddEditDebtorViewModel
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorDetailViewModel
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorListViewModel
+import org.bigblackowl.debttracker.ui.screens.accountonboarding.AccountOnboardingViewModel
+import org.bigblackowl.debttracker.ui.screens.authgate.AuthGateViewModel
+import org.bigblackowl.debttracker.ui.screens.home.HomeViewModel
+import org.bigblackowl.debttracker.ui.screens.protectiononboarding.ProtectionOnboardingViewModel
+import org.bigblackowl.debttracker.ui.screens.splash.SplashViewModel
 import org.bigblackowl.debttracker.ui.screens.auth.AuthViewModel
+import org.bigblackowl.debttracker.ui.screens.export.ExportViewModel
+import org.bigblackowl.debttracker.ui.screens.settings.ActiveSessionsViewModel
 import org.bigblackowl.debttracker.ui.screens.settings.EditAccountViewModel
+import org.bigblackowl.debttracker.ui.screens.settings.SettingsViewModel
 import org.bigblackowl.debttracker.ui.screens.stats.StatsViewModel
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.viewModel
@@ -55,8 +66,10 @@ val appModule = module {
     single<SupabaseClient> { createAppSupabaseClient() }
     single<AuthRepository> { SupabaseAuthRepository(get(), get()) }
     single<ProfileLookupRepository> { SupabaseProfileLookupRepository(get(), get()) }
+    single<SessionRepository> { SupabaseSessionRepository(get(), get()) }
     factoryOf(::DeleteAllDataUseCase)
     factoryOf(::FindProfileByEmailUseCase)
+    factoryOf(::ForceSignOutUseCase)
 
     factoryOf(::ObserveDebtorsUseCase)
     factoryOf(::ObserveDebtorUseCase)
@@ -80,5 +93,15 @@ val appModule = module {
     viewModel { (creditorId: String) -> CreditorDetailViewModel(creditorId, get(), get(), get(), get(), get()) }
     viewModelOf(::AuthViewModel)
     viewModelOf(::EditAccountViewModel)
+    viewModelOf(::ActiveSessionsViewModel)
     viewModelOf(::StatsViewModel)
+    viewModelOf(::SplashViewModel)
+    viewModelOf(::AccountOnboardingViewModel)
+    viewModelOf(::ProtectionOnboardingViewModel)
+    viewModelOf(::AuthGateViewModel)
+    viewModelOf(::HomeViewModel)
+    viewModelOf(::SettingsViewModel)
+    viewModel { (debtorId: String?, creditorId: String?) ->
+        ExportViewModel(debtorId, creditorId, get(), get(), get(), get(), get(), get(), get(), get())
+    }
 }

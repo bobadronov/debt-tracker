@@ -3,6 +3,7 @@ package org.bigblackowl.debttracker.ui.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -53,10 +54,8 @@ private sealed interface UpdateBannerState {
  * everywhere except Desktop ([appUpdateSupported]).
  */
 @Composable
-fun UpdateBanner() {
+fun BoxScope.UpdateBanner() {
     if (!appUpdateSupported) return
-
-    val strings = LocalStrings.current
     val updateChecker = rememberAppUpdateChecker()
     val scope = rememberCoroutineScope()
     var state by remember { mutableStateOf<UpdateBannerState>(UpdateBannerState.Hidden) }
@@ -68,7 +67,11 @@ fun UpdateBanner() {
     }
 
     val visibleState = state
-    AnimatedVisibility(visible = visibleState != UpdateBannerState.Hidden && !dismissed) {
+    AnimatedVisibility(
+        visible = visibleState != UpdateBannerState.Hidden && !dismissed, modifier = Modifier.align(
+            Alignment.BottomCenter
+        )
+    ) {
         UpdateBannerCard(
             state = visibleState,
             onDismiss = { dismissed = true },
@@ -100,7 +103,10 @@ private fun UpdateBannerCard(
     onRetry: (AppUpdateInfo) -> Unit,
 ) {
     val strings = LocalStrings.current
-    Box(modifier = Modifier.fillMaxWidth().padding(Dimens.space16), contentAlignment = Alignment.BottomCenter) {
+    Box(
+        modifier = Modifier.fillMaxWidth().padding(Dimens.space16),
+        contentAlignment = Alignment.BottomCenter
+    ) {
         Card(
             modifier = Modifier.widthIn(max = Dimens.contentMaxWidth),
             elevation = CardDefaults.cardElevation(defaultElevation = Dimens.space8),
@@ -110,7 +116,10 @@ private fun UpdateBannerCard(
                     is UpdateBannerState.Hidden -> Unit
 
                     is UpdateBannerState.Available -> {
-                        Text(strings.updateAvailableTitle, style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            strings.updateAvailableTitle,
+                            style = MaterialTheme.typography.titleMedium
+                        )
                         Spacer(Modifier.height(Dimens.space4))
                         Text(
                             strings.updateAvailableMessage(state.info.version),
@@ -131,7 +140,10 @@ private fun UpdateBannerCard(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
                             Spacer(Modifier.width(Dimens.space12))
-                            Text(strings.updateDownloading, style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                strings.updateDownloading,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
                         }
                         if (state.progress != null) {
                             Spacer(Modifier.height(Dimens.space8))
@@ -149,7 +161,10 @@ private fun UpdateBannerCard(
                             color = MaterialTheme.debtAccentColors.debt,
                         )
                         Spacer(Modifier.height(Dimens.space8))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
                             TextButton(onClick = onDismiss) { Text(strings.updateLater) }
                             TextButton(onClick = { onRetry(state.info) }) { Text(strings.updateRetry) }
                         }
@@ -169,23 +184,39 @@ private val previewUpdateInfo = AppUpdateInfo(
 @Preview
 @Composable
 private fun UpdateBannerLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    UpdateBannerCard(UpdateBannerState.Available(previewUpdateInfo), onDismiss = {}, onDownload = {}, onRetry = {})
+    UpdateBannerCard(
+        UpdateBannerState.Available(previewUpdateInfo),
+        onDismiss = {},
+        onDownload = {},
+        onRetry = {})
 }
 
 @Preview
 @Composable
 private fun UpdateBannerDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    UpdateBannerCard(UpdateBannerState.Available(previewUpdateInfo), onDismiss = {}, onDownload = {}, onRetry = {})
+    UpdateBannerCard(
+        UpdateBannerState.Available(previewUpdateInfo),
+        onDismiss = {},
+        onDownload = {},
+        onRetry = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun UpdateBannerLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    UpdateBannerCard(UpdateBannerState.Available(previewUpdateInfo), onDismiss = {}, onDownload = {}, onRetry = {})
+    UpdateBannerCard(
+        UpdateBannerState.Available(previewUpdateInfo),
+        onDismiss = {},
+        onDownload = {},
+        onRetry = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun UpdateBannerDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    UpdateBannerCard(UpdateBannerState.Available(previewUpdateInfo), onDismiss = {}, onDownload = {}, onRetry = {})
+    UpdateBannerCard(
+        UpdateBannerState.Available(previewUpdateInfo),
+        onDismiss = {},
+        onDownload = {},
+        onRetry = {})
 }

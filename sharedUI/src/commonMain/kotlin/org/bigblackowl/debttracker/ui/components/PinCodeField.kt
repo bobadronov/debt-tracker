@@ -40,7 +40,7 @@ const val PIN_LENGTH = 4
 
 /**
  * 4-значний PIN-код у вигляді окремих квадратів [_][_][_][_] замість звичайного текстового поля.
- * Shared by [PinSetupDialog] and [org.bigblackowl.debttracker.ui.screens.AuthGateScreen] so every
+ * Shared by [PinSetupDialog] and [org.bigblackowl.debttracker.ui.screens.authgate.AuthGateScreen] so every
  * PIN entry point in the app looks and behaves the same. [imeAction]/[keyboardActions] let each
  * caller wire up its own Enter/Done key behavior (e.g. advance to the next field, or submit).
  */

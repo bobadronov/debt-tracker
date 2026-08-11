@@ -3,6 +3,7 @@ package org.bigblackowl.debttracker.ui.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -33,16 +34,19 @@ import org.bigblackowl.debttracker.theme.Dimens
  * needs to make a call (when to restart).
  */
 @Composable
-fun InAppUpdateBanner() {
+fun BoxScope.InAppUpdateBanner() {
     if (!inAppUpdateSupported) return
 
-    val strings = LocalStrings.current
     val launcher = rememberInAppUpdateLauncher()
     val readyToInstall by launcher.updateReadyToInstall.collectAsState()
 
     LaunchedEffect(Unit) { launcher.checkForUpdate() }
 
-    AnimatedVisibility(visible = readyToInstall) {
+    AnimatedVisibility(
+        visible = readyToInstall, modifier = Modifier.align(
+            Alignment.BottomCenter
+        )
+    ) {
         InAppUpdateBannerCard(onRestart = { launcher.completeUpdate() })
     }
 }
@@ -51,7 +55,10 @@ fun InAppUpdateBanner() {
 @Composable
 private fun InAppUpdateBannerCard(onRestart: () -> Unit) {
     val strings = LocalStrings.current
-    Box(modifier = Modifier.fillMaxWidth().padding(Dimens.space16), contentAlignment = Alignment.BottomCenter) {
+    Box(
+        modifier = Modifier.fillMaxWidth().padding(Dimens.space16),
+        contentAlignment = Alignment.BottomCenter
+    ) {
         Card(
             modifier = Modifier.widthIn(max = Dimens.contentMaxWidth),
             elevation = CardDefaults.cardElevation(defaultElevation = Dimens.space8),

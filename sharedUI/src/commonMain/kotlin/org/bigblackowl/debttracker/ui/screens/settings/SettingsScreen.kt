@@ -7,7 +7,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Fingerprint
@@ -52,28 +52,22 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.BuildConfig
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.platform.AppPlatform
 import org.bigblackowl.debttracker.core.platform.currentPlatform
-import org.bigblackowl.debttracker.core.security.BiometricResult
 import org.bigblackowl.debttracker.core.security.rememberBiometricAuthenticator
 import org.bigblackowl.debttracker.core.settings.AppSettings
-import org.bigblackowl.debttracker.core.update.AppUpdateInfo
 import org.bigblackowl.debttracker.core.update.appUpdateSupported
 import org.bigblackowl.debttracker.core.update.inAppUpdateSupported
 import org.bigblackowl.debttracker.core.update.rememberAppUpdateChecker
 import org.bigblackowl.debttracker.core.update.rememberInAppUpdateLauncher
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
-import org.bigblackowl.debttracker.domain.usecase.DeleteAllDataUseCase
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
@@ -84,11 +78,16 @@ import org.bigblackowl.debttracker.ui.components.SettingsRow
 import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
 import org.bigblackowl.debttracker.ui.components.SettingsSection
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * SettingsScreen: захист/біометрія (спек §6, п.7), тема, звук, експорт,
  * видалення всіх даних (подвійне підтвердження, спек §9.2), Local-only/
- * Account+Sync (спек §1.1, Фаза 6).
+ * Account+Sync (спек §1.1, Фаза 6). All async/business logic lives in [SettingsViewModel] —
+ * this screen creates the composition-scoped platform objects (biometric authenticator, update
+ * checker/launcher — these need a live Activity/registration and can't be constructor-injected)
+ * and forwards them into intents; simple synchronous [AppSettings] toggles (sound/haptic/theme/
+ * language) stay direct reads/writes here, matching that class's own Compose-reactive design.
  */
 @Composable
 fun SettingsScreen(
@@ -97,29 +96,27 @@ fun SettingsScreen(
     onOpenAuth: () -> Unit,
     onEditAccount: () -> Unit,
     onOpenLanguage: () -> Unit,
+    onOpenActiveSessions: () -> Unit,
+    viewModel: SettingsViewModel = koinViewModel(),
 ) {
     val settings = koinInject<AppSettings>()
-    val deleteAllData = koinInject<DeleteAllDataUseCase>()
     val authRepository = koinInject<AuthRepository>()
     val biometricAuthenticator = rememberBiometricAuthenticator()
-    val scope = rememberCoroutineScope()
+    val state by viewModel.state.collectAsState()
     val isAuthenticated by authRepository.isAuthenticated.collectAsState()
     val avatarUrl by authRepository.avatarUrl.collectAsState()
     val accountEmail by authRepository.email.collectAsState()
     val accountName by authRepository.displayName.collectAsState()
     val accountPhone by authRepository.phone.collectAsState()
 
-    var biometricHardwareAvailable by remember { mutableStateOf(false) }
     var showPinSetupDialog by remember { mutableStateOf(false) }
-    var protectionConfirmError by remember { mutableStateOf<String?>(null) }
     var showDeleteConfirm1 by remember { mutableStateOf(false) }
     var showDeleteConfirm2 by remember { mutableStateOf(false) }
-    var deleteDone by remember { mutableStateOf(false) }
     var showSignOutConfirm by remember { mutableStateOf(false) }
     val strings = LocalStrings.current
 
     LaunchedEffect(Unit) {
-        biometricHardwareAvailable = biometricAuthenticator.isAvailable()
+        viewModel.onIntent(SettingsIntent.CheckBiometricHardware(biometricAuthenticator))
     }
 
     val showProtectionRow = when (currentPlatform) {
@@ -127,7 +124,7 @@ fun SettingsScreen(
         AppPlatform.WEB -> false
         // Мобільні платформи: лише біометрія, без PIN-фолбеку — перемикач доступний,
         // тільки якщо на пристрої справді є зареєстрована біометрія.
-        AppPlatform.ANDROID, AppPlatform.IOS -> biometricHardwareAvailable
+        AppPlatform.ANDROID, AppPlatform.IOS -> state.biometricHardwareAvailable
         // Desktop: немає нативної біометрії — лише PIN.
         AppPlatform.DESKTOP -> true
     }
@@ -141,50 +138,8 @@ fun SettingsScreen(
     val showHapticRow = currentPlatform == AppPlatform.ANDROID || currentPlatform == AppPlatform.IOS
 
     val updateChecker = rememberAppUpdateChecker()
-    var updateState by remember { mutableStateOf<UpdateCheckState>(UpdateCheckState.Idle) }
-
-    // Android updates via Play's in-app update flow (InAppUpdateBanner already checks once on
-    // launch) rather than AppUpdateChecker's GitHub-Releases download, which Play builds can't
-    // use — sideloading a self-downloaded APK over a Play install is blocked by Play Protect.
-    // This just lets "Check for updates" force a re-check on demand instead of waiting.
     val inAppUpdateLauncher = rememberInAppUpdateLauncher()
     val inAppUpdateReady by inAppUpdateLauncher.updateReadyToInstall.collectAsState()
-    var isCheckingInAppUpdate by remember { mutableStateOf(false) }
-
-    fun startInAppUpdateCheck() {
-        scope.launch {
-            isCheckingInAppUpdate = true
-            inAppUpdateLauncher.checkForUpdate()
-            // Play's API has no "no update found" signal to await — checkForUpdate() either
-            // starts a background download or does nothing, so just show a brief spinner.
-            delay(2_000)
-            isCheckingInAppUpdate = false
-        }
-    }
-
-    fun startUpdateCheck() {
-        scope.launch {
-            updateState = UpdateCheckState.Checking
-            updateState = updateChecker.checkForUpdate()
-                ?.let { UpdateCheckState.Available(it) }
-                ?: UpdateCheckState.UpToDate
-        }
-    }
-
-    fun startUpdateDownload(info: AppUpdateInfo) {
-        scope.launch {
-            updateState = UpdateCheckState.Downloading(info)
-            runCatching {
-                // Progress isn't rendered here (the trailing spinner is indeterminate either way),
-                // so we don't feed it into state — that would recompose this row on every chunk.
-                updateChecker.download(info) {}
-            }.onSuccess { path ->
-                updateChecker.installAndExit(path)
-            }.onFailure {
-                updateState = UpdateCheckState.Failed(info)
-            }
-        }
-    }
 
     PlaceholderScreen(title = strings.settingsTitle, onBack = onBack) {
 
@@ -260,6 +215,12 @@ fun SettingsScreen(
                     if (isAuthenticated) {
                         SettingsRowDivider()
                         SettingsRow(
+                            icon = Icons.Filled.Devices,
+                            title = strings.settingsActiveSessions,
+                            onClick = onOpenActiveSessions,
+                        )
+                        SettingsRowDivider()
+                        SettingsRow(
                             icon = Icons.AutoMirrored.Filled.Logout,
                             title = strings.settingsSignOut,
                             onClick = { showSignOutConfirm = true },
@@ -280,35 +241,25 @@ fun SettingsScreen(
                         SettingsRow(
                             icon = protectionIcon,
                             title = strings.settingsProtection,
-                            subtitle = protectionConfirmError,
+                            subtitle = state.protectionConfirmError,
                             trailing = {
                                 Switch(
                                     checked = settings.protectionEnabled,
                                     onCheckedChange = { checked ->
-                                        protectionConfirmError = null
                                         when (currentPlatform) {
                                             AppPlatform.DESKTOP -> if (checked && !settings.hasPinCode) {
                                                 showPinSetupDialog = true
                                             } else {
-                                                settings.protectionEnabled = checked
+                                                viewModel.onIntent(SettingsIntent.ToggleDesktopProtection(checked))
                                             }
 
                                             // Мобільні платформи: увімкнення захисту потребує підтвердження
                                             // відбитком/обличчям одразу — інакше можна ввімкнути перемикач,
                                             // маючи чужий палець на сканері, і сам захист виявиться фікцією.
                                             else -> if (checked) {
-                                                scope.launch {
-                                                    when (biometricAuthenticator.authenticate(strings.biometricEnableReason)) {
-                                                        BiometricResult.SUCCESS -> {
-                                                            settings.protectionEnabled = true
-                                                            settings.biometricEnabled = true
-                                                        }
-                                                        else -> protectionConfirmError = strings.settingsProtectionConfirmFailed
-                                                    }
-                                                }
+                                                viewModel.onIntent(SettingsIntent.EnableMobileProtection(biometricAuthenticator))
                                             } else {
-                                                settings.protectionEnabled = false
-                                                settings.biometricEnabled = false
+                                                viewModel.onIntent(SettingsIntent.DisableMobileProtection)
                                             }
                                         }
                                     },
@@ -397,7 +348,7 @@ fun SettingsScreen(
                         )
                     }
                     AnimatedVisibility(
-                        visible = deleteDone,
+                        visible = state.deleteDone,
                         enter = fadeIn() + expandVertically(),
                         exit = fadeOut() + shrinkVertically(),
                     ) {
@@ -416,11 +367,11 @@ fun SettingsScreen(
                     val versionSubtitle = if (currentPlatform == AppPlatform.ANDROID) {
                         when {
                             inAppUpdateReady -> strings.updateReadyToInstall
-                            isCheckingInAppUpdate -> "$versionLine · ${strings.settingsCheckingForUpdates}"
+                            state.isCheckingInAppUpdate -> "$versionLine · ${strings.settingsCheckingForUpdates}"
                             else -> versionLine
                         }
                     } else {
-                        when (val s = updateState) {
+                        when (val s = state.updateState) {
                             UpdateCheckState.Idle -> versionLine
                             UpdateCheckState.Checking -> "$versionLine · ${strings.settingsCheckingForUpdates}"
                             UpdateCheckState.UpToDate -> "$versionLine · ${strings.settingsUpToDate}"
@@ -440,29 +391,29 @@ fun SettingsScreen(
                                         Icon(Icons.Filled.Download, contentDescription = strings.updateRestartNow)
                                     }
 
-                                    isCheckingInAppUpdate ->
+                                    state.isCheckingInAppUpdate ->
                                         CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
 
-                                    else -> IconButton(onClick = { startInAppUpdateCheck() }) {
+                                    else -> IconButton(onClick = { viewModel.onIntent(SettingsIntent.CheckForInAppUpdate(inAppUpdateLauncher)) }) {
                                         Icon(Icons.Filled.Refresh, contentDescription = strings.settingsCheckForUpdates)
                                     }
                                 }
                             }
                         } else if (appUpdateSupported) {
                             {
-                                when (val s = updateState) {
+                                when (val s = state.updateState) {
                                     UpdateCheckState.Checking, is UpdateCheckState.Downloading ->
                                         CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
 
-                                    is UpdateCheckState.Available -> IconButton(onClick = { startUpdateDownload(s.info) }) {
+                                    is UpdateCheckState.Available -> IconButton(onClick = { viewModel.onIntent(SettingsIntent.DownloadUpdate(updateChecker, s.info)) }) {
                                         Icon(Icons.Filled.Download, contentDescription = strings.updateDownloadInstall)
                                     }
 
-                                    is UpdateCheckState.Failed -> IconButton(onClick = { startUpdateDownload(s.info) }) {
+                                    is UpdateCheckState.Failed -> IconButton(onClick = { viewModel.onIntent(SettingsIntent.DownloadUpdate(updateChecker, s.info)) }) {
                                         Icon(Icons.Filled.Refresh, contentDescription = strings.updateRetry)
                                     }
 
-                                    UpdateCheckState.Idle, UpdateCheckState.UpToDate -> IconButton(onClick = { startUpdateCheck() }) {
+                                    UpdateCheckState.Idle, UpdateCheckState.UpToDate -> IconButton(onClick = { viewModel.onIntent(SettingsIntent.CheckForUpdate(updateChecker)) }) {
                                         Icon(Icons.Filled.Refresh, contentDescription = strings.settingsCheckForUpdates)
                                     }
                                 }
@@ -484,9 +435,8 @@ fun SettingsScreen(
         PinSetupDialog(
             onDismiss = { showPinSetupDialog = false },
             onConfirm = { pin ->
-                settings.setPinCode(pin)
-                settings.protectionEnabled = true
                 showPinSetupDialog = false
+                viewModel.onIntent(SettingsIntent.SetupPinAndEnableProtection(pin))
             },
         )
     }
@@ -499,12 +449,7 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showSignOutConfirm = false
-                    scope.launch {
-                        // Local data belongs to whichever account is signed in — leaving it behind
-                        // would leak into the next account that signs in on this device.
-                        deleteAllData()
-                        authRepository.signOut()
-                    }
+                    viewModel.onIntent(SettingsIntent.SignOut)
                 }) { Text(strings.settingsSignOut) }
             },
             dismissButton = {
@@ -539,10 +484,7 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showDeleteConfirm2 = false
-                    scope.launch {
-                        deleteAllData()
-                        deleteDone = true
-                    }
+                    viewModel.onIntent(SettingsIntent.DeleteAllData)
                 }) { Text(strings.deleteForever) }
             },
             dismissButton = {
@@ -554,38 +496,26 @@ fun SettingsScreen(
     }
 }
 
-/** Settings' own on-demand update check — independent of [org.bigblackowl.debttracker.ui.components.UpdateBanner]'s automatic on-launch check. */
-private sealed interface UpdateCheckState {
-    data object Idle : UpdateCheckState
-    data object Checking : UpdateCheckState
-    data object UpToDate : UpdateCheckState
-    data class Available(val info: AppUpdateInfo) : UpdateCheckState
-    data class Downloading(val info: AppUpdateInfo) : UpdateCheckState
-    data class Failed(val info: AppUpdateInfo) : UpdateCheckState
-}
-
 @Preview
 @Composable
 private fun SettingsScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {}, onOpenLanguage = {})
+    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {}, onOpenLanguage = {}, onOpenActiveSessions = {})
 }
 
 @Preview
 @Composable
 private fun SettingsScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {}, onOpenLanguage = {})
+    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {}, onOpenLanguage = {}, onOpenActiveSessions = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun SettingsScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {}, onOpenLanguage = {})
+    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {}, onOpenLanguage = {}, onOpenActiveSessions = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun SettingsScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {}, onOpenLanguage = {})
+    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {}, onOpenLanguage = {}, onOpenActiveSessions = {})
 }
-
-

@@ -32,18 +32,21 @@ import org.bigblackowl.debttracker.core.di.requiresRemoteAuthGate
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
-import org.bigblackowl.debttracker.ui.screens.AccountOnboardingScreen
-import org.bigblackowl.debttracker.ui.screens.AuthGateScreen
-import org.bigblackowl.debttracker.ui.screens.HomeScreen
-import org.bigblackowl.debttracker.ui.screens.ProtectionOnboardingScreen
-import org.bigblackowl.debttracker.ui.screens.SplashDestination
-import org.bigblackowl.debttracker.ui.screens.SplashScreen
+import org.bigblackowl.debttracker.domain.repository.SessionRepository
+import org.bigblackowl.debttracker.domain.usecase.ForceSignOutUseCase
+import org.bigblackowl.debttracker.ui.screens.accountonboarding.AccountOnboardingScreen
+import org.bigblackowl.debttracker.ui.screens.authgate.AuthGateScreen
+import org.bigblackowl.debttracker.ui.screens.home.HomeScreen
+import org.bigblackowl.debttracker.ui.screens.protectiononboarding.ProtectionOnboardingScreen
+import org.bigblackowl.debttracker.ui.screens.splash.SplashDestination
+import org.bigblackowl.debttracker.ui.screens.splash.SplashScreen
 import org.bigblackowl.debttracker.ui.screens.auth.AuthScreen
 import org.bigblackowl.debttracker.ui.screens.creditors.AddEditCreditorScreen
 import org.bigblackowl.debttracker.ui.screens.creditors.CreditorDetailScreen
 import org.bigblackowl.debttracker.ui.screens.debtors.AddEditDebtorScreen
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorDetailScreen
 import org.bigblackowl.debttracker.ui.screens.export.ExportScreen
+import org.bigblackowl.debttracker.ui.screens.settings.ActiveSessionsScreen
 import org.bigblackowl.debttracker.ui.screens.settings.EditAccountScreen
 import org.bigblackowl.debttracker.ui.screens.settings.LanguageScreen
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsScreen
@@ -73,6 +76,8 @@ private fun <T : Any> navSlideTransitionSpec(
 fun DebtTrackerNavGraph(
     searchFocusRequests: SearchFocusRequests = koinInject(),
     authRepository: AuthRepository = koinInject(),
+    sessionRepository: SessionRepository = koinInject(),
+    forceSignOut: ForceSignOutUseCase = koinInject(),
     settings: AppSettings = koinInject(),
 ) {
     val backStack = remember { mutableStateListOf<Screen>(Screen.Splash) }
@@ -99,6 +104,16 @@ fun DebtTrackerNavGraph(
         requiresRemoteAuthGate && !authRepository.isAuthenticated.value -> Screen.Auth(isGate = true)
         !settings.hasSeenAccountOnboarding && !authRepository.isAuthenticated.value -> Screen.AccountOnboarding
         else -> Screen.Home
+    }
+
+    // A device gets logged out remotely (Settings → Active devices, on some other device) by
+    // having its own user_sessions row's revoked_at set — this is the one place that reacts to
+    // it, since it's the only spot that already owns the back stack.
+    LaunchedEffect(Unit) {
+        sessionRepository.revokedElsewhere.collect {
+            forceSignOut()
+            replaceStackWith(Screen.Auth(isGate = true))
+        }
     }
 
     Box(
@@ -212,6 +227,7 @@ fun DebtTrackerNavGraph(
                     onOpenAuth = { navigate(Screen.Auth()) },
                     onEditAccount = { navigate(Screen.EditAccount) },
                     onOpenLanguage = { navigate(Screen.Language) },
+                    onOpenActiveSessions = { navigate(Screen.ActiveSessions) },
                 )
             }
             entry<Screen.Language> {
@@ -219,6 +235,9 @@ fun DebtTrackerNavGraph(
             }
             entry<Screen.EditAccount> {
                 EditAccountScreen(onBack = { back() })
+            }
+            entry<Screen.ActiveSessions> {
+                ActiveSessionsScreen(onBack = { back() })
             }
             entry<Screen.Export> { screen ->
                 ExportScreen(onBack = { back() }, debtorId = screen.debtorId, creditorId = screen.creditorId)
