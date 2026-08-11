@@ -46,6 +46,7 @@ import org.bigblackowl.debttracker.ui.screens.creditors.CreditorDetailScreen
 import org.bigblackowl.debttracker.ui.screens.debtors.AddEditDebtorScreen
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorDetailScreen
 import org.bigblackowl.debttracker.ui.screens.export.ExportScreen
+import org.bigblackowl.debttracker.ui.screens.settings.AccountInfoScreen
 import org.bigblackowl.debttracker.ui.screens.settings.ActiveSessionsScreen
 import org.bigblackowl.debttracker.ui.screens.settings.EditAccountScreen
 import org.bigblackowl.debttracker.ui.screens.settings.LanguageScreen
@@ -225,13 +226,19 @@ fun DebtTrackerNavGraph(
                     onBack = { back() },
                     onExport = { navigate(Screen.Export()) },
                     onOpenAuth = { navigate(Screen.Auth()) },
-                    onEditAccount = { navigate(Screen.EditAccount) },
+                    onOpenAccountInfo = { navigate(Screen.AccountInfo) },
                     onOpenLanguage = { navigate(Screen.Language) },
-                    onOpenActiveSessions = { navigate(Screen.ActiveSessions) },
                 )
             }
             entry<Screen.Language> {
                 LanguageScreen(onBack = { back() })
+            }
+            entry<Screen.AccountInfo> {
+                AccountInfoScreen(
+                    onBack = { back() },
+                    onEdit = { navigate(Screen.EditAccount) },
+                    onOpenActiveSessions = { navigate(Screen.ActiveSessions) },
+                )
             }
             entry<Screen.EditAccount> {
                 EditAccountScreen(onBack = { back() })

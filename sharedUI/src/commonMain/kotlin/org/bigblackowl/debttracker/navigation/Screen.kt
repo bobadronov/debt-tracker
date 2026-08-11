@@ -14,6 +14,7 @@ sealed interface Screen {
     data object Stats : Screen
     data object Settings : Screen
     data object Language : Screen
+    data object AccountInfo : Screen
     data object EditAccount : Screen
     data object ActiveSessions : Screen
     data class Export(val debtorId: String? = null, val creditorId: String? = null) : Screen

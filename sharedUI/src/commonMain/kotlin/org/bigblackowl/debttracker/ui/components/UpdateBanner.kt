@@ -62,7 +62,9 @@ fun BoxScope.UpdateBanner() {
     var dismissed by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        val update = updateChecker.checkForUpdate() ?: return@LaunchedEffect
+        // Silent on failure by design — this is a passive background check; a network hiccup on
+        // launch shouldn't surface as an error, unlike the explicit Settings → Check for updates.
+        val update = runCatching { updateChecker.checkForUpdate() }.getOrNull() ?: return@LaunchedEffect
         state = UpdateBannerState.Available(update)
     }
 
@@ -79,10 +81,10 @@ fun BoxScope.UpdateBanner() {
                 scope.launch {
                     state = UpdateBannerState.Downloading(info, null)
                     runCatching {
-                        updateChecker.download(info) { progress ->
+                        val path = updateChecker.download(info) { progress ->
                             state = UpdateBannerState.Downloading(info, progress)
                         }
-                    }.onSuccess { path ->
+                        // Doesn't return on success — the process exits once the install finishes.
                         updateChecker.installAndExit(path)
                     }.onFailure {
                         state = UpdateBannerState.Failed(info)

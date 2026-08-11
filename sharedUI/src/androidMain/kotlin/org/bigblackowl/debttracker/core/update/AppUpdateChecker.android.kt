@@ -12,7 +12,7 @@ private object NoOpAppUpdateChecker : AppUpdateChecker {
     override suspend fun checkForUpdate(): AppUpdateInfo? = null
     override suspend fun download(update: AppUpdateInfo, onProgress: (Float?) -> Unit): String =
         error("Android updates via the Play Store, not self-update")
-    override fun installAndExit(filePath: String) = Unit
+    override suspend fun installAndExit(filePath: String) = Unit
 }
 
 @Composable

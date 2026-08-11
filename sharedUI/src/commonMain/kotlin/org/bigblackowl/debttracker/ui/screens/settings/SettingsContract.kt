@@ -18,6 +18,8 @@ sealed interface UpdateCheckState {
     data object Idle : UpdateCheckState
     data object Checking : UpdateCheckState
     data object UpToDate : UpdateCheckState
+    /** The check itself failed (offline, GitHub unreachable/rate-limited) — distinct from [UpToDate] so it isn't misreported as "no update". */
+    data object CheckFailed : UpdateCheckState
     data class Available(val info: AppUpdateInfo) : UpdateCheckState
     data class Downloading(val info: AppUpdateInfo) : UpdateCheckState
     data class Failed(val info: AppUpdateInfo) : UpdateCheckState

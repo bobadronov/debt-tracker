@@ -154,6 +154,10 @@ val EnStrings = Strings(
     settingsProtection = "App lock",
     settingsSound = "Sound",
     settingsHaptic = "Haptic feedback",
+    settingsRunInBackground = "Run in background",
+    settingsRunInBackgroundSubtitle = "Keep syncing in the tray instead of quitting when closed",
+    trayOpen = "Open Debt Tracker",
+    trayQuit = "Quit",
     settingsTheme = "Theme",
     settingsThemeSystem = "System",
     settingsThemeLight = "Light",
@@ -182,7 +186,9 @@ val EnStrings = Strings(
     settingsUpToDate = "You're up to date",
     settingsActiveSessions = "Active devices",
 
-    editAccountTitle = "Account",
+    accountInfoEdit = "Edit",
+
+    editAccountTitle = "Edit account",
     editAccountEmailReadOnly = "Email can't be changed here",
 
     activeSessionsTitle = "Active devices",

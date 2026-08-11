@@ -26,7 +26,6 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Fingerprint
@@ -37,6 +36,7 @@ import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularWavyProgressIndicator
@@ -94,9 +94,8 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onExport: () -> Unit,
     onOpenAuth: () -> Unit,
-    onEditAccount: () -> Unit,
+    onOpenAccountInfo: () -> Unit,
     onOpenLanguage: () -> Unit,
-    onOpenActiveSessions: () -> Unit,
     viewModel: SettingsViewModel = koinViewModel(),
 ) {
     val settings = koinInject<AppSettings>()
@@ -152,20 +151,20 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(Dimens.space24),
             ) {
                 // --- Account ---
-                // Tapping the card opens the account detail screen (avatar upload + name/phone
-                // edit all live there now) instead of a separate "Edit account" row.
+                // Tapping the card opens the read-only account detail screen (avatar/name/email/
+                // phone plus Active devices); editing itself lives one step further, on EditAccountScreen.
                 SettingsSection(strings.settingsAccount) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .let { if (isAuthenticated) it.clickable(onClick = onEditAccount) else it }
+                            .let { if (isAuthenticated) it.clickable(onClick = onOpenAccountInfo) else it }
                             .padding(Dimens.space16),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         AccountAvatar(
                             avatarUrl = avatarUrl,
                             isUploading = false,
-                            onEditClick = onEditAccount,
+                            onEditClick = onOpenAccountInfo,
                         )
                         Spacer(Modifier.width(Dimens.space16))
                         Column(modifier = Modifier.weight(1f)) {
@@ -213,12 +212,6 @@ fun SettingsScreen(
                         }
                     }
                     if (isAuthenticated) {
-                        SettingsRowDivider()
-                        SettingsRow(
-                            icon = Icons.Filled.Devices,
-                            title = strings.settingsActiveSessions,
-                            onClick = onOpenActiveSessions,
-                        )
                         SettingsRowDivider()
                         SettingsRow(
                             icon = Icons.AutoMirrored.Filled.Logout,
@@ -290,6 +283,20 @@ fun SettingsScreen(
                                 Switch(
                                     checked = settings.hapticEnabled,
                                     onCheckedChange = { settings.hapticEnabled = it })
+                            },
+                        )
+                        SettingsRowDivider()
+                    }
+
+                    if (currentPlatform == AppPlatform.DESKTOP) {
+                        SettingsRow(
+                            icon = Icons.Filled.Sync,
+                            title = strings.settingsRunInBackground,
+                            subtitle = strings.settingsRunInBackgroundSubtitle,
+                            trailing = {
+                                Switch(
+                                    checked = settings.runInBackground,
+                                    onCheckedChange = { settings.runInBackground = it })
                             },
                         )
                         SettingsRowDivider()
@@ -375,6 +382,7 @@ fun SettingsScreen(
                             UpdateCheckState.Idle -> versionLine
                             UpdateCheckState.Checking -> "$versionLine · ${strings.settingsCheckingForUpdates}"
                             UpdateCheckState.UpToDate -> "$versionLine · ${strings.settingsUpToDate}"
+                            UpdateCheckState.CheckFailed -> "$versionLine · ${strings.updateFailed}"
                             is UpdateCheckState.Available -> strings.updateAvailableMessage(s.info.version)
                             is UpdateCheckState.Downloading -> strings.updateDownloading
                             is UpdateCheckState.Failed -> strings.updateFailed
@@ -413,7 +421,7 @@ fun SettingsScreen(
                                         Icon(Icons.Filled.Refresh, contentDescription = strings.updateRetry)
                                     }
 
-                                    UpdateCheckState.Idle, UpdateCheckState.UpToDate -> IconButton(onClick = { viewModel.onIntent(SettingsIntent.CheckForUpdate(updateChecker)) }) {
+                                    UpdateCheckState.Idle, UpdateCheckState.UpToDate, UpdateCheckState.CheckFailed -> IconButton(onClick = { viewModel.onIntent(SettingsIntent.CheckForUpdate(updateChecker)) }) {
                                         Icon(Icons.Filled.Refresh, contentDescription = strings.settingsCheckForUpdates)
                                     }
                                 }
@@ -499,23 +507,23 @@ fun SettingsScreen(
 @Preview
 @Composable
 private fun SettingsScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {}, onOpenLanguage = {}, onOpenActiveSessions = {})
+    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onOpenAccountInfo = {}, onOpenLanguage = {})
 }
 
 @Preview
 @Composable
 private fun SettingsScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {}, onOpenLanguage = {}, onOpenActiveSessions = {})
+    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onOpenAccountInfo = {}, onOpenLanguage = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun SettingsScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {}, onOpenLanguage = {}, onOpenActiveSessions = {})
+    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onOpenAccountInfo = {}, onOpenLanguage = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun SettingsScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onEditAccount = {}, onOpenLanguage = {}, onOpenActiveSessions = {})
+    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onOpenAccountInfo = {}, onOpenLanguage = {})
 }

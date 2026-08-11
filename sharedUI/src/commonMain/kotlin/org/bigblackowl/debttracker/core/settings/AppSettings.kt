@@ -29,6 +29,8 @@ class AppSettings(private val settings: Settings) {
     var theme: String by SettingsStringState(settings, KEY_THEME, "system")
     /** "system" | "uk" | "en" — resolved to a [org.bigblackowl.debttracker.core.i18n.Strings] set via [org.bigblackowl.debttracker.core.i18n.resolveStrings]. */
     var locale: String by SettingsStringState(settings, KEY_LOCALE, "system")
+    /** Desktop-only: closing the window hides it to the system tray instead of quitting (desktopApp's `main.kt`). Off by default so closing the window keeps its usual meaning. */
+    var runInBackground: Boolean by SettingsBooleanState(settings, KEY_RUN_IN_BACKGROUND, false)
 
     /** Whether a desktop app-lock PIN has been set up. */
     val hasPinCode: Boolean
@@ -76,6 +78,7 @@ class AppSettings(private val settings: Settings) {
         const val KEY_THEME = "theme"
         const val KEY_LOCALE = "locale"
         const val KEY_DEVICE_SESSION_ID = "device_session_id"
+        const val KEY_RUN_IN_BACKGROUND = "run_in_background"
     }
 }
 

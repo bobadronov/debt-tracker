@@ -10,6 +10,7 @@ import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.selectAsFlow
 import io.github.jan.supabase.realtime.selectSingleValueAsFlow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.emptyFlow
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.retry
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.time.Clock
@@ -31,6 +33,15 @@ import org.bigblackowl.debttracker.domain.model.DeviceSession
 import org.bigblackowl.debttracker.domain.repository.SessionRepository
 
 private const val TABLE = "user_sessions"
+
+/**
+ * Backoff before re-subscribing after a failure (network blip, table momentarily unreachable,
+ * etc.) in [SupabaseSessionRepository.observeSessions]/[SupabaseSessionRepository.revokedElsewhere].
+ * Without this, one failed request kills the flow for the rest of the app session — the
+ * PGRST205-table-missing incident (2026-08-11) crashed the app this way, since nothing downstream
+ * caught it.
+ */
+private const val SESSION_RETRY_DELAY_MS = 5_000L
 
 @Serializable
 private data class SessionDto(
@@ -92,7 +103,7 @@ class SupabaseSessionRepository(
                             .filter { it.revokedAt == null }
                             .map { it.toDomain(currentSessionId) }
                             .sortedByDescending { it.lastSeenAt }
-                    }
+                    }.retry { delay(SESSION_RETRY_DELAY_MS); true }
                 }
             }
 
@@ -131,7 +142,7 @@ class SupabaseSessionRepository(
                                 eq("id", currentSessionId)
                             }
                         )
-                    }
+                    }.retry { delay(SESSION_RETRY_DELAY_MS); true }
                 }
             }.filter { it.revokedAt != null }.map { }
 

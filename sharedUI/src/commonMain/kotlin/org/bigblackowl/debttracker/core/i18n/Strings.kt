@@ -174,6 +174,11 @@ data class Strings(
     val settingsProtection: String,
     val settingsSound: String,
     val settingsHaptic: String,
+    // Desktop-only (see AppSettings.runInBackground / desktopApp's main.kt).
+    val settingsRunInBackground: String,
+    val settingsRunInBackgroundSubtitle: String,
+    val trayOpen: String,
+    val trayQuit: String,
     val settingsTheme: String,
     val settingsThemeSystem: String,
     val settingsThemeLight: String,
@@ -201,6 +206,10 @@ data class Strings(
     val settingsCheckingForUpdates: String,
     val settingsUpToDate: String,
     val settingsActiveSessions: String,
+
+    // account info (read-only Account screen — Settings → tap the account card; edit/Active
+    // devices are separate destinations reached from here)
+    val accountInfoEdit: String,
 
     // edit account
     val editAccountTitle: String,

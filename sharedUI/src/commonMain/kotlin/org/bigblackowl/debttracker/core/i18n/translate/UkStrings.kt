@@ -154,6 +154,10 @@ val UkStrings = Strings(
     settingsProtection = "Захист входу",
     settingsSound = "Звук",
     settingsHaptic = "Вібровідгук",
+    settingsRunInBackground = "Працювати у фоні",
+    settingsRunInBackgroundSubtitle = "Продовжувати синхронізацію в треї замість виходу при закритті",
+    trayOpen = "Відкрити Debt Tracker",
+    trayQuit = "Вийти",
     settingsTheme = "Тема",
     settingsThemeSystem = "Системна",
     settingsThemeLight = "Світла",
@@ -182,7 +186,9 @@ val UkStrings = Strings(
     settingsUpToDate = "Ви використовуєте останню версію",
     settingsActiveSessions = "Активні пристрої",
 
-    editAccountTitle = "Обліковий запис",
+    accountInfoEdit = "Редагувати",
+
+    editAccountTitle = "Редагувати обліковий запис",
     editAccountEmailReadOnly = "Пошту не можна змінити тут",
 
     activeSessionsTitle = "Активні пристрої",

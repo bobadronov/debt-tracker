@@ -154,6 +154,10 @@ val PlStrings = Strings(
     settingsProtection = "Blokada aplikacji",
     settingsSound = "Dźwięk",
     settingsHaptic = "Wibracje",
+    settingsRunInBackground = "Działaj w tle",
+    settingsRunInBackgroundSubtitle = "Kontynuuj synchronizację w zasobniku systemowym zamiast zamykać po zamknięciu okna",
+    trayOpen = "Otwórz Debt Tracker",
+    trayQuit = "Zamknij",
     settingsTheme = "Motyw",
     settingsThemeSystem = "Systemowy",
     settingsThemeLight = "Jasny",
@@ -182,7 +186,9 @@ val PlStrings = Strings(
     settingsUpToDate = "Masz najnowszą wersję",
     settingsActiveSessions = "Aktywne urządzenia",
 
-    editAccountTitle = "Konto",
+    accountInfoEdit = "Edytuj",
+
+    editAccountTitle = "Edytuj konto",
     editAccountEmailReadOnly = "Adresu email nie można tu zmienić",
 
     activeSessionsTitle = "Aktywne urządzenia",

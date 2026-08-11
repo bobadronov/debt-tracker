@@ -9,7 +9,7 @@ private object NoOpAppUpdateChecker : AppUpdateChecker {
     override suspend fun checkForUpdate(): AppUpdateInfo? = null
     override suspend fun download(update: AppUpdateInfo, onProgress: (Float?) -> Unit): String =
         error("iOS updates via the App Store, not self-update")
-    override fun installAndExit(filePath: String) = Unit
+    override suspend fun installAndExit(filePath: String) = Unit
 }
 
 @Composable

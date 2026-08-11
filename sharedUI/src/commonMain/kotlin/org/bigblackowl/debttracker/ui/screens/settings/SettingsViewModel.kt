@@ -84,8 +84,13 @@ class SettingsViewModel(
 
             is SettingsIntent.CheckForUpdate -> viewModelScope.launch {
                 _state.update { it.copy(updateState = UpdateCheckState.Checking) }
-                val info = intent.checker.checkForUpdate()
-                _state.update { it.copy(updateState = info?.let { UpdateCheckState.Available(it) } ?: UpdateCheckState.UpToDate) }
+                runCatching { intent.checker.checkForUpdate() }
+                    .onSuccess { info ->
+                        _state.update { it.copy(updateState = info?.let { UpdateCheckState.Available(it) } ?: UpdateCheckState.UpToDate) }
+                    }
+                    .onFailure {
+                        _state.update { it.copy(updateState = UpdateCheckState.CheckFailed) }
+                    }
             }
 
             is SettingsIntent.DownloadUpdate -> viewModelScope.launch {
@@ -93,8 +98,8 @@ class SettingsViewModel(
                 runCatching {
                     // Progress isn't rendered here (the trailing spinner is indeterminate either way),
                     // so we don't feed it into state — that would recompose this row on every chunk.
-                    intent.checker.download(intent.info) {}
-                }.onSuccess { path ->
+                    val path = intent.checker.download(intent.info) {}
+                    // Doesn't return on success — the process exits once the install finishes.
                     intent.checker.installAndExit(path)
                 }.onFailure {
                     _state.update { it.copy(updateState = UpdateCheckState.Failed(intent.info)) }

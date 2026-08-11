@@ -3,7 +3,6 @@ package org.bigblackowl.debttracker.ui.screens.settings
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -87,14 +86,14 @@ fun ActiveSessionsScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Column(
-                modifier = Modifier.width(Dimens.contentMaxWidth).padding(Dimens.space16).fillMaxHeight(),
+                modifier = Modifier.width(Dimens.contentMaxWidth).padding(Dimens.space16),
                 verticalArrangement = Arrangement.spacedBy(Dimens.space16),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 if (state.isLoading) {
-                    CircularWavyProgressIndicator(modifier = Modifier.padding(Dimens.space16).fillMaxHeight())
+                    CircularWavyProgressIndicator(modifier = Modifier.padding(Dimens.space16))
                 } else {
-                    SettingsSection(strings.activeSessionsTitle, modifier = Modifier.weight(1f)) {
+                    SettingsSection(strings.activeSessionsTitle) {
                         state.sessions.forEachIndexed { index, session ->
                             SettingsRow(
                                 icon = session.platform.icon(),
@@ -102,7 +101,11 @@ fun ActiveSessionsScreen(
                                 subtitle = if (session.isCurrentDevice) {
                                     strings.activeSessionsCurrentDevice
                                 } else {
-                                    strings.activeSessionsLastActive(session.lastSeenAt.toLocalDateTime(TimeZone.currentSystemDefault()).date.toString())
+                                    strings.activeSessionsLastActive(
+                                        session.lastSeenAt.toLocalDateTime(TimeZone.currentSystemDefault()).let { dt ->
+                                            "${dt.date} ${dt.hour.toString().padStart(2, '0')}:${dt.minute.toString().padStart(2, '0')}"
+                                        }
+                                    )
                                 },
                                 trailing = if (!session.isCurrentDevice) {
                                     {
