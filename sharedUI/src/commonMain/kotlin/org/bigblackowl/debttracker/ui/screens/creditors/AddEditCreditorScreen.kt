@@ -47,13 +47,15 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
-import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
+import org.bigblackowl.debttracker.domain.validation.isPhonePasteRelevant
+import org.bigblackowl.debttracker.domain.validation.isValidAmountText
 import org.bigblackowl.debttracker.domain.validation.isValidEmail
 import org.bigblackowl.debttracker.domain.validation.isValidFullName
 import org.bigblackowl.debttracker.domain.validation.sanitizeAmountInput
+import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.BackButton
@@ -132,9 +134,7 @@ fun AddEditCreditorScreen(
                 var phoneFocused by remember { mutableStateOf(false) }
                 OutlinedTextField(
                     value = state.phone,
-                    onValueChange = {
-                        viewModel.onIntent(AddEditCreditorIntent.PhoneChanged(it.filter { c -> c.isDigit() }.take(10)))
-                    },
+                    onValueChange = { viewModel.onIntent(AddEditCreditorIntent.PhoneChanged(sanitizePhoneInput(it))) },
                     label = { Text(strings.phone) },
                     modifier = Modifier.fillMaxWidth().onFocusChanged { phoneFocused = it.isFocused }.semantics { contentType = ContentType.PhoneNumber },
                     singleLine = true,
@@ -145,10 +145,8 @@ fun AddEditCreditorScreen(
                     clipboardText = clipboardText,
                     fieldValue = state.phone,
                     isFieldFocused = phoneFocused,
-                    isRelevant = { it.filter(Char::isDigit).length >= 9 },
-                    onPaste = {
-                        viewModel.onIntent(AddEditCreditorIntent.PhoneChanged(it.filter(Char::isDigit).take(10)))
-                    },
+                    isRelevant = ::isPhonePasteRelevant,
+                    onPaste = { viewModel.onIntent(AddEditCreditorIntent.PhoneChanged(sanitizePhoneInput(it))) },
                 )
                 var emailFocused by remember { mutableStateOf(false) }
                 OutlinedTextField(
@@ -251,12 +249,7 @@ fun AddEditCreditorScreen(
                         clipboardText = clipboardText,
                         fieldValue = state.initialAmountText,
                         isFieldFocused = initialAmountFocused,
-                        isRelevant = { text ->
-                            val sanitized = sanitizeAmountInput(text)
-                            sanitized.isNotBlank() &&
-                                runCatching { BigDecimal.parseString(sanitized) }.getOrNull()
-                                    ?.let { it > BigDecimal.ZERO } == true
-                        },
+                        isRelevant = ::isValidAmountText,
                         onPaste = {
                             viewModel.onIntent(AddEditCreditorIntent.InitialAmountChanged(sanitizeAmountInput(it)))
                         },

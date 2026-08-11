@@ -1,7 +1,9 @@
 package org.bigblackowl.debttracker.ui.screens.auth
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,9 +11,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -47,15 +53,21 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
+import org.bigblackowl.debttracker.core.media.rememberImagePicker
+import org.bigblackowl.debttracker.domain.validation.isPhonePasteRelevant
 import org.bigblackowl.debttracker.domain.validation.isValidEmail
+import org.bigblackowl.debttracker.domain.validation.isValidFullName
+import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.ui.components.AccountAvatar
 import org.bigblackowl.debttracker.ui.components.BackButton
 import org.bigblackowl.debttracker.ui.components.ClipboardPasteHint
+import org.bigblackowl.debttracker.ui.components.UkrainianPhoneVisualTransformation
 import org.bigblackowl.debttracker.ui.components.rememberClipboardText
 import org.koin.compose.viewmodel.koinViewModel
 
-/** Account+Sync (спек §1.1) — email/пароль через supabase-kt Auth. */
+/** Account+Sync (спек §1.1) — email/пароль через supabase-kt Auth; sign up also collects name/optional avatar+phone. */
 @Composable
 fun AuthScreen(
     onBack: () -> Unit,
@@ -67,10 +79,16 @@ fun AuthScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val strings = LocalStrings.current
     var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
     var emailFocused by remember { mutableStateOf(false) }
+    var fullNameFocused by remember { mutableStateOf(false) }
+    var phoneFocused by remember { mutableStateOf(false) }
+    val imagePicker = rememberImagePicker()
 
+    val fullNameFocusRequester = remember { FocusRequester() }
     val emailFocusRequester = remember { FocusRequester() }
     val passwordFocusRequester = remember { FocusRequester() }
+    val confirmPasswordFocusRequester = remember { FocusRequester() }
     val clipboardText by rememberClipboardText()
 
     LaunchedEffect(Unit) {
@@ -93,7 +111,8 @@ fun AuthScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).imePadding().padding(Dimens.space16),
+            modifier = Modifier.fillMaxSize().padding(padding).imePadding()
+                .verticalScroll(rememberScrollState()).padding(Dimens.space16),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -102,6 +121,41 @@ fun AuthScreen(
                 verticalArrangement = Arrangement.spacedBy(Dimens.space12),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+
+                SignUpOnlyFields(visible = state.isSignUpMode) {
+                    AccountAvatar(
+                        localImageBytes = state.avatarPicked?.bytes,
+                        onEditClick = {
+                            imagePicker.pickImage { picked ->
+                                if (picked == null) return@pickImage
+                                viewModel.onIntent(AuthIntent.AvatarPicked(picked))
+                            }
+                        },
+                    )
+
+                    OutlinedTextField(
+                        value = state.fullName,
+                        onValueChange = { viewModel.onIntent(AuthIntent.FullNameChanged(it)) },
+                        label = { Text(strings.fullName) },
+                        leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
+                        isError = state.fullNameError != null,
+                        supportingText = { state.fullNameError?.let { Text(it) } },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(onNext = { emailFocusRequester.requestFocus() }),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(fullNameFocusRequester)
+                            .onFocusChanged { fullNameFocused = it.isFocused },
+                    )
+                    ClipboardPasteHint(
+                        clipboardText = clipboardText,
+                        fieldValue = state.fullName,
+                        isFieldFocused = fullNameFocused,
+                        isRelevant = ::isValidFullName,
+                        onPaste = { viewModel.onIntent(AuthIntent.FullNameChanged(it)) },
+                    )
+                }
 
                 OutlinedTextField(
                     value = state.email,
@@ -148,9 +202,10 @@ fun AuthScreen(
                     },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Done,
+                        imeAction = if (state.isSignUpMode) ImeAction.Next else ImeAction.Done,
                     ),
                     keyboardActions = KeyboardActions(
+                        onNext = { confirmPasswordFocusRequester.requestFocus() },
                         onDone = {
                             if (!state.isLoading) {
                                 viewModel.onIntent(AuthIntent.Submit)
@@ -186,6 +241,77 @@ fun AuthScreen(
                         .focusRequester(passwordFocusRequester)
                         .semantics { contentType = if (state.isSignUpMode) ContentType.NewPassword else ContentType.Password },
                 )
+
+                SignUpOnlyFields(visible = state.isSignUpMode) {
+                    OutlinedTextField(
+                        value = state.confirmPassword,
+                        onValueChange = { viewModel.onIntent(AuthIntent.ConfirmPasswordChanged(it)) },
+                        label = { Text(strings.authConfirmPassword) },
+                        singleLine = true,
+                        visualTransformation = if (confirmPasswordVisible) {
+                            VisualTransformation.None
+                        } else {
+                            PasswordVisualTransformation()
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Next,
+                        ),
+                        keyboardActions = KeyboardActions(onNext = { phoneFocused = true }),
+                        isError = state.confirmPasswordError != null,
+                        supportingText = { state.confirmPasswordError?.let { Text(it) } },
+                        trailingIcon = {
+                            IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                                Icon(
+                                    imageVector = if (confirmPasswordVisible) {
+                                        Icons.Default.VisibilityOff
+                                    } else {
+                                        Icons.Default.Visibility
+                                    },
+                                    contentDescription = if (confirmPasswordVisible) {
+                                        strings.hidePassword
+                                    } else {
+                                        strings.showPassword
+                                    },
+                                )
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(confirmPasswordFocusRequester)
+                            .semantics { contentType = ContentType.NewPassword },
+                    )
+
+                    OutlinedTextField(
+                        value = state.phone,
+                        onValueChange = { viewModel.onIntent(AuthIntent.PhoneChanged(sanitizePhoneInput(it))) },
+                        label = { Text(strings.phone) },
+                        leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Phone,
+                            imeAction = ImeAction.Done,
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                if (!state.isLoading) {
+                                    viewModel.onIntent(AuthIntent.Submit)
+                                }
+                            },
+                        ),
+                        visualTransformation = remember { UkrainianPhoneVisualTransformation() },
+                        modifier = Modifier.fillMaxWidth().onFocusChanged { phoneFocused = it.isFocused }
+                            .semantics { contentType = ContentType.PhoneNumber },
+                    )
+                    ClipboardPasteHint(
+                        clipboardText = clipboardText,
+                        fieldValue = state.phone,
+                        isFieldFocused = phoneFocused,
+                        isRelevant = ::isPhonePasteRelevant,
+                        onPaste = { viewModel.onIntent(AuthIntent.PhoneChanged(sanitizePhoneInput(it))) },
+                    )
+                }
+
                 Spacer(Modifier.height(Dimens.space30))
                 Button(
                     onClick = { viewModel.onIntent(AuthIntent.Submit) },
@@ -202,6 +328,18 @@ fun AuthScreen(
                 }
             }
         }
+    }
+}
+
+/** Wraps the sign-up-only fields shared by both halves of the form (around the always-visible password field). */
+@Composable
+private fun SignUpOnlyFields(visible: Boolean, content: @Composable ColumnScope.() -> Unit) {
+    AnimatedVisibility(visible = visible) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(Dimens.space12),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            content = content,
+        )
     }
 }
 

@@ -3,6 +3,7 @@ package org.bigblackowl.debttracker.ui.screens.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,6 +13,7 @@ import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.i18n.resolveStrings
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
+import org.bigblackowl.debttracker.domain.validation.isValidFullName
 
 /** Reduces [AuthIntent]s into [AuthState], delegating sign up/in to [AuthRepository]. */
 class AuthViewModel(
@@ -28,14 +30,29 @@ class AuthViewModel(
     fun onIntent(intent: AuthIntent) {
         when (intent) {
             is AuthIntent.EmailChanged -> _state.update { it.copy(email = intent.value, error = null) }
-            is AuthIntent.PasswordChanged -> _state.update { it.copy(password = intent.value, error = null) }
-            AuthIntent.ToggleMode -> _state.update { it.copy(isSignUpMode = !it.isSignUpMode, error = null) }
+            is AuthIntent.PasswordChanged -> _state.update { it.copy(password = intent.value, error = null, confirmPasswordError = null) }
+            is AuthIntent.ConfirmPasswordChanged -> _state.update { it.copy(confirmPassword = intent.value, confirmPasswordError = null) }
+            is AuthIntent.FullNameChanged -> _state.update { it.copy(fullName = intent.value, fullNameError = null) }
+            is AuthIntent.PhoneChanged -> _state.update { it.copy(phone = intent.value) }
+            is AuthIntent.AvatarPicked -> _state.update { it.copy(avatarPicked = intent.picked) }
+            AuthIntent.ToggleMode -> _state.update { it.copy(isSignUpMode = !it.isSignUpMode, error = null, fullNameError = null, confirmPasswordError = null) }
             AuthIntent.Submit -> submit()
         }
     }
 
     private fun submit() {
         val current = _state.value
+        val strings = resolveStrings(appSettings.locale)
+
+        if (current.isSignUpMode) {
+            val fullNameError = if (!isValidFullName(current.fullName)) strings.fullNameError else null
+            val confirmPasswordError = if (current.password != current.confirmPassword) strings.authPasswordMismatch else null
+            if (fullNameError != null || confirmPasswordError != null) {
+                _state.update { it.copy(fullNameError = fullNameError, confirmPasswordError = confirmPasswordError) }
+                return
+            }
+        }
+
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             val result = if (current.isSignUpMode) {
@@ -45,6 +62,16 @@ class AuthViewModel(
             }
             result
                 .onSuccess {
+                    if (current.isSignUpMode) {
+                        // Independent writes against the profile just created by signUp() above — run
+                        // concurrently rather than paying for two round trips back to back.
+                        coroutineScope {
+                            launch { authRepository.updateProfile(current.fullName.trim(), current.phone) }
+                            current.avatarPicked?.let { picked ->
+                                launch { authRepository.updateAvatar(picked.bytes, picked.fileExtension) }
+                            }
+                        }
+                    }
                     _state.update { it.copy(isLoading = false) }
                     effectsChannel.send(AuthEffect.Success)
                 }

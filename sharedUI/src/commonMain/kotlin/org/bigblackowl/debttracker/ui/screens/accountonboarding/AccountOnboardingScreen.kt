@@ -1,4 +1,4 @@
-package org.bigblackowl.debttracker.ui.screens
+package org.bigblackowl.debttracker.ui.screens.accountonboarding
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
@@ -20,22 +21,29 @@ import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * First-launch-only screen explaining Account+Sync, shown once after [ProtectionOnboardingScreen]/
- * [AuthGateScreen] and before Home (see [AppSettings.hasSeenAccountOnboarding]) — surfaces the
+ * First-launch-only screen explaining Account+Sync, shown once after [org.bigblackowl.debttracker.ui.screens.protectiononboarding.ProtectionOnboardingScreen]/
+ * [org.bigblackowl.debttracker.ui.screens.authgate.AuthGateScreen] and before Home (see [AppSettings.hasSeenAccountOnboarding]) — surfaces the
  * sign-in option up front instead of leaving it undiscoverable inside Settings. Not shown on Web,
  * which already forces sign-in before Home has no local-only mode to explain.
  */
 @Composable
-fun AccountOnboardingScreen(onSignIn: () -> Unit, onSkip: () -> Unit) {
-    val settings = koinInject<AppSettings>()
+fun AccountOnboardingScreen(
+    onSignIn: () -> Unit,
+    onSkip: () -> Unit,
+    viewModel: AccountOnboardingViewModel = koinViewModel(),
+) {
     val strings = LocalStrings.current
 
-    fun finish(then: () -> Unit) {
-        settings.hasSeenAccountOnboarding = true
-        then()
+    LaunchedEffect(Unit) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                AccountOnboardingEffect.NavigateSignIn -> onSignIn()
+                AccountOnboardingEffect.NavigateSkip -> onSkip()
+            }
+        }
     }
 
     PlaceholderScreen(title = strings.onboardingAccountTitle) {
@@ -49,9 +57,9 @@ fun AccountOnboardingScreen(onSignIn: () -> Unit, onSkip: () -> Unit) {
         Text(strings.onboardingAccountBody, textAlign = TextAlign.Center)
         Spacer(Modifier.height(Dimens.space24))
 
-        Button(onClick = { finish(onSignIn) }) { Text(strings.settingsSignIn) }
+        Button(onClick = { viewModel.onIntent(AccountOnboardingIntent.SignIn) }) { Text(strings.settingsSignIn) }
         Spacer(Modifier.height(Dimens.space8))
-        TextButton(onClick = { finish(onSkip) }) { Text(strings.onboardingProtectionSkip) }
+        TextButton(onClick = { viewModel.onIntent(AccountOnboardingIntent.Skip) }) { Text(strings.onboardingProtectionSkip) }
     }
 }
 

@@ -25,6 +25,7 @@ class EditAccountViewModel(
             email = authRepository.email.value.orEmpty(),
             fullName = authRepository.displayName.value.orEmpty(),
             phone = authRepository.phone.value.orEmpty(),
+            avatarUrl = authRepository.avatarUrl.value,
         )
     )
     val state: StateFlow<EditAccountState> = _state.asStateFlow()
@@ -36,7 +37,20 @@ class EditAccountViewModel(
         when (intent) {
             is EditAccountIntent.FullNameChanged -> _state.update { it.copy(fullName = intent.value, fullNameError = null) }
             is EditAccountIntent.PhoneChanged -> _state.update { it.copy(phone = intent.value) }
+            is EditAccountIntent.AvatarPicked -> uploadAvatar(intent.picked.bytes, intent.picked.fileExtension)
             EditAccountIntent.Save -> save()
+        }
+    }
+
+    private fun uploadAvatar(bytes: ByteArray, fileExtension: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(isUploadingAvatar = true, avatarError = null) }
+            authRepository.updateAvatar(bytes, fileExtension)
+                .onSuccess { url -> _state.update { it.copy(isUploadingAvatar = false, avatarUrl = url) } }
+                .onFailure {
+                    val strings = resolveStrings(appSettings.locale)
+                    _state.update { it.copy(isUploadingAvatar = false, avatarError = strings.settingsAvatarUploadError) }
+                }
         }
     }
 

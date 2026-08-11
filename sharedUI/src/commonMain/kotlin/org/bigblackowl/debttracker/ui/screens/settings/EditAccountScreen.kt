@@ -36,7 +36,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,11 +43,11 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
-import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.media.rememberImagePicker
-import org.bigblackowl.debttracker.domain.repository.AuthRepository
+import org.bigblackowl.debttracker.domain.validation.isPhonePasteRelevant
 import org.bigblackowl.debttracker.domain.validation.isValidFullName
+import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
@@ -57,7 +56,6 @@ import org.bigblackowl.debttracker.ui.components.BackButton
 import org.bigblackowl.debttracker.ui.components.ClipboardPasteHint
 import org.bigblackowl.debttracker.ui.components.UkrainianPhoneVisualTransformation
 import org.bigblackowl.debttracker.ui.components.rememberClipboardText
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -74,12 +72,7 @@ fun EditAccountScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val strings = LocalStrings.current
     val clipboardText by rememberClipboardText()
-    val authRepository = koinInject<AuthRepository>()
     val imagePicker = rememberImagePicker()
-    val scope = rememberCoroutineScope()
-    val avatarUrl by authRepository.avatarUrl.collectAsState()
-    var isUploadingAvatar by remember { mutableStateOf(false) }
-    var avatarError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -114,28 +107,22 @@ fun EditAccountScreen(
             ) {
                 Spacer(Modifier.height(Dimens.space8))
                 AccountAvatar(
-                    avatarUrl = avatarUrl,
-                    isUploading = isUploadingAvatar,
+                    avatarUrl = state.avatarUrl,
+                    isUploading = state.isUploadingAvatar,
                     onEditClick = {
                         imagePicker.pickImage { picked ->
                             if (picked == null) return@pickImage
-                            scope.launch {
-                                isUploadingAvatar = true
-                                avatarError = null
-                                authRepository.updateAvatar(picked.bytes, picked.fileExtension)
-                                    .onFailure { avatarError = strings.settingsAvatarUploadError }
-                                isUploadingAvatar = false
-                            }
+                            viewModel.onIntent(EditAccountIntent.AvatarPicked(picked))
                         }
                     },
                 )
                 AnimatedVisibility(
-                    visible = avatarError != null,
+                    visible = state.avatarError != null,
                     enter = fadeIn(),
                     exit = fadeOut()
                 ) {
                     Text(
-                        avatarError.orEmpty(),
+                        state.avatarError.orEmpty(),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.debtAccentColors.debt,
                     )
@@ -177,13 +164,7 @@ fun EditAccountScreen(
                 var phoneFocused by remember { mutableStateOf(false) }
                 OutlinedTextField(
                     value = state.phone,
-                    onValueChange = {
-                        viewModel.onIntent(
-                            EditAccountIntent.PhoneChanged(
-                                it.filter(Char::isDigit).take(10)
-                            )
-                        )
-                    },
+                    onValueChange = { viewModel.onIntent(EditAccountIntent.PhoneChanged(sanitizePhoneInput(it))) },
                     label = { Text(strings.phone) },
                     leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null) },
                     singleLine = true,
@@ -195,14 +176,8 @@ fun EditAccountScreen(
                     clipboardText = clipboardText,
                     fieldValue = state.phone,
                     isFieldFocused = phoneFocused,
-                    isRelevant = { it.filter(Char::isDigit).length >= 9 },
-                    onPaste = {
-                        viewModel.onIntent(
-                            EditAccountIntent.PhoneChanged(
-                                it.filter(Char::isDigit).take(10)
-                            )
-                        )
-                    },
+                    isRelevant = ::isPhonePasteRelevant,
+                    onPaste = { viewModel.onIntent(EditAccountIntent.PhoneChanged(sanitizePhoneInput(it))) },
                 )
                 Spacer(Modifier.height(Dimens.space12))
                 Button(

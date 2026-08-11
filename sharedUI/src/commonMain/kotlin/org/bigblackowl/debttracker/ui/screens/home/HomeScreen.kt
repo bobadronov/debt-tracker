@@ -1,4 +1,4 @@
-package org.bigblackowl.debttracker.ui.screens
+package org.bigblackowl.debttracker.ui.screens.home
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
@@ -56,14 +56,12 @@ import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 import org.bigblackowl.debttracker.domain.model.SyncUiStatus
-import org.bigblackowl.debttracker.domain.repository.AuthRepository
-import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.screens.creditors.CreditorListScreen
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorListScreen
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * HomeScreen: верхній TabRow "Мені винні" / "Я винен" (спек §6, п. 3, §4.1).
@@ -79,13 +77,11 @@ fun HomeScreen(
     onOpenCreditor: (String) -> Unit,
     onOpenStats: () -> Unit,
     onOpenSettings: () -> Unit,
+    viewModel: HomeViewModel = koinViewModel(),
 ) {
     val pagerState = rememberPagerState(pageCount = { 2 })
     val scope = rememberCoroutineScope()
-    val authRepository = koinInject<AuthRepository>()
-    val syncStatusProvider = koinInject<SyncStatusProvider>()
-    val isAuthenticated by authRepository.isAuthenticated.collectAsState()
-    val syncStatus by syncStatusProvider.status.collectAsState()
+    val state by viewModel.state.collectAsState()
     val strings = LocalStrings.current
 
     Scaffold(
@@ -94,9 +90,9 @@ fun HomeScreen(
                 title = {
                     Column {
                         Text(strings.appName)
-                        if (isAuthenticated) {
+                        if (state.isAuthenticated) {
                             Spacer(Modifier.height(Dimens.space2))
-                            SyncStatusBadge(status = syncStatus, strings = strings)
+                            SyncStatusBadge(status = state.syncStatus, strings = strings)
                         }
                     }
                 },

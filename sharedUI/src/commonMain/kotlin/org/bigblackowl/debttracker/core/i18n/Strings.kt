@@ -51,6 +51,8 @@ data class Strings(
     val authTitleSignIn: String,
     val authEmail: String,
     val authPassword: String,
+    val authConfirmPassword: String,
+    val authPasswordMismatch: String,
     val authSubmitSignUp: String,
     val authSubmitSignIn: String,
     val authToggleToSignIn: String,
@@ -198,10 +200,23 @@ data class Strings(
     val settingsCheckForUpdates: String,
     val settingsCheckingForUpdates: String,
     val settingsUpToDate: String,
+    val settingsActiveSessions: String,
 
     // edit account
     val editAccountTitle: String,
     val editAccountEmailReadOnly: String,
+
+    // active sessions (Settings → Active devices — session management/remote logout)
+    val activeSessionsTitle: String,
+    val activeSessionsCurrentDevice: String,
+    val activeSessionsLastActive: (date: String) -> String,
+    val activeSessionsLogOut: String,
+    val activeSessionsLogOutAllOthers: String,
+    val activeSessionsLogOutAllOthersConfirmTitle: String,
+    val activeSessionsLogOutAllOthersConfirmText: String,
+    val activeSessionsRevokeConfirmTitle: String,
+    val activeSessionsRevokeConfirmText: (deviceName: String) -> String,
+    val activeSessionsError: String,
 
     // update (Desktop-only, see core/update/AppUpdateChecker)
     val updateAvailableTitle: String,
