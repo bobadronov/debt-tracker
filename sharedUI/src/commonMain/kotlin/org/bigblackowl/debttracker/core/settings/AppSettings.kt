@@ -6,6 +6,8 @@ import org.bigblackowl.debttracker.core.security.PinHasher
 import org.bigblackowl.debttracker.core.security.hexToByteArray
 import org.bigblackowl.debttracker.core.security.toHex
 import kotlin.reflect.KProperty
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Налаштування користувача (спек §9.1 `profiles`, локальний аналог). Поля,
@@ -31,6 +33,14 @@ class AppSettings(private val settings: Settings) {
     /** Whether a desktop app-lock PIN has been set up. */
     val hasPinCode: Boolean
         get() = settings.getStringOrNull(KEY_PIN_HASH) != null
+
+    /** Stable per-install id for this device's row in `user_sessions` (Settings → Active devices) — generated once, then persisted. */
+    @OptIn(ExperimentalUuidApi::class)
+    val deviceSessionId: String by lazy {
+        settings.getStringOrNull(KEY_DEVICE_SESSION_ID) ?: Uuid.random().toString().also {
+            settings.putString(KEY_DEVICE_SESSION_ID, it)
+        }
+    }
 
     /** Salts+hashes [pin] before persisting it (see [PinHasher]) — the raw PIN is never stored. */
     fun setPinCode(pin: String) {
@@ -65,6 +75,7 @@ class AppSettings(private val settings: Settings) {
         const val KEY_HAPTIC_ENABLED = "haptic_enabled"
         const val KEY_THEME = "theme"
         const val KEY_LOCALE = "locale"
+        const val KEY_DEVICE_SESSION_ID = "device_session_id"
     }
 }
 
