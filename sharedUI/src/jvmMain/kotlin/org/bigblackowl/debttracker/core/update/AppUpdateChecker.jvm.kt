@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.bigblackowl.debttracker.BuildConfig
 import java.io.File
 import kotlin.system.exitProcess
@@ -43,7 +44,9 @@ private data class GitHubAsset(
 private class DesktopAppUpdateChecker : AppUpdateChecker {
 
     private val client = HttpClient(OkHttp) {
-        install(ContentNegotiation) { json() }
+        // GitHub's release JSON has dozens of fields beyond the ones GitHubRelease/GitHubAsset
+        // declare — without this, the default Json() rejects every response as an unknown key.
+        install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true }) }
         install(HttpTimeout) {
             requestTimeoutMillis = 15_000
             connectTimeoutMillis = 10_000
