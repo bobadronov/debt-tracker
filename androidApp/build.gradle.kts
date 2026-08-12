@@ -87,6 +87,7 @@ kotlin {
 dependencies {
     implementation(project(":sharedUI"))
     implementation(libs.androidx.activityCompose)
+    implementation(libs.androidx.core.splashscreen)
     implementation(libs.koin.android)
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.preview) // @Preview для WidgetUi у Android Studio

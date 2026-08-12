@@ -14,15 +14,13 @@ import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.ui.components.AddEditContactForm
 import org.koin.compose.viewmodel.koinViewModel
-import org.koin.core.parameter.parametersOf
 
-/** Create/edit form for a [org.bigblackowl.debttracker.domain.model.Creditor] — `creditorId == null` means "new". */
+/** Create form for a new [org.bigblackowl.debttracker.domain.model.Creditor]. */
 @Composable
 fun AddEditCreditorScreen(
-    creditorId: String?,
     onDone: () -> Unit,
+    viewModel: AddEditCreditorViewModel = koinViewModel(),
 ) {
-    val viewModel: AddEditCreditorViewModel = koinViewModel { parametersOf(creditorId) }
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val strings = LocalStrings.current
@@ -37,7 +35,7 @@ fun AddEditCreditorScreen(
     }
 
     AddEditContactForm(
-        title = if (state.isEditing) strings.addEditCreditorTitleEdit else strings.addEditCreditorTitleNew,
+        title = strings.addEditCreditorTitleNew,
         onDone = onDone,
         snackbarHostState = snackbarHostState,
         fullName = state.fullName,
@@ -52,7 +50,6 @@ fun AddEditCreditorScreen(
         onDismissSuggestion = { viewModel.onIntent(AddEditCreditorIntent.DismissProfileSuggestion) },
         comment = state.comment,
         onCommentChange = { viewModel.onIntent(AddEditCreditorIntent.CommentChanged(it)) },
-        isEditing = state.isEditing,
         initialAmountLabel = strings.addEditCreditorInitialAmount,
         initialAmountText = state.initialAmountText,
         onInitialAmountChange = { viewModel.onIntent(AddEditCreditorIntent.InitialAmountChanged(sanitizeAmountInput(it))) },
@@ -64,7 +61,6 @@ fun AddEditCreditorScreen(
         cardLastDigits = state.cardLastDigits,
         onCardLastDigitsChange = { viewModel.onIntent(AddEditCreditorIntent.CardLastDigitsChanged(it)) },
         isSaving = state.isSaving,
-        isLoading = state.isLoading,
         onSave = { viewModel.onIntent(AddEditCreditorIntent.Save) },
     )
 }
@@ -72,23 +68,23 @@ fun AddEditCreditorScreen(
 @Preview
 @Composable
 private fun AddEditCreditorScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    AddEditCreditorScreen(creditorId = null, onDone = {})
+    AddEditCreditorScreen(onDone = {})
 }
 
 @Preview
 @Composable
 private fun AddEditCreditorScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    AddEditCreditorScreen(creditorId = null, onDone = {})
+    AddEditCreditorScreen(onDone = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun AddEditCreditorScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    AddEditCreditorScreen(creditorId = null, onDone = {})
+    AddEditCreditorScreen(onDone = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun AddEditCreditorScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    AddEditCreditorScreen(creditorId = null, onDone = {})
+    AddEditCreditorScreen(onDone = {})
 }

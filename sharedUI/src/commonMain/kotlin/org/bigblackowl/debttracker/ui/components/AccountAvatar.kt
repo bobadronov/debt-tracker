@@ -2,7 +2,9 @@ package org.bigblackowl.debttracker.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -18,7 +20,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.tooling.preview.Devices.DESKTOP
+import androidx.compose.ui.tooling.preview.Preview
 import coil3.compose.AsyncImage
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.jetbrains.compose.resources.decodeToImageBitmap
 
@@ -85,3 +90,27 @@ fun AccountAvatar(
         }
     }
 }
+
+@Composable
+private fun AccountAvatarSample() {
+    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.space24)) {
+        AccountAvatar(onEditClick = {})
+        AccountAvatar(isUploading = true, onEditClick = {})
+    }
+}
+
+@Preview
+@Composable
+private fun AccountAvatarLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { AccountAvatarSample() }
+
+@Preview
+@Composable
+private fun AccountAvatarDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { AccountAvatarSample() }
+
+@Preview(device = DESKTOP)
+@Composable
+private fun AccountAvatarLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { AccountAvatarSample() }
+
+@Preview(device = DESKTOP)
+@Composable
+private fun AccountAvatarDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { AccountAvatarSample() }

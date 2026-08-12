@@ -88,12 +88,10 @@ data class Strings(
     val onboardingAccountBody: String,
 
     // add/edit creditor
-    val addEditCreditorTitleEdit: String,
     val addEditCreditorTitleNew: String,
     val addEditCreditorInitialAmount: String,
 
     // add/edit debtor
-    val addEditDebtorTitleEdit: String,
     val addEditDebtorTitleNew: String,
     val addEditDebtorInitialAmount: String,
 

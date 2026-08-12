@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalView
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.FragmentActivity
 import org.bigblackowl.debttracker.App
@@ -17,10 +18,11 @@ import org.bigblackowl.debttracker.App
  */
 class AppActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent { 
-            App(onThemeChanged = { ThemeChanged(it) }) 
+        setContent {
+            App(onThemeChanged = { ThemeChanged(it) })
         }
     }
 }

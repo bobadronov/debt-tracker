@@ -75,11 +75,9 @@ val PlStrings = Strings(
     onboardingAccountTitle = "Nie trać swoich danych",
     onboardingAccountBody = "Zaloguj się, aby tworzyć kopie zapasowe dłużników, wierzycieli i transakcji oraz widzieć je na każdym urządzeniu. Możesz pominąć ten krok i korzystać tylko lokalnie — zalogujesz się później w Ustawieniach.",
 
-    addEditCreditorTitleEdit = "Edytuj wierzyciela",
     addEditCreditorTitleNew = "Nowy wierzyciel",
     addEditCreditorInitialAmount = "Ile pożyczyłem",
 
-    addEditDebtorTitleEdit = "Edytuj dłużnika",
     addEditDebtorTitleNew = "Nowy dłużnik",
     addEditDebtorInitialAmount = "Ile użyczyłem",
 

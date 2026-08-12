@@ -9,7 +9,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -29,23 +28,20 @@ import org.bigblackowl.debttracker.domain.usecase.FindProfileByEmailUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddCreditorTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddOrUpdateCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.DeleteCreditorUseCase
-import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorUseCase
 import org.bigblackowl.debttracker.domain.validation.isValidEmail
 import org.bigblackowl.debttracker.domain.validation.isValidFullName
 
 private const val EMAIL_LOOKUP_DEBOUNCE_MS = 500L
 
 /**
- * Loads the existing [org.bigblackowl.debttracker.domain.model.Creditor] when [creditorId] is
- * non-null, validates the form, and saves it (plus an optional initial transaction) on [Save][AddEditCreditorIntent.Save].
+ * Validates the form and saves a new [org.bigblackowl.debttracker.domain.model.Creditor] (plus its
+ * opening transaction) on [Save][AddEditCreditorIntent.Save].
  * While the user types an [AddEditCreditorIntent.EmailChanged] email, debounces a lookup against
  * [findProfileByEmail] to offer a name/photo autofill suggestion if that email belongs to a
  * registered app user (§ProfileLookup) — purely additive, never blocks saving.
  */
 @OptIn(ExperimentalUuidApi::class)
 class AddEditCreditorViewModel(
-    private val creditorId: String?,
-    private val observeCreditor: ObserveCreditorUseCase,
     private val addOrUpdateCreditor: AddOrUpdateCreditorUseCase,
     private val addTransaction: AddCreditorTransactionUseCase,
     private val deleteCreditor: DeleteCreditorUseCase,
@@ -54,35 +50,13 @@ class AddEditCreditorViewModel(
     private val findProfileByEmail: FindProfileByEmailUseCase,
 ) : ViewModel() {
 
-    private var loadedCreditor: Creditor? = null
     private var emailLookupJob: Job? = null
 
-    private val _state = MutableStateFlow(
-        AddEditCreditorState(isEditing = creditorId != null, isLoading = creditorId != null)
-    )
+    private val _state = MutableStateFlow(AddEditCreditorState())
     val state: StateFlow<AddEditCreditorState> = _state.asStateFlow()
 
     private val effectsChannel = Channel<AddEditCreditorEffect>()
     val effects = effectsChannel.receiveAsFlow()
-
-    init {
-        if (creditorId != null) {
-            viewModelScope.launch {
-                val existing = observeCreditor(creditorId).firstOrNull()
-                loadedCreditor = existing
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        fullName = existing?.fullName.orEmpty(),
-                        phone = existing?.phone.orEmpty(),
-                        email = existing?.email.orEmpty(),
-                        comment = existing?.comment.orEmpty(),
-                        currency = existing?.currency ?: it.currency,
-                    )
-                }
-            }
-        }
-    }
 
     fun onIntent(intent: AddEditCreditorIntent) {
         when (intent) {
@@ -135,44 +109,28 @@ class AddEditCreditorViewModel(
             return
         }
 
-        var parsedAmount: BigDecimal? = null
-        if (!current.isEditing) {
-            val parsed = runCatching { BigDecimal.parseString(current.initialAmountText.trim()) }.getOrNull()
-            if (parsed == null || parsed <= BigDecimal.ZERO) {
-                _state.update { it.copy(amountError = strings.amountError) }
-                return
-            }
-            parsedAmount = parsed
+        val parsedAmount = runCatching { BigDecimal.parseString(current.initialAmountText.trim()) }.getOrNull()
+        if (parsedAmount == null || parsedAmount <= BigDecimal.ZERO) {
+            _state.update { it.copy(amountError = strings.amountError) }
+            return
         }
 
-        val isNew = !(current.isEditing && loadedCreditor != null)
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true) }
             val now = Clock.System.now()
-            val creditor = if (current.isEditing && loadedCreditor != null) {
-                loadedCreditor!!.copy(
-                    fullName = current.fullName.trim(),
-                    phone = current.phone.trim().ifBlank { null },
-                    email = current.email.trim().ifBlank { null },
-                    avatarUrl = current.suggestedAvatarUrl ?: loadedCreditor!!.avatarUrl,
-                    comment = current.comment.trim().ifBlank { null },
-                    updatedAt = now,
-                )
-            } else {
-                Creditor(
-                    id = Uuid.random().toString(),
-                    fullName = current.fullName.trim(),
-                    phone = current.phone.trim().ifBlank { null },
-                    email = current.email.trim().ifBlank { null },
-                    avatarUrl = current.suggestedAvatarUrl,
-                    comment = current.comment.trim().ifBlank { null },
-                    createdAt = now,
-                    updatedAt = now,
-                    status = DebtStatus.ACTIVE,
-                    syncStatus = SyncStatus.PENDING,
-                    currency = current.currency,
-                )
-            }
+            val creditor = Creditor(
+                id = Uuid.random().toString(),
+                fullName = current.fullName.trim(),
+                phone = current.phone.trim().ifBlank { null },
+                email = current.email.trim().ifBlank { null },
+                avatarUrl = current.suggestedAvatarUrl,
+                comment = current.comment.trim().ifBlank { null },
+                createdAt = now,
+                updatedAt = now,
+                status = DebtStatus.ACTIVE,
+                syncStatus = SyncStatus.PENDING,
+                currency = current.currency,
+            )
 
             runCatching { addOrUpdateCreditor(creditor) }.onFailure {
                 _state.update { it.copy(isSaving = false) }
@@ -180,32 +138,29 @@ class AddEditCreditorViewModel(
                 return@launch
             }
 
-            val amount = parsedAmount
-            if (amount != null) {
-                runCatching {
-                    addTransaction(
-                        CreditorTransaction(
-                            id = Uuid.random().toString(),
-                            creditorId = creditor.id,
-                            amount = amount.negate(),
-                            type = MyDebtTransactionType.BORROW,
-                            method = current.method,
-                            cardLastDigits = current.cardLastDigits.trim().ifBlank { null },
-                            date = now,
-                            comment = null,
-                            createdAt = now,
-                            updatedAt = now,
-                            syncStatus = SyncStatus.PENDING,
-                        )
+            runCatching {
+                addTransaction(
+                    CreditorTransaction(
+                        id = Uuid.random().toString(),
+                        creditorId = creditor.id,
+                        amount = parsedAmount.negate(),
+                        type = MyDebtTransactionType.BORROW,
+                        method = current.method,
+                        cardLastDigits = current.cardLastDigits.trim().ifBlank { null },
+                        date = now,
+                        comment = null,
+                        createdAt = now,
+                        updatedAt = now,
+                        syncStatus = SyncStatus.PENDING,
                     )
-                }.onFailure {
-                    // The creditor write already committed but its opening transaction didn't —
-                    // don't leave an orphaned 0-balance creditor behind; undo the half-finished save.
-                    if (isNew) runCatching { deleteCreditor(creditor.id) }
-                    _state.update { it.copy(isSaving = false) }
-                    effectsChannel.send(AddEditCreditorEffect.Error(strings.saveError))
-                    return@launch
-                }
+                )
+            }.onFailure {
+                // The creditor write already committed but its opening transaction didn't —
+                // don't leave an orphaned 0-balance creditor behind; undo the half-finished save.
+                runCatching { deleteCreditor(creditor.id) }
+                _state.update { it.copy(isSaving = false) }
+                effectsChannel.send(AddEditCreditorEffect.Error(strings.saveError))
+                return@launch
             }
 
             _state.update { it.copy(isSaving = false) }

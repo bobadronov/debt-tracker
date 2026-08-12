@@ -75,11 +75,9 @@ val EnStrings = Strings(
     onboardingAccountTitle = "Don't lose your data",
     onboardingAccountBody = "Sign in to back up your debtors, creditors, and transactions, and see them on any device. You can skip this and stay local-only — sign in later from Settings.",
 
-    addEditCreditorTitleEdit = "Edit creditor",
     addEditCreditorTitleNew = "New creditor",
     addEditCreditorInitialAmount = "How much I borrowed",
 
-    addEditDebtorTitleEdit = "Edit debtor",
     addEditDebtorTitleNew = "New debtor",
     addEditDebtorInitialAmount = "How much I lent",
 

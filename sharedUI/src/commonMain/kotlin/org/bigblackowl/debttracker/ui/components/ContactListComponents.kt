@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -20,7 +21,10 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -46,7 +50,10 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.tooling.preview.Devices.DESKTOP
+import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.settings.AppSettings
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.koin.compose.koinInject
@@ -275,3 +282,79 @@ fun <T> ContactListScaffold(
         }
     }
 }
+
+private data class SampleContact(val id: String, val name: String, val phone: String?, val balanceText: String)
+
+private val sampleContacts = listOf(
+    SampleContact("1", "Олена Коваль", "+380 67 123 4567", "1 200 ₴"),
+    SampleContact("2", "Іван Петренко", null, "450 ₴"),
+    SampleContact("3", "Марія Бондар", "+380 50 987 6543", "3 000 ₴"),
+)
+
+@Composable
+private fun ContactListComponentsSample() {
+    var query by remember { mutableStateOf("") }
+    val searchFocusRequester = remember { FocusRequester() }
+
+    ContactListScaffold(
+        items = sampleContacts,
+        key = { it.id },
+        isRefreshing = false,
+        onRefresh = {},
+        searchBar = {
+            ListSearchBar(
+                query = query,
+                onQueryChange = { query = it },
+                searchPlaceholder = "Search",
+                clearSearchDescription = "Clear",
+                searchFocusRequester = searchFocusRequester,
+                filterDescription = "Filter",
+                sortOptions = listOf(
+                    MenuOption("name", "By name", Icons.Filled.SortByAlpha),
+                    MenuOption("balance", "By balance", Icons.Filled.Payments),
+                ),
+                currentSort = "name",
+                sortAscending = true,
+                sortReverseDescription = "Reverse",
+                onToggleSortDirection = {},
+                onChangeSort = {},
+                statusOptions = listOf(
+                    MenuOption("active", "Active", Icons.Filled.HourglassEmpty),
+                    MenuOption("all", "All", Icons.AutoMirrored.Filled.List),
+                ),
+                currentStatus = "active",
+                onChangeStatus = {},
+            )
+        },
+        totalBar = {
+            ListTotalBar(label = "Total", totalText = "4 650 ₴", onAdd = {})
+        },
+    ) { item ->
+        ContactRow(
+            id = item.id,
+            name = item.name,
+            phone = item.phone,
+            avatarUrl = null,
+            balanceText = item.balanceText,
+            deleteLabel = "Delete",
+            onClick = {},
+            onDelete = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ContactListComponentsLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { ContactListComponentsSample() }
+
+@Preview
+@Composable
+private fun ContactListComponentsDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { ContactListComponentsSample() }
+
+@Preview(device = DESKTOP)
+@Composable
+private fun ContactListComponentsLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { ContactListComponentsSample() }
+
+@Preview(device = DESKTOP)
+@Composable
+private fun ContactListComponentsDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { ContactListComponentsSample() }

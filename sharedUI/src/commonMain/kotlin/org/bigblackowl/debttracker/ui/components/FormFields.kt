@@ -30,9 +30,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Devices.DESKTOP
+import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 
 /**
@@ -64,7 +67,7 @@ fun PasteableOutlinedTextField(
     onPaste: (String) -> Unit = onValueChange,
 ) {
     var focused by remember { mutableStateOf(false) }
-    Column {
+    Column(modifier = modifier) {
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
@@ -81,7 +84,7 @@ fun PasteableOutlinedTextField(
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             visualTransformation = visualTransformation,
-            modifier = Modifier.fillMaxWidth().then(modifier).onFocusChanged { focused = it.isFocused },
+            modifier = Modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused },
         )
         ClipboardPasteHint(
             clipboardText = clipboardText,
@@ -140,7 +143,10 @@ fun PaymentMethodChipRow(
     val strings = LocalStrings.current
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.space8, alignment = Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(
+            Dimens.space8,
+            alignment = Alignment.CenterHorizontally
+        ),
     ) {
         FilterChip(
             selected = selected == PaymentMethod.CASH,
@@ -180,3 +186,47 @@ fun LoadingButton(
         }
     }
 }
+
+@Composable
+private fun FormFieldsSample() {
+    var text by remember { mutableStateOf("") }
+    var currency by remember { mutableStateOf(Currency.UAH) }
+    var method by remember { mutableStateOf(PaymentMethod.CASH) }
+    var saving by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier.padding(Dimens.space16),
+        verticalArrangement = Arrangement.spacedBy(Dimens.space12),
+    ) {
+        PasteableOutlinedTextField(
+            value = text,
+            onValueChange = { text = it },
+            label = "Full name",
+            clipboardText = null,
+            isPasteRelevant = { it.isNotBlank() },
+        )
+        CurrencyDropdownField(selected = currency, onSelect = { currency = it }, label = "Currency")
+        PaymentMethodChipRow(selected = method, onSelect = { method = it })
+        LoadingButton(onClick = { saving = !saving }, isLoading = saving, label = { Text("Save") })
+    }
+}
+
+@Preview
+@Composable
+private fun FormFieldsLightPhonePreview() =
+    DebtTrackerPreview(darkTheme = false) { FormFieldsSample() }
+
+@Preview
+@Composable
+private fun FormFieldsDarkPhonePreview() =
+    DebtTrackerPreview(darkTheme = true) { FormFieldsSample() }
+
+@Preview(device = DESKTOP)
+@Composable
+private fun FormFieldsLightDesktopPreview() =
+    DebtTrackerPreview(darkTheme = false) { FormFieldsSample() }
+
+@Preview(device = DESKTOP)
+@Composable
+private fun FormFieldsDarkDesktopPreview() =
+    DebtTrackerPreview(darkTheme = true) { FormFieldsSample() }

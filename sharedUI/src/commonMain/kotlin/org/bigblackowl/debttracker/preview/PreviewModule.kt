@@ -89,8 +89,8 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
 
     viewModelOf(::DebtorListViewModel)
     viewModelOf(::CreditorListViewModel)
-    viewModel { (debtorId: String?) -> AddEditDebtorViewModel(debtorId, get(), get(), get(), get(), get(), get(), get()) }
-    viewModel { (creditorId: String?) -> AddEditCreditorViewModel(creditorId, get(), get(), get(), get(), get(), get(), get()) }
+    viewModelOf(::AddEditDebtorViewModel)
+    viewModelOf(::AddEditCreditorViewModel)
     viewModel { (debtorId: String) -> DebtorDetailViewModel(debtorId, get(), get(), get(), get(), get()) }
     viewModel { (creditorId: String) -> CreditorDetailViewModel(creditorId, get(), get(), get(), get(), get()) }
     viewModelOf(::AuthViewModel)

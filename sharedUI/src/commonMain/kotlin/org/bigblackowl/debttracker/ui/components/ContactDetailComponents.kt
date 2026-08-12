@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -26,16 +27,21 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Devices.DESKTOP
+import androidx.compose.ui.tooling.preview.Preview
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.domain.model.formatMoney
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
+import kotlin.time.Clock
 import kotlin.time.Instant
 
 /**
@@ -157,3 +163,63 @@ fun TransactionRow(
         }
     }
 }
+
+private data class SampleTransaction(
+    val id: String,
+    val amount: BigDecimal,
+    val method: PaymentMethod,
+    val comment: String?,
+    val createdAt: Instant,
+)
+
+private val sampleTransactions = listOf(
+    SampleTransaction("1", BigDecimal.parseString("500"), PaymentMethod.CASH, "Repaid half", Clock.System.now()),
+    SampleTransaction("2", BigDecimal.parseString("-1200"), PaymentMethod.CARD, null, Clock.System.now()),
+)
+
+@Composable
+private fun ContactDetailComponentsSample() {
+    val snackbarHostState = remember { SnackbarHostState() }
+    ContactDetailScaffold(
+        title = "Олена Коваль",
+        onBack = {},
+        exportLabel = "Export",
+        onExport = {},
+        snackbarHostState = snackbarHostState,
+        phone = "+380 67 123 4567",
+        comment = "Lent for repairs",
+        balanceText = "Owes: 700 ₴",
+        primaryLabel = "Repay",
+        onPrimary = {},
+        secondaryLabel = "Lend more",
+        onSecondary = {},
+        isRefreshing = false,
+        onRefresh = {},
+    ) {
+        items(sampleTransactions, key = { it.id }) { tx ->
+            TransactionRow(
+                amount = tx.amount,
+                method = tx.method,
+                comment = tx.comment,
+                createdAt = tx.createdAt,
+                currency = Currency.UAH,
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun ContactDetailComponentsLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { ContactDetailComponentsSample() }
+
+@Preview
+@Composable
+private fun ContactDetailComponentsDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { ContactDetailComponentsSample() }
+
+@Preview(device = DESKTOP)
+@Composable
+private fun ContactDetailComponentsLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { ContactDetailComponentsSample() }
+
+@Preview(device = DESKTOP)
+@Composable
+private fun ContactDetailComponentsDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { ContactDetailComponentsSample() }

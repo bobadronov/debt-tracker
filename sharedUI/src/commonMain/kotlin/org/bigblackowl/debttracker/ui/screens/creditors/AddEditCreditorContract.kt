@@ -4,10 +4,8 @@ import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.domain.model.ProfileSuggestion
 
-/** MVI contract for [AddEditCreditorScreen] — create a creditor, or edit an existing one's details. */
+/** MVI contract for [AddEditCreditorScreen] — creates a new creditor. */
 data class AddEditCreditorState(
-    val isEditing: Boolean = false,
-    val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val fullName: String = "",
     val phone: String = "",

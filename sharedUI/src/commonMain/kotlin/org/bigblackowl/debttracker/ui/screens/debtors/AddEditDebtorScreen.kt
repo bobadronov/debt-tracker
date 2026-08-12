@@ -14,14 +14,12 @@ import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.ui.components.AddEditContactForm
 import org.koin.compose.viewmodel.koinViewModel
-import org.koin.core.parameter.parametersOf
 
-/** Create/edit form for a [org.bigblackowl.debttracker.domain.model.Debtor] — `debtorId == null` means "new". */
+/** Create form for a new [org.bigblackowl.debttracker.domain.model.Debtor]. */
 @Composable
 fun AddEditDebtorScreen(
-    debtorId: String?,
     onDone: () -> Unit,
-    viewModel: AddEditDebtorViewModel = koinViewModel { parametersOf(debtorId) },
+    viewModel: AddEditDebtorViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -37,7 +35,7 @@ fun AddEditDebtorScreen(
     }
 
     AddEditContactForm(
-        title = if (state.isEditing) strings.addEditDebtorTitleEdit else strings.addEditDebtorTitleNew,
+        title = strings.addEditDebtorTitleNew,
         onDone = onDone,
         snackbarHostState = snackbarHostState,
         fullName = state.fullName,
@@ -52,10 +50,15 @@ fun AddEditDebtorScreen(
         onDismissSuggestion = { viewModel.onIntent(AddEditDebtorIntent.DismissProfileSuggestion) },
         comment = state.comment,
         onCommentChange = { viewModel.onIntent(AddEditDebtorIntent.CommentChanged(it)) },
-        isEditing = state.isEditing,
         initialAmountLabel = strings.addEditDebtorInitialAmount,
         initialAmountText = state.initialAmountText,
-        onInitialAmountChange = { viewModel.onIntent(AddEditDebtorIntent.InitialAmountChanged(sanitizeAmountInput(it))) },
+        onInitialAmountChange = {
+            viewModel.onIntent(
+                AddEditDebtorIntent.InitialAmountChanged(
+                    sanitizeAmountInput(it)
+                )
+            )
+        },
         amountError = state.amountError,
         currency = state.currency,
         onCurrencyChange = { viewModel.onIntent(AddEditDebtorIntent.CurrencyChanged(it)) },
@@ -64,7 +67,6 @@ fun AddEditDebtorScreen(
         cardLastDigits = state.cardLastDigits,
         onCardLastDigitsChange = { viewModel.onIntent(AddEditDebtorIntent.CardLastDigitsChanged(it)) },
         isSaving = state.isSaving,
-        isLoading = state.isLoading,
         onSave = { viewModel.onIntent(AddEditDebtorIntent.Save) },
     )
 }
@@ -72,23 +74,23 @@ fun AddEditDebtorScreen(
 @Preview
 @Composable
 private fun AddEditDebtorScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    AddEditDebtorScreen(debtorId = null, onDone = {})
+    AddEditDebtorScreen(onDone = {})
 }
 
 @Preview
 @Composable
 private fun AddEditDebtorScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    AddEditDebtorScreen(debtorId = null, onDone = {})
+    AddEditDebtorScreen(onDone = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun AddEditDebtorScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    AddEditDebtorScreen(debtorId = null, onDone = {})
+    AddEditDebtorScreen(onDone = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun AddEditDebtorScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    AddEditDebtorScreen(debtorId = null, onDone = {})
+    AddEditDebtorScreen(onDone = {})
 }

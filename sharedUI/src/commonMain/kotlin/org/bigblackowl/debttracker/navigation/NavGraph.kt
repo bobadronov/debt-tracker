@@ -143,11 +143,11 @@ fun DebtTrackerNavGraph(
                         true
                     }
                     event.isCtrlPressed && event.key == Key.N && event.isShiftPressed -> {
-                        navigate(Screen.AddEditCreditor())
+                        navigate(Screen.AddEditCreditor)
                         true
                     }
                     event.isCtrlPressed && event.key == Key.N -> {
-                        navigate(Screen.AddEditDebtor())
+                        navigate(Screen.AddEditDebtor)
                         true
                     }
                     event.isCtrlPressed && event.key == Key.F -> {
@@ -203,16 +203,16 @@ fun DebtTrackerNavGraph(
             }
             entry<Screen.Home> {
                 HomeScreen(
-                    onAddDebtor = { navigate(Screen.AddEditDebtor()) },
+                    onAddDebtor = { navigate(Screen.AddEditDebtor) },
                     onOpenDebtor = { id -> navigate(Screen.DebtorDetail(id)) },
-                    onAddCreditor = { navigate(Screen.AddEditCreditor()) },
+                    onAddCreditor = { navigate(Screen.AddEditCreditor) },
                     onOpenCreditor = { id -> navigate(Screen.CreditorDetail(id)) },
                     onOpenStats = { navigate(Screen.Stats) },
                     onOpenSettings = { navigate(Screen.Settings) },
                 )
             }
-            entry<Screen.AddEditDebtor> { screen ->
-                AddEditDebtorScreen(debtorId = screen.debtorId, onDone = { back() })
+            entry<Screen.AddEditDebtor> {
+                AddEditDebtorScreen(onDone = { back() })
             }
             entry<Screen.DebtorDetail> { screen ->
                 DebtorDetailScreen(
@@ -221,8 +221,8 @@ fun DebtTrackerNavGraph(
                     onExport = { navigate(Screen.Export(debtorId = screen.debtorId)) }
                 )
             }
-            entry<Screen.AddEditCreditor> { screen ->
-                AddEditCreditorScreen(creditorId = screen.creditorId, onDone = { back() })
+            entry<Screen.AddEditCreditor> {
+                AddEditCreditorScreen( onDone = { back() })
             }
             entry<Screen.CreditorDetail> { screen ->
                 CreditorDetailScreen(

@@ -33,7 +33,10 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Devices.DESKTOP
+import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 
 const val PIN_LENGTH = 4
@@ -123,3 +126,26 @@ private fun PinDot(char: Char?, highlighted: Boolean, visible: Boolean) {
         }
     }
 }
+
+@Composable
+private fun PinCodeFieldSample() {
+    var pin by remember { mutableStateOf("12") }
+    val focusRequester = remember { FocusRequester() }
+    PinCodeField(value = pin, onValueChange = { pin = it }, focusRequester = focusRequester)
+}
+
+@Preview
+@Composable
+private fun PinCodeFieldLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { PinCodeFieldSample() }
+
+@Preview
+@Composable
+private fun PinCodeFieldDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { PinCodeFieldSample() }
+
+@Preview(device = DESKTOP)
+@Composable
+private fun PinCodeFieldLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { PinCodeFieldSample() }
+
+@Preview(device = DESKTOP)
+@Composable
+private fun PinCodeFieldDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { PinCodeFieldSample() }

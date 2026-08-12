@@ -75,11 +75,9 @@ val UkStrings = Strings(
     onboardingAccountTitle = "Не втратьте свої дані",
     onboardingAccountBody = "Увійдіть, щоб резервувати боржників, кредиторів і транзакції та бачити їх на будь-якому пристрої. Можна пропустити й користуватись лише локально — увійти можна пізніше в Налаштуваннях.",
 
-    addEditCreditorTitleEdit = "Редагувати кредитора",
     addEditCreditorTitleNew = "Новий кредитор",
     addEditCreditorInitialAmount = "Скільки я взяв у борг",
 
-    addEditDebtorTitleEdit = "Редагувати боржника",
     addEditDebtorTitleNew = "Новий боржник",
     addEditDebtorInitialAmount = "Скільки я дав у борг",
 

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Launch-time splash shown while the process/Activity is cold-starting, before Compose has
+        drawn a single frame — installSplashScreen() in AppActivity keeps it up until then, at
+        which point postSplashScreenTheme takes over and the in-app SplashScreen composable
+        (org.bigblackowl.debttracker.ui.screens.splash) continues the branded loading state while
+        onboarding/auth is resolved.
+    -->
+    <style name="Theme.DebtTracker.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@android:style/Theme.Material.NoActionBar</item>
+    </style>
+</resources>

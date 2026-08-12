@@ -19,13 +19,17 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Devices.DESKTOP
+import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
@@ -34,10 +38,11 @@ import org.bigblackowl.debttracker.domain.validation.isPhonePasteRelevant
 import org.bigblackowl.debttracker.domain.validation.isValidAmountText
 import org.bigblackowl.debttracker.domain.validation.isValidEmail
 import org.bigblackowl.debttracker.domain.validation.isValidFullName
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 
 /**
- * Shared create/edit form for AddEditDebtorScreen/AddEditCreditorScreen (спек §4.1): identical
+ * Shared create form for AddEditDebtorScreen/AddEditCreditorScreen (спек §4.1): identical
  * fields and layout over a different domain model, mirroring how [ContactListScaffold]/
  * [ContactDetailScaffold] do it for the list/detail screens — each screen only supplies its own
  * state values and intent-dispatching callbacks.
@@ -60,7 +65,6 @@ fun AddEditContactForm(
     onDismissSuggestion: () -> Unit,
     comment: String,
     onCommentChange: (String) -> Unit,
-    isEditing: Boolean,
     initialAmountLabel: String,
     initialAmountText: String,
     onInitialAmountChange: (String) -> Unit,
@@ -72,7 +76,6 @@ fun AddEditContactForm(
     cardLastDigits: String,
     onCardLastDigitsChange: (String) -> Unit,
     isSaving: Boolean,
-    isLoading: Boolean,
     onSave: () -> Unit,
 ) {
     val strings = LocalStrings.current
@@ -141,52 +144,108 @@ fun AddEditContactForm(
                     isPasteRelevant = { it.trim().length in 1..500 },
                 )
 
-                if (!isEditing) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(Dimens.space5),
-                    ) {
-                        PasteableOutlinedTextField(
-                            value = initialAmountText,
-                            onValueChange = onInitialAmountChange,
-                            label = initialAmountLabel,
-                            isError = amountError != null,
-                            supportingText = amountError,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            clipboardText = clipboardText,
-                            isPasteRelevant = ::isValidAmountText,
-                            onPaste = onInitialAmountChange,
-                            modifier = Modifier.weight(1f),
-                        )
-                        CurrencyDropdownField(
-                            selected = currency,
-                            onSelect = onCurrencyChange,
-                            label = strings.currency,
-                            modifier = Modifier.widthIn(max = Dimens.space120),
-                        )
-                    }
-                    PaymentMethodChipRow(
-                        selected = method,
-                        onSelect = onMethodChange,
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.space5),
+                ) {
+                    PasteableOutlinedTextField(
+                        value = initialAmountText,
+                        onValueChange = onInitialAmountChange,
+                        label = initialAmountLabel,
+                        isError = amountError != null,
+                        supportingText = amountError,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        clipboardText = clipboardText,
+                        isPasteRelevant = ::isValidAmountText,
+                        onPaste = onInitialAmountChange,
+                        modifier = Modifier.weight(1f),
                     )
-                    if (method == PaymentMethod.CARD) {
-                        PasteableOutlinedTextField(
-                            value = cardLastDigits,
-                            onValueChange = onCardLastDigitsChange,
-                            label = strings.cardLastDigits,
-                            clipboardText = clipboardText,
-                            isPasteRelevant = { it.filter(Char::isDigit).length in 3..6 },
-                        )
-                    }
+                    CurrencyDropdownField(
+                        selected = currency,
+                        onSelect = onCurrencyChange,
+                        label = strings.currency,
+                        modifier = Modifier.widthIn(max = Dimens.space120),
+                    )
+                }
+                PaymentMethodChipRow(
+                    selected = method,
+                    onSelect = onMethodChange,
+                )
+                if (method == PaymentMethod.CARD) {
+                    PasteableOutlinedTextField(
+                        value = cardLastDigits,
+                        onValueChange = onCardLastDigitsChange,
+                        label = strings.cardLastDigits,
+                        clipboardText = clipboardText,
+                        isPasteRelevant = { it.filter(Char::isDigit).length in 3..6 },
+                    )
                 }
             }
             LoadingButton(
                 onClick = onSave,
                 isLoading = isSaving,
-                enabled = !isLoading,
                 modifier = Modifier.widthIn(max = Dimens.contentMaxWidth),
                 label = { Text(strings.save) },
             )
         }
     }
 }
+
+@Composable
+private fun AddEditContactFormSample() {
+    var fullName by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var comment by remember { mutableStateOf("") }
+    var amount by remember { mutableStateOf("") }
+    var currency by remember { mutableStateOf(Currency.UAH) }
+    var method by remember { mutableStateOf(PaymentMethod.CASH) }
+    var cardLastDigits by remember { mutableStateOf("") }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    AddEditContactForm(
+        title = "New debtor",
+        onDone = {},
+        snackbarHostState = snackbarHostState,
+        fullName = fullName,
+        onFullNameChange = { fullName = it },
+        fullNameError = null,
+        phone = phone,
+        onPhoneChange = { phone = it },
+        email = email,
+        onEmailChange = { email = it },
+        profileSuggestion = null,
+        onApplySuggestion = {},
+        onDismissSuggestion = {},
+        comment = comment,
+        onCommentChange = { comment = it },
+        initialAmountLabel = "How much I lent",
+        initialAmountText = amount,
+        onInitialAmountChange = { amount = it },
+        amountError = null,
+        currency = currency,
+        onCurrencyChange = { currency = it },
+        method = method,
+        onMethodChange = { method = it },
+        cardLastDigits = cardLastDigits,
+        onCardLastDigitsChange = { cardLastDigits = it },
+        isSaving = false,
+        onSave = {},
+    )
+}
+
+@Preview
+@Composable
+private fun AddEditContactFormLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { AddEditContactFormSample() }
+
+@Preview
+@Composable
+private fun AddEditContactFormDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { AddEditContactFormSample() }
+
+@Preview(device = DESKTOP)
+@Composable
+private fun AddEditContactFormLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { AddEditContactFormSample() }
+
+@Preview(device = DESKTOP)
+@Composable
+private fun AddEditContactFormDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { AddEditContactFormSample() }
