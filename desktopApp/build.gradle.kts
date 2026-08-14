@@ -46,6 +46,7 @@ compose.desktop {
             windows {
                 iconFile.set(project.file("appIcons/WindowsIcon.ico"))
                 shortcut = true
+                dirChooser= false
             }
             macOS {
                 iconFile.set(project.file("appIcons/MacosIcon.icns"))
