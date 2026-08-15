@@ -2,10 +2,12 @@ package org.bigblackowl.debttracker.core.update
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import io.github.aakira.napier.Napier
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.timeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.onDownload
 import io.ktor.client.request.get
@@ -41,6 +43,8 @@ private data class GitHubAsset(
     @SerialName("browser_download_url") val browserDownloadUrl: String,
 )
 
+private const val TAG = "AppUpdateChecker"
+
 private class DesktopAppUpdateChecker : AppUpdateChecker {
 
     private val client = HttpClient(OkHttp) {
@@ -54,41 +58,84 @@ private class DesktopAppUpdateChecker : AppUpdateChecker {
     }
 
     override suspend fun checkForUpdate(): AppUpdateInfo? = withContext(Dispatchers.IO) {
+        Napier.d(tag = TAG) { "checkForUpdate: local version = ${BuildConfig.APP_VERSION}" }
         val assetExtension = currentAssetExtension() ?: return@withContext null
 
         // Deliberately not caught here — a network/GitHub failure must not look identical to
         // "no update available" (see AppUpdateChecker's KDoc); callers catch and surface it.
-        val release = client.get("https://api.github.com/repos/$REPO/releases/latest") {
-            header("Accept", "application/vnd.github+json")
-        }.body<GitHubRelease>()
+        val release = try {
+            client.get("https://api.github.com/repos/$REPO/releases/latest") {
+                header("Accept", "application/vnd.github+json")
+            }.body<GitHubRelease>()
+        } catch (e: Exception) {
+            Napier.e(tag = TAG, throwable = e) { "checkForUpdate: GitHub request failed" }
+            throw e
+        }
 
         val latestVersion = release.tagName.removePrefix("v")
-        if (!isNewerVersion(latestVersion, BuildConfig.APP_VERSION)) return@withContext null
+        Napier.d(tag = TAG) { "checkForUpdate: latest GitHub tag = ${release.tagName} -> $latestVersion" }
+        if (!isNewerVersion(latestVersion, BuildConfig.APP_VERSION)) {
+            Napier.d(tag = TAG) { "checkForUpdate: no newer version available" }
+            return@withContext null
+        }
 
         val asset = release.assets.firstOrNull { it.name.endsWith(assetExtension) }
-            ?: return@withContext null
+        if (asset == null) {
+            Napier.w(tag = TAG) { "checkForUpdate: $latestVersion is newer but has no *$assetExtension asset" }
+            return@withContext null
+        }
 
+        Napier.i(tag = TAG) { "checkForUpdate: update found -> $latestVersion, asset=${asset.name}" }
         AppUpdateInfo(version = latestVersion, downloadUrl = asset.browserDownloadUrl, releaseUrl = release.htmlUrl)
     }
 
-    override suspend fun download(update: AppUpdateInfo, onProgress: (Float?) -> Unit): String =
+    override suspend fun download(update: AppUpdateInfo, onProgress: (DownloadProgress) -> Unit): String =
         withContext(Dispatchers.IO) {
+            Napier.d(tag = TAG) { "download: starting from ${update.downloadUrl}" }
             val target = File.createTempFile("debt-tracker-update-", currentAssetExtension())
-            client.prepareGet(update.downloadUrl) {
-                onDownload { sentBytes, contentLength ->
-                    onProgress(if (contentLength != null && contentLength > 0) sentBytes.toFloat() / contentLength else null)
+            // Overall average since the download started, not an instantaneous per-chunk rate —
+            // onDownload fires for every small buffer, so an instant delta would be too jumpy to show.
+            val startedAtNanos = System.nanoTime()
+            try {
+                client.prepareGet(update.downloadUrl) {
+                    // The client-level 15s requestTimeoutMillis covers checkForUpdate()'s small JSON
+                    // request, but Ktor's HttpTimeout applies it to the WHOLE request lifetime — an
+                    // 80-120MB installer would blow past 15s on any but the fastest connection, so
+                    // this request needs its own much longer budget.
+                    timeout { requestTimeoutMillis = 5 * 60_000 }
+                    onDownload { sentBytes, contentLength ->
+                        val elapsedSeconds = (System.nanoTime() - startedAtNanos) / 1_000_000_000.0
+                        onProgress(
+                            DownloadProgress(
+                                bytesDownloaded = sentBytes,
+                                totalBytes = contentLength?.takeIf { it > 0 },
+                                bytesPerSecond = if (elapsedSeconds > 0) (sentBytes / elapsedSeconds).toLong() else null,
+                            )
+                        )
+                    }
+                }.execute { response ->
+                    target.outputStream().use { out -> response.bodyAsChannel().copyTo(out) }
                 }
-            }.execute { response ->
-                target.outputStream().use { out -> response.bodyAsChannel().copyTo(out) }
+            } catch (e: Exception) {
+                Napier.e(tag = TAG, throwable = e) { "download: failed" }
+                throw e
             }
+            Napier.i(tag = TAG) { "download: finished -> ${target.absolutePath} (${target.length()} bytes)" }
             target.absolutePath
         }
 
     override suspend fun installAndExit(filePath: String): Unit = withContext(Dispatchers.IO) {
+        Napier.i(tag = TAG) { "installAndExit: launching installer for $filePath" }
         // Captured before running the installer: for a jpackage-installed app this is the native
         // launcher's own exe, at the same path the (in-place) upgrade just wrote back to.
         val relaunchCommand = ProcessHandle.current().info().command().orElse(null)
-        runInstallerSilently(File(filePath))
+        try {
+            runInstallerSilently(File(filePath))
+        } catch (e: Exception) {
+            Napier.e(tag = TAG, throwable = e) { "installAndExit: installer failed" }
+            throw e
+        }
+        Napier.i(tag = TAG) { "installAndExit: install succeeded, relaunching via $relaunchCommand and exiting" }
         relaunchCommand?.let { runCatching { ProcessBuilder(it).start() } }
         exitProcess(0)
     }

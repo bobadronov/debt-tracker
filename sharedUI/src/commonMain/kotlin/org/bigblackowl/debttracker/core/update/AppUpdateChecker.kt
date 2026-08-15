@@ -9,6 +9,15 @@ data class AppUpdateInfo(
     val releaseUrl: String,
 )
 
+/** [totalBytes]/[bytesPerSecond] are null until known (e.g. no Content-Length header, or too early to average). */
+data class DownloadProgress(
+    val bytesDownloaded: Long,
+    val totalBytes: Long?,
+    val bytesPerSecond: Long?,
+) {
+    val fraction: Float? get() = totalBytes?.takeIf { it > 0 }?.let { bytesDownloaded.toFloat() / it }
+}
+
 /**
  * Checks GitHub Releases for a build newer than the one currently running, downloads its
  * installer, and launches it. Desktop-only (option (a) from the OTA discussion): Android/iOS
@@ -23,8 +32,8 @@ interface AppUpdateChecker {
      */
     suspend fun checkForUpdate(): AppUpdateInfo?
 
-    /** Downloads [update]'s installer to a temp file, reporting 0f..1f progress where known, and returns its path. */
-    suspend fun download(update: AppUpdateInfo, onProgress: (Float?) -> Unit): String
+    /** Downloads [update]'s installer to a temp file, reporting [DownloadProgress] as it goes, and returns its path. */
+    suspend fun download(update: AppUpdateInfo, onProgress: (DownloadProgress) -> Unit): String
 
     /**
      * Runs the installer at [filePath] and, on success, exits this process so it can replace this

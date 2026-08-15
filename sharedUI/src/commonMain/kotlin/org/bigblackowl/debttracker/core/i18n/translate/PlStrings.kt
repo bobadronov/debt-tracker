@@ -205,6 +205,7 @@ val PlStrings = Strings(
     updateDownloadInstall = "Pobierz i zainstaluj",
     updateLater = "Później",
     updateDownloading = "Pobieranie aktualizacji…",
+    updateDownloadingDetail = { downloaded, total, speed -> "$downloaded z $total · $speed" },
     updateFailed = "Nie udało się pobrać aktualizacji",
     updateRetry = "Ponów",
     updateReadyToInstall = "Aktualizacja pobrana — uruchom ponownie, aby zainstalować.",

@@ -183,6 +183,21 @@ val versionProps = Properties().apply {
     rootProject.file("version.properties").inputStream().use { load(it) }
 }
 
+// Desktop/KMP has no real debug/release build variant (unlike Android's AGP), so this approximates
+// it from which Gradle task is running: release.yml's packaging/publishing tasks vs. everything
+// else (IDE run, ./gradlew build, tests). Gates verbose logging (see initKoin/Napier.base call).
+// Compose Desktop's release build-type tasks all contain "Release" (packageReleaseMsi,
+// packageReleaseDistributionForCurrentOS, createReleaseDistributable, ...), same as AGP's
+// (assembleRelease, bundleRelease) — except release.yml's actual desktop packaging tasks, which
+// invoke the default/"main" build type (packageMsi/packageDeb, no "Release" in the name).
+val releaseTaskSuffixes = setOf(
+    "packageMsi", "packageDeb", // desktopApp (release.yml's actual CI tasks)
+    "composeCompatibilityBrowserDistribution", // webApp
+)
+val isDebugBuild = gradle.startParameter.taskNames.none { taskName ->
+    taskName.contains("Release") || releaseTaskSuffixes.any { taskName.endsWith(it) }
+}
+
 buildConfig {
     packageName("org.bigblackowl.debttracker")
     // anon key навмисно публічний (RLS захищає дані, не сам ключ) — стандартна практика Supabase.
@@ -193,6 +208,7 @@ buildConfig {
     buildConfigField("APP_VERSION_CODE", versionProps.getProperty("VERSION_CODE").toInt())
     buildConfigField("APP_AUTHOR", "BigBlackOwl")
     buildConfigField("SOUND_ENABLED", false)
+    buildConfigField("DEBUG", isDebugBuild)
 }
 
 room {

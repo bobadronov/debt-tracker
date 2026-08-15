@@ -205,6 +205,7 @@ val EnStrings = Strings(
     updateDownloadInstall = "Download & Install",
     updateLater = "Later",
     updateDownloading = "Downloading update…",
+    updateDownloadingDetail = { downloaded, total, speed -> "$downloaded / $total · $speed" },
     updateFailed = "Failed to download the update",
     updateRetry = "Retry",
     updateReadyToInstall = "Update downloaded — restart to finish installing.",

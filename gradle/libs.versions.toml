@@ -23,12 +23,12 @@ sqlite = "2.7.0"
 ksp = "2.3.10"
 buildConfig = "6.0.10"
 androidx-biometric = "1.1.0"
-androidx-fragment = "1.8.9"
+androidx-fragment = "1.9.0"
 supabase = "3.7.0"
 androidx-glance = "1.1.1"
 pdfkmp = "1.2.0"
 playAppUpdate = "2.1.0"
-androidx-core-splashscreen = "1.0.1"
+androidx-core-splashscreen = "1.2.0"
 
 [libraries]
 

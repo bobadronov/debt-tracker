@@ -231,6 +231,7 @@ data class Strings(
     val updateDownloadInstall: String,
     val updateLater: String,
     val updateDownloading: String,
+    val updateDownloadingDetail: (downloaded: String, total: String, speed: String) -> String,
     val updateFailed: String,
     val updateRetry: String,
 

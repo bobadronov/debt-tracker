@@ -205,6 +205,7 @@ val UkStrings = Strings(
     updateDownloadInstall = "Завантажити і встановити",
     updateLater = "Пізніше",
     updateDownloading = "Завантаження оновлення…",
+    updateDownloadingDetail = { downloaded, total, speed -> "$downloaded з $total · $speed" },
     updateFailed = "Не вдалося завантажити оновлення",
     updateRetry = "Повторити",
     updateReadyToInstall = "Оновлення завантажено — перезапустіть, щоб встановити.",

@@ -10,7 +10,7 @@ actual val appUpdateSupported: Boolean = false
 
 private object NoOpAppUpdateChecker : AppUpdateChecker {
     override suspend fun checkForUpdate(): AppUpdateInfo? = null
-    override suspend fun download(update: AppUpdateInfo, onProgress: (Float?) -> Unit): String =
+    override suspend fun download(update: AppUpdateInfo, onProgress: (DownloadProgress) -> Unit): String =
         error("Android updates via the Play Store, not self-update")
     override suspend fun installAndExit(filePath: String) = Unit
 }

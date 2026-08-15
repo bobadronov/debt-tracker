@@ -31,9 +31,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.update.AppUpdateInfo
+import org.bigblackowl.debttracker.core.update.DownloadProgress
 import org.bigblackowl.debttracker.core.update.appUpdateSupported
 import org.bigblackowl.debttracker.core.update.rememberAppUpdateChecker
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
@@ -43,7 +45,7 @@ import org.bigblackowl.debttracker.theme.debtAccentColors
 private sealed interface UpdateBannerState {
     data object Hidden : UpdateBannerState
     data class Available(val info: AppUpdateInfo) : UpdateBannerState
-    data class Downloading(val info: AppUpdateInfo, val progress: Float?) : UpdateBannerState
+    data class Downloading(val info: AppUpdateInfo, val progress: DownloadProgress?) : UpdateBannerState
     data class Failed(val info: AppUpdateInfo) : UpdateBannerState
 }
 
@@ -64,7 +66,9 @@ fun BoxScope.UpdateBanner() {
     LaunchedEffect(Unit) {
         // Silent on failure by design — this is a passive background check; a network hiccup on
         // launch shouldn't surface as an error, unlike the explicit Settings → Check for updates.
-        val update = runCatching { updateChecker.checkForUpdate() }.getOrNull() ?: return@LaunchedEffect
+        val update = runCatching { updateChecker.checkForUpdate() }
+            .onFailure { Napier.w(tag = "UpdateBanner", throwable = it) { "Startup update check failed" } }
+            .getOrNull() ?: return@LaunchedEffect
         state = UpdateBannerState.Available(update)
     }
 
@@ -87,6 +91,7 @@ fun BoxScope.UpdateBanner() {
                         // Doesn't return on success — the process exits once the install finishes.
                         updateChecker.installAndExit(path)
                     }.onFailure {
+                        Napier.e(tag = "UpdateBanner", throwable = it) { "Download/install of ${info.version} failed" }
                         state = UpdateBannerState.Failed(info)
                     }
                 }
@@ -147,12 +152,29 @@ private fun UpdateBannerCard(
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
-                        if (state.progress != null) {
+                        val progress = state.progress
+                        if (progress != null) {
                             Spacer(Modifier.height(Dimens.space8))
                             LinearWavyProgressIndicator(
-                                progress = { state.progress },
+                                progress = { progress.fraction ?: 0f },
                                 modifier = Modifier.fillMaxWidth(),
                             )
+                            // totalBytes/bytesPerSecond are null very early in the download (no
+                            // Content-Length yet, or too soon to average) — skip the detail line then.
+                            val total = progress.totalBytes
+                            val speed = progress.bytesPerSecond
+                            if (total != null && speed != null) {
+                                Spacer(Modifier.height(Dimens.space4))
+                                Text(
+                                    strings.updateDownloadingDetail(
+                                        formatBytes(progress.bytesDownloaded),
+                                        formatBytes(total),
+                                        "${formatBytes(speed)}/s",
+                                    ),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                         }
                     }
 
@@ -175,6 +197,15 @@ private fun UpdateBannerCard(
             }
         }
     }
+}
+
+/** "12.3 MB" / "850 KB" — plain integer math so it's exact and portable across every KMP target. */
+private fun formatBytes(bytes: Long): String {
+    if (bytes >= 1_048_576) {
+        val tenthsOfMb = bytes * 10 / 1_048_576
+        return "${tenthsOfMb / 10}.${tenthsOfMb % 10} MB"
+    }
+    return "${(bytes + 512) / 1024} KB"
 }
 
 private val previewUpdateInfo = AppUpdateInfo(
@@ -218,6 +249,22 @@ private fun UpdateBannerLightDesktopPreview() = DebtTrackerPreview(darkTheme = f
 private fun UpdateBannerDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     UpdateBannerCard(
         UpdateBannerState.Available(previewUpdateInfo),
+        onDismiss = {},
+        onDownload = {},
+        onRetry = {})
+}
+
+private val previewDownloadProgress = DownloadProgress(
+    bytesDownloaded = 42_800_000L,
+    totalBytes = 127_600_000L,
+    bytesPerSecond = 5_200_000L,
+)
+
+@Preview(device = DESKTOP)
+@Composable
+private fun UpdateBannerDownloadingDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    UpdateBannerCard(
+        UpdateBannerState.Downloading(previewUpdateInfo, previewDownloadProgress),
         onDismiss = {},
         onDownload = {},
         onRetry = {})
