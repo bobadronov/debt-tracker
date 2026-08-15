@@ -31,6 +31,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
+import org.bigblackowl.debttracker.domain.model.ContactSuggestion
 import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.domain.model.ProfileSuggestion
@@ -56,6 +57,8 @@ fun AddEditContactForm(
     fullName: String,
     onFullNameChange: (String) -> Unit,
     fullNameError: String?,
+    nameSuggestions: List<ContactSuggestion>,
+    onSelectNameSuggestion: (ContactSuggestion) -> Unit,
     phone: String,
     onPhoneChange: (String) -> Unit,
     email: String,
@@ -109,6 +112,10 @@ fun AddEditContactForm(
                     supportingText = fullNameError,
                     clipboardText = clipboardText,
                     isPasteRelevant = ::isValidFullName,
+                )
+                ContactSuggestionsList(
+                    suggestions = nameSuggestions,
+                    onSelect = onSelectNameSuggestion,
                 )
                 PasteableOutlinedTextField(
                     value = phone,
@@ -210,6 +217,8 @@ private fun AddEditContactFormSample() {
         fullName = fullName,
         onFullNameChange = { fullName = it },
         fullNameError = null,
+        nameSuggestions = emptyList(),
+        onSelectNameSuggestion = {},
         phone = phone,
         onPhoneChange = { phone = it },
         email = email,

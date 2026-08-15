@@ -10,8 +10,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -30,15 +33,20 @@ import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.NavDisplay
 import kotlinx.coroutines.flow.drop
 import org.bigblackowl.debttracker.core.di.requiresRemoteAuthGate
+import org.bigblackowl.debttracker.core.qr.ContactDeepLinks
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
+import org.bigblackowl.debttracker.domain.model.ContactQrPayload
+import org.bigblackowl.debttracker.domain.model.ScannedContact
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.SessionRepository
 import org.bigblackowl.debttracker.domain.usecase.ForceSignOutUseCase
+import org.bigblackowl.debttracker.ui.components.ScannedContactDialog
 import org.bigblackowl.debttracker.ui.screens.accountonboarding.AccountOnboardingScreen
 import org.bigblackowl.debttracker.ui.screens.authgate.AuthGateScreen
 import org.bigblackowl.debttracker.ui.screens.home.HomeScreen
 import org.bigblackowl.debttracker.ui.screens.protectiononboarding.ProtectionOnboardingScreen
+import org.bigblackowl.debttracker.ui.screens.qr.QrHubScreen
 import org.bigblackowl.debttracker.ui.screens.splash.SplashDestination
 import org.bigblackowl.debttracker.ui.screens.splash.SplashScreen
 import org.bigblackowl.debttracker.ui.screens.auth.AuthScreen
@@ -130,6 +138,20 @@ fun DebtTrackerNavGraph(
         }
     }
 
+    // A third-party QR scanner (Google Lens, the stock camera app) resolving a scanned
+    // `debttracker://contact` link opens the app via the OS and hands it to ContactDeepLinks —
+    // this is the app-wide landing spot for it, since the link can arrive on top of any screen
+    // (or before any screen has even shown, on a cold start). Mirrors QrHubScreen's own in-app
+    // camera-scan flow (same dialog, same destinations) so both paths feel identical.
+    var pendingDeepLinkContact by remember { mutableStateOf<ScannedContact?>(null) }
+    LaunchedEffect(Unit) {
+        ContactDeepLinks.pendingLink.collect { rawLink ->
+            if (rawLink == null) return@collect
+            ContactDeepLinks.consume()
+            ContactQrPayload.decode(rawLink)?.let { pendingDeepLinkContact = it }
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -143,11 +165,11 @@ fun DebtTrackerNavGraph(
                         true
                     }
                     event.isCtrlPressed && event.key == Key.N && event.isShiftPressed -> {
-                        navigate(Screen.AddEditCreditor)
+                        navigate(Screen.AddEditCreditor())
                         true
                     }
                     event.isCtrlPressed && event.key == Key.N -> {
-                        navigate(Screen.AddEditDebtor)
+                        navigate(Screen.AddEditDebtor())
                         true
                     }
                     event.isCtrlPressed && event.key == Key.F -> {
@@ -203,16 +225,17 @@ fun DebtTrackerNavGraph(
             }
             entry<Screen.Home> {
                 HomeScreen(
-                    onAddDebtor = { navigate(Screen.AddEditDebtor) },
+                    onAddDebtor = { navigate(Screen.AddEditDebtor()) },
                     onOpenDebtor = { id -> navigate(Screen.DebtorDetail(id)) },
-                    onAddCreditor = { navigate(Screen.AddEditCreditor) },
+                    onAddCreditor = { navigate(Screen.AddEditCreditor()) },
                     onOpenCreditor = { id -> navigate(Screen.CreditorDetail(id)) },
                     onOpenStats = { navigate(Screen.Stats) },
                     onOpenSettings = { navigate(Screen.Settings) },
+                    onOpenQr = { navigate(Screen.QrHub) },
                 )
             }
-            entry<Screen.AddEditDebtor> {
-                AddEditDebtorScreen(onDone = { back() })
+            entry<Screen.AddEditDebtor> { screen ->
+                AddEditDebtorScreen(onDone = { back() }, prefill = screen.prefill)
             }
             entry<Screen.DebtorDetail> { screen ->
                 DebtorDetailScreen(
@@ -221,8 +244,8 @@ fun DebtTrackerNavGraph(
                     onExport = { navigate(Screen.Export(debtorId = screen.debtorId)) }
                 )
             }
-            entry<Screen.AddEditCreditor> {
-                AddEditCreditorScreen( onDone = { back() })
+            entry<Screen.AddEditCreditor> { screen ->
+                AddEditCreditorScreen(onDone = { back() }, prefill = screen.prefill)
             }
             entry<Screen.CreditorDetail> { screen ->
                 CreditorDetailScreen(
@@ -266,6 +289,13 @@ fun DebtTrackerNavGraph(
             entry<Screen.Export> { screen ->
                 ExportScreen(onBack = { back() }, debtorId = screen.debtorId, creditorId = screen.creditorId)
             }
+            entry<Screen.QrHub> {
+                QrHubScreen(
+                    onBack = { back() },
+                    onNavigateToAddDebtor = { contact -> navigate(Screen.AddEditDebtor(prefill = contact)) },
+                    onNavigateToAddCreditor = { contact -> navigate(Screen.AddEditCreditor(prefill = contact)) },
+                )
+            }
             entry<Screen.Auth> { screen ->
                 AuthScreen(
                     onBack = { back() },
@@ -274,6 +304,21 @@ fun DebtTrackerNavGraph(
                 )
             }
             }
+        )
+    }
+
+    pendingDeepLinkContact?.let { contact ->
+        ScannedContactDialog(
+            contact = contact,
+            onDismiss = { pendingDeepLinkContact = null },
+            onAddAsDebtor = {
+                pendingDeepLinkContact = null
+                navigate(Screen.AddEditDebtor(prefill = contact))
+            },
+            onAddAsCreditor = {
+                pendingDeepLinkContact = null
+                navigate(Screen.AddEditCreditor(prefill = contact))
+            },
         )
     }
 }

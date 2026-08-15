@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sync
@@ -55,6 +56,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
+import org.bigblackowl.debttracker.core.platform.AppPlatform
+import org.bigblackowl.debttracker.core.platform.currentPlatform
 import org.bigblackowl.debttracker.domain.model.SyncUiStatus
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
@@ -77,6 +80,7 @@ fun HomeScreen(
     onOpenCreditor: (String) -> Unit,
     onOpenStats: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenQr: () -> Unit,
     viewModel: HomeViewModel = koinViewModel(),
 ) {
     val pagerState = rememberPagerState(pageCount = { 2 })
@@ -97,6 +101,10 @@ fun HomeScreen(
                     }
                 },
                 actions = {
+                    // QRKit (core/qr) publishes no working Web scanner — hide the entry point there entirely.
+                    if (currentPlatform != AppPlatform.WEB) {
+                        TopBarActionIcon(icon = Icons.Filled.QrCode, description = strings.homeQr, onClick = onOpenQr)
+                    }
                     TopBarActionIcon(icon = Icons.Filled.QueryStats, description = strings.homeStats, onClick = onOpenStats)
                     TopBarActionIcon(icon = Icons.Filled.Settings, description = strings.homeSettings, onClick = onOpenSettings)
                 }
@@ -214,6 +222,7 @@ private fun HomeScreenPreviewContent() {
         onOpenCreditor = {},
         onOpenStats = {},
         onOpenSettings = {},
+        onOpenQr = {},
     )
 }
 

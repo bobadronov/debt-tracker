@@ -4,5 +4,21 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Debt Tracker needs camera access to scan a contact's QR code.</string>
+	<!-- Contact-card QR codes (QrHubScreen) encode a debttracker://contact link so a third-party
+	     scanner (Google Lens, the stock Camera app) opens straight into the app instead of just
+	     showing inert text — see core/qr/ContactDeepLinks.kt and iosApp.swift's onOpenURL. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>org.bigblackowl.debttracker</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>debttracker</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

@@ -1,14 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.FLASHLIGHT"/>
+    <uses-feature android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
         android:name=".DebtTrackerApplication"
         android:icon="@mipmap/ic_launcher"
         android:label="Debt Tracker"
         android:allowBackup="false"
-        android:theme="@android:style/Theme.Material.NoActionBar">
+        android:theme="@android:style/Theme.Material.NoActionBar"
+        tools:replace="android:name,android:allowBackup">
         <activity
             android:name=".AppActivity"
             android:theme="@style/Theme.DebtTracker.Splash"
@@ -19,6 +26,15 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Contact-card QR codes (QrHubScreen) encode a debttracker://contact link so a
+                 third-party scanner (Google Lens, the stock camera app) opens straight into the
+                 app instead of just showing inert text — see core/qr/ContactDeepLinks. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="debttracker" android:host="contact" />
             </intent-filter>
         </activity>
 

@@ -253,4 +253,15 @@ data class Strings(
     // widget
     val widgetDebtorsTotal: (amount: String) -> String,
     val widgetCreditorsTotal: (amount: String) -> String,
+
+    // qr (org.bigblackowl.debttracker.ui.screens.qr — Android/iOS/Desktop only, hidden on Web)
+    val homeQr: String,
+    val qrHubScanTab: String,
+    val qrHubMyCardHint: String,
+    val qrHubCameraPermissionRationale: String,
+    val qrHubCameraPermissionRetry: String,
+    val qrHubScannedDialogTitle: String,
+    val qrHubScannedDialogMessage: (name: String) -> String,
+    val qrHubScannedAsDebtor: String,
+    val qrHubScannedAsCreditor: String,
 )

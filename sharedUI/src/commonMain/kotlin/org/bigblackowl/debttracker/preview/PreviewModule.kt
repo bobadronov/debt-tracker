@@ -13,6 +13,7 @@ import org.bigblackowl.debttracker.domain.usecase.ClearLocalCacheUseCase
 import org.bigblackowl.debttracker.domain.usecase.DeleteAllDataUseCase
 import org.bigblackowl.debttracker.domain.usecase.FindProfileByEmailUseCase
 import org.bigblackowl.debttracker.domain.usecase.ForceSignOutUseCase
+import org.bigblackowl.debttracker.domain.usecase.ObserveContactSuggestionsUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddCreditorTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddOrUpdateCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.DeleteCreditorUseCase
@@ -37,6 +38,7 @@ import org.bigblackowl.debttracker.ui.screens.debtors.DebtorListViewModel
 import org.bigblackowl.debttracker.ui.screens.export.ExportViewModel
 import org.bigblackowl.debttracker.ui.screens.home.HomeViewModel
 import org.bigblackowl.debttracker.ui.screens.protectiononboarding.ProtectionOnboardingViewModel
+import org.bigblackowl.debttracker.ui.screens.qr.QrHubViewModel
 import org.bigblackowl.debttracker.ui.screens.settings.ActiveSessionsViewModel
 import org.bigblackowl.debttracker.ui.screens.settings.EditAccountViewModel
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsViewModel
@@ -87,6 +89,8 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     factoryOf(::DeleteCreditorUseCase)
     factoryOf(::AddCreditorTransactionUseCase)
 
+    factoryOf(::ObserveContactSuggestionsUseCase)
+
     viewModelOf(::DebtorListViewModel)
     viewModelOf(::CreditorListViewModel)
     viewModelOf(::AddEditDebtorViewModel)
@@ -103,6 +107,7 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     viewModelOf(::AuthGateViewModel)
     viewModelOf(::HomeViewModel)
     viewModelOf(::SettingsViewModel)
+    viewModelOf(::QrHubViewModel)
     viewModel { (debtorId: String?, creditorId: String?) ->
         ExportViewModel(debtorId, creditorId, get(), get(), get(), get(), get(), get(), get(), get())
     }

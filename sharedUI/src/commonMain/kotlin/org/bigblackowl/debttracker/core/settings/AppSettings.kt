@@ -32,6 +32,12 @@ class AppSettings(private val settings: Settings) {
     /** Desktop-only: closing the window hides it to the system tray instead of quitting (desktopApp's `main.kt`). Off by default so closing the window keeps its usual meaning. */
     var runInBackground: Boolean by SettingsBooleanState(settings, KEY_RUN_IN_BACKGROUND, false)
 
+    /** Locally-saved "my contact card" for the QR share screen (org.bigblackowl.debttracker.ui.screens.qr) —
+     * default source when signed out, persisted edit-override when signed in. */
+    var myCardName: String by SettingsStringState(settings, KEY_MY_CARD_NAME, "")
+    var myCardPhone: String by SettingsStringState(settings, KEY_MY_CARD_PHONE, "")
+    var myCardEmail: String by SettingsStringState(settings, KEY_MY_CARD_EMAIL, "")
+
     /** Whether a desktop app-lock PIN has been set up. */
     val hasPinCode: Boolean
         get() = settings.getStringOrNull(KEY_PIN_HASH) != null
@@ -79,6 +85,9 @@ class AppSettings(private val settings: Settings) {
         const val KEY_LOCALE = "locale"
         const val KEY_DEVICE_SESSION_ID = "device_session_id"
         const val KEY_RUN_IN_BACKGROUND = "run_in_background"
+        const val KEY_MY_CARD_NAME = "my_card_name"
+        const val KEY_MY_CARD_PHONE = "my_card_phone"
+        const val KEY_MY_CARD_EMAIL = "my_card_email"
     }
 }
 

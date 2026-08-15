@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
+import org.bigblackowl.debttracker.domain.model.ScannedContact
 import org.bigblackowl.debttracker.domain.validation.sanitizeAmountInput
 import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
@@ -19,11 +20,16 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun AddEditCreditorScreen(
     onDone: () -> Unit,
+    prefill: ScannedContact? = null,
     viewModel: AddEditCreditorViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val strings = LocalStrings.current
+
+    LaunchedEffect(Unit) {
+        prefill?.let { viewModel.onIntent(AddEditCreditorIntent.ApplyScannedContact(it)) }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -41,6 +47,8 @@ fun AddEditCreditorScreen(
         fullName = state.fullName,
         onFullNameChange = { viewModel.onIntent(AddEditCreditorIntent.FullNameChanged(it)) },
         fullNameError = state.fullNameError,
+        nameSuggestions = state.nameSuggestions,
+        onSelectNameSuggestion = { viewModel.onIntent(AddEditCreditorIntent.NameSuggestionSelected(it)) },
         phone = state.phone,
         onPhoneChange = { viewModel.onIntent(AddEditCreditorIntent.PhoneChanged(sanitizePhoneInput(it))) },
         email = state.email,

@@ -19,19 +19,24 @@ import org.bigblackowl.debttracker.core.i18n.resolveStrings
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.sound.SoundEffect
 import org.bigblackowl.debttracker.core.sound.SoundPlayer
+import org.bigblackowl.debttracker.domain.model.ContactSuggestion
 import org.bigblackowl.debttracker.domain.model.Creditor
 import org.bigblackowl.debttracker.domain.model.CreditorTransaction
 import org.bigblackowl.debttracker.domain.model.DebtStatus
 import org.bigblackowl.debttracker.domain.model.MyDebtTransactionType
+import org.bigblackowl.debttracker.domain.model.ScannedContact
 import org.bigblackowl.debttracker.domain.model.SyncStatus
 import org.bigblackowl.debttracker.domain.usecase.FindProfileByEmailUseCase
+import org.bigblackowl.debttracker.domain.usecase.ObserveContactSuggestionsUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddCreditorTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddOrUpdateCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.DeleteCreditorUseCase
 import org.bigblackowl.debttracker.domain.validation.isValidEmail
 import org.bigblackowl.debttracker.domain.validation.isValidFullName
+import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 
 private const val EMAIL_LOOKUP_DEBOUNCE_MS = 500L
+private const val NAME_SUGGESTIONS_LIMIT = 5
 
 /**
  * Validates the form and saves a new [org.bigblackowl.debttracker.domain.model.Creditor] (plus its
@@ -39,6 +44,9 @@ private const val EMAIL_LOOKUP_DEBOUNCE_MS = 500L
  * While the user types an [AddEditCreditorIntent.EmailChanged] email, debounces a lookup against
  * [findProfileByEmail] to offer a name/photo autofill suggestion if that email belongs to a
  * registered app user (§ProfileLookup) — purely additive, never blocks saving.
+ * Separately, [observeContactSuggestions] feeds a live name-autocomplete list of past
+ * debtors/creditors matching what's typed in [AddEditCreditorIntent.FullNameChanged] — picking one
+ * ([AddEditCreditorIntent.NameSuggestionSelected]) carries over its phone/email/comment too.
  */
 @OptIn(ExperimentalUuidApi::class)
 class AddEditCreditorViewModel(
@@ -48,9 +56,11 @@ class AddEditCreditorViewModel(
     private val appSettings: AppSettings,
     private val soundPlayer: SoundPlayer,
     private val findProfileByEmail: FindProfileByEmailUseCase,
+    private val observeContactSuggestions: ObserveContactSuggestionsUseCase,
 ) : ViewModel() {
 
     private var emailLookupJob: Job? = null
+    private var allContacts: List<ContactSuggestion> = emptyList()
 
     private val _state = MutableStateFlow(AddEditCreditorState())
     val state: StateFlow<AddEditCreditorState> = _state.asStateFlow()
@@ -58,9 +68,21 @@ class AddEditCreditorViewModel(
     private val effectsChannel = Channel<AddEditCreditorEffect>()
     val effects = effectsChannel.receiveAsFlow()
 
+    init {
+        viewModelScope.launch {
+            observeContactSuggestions().collect { contacts ->
+                allContacts = contacts
+                updateNameSuggestions()
+            }
+        }
+    }
+
     fun onIntent(intent: AddEditCreditorIntent) {
         when (intent) {
-            is AddEditCreditorIntent.FullNameChanged -> _state.update { it.copy(fullName = intent.value, fullNameError = null) }
+            is AddEditCreditorIntent.FullNameChanged -> {
+                _state.update { it.copy(fullName = intent.value, fullNameError = null) }
+                updateNameSuggestions()
+            }
             is AddEditCreditorIntent.PhoneChanged -> _state.update { it.copy(phone = intent.value) }
             is AddEditCreditorIntent.EmailChanged -> onEmailChanged(intent.value)
             is AddEditCreditorIntent.CommentChanged -> _state.update { it.copy(comment = intent.value) }
@@ -70,7 +92,49 @@ class AddEditCreditorViewModel(
             is AddEditCreditorIntent.CardLastDigitsChanged -> _state.update { it.copy(cardLastDigits = intent.value) }
             AddEditCreditorIntent.ApplyProfileSuggestion -> applySuggestion()
             AddEditCreditorIntent.DismissProfileSuggestion -> _state.update { it.copy(profileSuggestion = null) }
+            is AddEditCreditorIntent.NameSuggestionSelected -> applyNameSuggestion(intent.suggestion)
+            is AddEditCreditorIntent.ApplyScannedContact -> applyScannedContact(intent.contact)
             AddEditCreditorIntent.Save -> save()
+        }
+    }
+
+    private fun updateNameSuggestions() {
+        val query = _state.value.fullName.trim()
+        val matches = if (query.isBlank()) {
+            emptyList()
+        } else {
+            allContacts
+                .filter { it.fullName.contains(query, ignoreCase = true) && !it.fullName.equals(query, ignoreCase = true) }
+                .take(NAME_SUGGESTIONS_LIMIT)
+        }
+        _state.update { it.copy(nameSuggestions = matches) }
+    }
+
+    private fun applyNameSuggestion(suggestion: ContactSuggestion) {
+        _state.update {
+            it.copy(
+                fullName = suggestion.fullName,
+                fullNameError = null,
+                phone = suggestion.phone ?: it.phone,
+                email = suggestion.email ?: it.email,
+                comment = suggestion.comment ?: it.comment,
+                nameSuggestions = emptyList(),
+            )
+        }
+    }
+
+    private fun applyScannedContact(contact: ScannedContact) {
+        _state.update {
+            it.copy(
+                fullName = contact.fullName,
+                fullNameError = null,
+                // sanitizePhoneInput: the phone field's UkrainianPhoneVisualTransformation expects
+                // a bare national number (no "+380"/spaces) — a scanned contact.phone can be in
+                // whatever format its owner typed into their own "My card" QR (which doesn't
+                // sanitize as you type), so it needs the same cleanup manual entry gets.
+                phone = contact.phone?.let(::sanitizePhoneInput) ?: it.phone,
+                email = contact.email ?: it.email,
+            )
         }
     }
 

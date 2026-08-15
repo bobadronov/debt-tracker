@@ -1,6 +1,7 @@
 package org.bigblackowl.debttracker.androidApp
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -11,6 +12,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.FragmentActivity
 import org.bigblackowl.debttracker.App
+import org.bigblackowl.debttracker.core.qr.ContactDeepLinks
 
 /**
  * Android entry point — `FragmentActivity` rather than `ComponentActivity` because
@@ -21,9 +23,22 @@ class AppActivity : FragmentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        forwardDeepLink(intent)
         setContent {
             App(onThemeChanged = { ThemeChanged(it) })
         }
+    }
+
+    // launchMode="singleInstance" (AndroidManifest.xml) means a `debttracker://contact` link
+    // tapped while the app is already running arrives here instead of a fresh onCreate.
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        forwardDeepLink(intent)
+    }
+
+    private fun forwardDeepLink(intent: Intent?) {
+        intent?.data?.let { ContactDeepLinks.onIncomingLink(it.toString()) }
     }
 }
 

@@ -1,8 +1,10 @@
 package org.bigblackowl.debttracker.ui.screens.debtors
 
+import org.bigblackowl.debttracker.domain.model.ContactSuggestion
 import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.domain.model.ProfileSuggestion
+import org.bigblackowl.debttracker.domain.model.ScannedContact
 
 /** MVI contract for [AddEditDebtorScreen] — creates a new debtor. */
 data class AddEditDebtorState(
@@ -20,6 +22,8 @@ data class AddEditDebtorState(
     /** Ненульове поки не знайдено збіг за email, не застосовано або не відхилено (§ProfileLookup autofill). */
     val profileSuggestion: ProfileSuggestion? = null,
     val suggestedAvatarUrl: String? = null,
+    /** Past debtors/creditors whose name matches [fullName] as it's typed — name-autocomplete. */
+    val nameSuggestions: List<ContactSuggestion> = emptyList(),
 )
 
 sealed interface AddEditDebtorIntent {
@@ -33,6 +37,8 @@ sealed interface AddEditDebtorIntent {
     data class CardLastDigitsChanged(val value: String) : AddEditDebtorIntent
     data object ApplyProfileSuggestion : AddEditDebtorIntent
     data object DismissProfileSuggestion : AddEditDebtorIntent
+    data class NameSuggestionSelected(val suggestion: ContactSuggestion) : AddEditDebtorIntent
+    data class ApplyScannedContact(val contact: ScannedContact) : AddEditDebtorIntent
     data object Save : AddEditDebtorIntent
 }
 

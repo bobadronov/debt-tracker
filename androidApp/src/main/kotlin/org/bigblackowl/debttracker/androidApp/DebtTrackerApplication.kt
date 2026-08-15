@@ -4,11 +4,13 @@ import android.app.Application
 import org.bigblackowl.debttracker.core.di.initKoin
 import org.bigblackowl.debttracker.data.sync.SyncCoordinator
 import org.koin.android.ext.koin.androidContext
+import qrgenerator.AppContext
 
 /** Starts Koin and the background [SyncCoordinator] once for the process, before any Activity or the widget runs. */
 class DebtTrackerApplication : Application() {
     override fun onCreate() {
         super.onCreate()
+        AppContext.set(applicationContext) // required by QRKit's QR generator/scanner (core/qr)
         val koinApp = initKoin {
             androidContext(this@DebtTrackerApplication)
         }
