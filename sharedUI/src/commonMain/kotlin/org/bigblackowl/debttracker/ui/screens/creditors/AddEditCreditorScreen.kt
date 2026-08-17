@@ -3,12 +3,14 @@ package org.bigblackowl.debttracker.ui.screens.creditors
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
+import org.bigblackowl.debttracker.core.platform.currentPlatform
+import org.bigblackowl.debttracker.core.qr.QR_SCAN_CAPABLE_PLATFORMS
 import org.bigblackowl.debttracker.domain.model.ScannedContact
 import org.bigblackowl.debttracker.domain.validation.sanitizeAmountInput
 import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
@@ -23,7 +25,7 @@ fun AddEditCreditorScreen(
     prefill: ScannedContact? = null,
     viewModel: AddEditCreditorViewModel = koinViewModel(),
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val strings = LocalStrings.current
 
@@ -70,6 +72,9 @@ fun AddEditCreditorScreen(
         onCardLastDigitsChange = { viewModel.onIntent(AddEditCreditorIntent.CardLastDigitsChanged(it)) },
         isSaving = state.isSaving,
         onSave = { viewModel.onIntent(AddEditCreditorIntent.Save) },
+        onScannedContact = if (currentPlatform in QR_SCAN_CAPABLE_PLATFORMS) {
+            { contact -> viewModel.onIntent(AddEditCreditorIntent.ApplyScannedContact(contact)) }
+        } else null,
     )
 }
 

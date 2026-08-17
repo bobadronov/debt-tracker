@@ -46,7 +46,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -100,12 +100,12 @@ fun SettingsScreen(
     val settings = koinInject<AppSettings>()
     val authRepository = koinInject<AuthRepository>()
     val biometricAuthenticator = rememberBiometricAuthenticator()
-    val state by viewModel.state.collectAsState()
-    val isAuthenticated by authRepository.isAuthenticated.collectAsState()
-    val avatarUrl by authRepository.avatarUrl.collectAsState()
-    val accountEmail by authRepository.email.collectAsState()
-    val accountName by authRepository.displayName.collectAsState()
-    val accountPhone by authRepository.phone.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val isAuthenticated by authRepository.isAuthenticated.collectAsStateWithLifecycle()
+    val avatarUrl by authRepository.avatarUrl.collectAsStateWithLifecycle()
+    val accountEmail by authRepository.email.collectAsStateWithLifecycle()
+    val accountName by authRepository.displayName.collectAsStateWithLifecycle()
+    val accountPhone by authRepository.phone.collectAsStateWithLifecycle()
 
     var showPinSetupDialog by remember { mutableStateOf(false) }
     var showDeleteConfirm1 by remember { mutableStateOf(false) }
@@ -117,17 +117,12 @@ fun SettingsScreen(
         viewModel.onIntent(SettingsIntent.CheckBiometricHardware(biometricAuthenticator))
     }
 
-    val showProtectionRow = when (currentPlatform) {
-        // Web: захисту немає взагалі — вхід уже вимагає email/пароль (Account+Sync-only на Web).
-        AppPlatform.WEB -> false
-        // Мобільні платформи: лише біометрія, без PIN-фолбеку — перемикач доступний,
-        // тільки якщо на пристрої справді є зареєстрована біометрія.
-        AppPlatform.ANDROID, AppPlatform.IOS -> state.biometricHardwareAvailable
-        // Desktop: немає нативної біометрії — лише PIN.
-        AppPlatform.DESKTOP -> true
-    }
-    val protectionIcon =
-        if (currentPlatform == AppPlatform.DESKTOP) Icons.Filled.Password else Icons.Filled.Fingerprint
+    // Web: захисту немає взагалі — вхід уже вимагає email/пароль (Account+Sync-only на Web).
+    val showProtectionRow = currentPlatform != AppPlatform.WEB
+    // Мобільні платформи без біометричного заліза (або незареєстрованою біометрією — типово
+    // для планшетів) падають на той самий PIN-механізм, що й Desktop, замість ховати перемикач.
+    val usesPinProtection = currentPlatform == AppPlatform.DESKTOP || !state.biometricHardwareAvailable
+    val protectionIcon = if (usesPinProtection) Icons.Filled.Password else Icons.Filled.Fingerprint
 
     // Тільки Android/iOS мають реальний віброзвінок під керуванням LocalHapticFeedback —
     // на Desktop/Web це або no-op, або взагалі не підтримується, тож перемикач там ховаємо.
@@ -137,7 +132,7 @@ fun SettingsScreen(
 
     val updateChecker = rememberAppUpdateChecker()
     val inAppUpdateLauncher = rememberInAppUpdateLauncher()
-    val inAppUpdateReady by inAppUpdateLauncher.updateReadyToInstall.collectAsState()
+    val inAppUpdateReady by inAppUpdateLauncher.updateReadyToInstall.collectAsStateWithLifecycle()
 
     PlaceholderScreen(title = strings.settingsTitle, onBack = onBack) {
 
@@ -238,21 +233,15 @@ fun SettingsScreen(
                                 Switch(
                                     checked = settings.protectionEnabled,
                                     onCheckedChange = { checked ->
-                                        when (currentPlatform) {
-                                            AppPlatform.DESKTOP -> if (checked && !settings.hasPinCode) {
-                                                showPinSetupDialog = true
-                                            } else {
-                                                viewModel.onIntent(SettingsIntent.ToggleDesktopProtection(checked))
-                                            }
+                                        when {
+                                            usesPinProtection && checked && !settings.hasPinCode -> showPinSetupDialog = true
+                                            usesPinProtection -> viewModel.onIntent(SettingsIntent.TogglePinProtection(checked))
 
-                                            // Мобільні платформи: увімкнення захисту потребує підтвердження
-                                            // відбитком/обличчям одразу — інакше можна ввімкнути перемикач,
-                                            // маючи чужий палець на сканері, і сам захист виявиться фікцією.
-                                            else -> if (checked) {
-                                                viewModel.onIntent(SettingsIntent.EnableMobileProtection(biometricAuthenticator))
-                                            } else {
-                                                viewModel.onIntent(SettingsIntent.DisableMobileProtection)
-                                            }
+                                            // Мобільні платформи з біометрією: увімкнення захисту потребує
+                                            // підтвердження відбитком/обличчям одразу — інакше можна ввімкнути
+                                            // перемикач, маючи чужий палець на сканері, і сам захист виявиться фікцією.
+                                            checked -> viewModel.onIntent(SettingsIntent.EnableMobileProtection(biometricAuthenticator))
+                                            else -> viewModel.onIntent(SettingsIntent.DisableMobileProtection)
                                         }
                                     },
                                 )
@@ -362,6 +351,18 @@ fun SettingsScreen(
                             strings.settingsDeleteAllDataDone,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.debtAccentColors.repay,
+                            modifier = Modifier.padding(start = Dimens.space8),
+                        )
+                    }
+                    AnimatedVisibility(
+                        visible = state.deleteError,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically(),
+                    ) {
+                        Text(
+                            strings.settingsDeleteAllDataFailed,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.debtAccentColors.debt,
                             modifier = Modifier.padding(start = Dimens.space8),
                         )
                     }

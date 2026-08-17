@@ -37,7 +37,7 @@ class SettingsViewModel(
                 _state.update { it.copy(biometricHardwareAvailable = available) }
             }
 
-            is SettingsIntent.ToggleDesktopProtection -> {
+            is SettingsIntent.TogglePinProtection -> {
                 _state.update { it.copy(protectionConfirmError = null) }
                 appSettings.protectionEnabled = intent.enabled
             }
@@ -69,8 +69,10 @@ class SettingsViewModel(
             SettingsIntent.SignOut -> viewModelScope.launch { forceSignOut() }
 
             SettingsIntent.DeleteAllData -> viewModelScope.launch {
+                _state.update { it.copy(deleteError = false) }
                 deleteAllData()
-                _state.update { it.copy(deleteDone = true) }
+                    .onSuccess { _state.update { it.copy(deleteDone = true) } }
+                    .onFailure { _state.update { it.copy(deleteError = true) } }
             }
 
             is SettingsIntent.CheckForInAppUpdate -> viewModelScope.launch {

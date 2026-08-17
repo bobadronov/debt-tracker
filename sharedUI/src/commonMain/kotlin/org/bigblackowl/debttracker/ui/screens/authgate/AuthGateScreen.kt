@@ -9,7 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -21,27 +21,33 @@ import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.platform.AppPlatform
 import org.bigblackowl.debttracker.core.platform.currentPlatform
 import org.bigblackowl.debttracker.core.security.rememberBiometricAuthenticator
+import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.PinCodeField
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * Auth Gate (спек §6, п.2). Механізм розблокування залежить від платформи:
- * Android/iOS — лише біометрія, без PIN-фолбеку; Desktop — лише PIN (немає нативної
- * біометрії); Web — екран узагалі не рендериться, бо вхід уже захищений обов'язковим
- * email/паролем (Account+Sync-only на Web). PIN/biometric verification lives in [AuthGateViewModel].
+ * Auth Gate (спек §6, п.2). Механізм розблокування залежить від того, що налаштовано
+ * (SettingsScreen/ProtectionOnboardingScreen), а не лише від платформи: Android/iOS з
+ * увімкненою біометрією — біометрія; Android/iOS без біометричного заліза (типово для
+ * планшетів) чи Desktop (немає нативної біометрії) — PIN; Web — екран узагалі не
+ * рендериться, бо вхід уже захищений обов'язковим email/паролем (Account+Sync-only на Web).
+ * PIN/biometric verification lives in [AuthGateViewModel].
  */
 @Composable
 fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinViewModel()) {
     val biometricAuthenticator = rememberBiometricAuthenticator()
+    val settings = koinInject<AppSettings>()
     val strings = LocalStrings.current
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val pinFocusRequester = remember { FocusRequester() }
 
     val isMobile = currentPlatform == AppPlatform.ANDROID || currentPlatform == AppPlatform.IOS
+    val usesBiometric = isMobile && settings.biometricEnabled
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -52,17 +58,17 @@ fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinVi
     }
 
     LaunchedEffect(Unit) {
-        when (currentPlatform) {
-            AppPlatform.WEB -> onUnlocked()
-            AppPlatform.ANDROID, AppPlatform.IOS -> viewModel.onIntent(AuthGateIntent.Authenticate(biometricAuthenticator))
-            AppPlatform.DESKTOP -> Unit
+        when {
+            currentPlatform == AppPlatform.WEB -> onUnlocked()
+            usesBiometric -> viewModel.onIntent(AuthGateIntent.Authenticate(biometricAuthenticator))
+            else -> Unit
         }
     }
 
     if (currentPlatform == AppPlatform.WEB) return
 
     PlaceholderScreen(title = strings.authGateTitle) {
-        if (isMobile) {
+        if (usesBiometric) {
             Text(if (state.biometricFailed) strings.authGateBiometricFailed else strings.authGateBiometricPrompt)
             Spacer(Modifier.height(Dimens.space16))
             Button(onClick = { viewModel.onIntent(AuthGateIntent.Authenticate(biometricAuthenticator)) }) {

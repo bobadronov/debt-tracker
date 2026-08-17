@@ -165,6 +165,7 @@ val EnStrings = Strings(
     settingsExportData = "Export data",
     settingsDeleteAllData = "Delete all data",
     settingsDeleteAllDataDone = "All data deleted",
+    settingsDeleteAllDataFailed = "Couldn't delete all data. Check your connection and try again.",
     settingsDeleteConfirm1Title = "Delete all data?",
     settingsDeleteConfirm1Text = "All debtors, creditors, and transactions will be deleted.",
     settingsDeleteConfirm2Title = "Are you sure?",

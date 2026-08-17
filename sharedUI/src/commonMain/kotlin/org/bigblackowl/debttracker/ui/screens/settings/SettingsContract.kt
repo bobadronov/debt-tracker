@@ -9,6 +9,7 @@ data class SettingsState(
     val biometricHardwareAvailable: Boolean = false,
     val protectionConfirmError: String? = null,
     val deleteDone: Boolean = false,
+    val deleteError: Boolean = false,
     val isCheckingInAppUpdate: Boolean = false,
     val updateState: UpdateCheckState = UpdateCheckState.Idle,
 )
@@ -27,7 +28,8 @@ sealed interface UpdateCheckState {
 
 sealed interface SettingsIntent {
     data class CheckBiometricHardware(val authenticator: BiometricAuthenticator) : SettingsIntent
-    data class ToggleDesktopProtection(val enabled: Boolean) : SettingsIntent
+    /** Toggles protection when it's PIN-backed — Desktop (no biometric at all) or mobile with no biometric hardware/enrollment. */
+    data class TogglePinProtection(val enabled: Boolean) : SettingsIntent
     data class SetupPinAndEnableProtection(val pin: String) : SettingsIntent
     data class EnableMobileProtection(val authenticator: BiometricAuthenticator) : SettingsIntent
     data object DisableMobileProtection : SettingsIntent

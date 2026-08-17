@@ -165,6 +165,7 @@ val UkStrings = Strings(
     settingsExportData = "Експорт даних",
     settingsDeleteAllData = "Видалити всі дані",
     settingsDeleteAllDataDone = "Усі дані видалено",
+    settingsDeleteAllDataFailed = "Не вдалося видалити всі дані. Перевірте з'єднання та спробуйте ще раз.",
     settingsDeleteConfirm1Title = "Видалити всі дані?",
     settingsDeleteConfirm1Text = "Усіх боржників, кредиторів і транзакції буде видалено.",
     settingsDeleteConfirm2Title = "Ви впевнені?",

@@ -226,6 +226,19 @@ room {
     schemaDirectory("$projectDir/schemas")
 }
 
+// qr-kit (contact-card QR generate/scan) transitively pulls cmp-image-pick-n-crop on JVM,
+// which drags in javacv-platform/opencv-platform (native opencv/ffmpeg/openblas binaries for
+// every OS+arch, ~900MB) for webcam-based capture, plus a hardcoded macos-arm64 compose-desktop
+// copy (a duplicate skiko native lib). Per QR_SCAN_CAPABLE_PLATFORMS in QrScanSupport.kt, Desktop
+// never offers camera scanning, so none of it is reachable at runtime — safe to drop from the
+// packaged app. (KMP's per-sourceSet `implementation(libs.qr.kit) { exclude(...) }` doesn't type-check
+// against the version catalog's Provider, so the exclude is applied here at the configuration level instead.)
+configurations.matching { it.name.startsWith("jvm") }.configureEach {
+    exclude(group = "org.bytedeco", module = "javacv-platform")
+    exclude(group = "org.bytedeco", module = "opencv-platform")
+    exclude(group = "org.jetbrains.compose.desktop", module = "desktop-jvm-macos-arm64")
+}
+
 dependencies {
     androidRuntimeClasspath(libs.compose.ui.tooling)
 

@@ -25,7 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +36,7 @@ import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.platform.AppPlatform
 import org.bigblackowl.debttracker.core.platform.currentPlatform
 import org.bigblackowl.debttracker.core.qr.ContactQrScanner
+import org.bigblackowl.debttracker.core.qr.QR_SCAN_CAPABLE_PLATFORMS
 import org.bigblackowl.debttracker.core.qr.rememberContactQrPainter
 import org.bigblackowl.debttracker.domain.model.ContactQrPayload
 import org.bigblackowl.debttracker.domain.model.ScannedContact
@@ -49,10 +50,6 @@ import org.bigblackowl.debttracker.ui.components.PasteableOutlinedTextField
 import org.bigblackowl.debttracker.ui.components.ScannedContactDialog
 import org.bigblackowl.debttracker.ui.components.rememberClipboardText
 import org.koin.compose.viewmodel.koinViewModel
-
-/** Camera scanning needs a working QRKit scanner — Web has none at all (icon hidden entirely in
- * HomeScreen) and Desktop's only wired up for the "show my QR" half (see core/qr's self-review). */
-private val QR_SCAN_CAPABLE_PLATFORMS = setOf(AppPlatform.ANDROID, AppPlatform.IOS)
 
 /**
  * QR contact-exchange hub (Home top bar → QR icon). Shows your own contact card as a QR code —
@@ -70,7 +67,7 @@ fun QrHubScreen(
     onNavigateToAddCreditor: (ScannedContact) -> Unit,
     viewModel: QrHubViewModel = koinViewModel(),
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->

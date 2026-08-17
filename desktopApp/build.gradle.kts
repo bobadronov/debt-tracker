@@ -35,23 +35,25 @@ compose.desktop {
         }
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Debt Tracker"
             packageVersion = appVersionName
-
 
             linux {
                 iconFile.set(project.file("appIcons/LinuxIcon.png"))
             }
+
             windows {
                 iconFile.set(project.file("appIcons/WindowsIcon.ico"))
                 shortcut = true
                 dirChooser= false
             }
+
             macOS {
                 iconFile.set(project.file("appIcons/MacosIcon.icns"))
                 bundleID = "org.bigblackowl.debttracker.desktopApp"
             }
+
         }
     }
 }

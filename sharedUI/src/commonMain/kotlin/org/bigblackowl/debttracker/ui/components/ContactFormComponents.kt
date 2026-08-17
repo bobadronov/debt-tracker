@@ -12,7 +12,11 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -35,6 +39,7 @@ import org.bigblackowl.debttracker.domain.model.ContactSuggestion
 import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.domain.model.ProfileSuggestion
+import org.bigblackowl.debttracker.domain.model.ScannedContact
 import org.bigblackowl.debttracker.domain.validation.isPhonePasteRelevant
 import org.bigblackowl.debttracker.domain.validation.isValidAmountText
 import org.bigblackowl.debttracker.domain.validation.isValidEmail
@@ -80,12 +85,27 @@ fun AddEditContactForm(
     onCardLastDigitsChange: (String) -> Unit,
     isSaving: Boolean,
     onSave: () -> Unit,
+    /** Non-null shows a QR-scan action in the top bar (Android/iOS only — see QR_SCAN_CAPABLE_PLATFORMS); fires with the decoded contact instead of navigating anywhere. */
+    onScannedContact: ((ScannedContact) -> Unit)? = null,
 ) {
     val strings = LocalStrings.current
     val clipboardText by rememberClipboardText()
+    var showScanner by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = { BackTopAppBar(title = title, onBack = onDone) },
+        topBar = {
+            BackTopAppBar(
+                title = title,
+                onBack = onDone,
+                actions = {
+                    onScannedContact?.let {
+                        IconButton(onClick = { showScanner = true }) {
+                            Icon(Icons.Filled.QrCodeScanner, contentDescription = strings.qrHubScanTab)
+                        }
+                    }
+                },
+            )
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         Column(
@@ -195,6 +215,16 @@ fun AddEditContactForm(
                 label = { Text(strings.save) },
             )
         }
+    }
+
+    if (showScanner && onScannedContact != null) {
+        ContactQrScanOverlay(
+            onScanned = { contact ->
+                showScanner = false
+                onScannedContact(contact)
+            },
+            onClose = { showScanner = false },
+        )
     }
 }
 

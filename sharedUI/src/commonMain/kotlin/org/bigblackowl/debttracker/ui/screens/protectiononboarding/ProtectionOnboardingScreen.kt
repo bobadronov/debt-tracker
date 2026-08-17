@@ -13,7 +13,7 @@ import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,7 +48,7 @@ fun ProtectionOnboardingScreen(
 ) {
     val biometricAuthenticator = rememberBiometricAuthenticator()
     val strings = LocalStrings.current
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     var showPinSetupDialog by remember { mutableStateOf(false) }
 
@@ -70,7 +70,7 @@ fun ProtectionOnboardingScreen(
 
     PlaceholderScreen(title = strings.onboardingProtectionTitle) {
         Icon(
-            if (currentPlatform == AppPlatform.DESKTOP) Icons.Filled.Password else Icons.Filled.Fingerprint,
+            if (state.biometricAvailable) Icons.Filled.Fingerprint else Icons.Filled.Password,
             contentDescription = null,
             modifier = Modifier.size(Dimens.space60),
             tint = MaterialTheme.colorScheme.primary,
@@ -83,13 +83,15 @@ fun ProtectionOnboardingScreen(
         }
         Spacer(Modifier.height(Dimens.space24))
 
-        if (currentPlatform == AppPlatform.DESKTOP) {
-            Button(onClick = { showPinSetupDialog = true }) {
-                Text(strings.onboardingProtectionEnablePin)
-            }
-        } else if (state.biometricAvailable) {
+        // Desktop has no biometric at all; mobile devices without biometric hardware/enrollment
+        // (common on tablets) fall back to the same PIN setup instead of only offering Skip.
+        if (state.biometricAvailable) {
             Button(onClick = { viewModel.onIntent(ProtectionOnboardingIntent.EnableBiometric(biometricAuthenticator)) }) {
                 Text(strings.onboardingProtectionEnableBiometric)
+            }
+        } else {
+            Button(onClick = { showPinSetupDialog = true }) {
+                Text(strings.onboardingProtectionEnablePin)
             }
         }
 

@@ -11,7 +11,7 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
@@ -41,10 +41,10 @@ fun AccountInfoScreen(
     authRepository: AuthRepository = koinInject(),
 ) {
     val strings = LocalStrings.current
-    val avatarUrl by authRepository.avatarUrl.collectAsState()
-    val name by authRepository.displayName.collectAsState()
-    val email by authRepository.email.collectAsState()
-    val phone by authRepository.phone.collectAsState()
+    val avatarUrl by authRepository.avatarUrl.collectAsStateWithLifecycle()
+    val name by authRepository.displayName.collectAsStateWithLifecycle()
+    val email by authRepository.email.collectAsStateWithLifecycle()
+    val phone by authRepository.phone.collectAsStateWithLifecycle()
 
     SettingsDetailScaffold(title = strings.settingsAccount, onBack = onBack) {
         Spacer(Modifier.height(Dimens.space8))

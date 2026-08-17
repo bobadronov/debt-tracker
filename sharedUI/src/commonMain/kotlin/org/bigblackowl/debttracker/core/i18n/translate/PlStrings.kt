@@ -165,6 +165,7 @@ val PlStrings = Strings(
     settingsExportData = "Eksport danych",
     settingsDeleteAllData = "Usuń wszystkie dane",
     settingsDeleteAllDataDone = "Wszystkie dane zostały usunięte",
+    settingsDeleteAllDataFailed = "Nie udało się usunąć wszystkich danych. Sprawdź połączenie i spróbuj ponownie.",
     settingsDeleteConfirm1Title = "Usunąć wszystkie dane?",
     settingsDeleteConfirm1Text = "Wszyscy dłużnicy, wierzyciele i transakcje zostaną usunięci.",
     settingsDeleteConfirm2Title = "Czy na pewno?",

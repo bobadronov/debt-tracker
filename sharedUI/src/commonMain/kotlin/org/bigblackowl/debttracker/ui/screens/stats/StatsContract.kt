@@ -21,8 +21,10 @@ data class StatsState(
     val monthlyDebtTrend: List<MonthlyPoint> = emptyList(),
     val monthlyCreditorTrend: List<MonthlyPoint> = emptyList(),
 ) {
-    val totalDebtorsByCurrency: Map<Currency, BigDecimal> get() = debtors.sumByCurrency({ it.debtor.currency }, { it.balance })
-    val totalCreditorsByCurrency: Map<Currency, BigDecimal> get() = creditors.sumByCurrency({ it.creditor.currency }, { it.balance })
-    val topDebtors: List<DebtorWithBalance> get() = debtors.sortedWith { a, b -> b.balance.compareTo(a.balance) }.take(5)
-    val topCreditors: List<CreditorWithBalance> get() = creditors.sortedWith { a, b -> b.balance.compareTo(a.balance) }.take(5)
+    // by lazy (not get()) — StatsScreen reads topDebtors/topCreditors twice each (list + lastIndex),
+    // and re-sorting the full list on every access is wasted work once the state instance is stable.
+    val totalDebtorsByCurrency: Map<Currency, BigDecimal> by lazy { debtors.sumByCurrency({ it.debtor.currency }, { it.balance }) }
+    val totalCreditorsByCurrency: Map<Currency, BigDecimal> by lazy { creditors.sumByCurrency({ it.creditor.currency }, { it.balance }) }
+    val topDebtors: List<DebtorWithBalance> by lazy { debtors.sortedWith { a, b -> b.balance.compareTo(a.balance) }.take(5) }
+    val topCreditors: List<CreditorWithBalance> by lazy { creditors.sortedWith { a, b -> b.balance.compareTo(a.balance) }.take(5) }
 }

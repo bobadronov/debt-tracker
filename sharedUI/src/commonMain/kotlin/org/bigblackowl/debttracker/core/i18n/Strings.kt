@@ -186,6 +186,7 @@ data class Strings(
     val settingsExportData: String,
     val settingsDeleteAllData: String,
     val settingsDeleteAllDataDone: String,
+    val settingsDeleteAllDataFailed: String,
     val settingsDeleteConfirm1Title: String,
     val settingsDeleteConfirm1Text: String,
     val settingsDeleteConfirm2Title: String,

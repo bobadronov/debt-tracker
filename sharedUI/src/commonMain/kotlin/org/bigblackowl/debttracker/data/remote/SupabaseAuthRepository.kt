@@ -1,5 +1,6 @@
 package org.bigblackowl.debttracker.data.remote
 
+import io.github.aakira.napier.Napier
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
@@ -105,7 +106,12 @@ class SupabaseAuthRepository(
     }
 
     override suspend fun signOut() {
-        client.auth.signOut()
+        // Unlike every other method here, callers (ForceSignOutUseCase) treat this as best-effort:
+        // local cache clearing already happened by the time this runs, so a network failure here
+        // must not propagate and crash the caller's coroutine (NavGraph's revokedElsewhere
+        // LaunchedEffect and SettingsViewModel's viewModelScope.launch both have no exception handler).
+        runCatching { client.auth.signOut() }
+            .onFailure { Napier.w(tag = "SupabaseAuthRepository", throwable = it) { "Remote signOut() failed; local sign-out still proceeds" } }
     }
 
     override suspend fun updateAvatar(bytes: ByteArray, fileExtension: String): Result<String> = runCatching {
