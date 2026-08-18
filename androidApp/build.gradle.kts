@@ -90,7 +90,8 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.koin.android)
     implementation(libs.androidx.glance.appwidget)
-    implementation(libs.androidx.glance.preview) // @Preview для WidgetUi у Android Studio
+    debugImplementation(libs.androidx.glance.preview)
+    debugImplementation(libs.androidx.glance.appwidget.preview)
     debugImplementation(libs.compose.ui.tooling) // ComposeViewAdapter — потрібен рендереру Preview-панелі в IDE
     implementation(libs.bignum) // DebtSummaryWidget рахує BigDecimal-суми напряму
     implementation(libs.qr.kit) // AppContext.set(...) in DebtTrackerApplication (QRKit setup requirement)

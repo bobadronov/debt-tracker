@@ -2,4 +2,13 @@
 <resources>
     <!-- Matches BackgroundDark in sharedUI theme/Color.kt -->
     <color name="splash_background">#121414</color>
+
+    <!-- Matches SurfaceContainerLowDark in sharedUI theme/Color.kt, and the debt/repay accent
+         duplicated in DebtSummaryWidget.kt (DebtDark/RepayDark, mirrors internal
+         DebtAccentColors.kt) — used by res/layout/widget_preview.xml to mimic WidgetUi. -->
+    <color name="widget_preview_background">#1A1C1C</color>
+    <color name="widget_preview_repay">#81C995</color>
+    <color name="widget_preview_debt">#FFB3B1</color>
+    <color name="widget_preview_repay_badge">#1F81C995</color>
+    <color name="widget_preview_debt_badge">#1FFFB3B1</color>
 </resources>

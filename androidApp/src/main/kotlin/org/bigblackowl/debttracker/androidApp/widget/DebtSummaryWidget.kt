@@ -2,36 +2,47 @@ package org.bigblackowl.debttracker.androidApp.widget
 
 import android.annotation.SuppressLint
 import android.content.Context
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.glance.ColorFilter
 import androidx.glance.GlanceComposable
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
+import androidx.glance.Image
+import androidx.glance.ImageProvider
+import androidx.glance.LocalSize
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
+import androidx.glance.color.ColorProvider
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
-import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
 import androidx.glance.layout.width
+import androidx.glance.preview.ExperimentalGlancePreviewApi
+import androidx.glance.preview.Preview
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import kotlinx.coroutines.flow.first
 import org.bigblackowl.debttracker.androidApp.AppActivity
+import org.bigblackowl.debttracker.androidApp.R
 import org.bigblackowl.debttracker.core.i18n.resolveStrings
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.domain.model.formatTotals
@@ -47,6 +58,9 @@ import org.koin.core.context.GlobalContext
  */
 class DebtSummaryWidget : GlanceAppWidget() {
 
+    /** Реальний поточний розмір (а не лише minWidth/minHeight) — потрібен для [WidgetUi] масштабування. */
+    override val sizeMode: SizeMode = SizeMode.Exact
+
     @SuppressLint("RestrictedApi")
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val koin = GlobalContext.get()
@@ -59,19 +73,35 @@ class DebtSummaryWidget : GlanceAppWidget() {
         val creditorsTotal = creditorRepository.observeCreditors().first()
             .sumByCurrency({ it.creditor.currency }, { it.balance })
 
-        val appName = strings.appName
-        val debtorsLine = strings.widgetDebtorsTotal(debtorsTotal.formatTotals())
-        val creditorsLine = strings.widgetCreditorsTotal(creditorsTotal.formatTotals())
-
         provideContent {
             WidgetUi(
-                appName = appName,
-                debtorsLine = debtorsLine,
-                creditorsLine = creditorsLine,
+                debtorsAmount = debtorsTotal.formatTotals(),
+                creditorsAmount = creditorsTotal.formatTotals(),
+                debtorsDescription = strings.widgetDebtorsTotal(debtorsTotal.formatTotals()),
+                creditorsDescription = strings.widgetCreditorsTotal(creditorsTotal.formatTotals()),
             )
         }
     }
 }
+
+// Дублює sharedUI theme/DebtAccentColors.kt (internal, недоступний з androidApp через
+// межу модуля) — той самий "тривожний"/"позитивний" акцент, що й у KpiCard (StatsScreen.kt).
+private val DebtLight = Color(0xFFBB152C)
+private val DebtDark = Color(0xFFFFB3B1)
+private val RepayLight = Color(0xFF2E7D32)
+private val RepayDark = Color(0xFF81C995)
+
+private val DebtColor = ColorProvider(day = DebtLight, night = DebtDark)
+private val RepayColor = ColorProvider(day = RepayLight, night = RepayDark)
+private val DebtBadgeColor = ColorProvider(day = DebtLight.copy(alpha = 0.12f), night = DebtDark.copy(alpha = 0.12f))
+private val RepayBadgeColor = ColorProvider(day = RepayLight.copy(alpha = 0.12f), night = RepayDark.copy(alpha = 0.12f))
+
+/** Базові розміри при "еталонній" висоті 110dp — масштабуються від [LocalSize] в [WidgetUi]. */
+private const val ReferenceHeight = 110
+private const val BaseBadgeSize = 36
+private const val BaseFontSize = 17f
+private const val BaseSpacing = 10
+private const val BasePadding = 12
 
 /**
  * Чиста, без сайд-ефектів composable-функція — дані приходять готовими
@@ -79,18 +109,31 @@ class DebtSummaryWidget : GlanceAppWidget() {
  * не можна робити напряму всередині @Composable. Значення параметрів за
  * замовчуванням дають змогу рендерити @Preview в Android Studio.
  *
- * Стиль: Material You / [GlanceTheme] — той самий "google-style" адаптивний
- * підхід, що й у системних віджетах (кольори підлаштовуються під шпалери на
- * Android 12+, інакше під світлу/темну тему), а не власна фіксована палітра.
+ * Іконка + сума в один рядок — той самий мотив (гліф і кольорове коло), що й
+ * у [org.bigblackowl.debttracker.ui.screens.stats.StatsScreen] `KpiCard`.
+ * Всі розміри порахувані від [LocalSize.current], тому вигляд плавно
+ * підлаштовується під зміну розміру віджета на робочому столі.
  */
+@OptIn(ExperimentalGlancePreviewApi::class)
 @SuppressLint("RestrictedApi")
+@Preview(300,150)
 @Composable
 @GlanceComposable
 fun WidgetUi(
-    appName: String = "Debt Tracker",
-    debtorsLine: String = "Мені винні: 1 250,00 ₴",
-    creditorsLine: String = "Я винен: 430,00 ₴",
+    debtorsAmount: String = "1 250,00 ₴",
+    creditorsAmount: String = "430,00 ₴",
+    debtorsDescription: String = "Мені винні: $debtorsAmount",
+    creditorsDescription: String = "Мій борг: $creditorsAmount",
 ) {
+    val size = LocalSize.current
+    val scale = (size.height / ReferenceHeight.dp).coerceIn(0.55f, 1.6f)
+
+    val badgeSize = (BaseBadgeSize.dp * scale).coerceIn(22.dp, 44.dp)
+    val iconSize = badgeSize * 0.55f
+    val amountFontSize = (BaseFontSize * scale).coerceIn(13f, 22f).sp
+    val rowSpacing = (BaseSpacing.dp * scale).coerceIn(4.dp, 14.dp)
+    val outerPadding = (BasePadding.dp * scale).coerceIn(8.dp, 16.dp)
+
     GlanceTheme {
         Box(
             modifier = GlanceModifier
@@ -98,62 +141,73 @@ fun WidgetUi(
                 .background(GlanceTheme.colors.widgetBackground)
                 .cornerRadius(24.dp)
                 .clickable(actionStartActivity(AppActivity::class.java))
-                .padding(16.dp),
+                .padding(outerPadding),
         ) {
             Column(
                 modifier = GlanceModifier.fillMaxSize(),
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.Top,
             ) {
-                Text(
-                    text = appName,
-                    style = TextStyle(
-                        color = GlanceTheme.colors.onSurfaceVariant,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 16.sp,
-                    ),
+                KpiRow(
+                    icon = R.drawable.ic_widget_trend_down,
+                    amount = debtorsAmount,
+                    contentDescription = debtorsDescription,
+                    accentColor = RepayColor,
+                    badgeColor = RepayBadgeColor,
+                    badgeSize = badgeSize,
+                    iconSize = iconSize,
+                    fontSize = amountFontSize,
                 )
-                Box(GlanceModifier.fillMaxWidth().height(2.dp).background(MaterialTheme.colorScheme.primary)){}
-                StatLine(line = debtorsLine, valueColor = GlanceTheme.colors.primary)
-                StatLine(line = creditorsLine, valueColor = GlanceTheme.colors.error)
+                Spacer(modifier = GlanceModifier.height(rowSpacing))
+                KpiRow(
+                    icon = R.drawable.ic_widget_trend_up,
+                    amount = creditorsAmount,
+                    contentDescription = creditorsDescription,
+                    accentColor = DebtColor,
+                    badgeColor = DebtBadgeColor,
+                    badgeSize = badgeSize,
+                    iconSize = iconSize,
+                    fontSize = amountFontSize,
+                )
             }
         }
     }
 }
 
-/** Розбиває рядок виду "Мітка: значення" на дві частини, аби виділити суму акцентним кольором. */
+/** Кольорове коло з іконкою (як у KpiCard) + сума поряд у тому ж рядку. */
 @SuppressLint("RestrictedApi")
 @Composable
-private fun StatLine(line: String, valueColor: ColorProvider) {
-    val separatorIndex = line.indexOf(':')
-    if (separatorIndex == -1) {
-        Text(
-            text = line,
-            style = TextStyle(
-                color = valueColor,
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp,
-            ),
-        )
-        return
-    }
-    val label = line.substring(0, separatorIndex + 1)
-    val value = line.substring(separatorIndex + 1)
+private fun KpiRow(
+    icon: Int,
+    amount: String,
+    contentDescription: String,
+    accentColor: ColorProvider,
+    badgeColor: ColorProvider,
+    badgeSize: Dp,
+    iconSize: Dp,
+    fontSize: TextUnit,
+) {
     Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
+        Box(
+            modifier = GlanceModifier
+                .size(badgeSize)
+                .cornerRadius(badgeSize / 2)
+                .background(badgeColor),
+            contentAlignment = Alignment.Center,
+        ) {
+            Image(
+                provider = ImageProvider(icon),
+                contentDescription = contentDescription,
+                colorFilter = ColorFilter.tint(accentColor),
+                modifier = GlanceModifier.size(iconSize),
+            )
+        }
+        Spacer(modifier = GlanceModifier.width(8.dp))
         Text(
-            text = label,
-            modifier = GlanceModifier.defaultWeight(),
+            text = amount,
             style = TextStyle(
-                color = GlanceTheme.colors.onSurfaceVariant,
-                fontSize = 15.sp,
-            ),
-        )
-        Spacer(modifier = GlanceModifier.width(4.dp))
-        Text(
-            text = value,
-            style = TextStyle(
-                color = valueColor,
+                color = accentColor,
                 fontWeight = FontWeight.Bold,
-                fontSize = 17.sp,
+                fontSize = fontSize,
             ),
         )
     }
