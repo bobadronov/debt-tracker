@@ -21,16 +21,16 @@ import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.cornerRadius
+import androidx.glance.appwidget.lazy.GridCells
+import androidx.glance.appwidget.lazy.LazyVerticalGrid
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.color.ColorProvider
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
-import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
-import androidx.glance.layout.height
 import androidx.glance.layout.padding
 import androidx.glance.layout.size
 import androidx.glance.layout.width
@@ -103,6 +103,9 @@ private const val BaseFontSize = 17f
 private const val BaseSpacing = 10
 private const val BasePadding = 12
 
+/** Від цієї ширини рядки KPI переходять з одної колонки (стовпчиком) у дві (пліч-о-пліч). */
+private const val WideWidthThreshold = 260
+
 /**
  * Чиста, без сайд-ефектів composable-функція — дані приходять готовими
  * з [DebtSummaryWidget.provideGlance], бо suspend-виклики (Koin, Flow.first)
@@ -113,6 +116,11 @@ private const val BasePadding = 12
  * у [org.bigblackowl.debttracker.ui.screens.stats.StatsScreen] `KpiCard`.
  * Всі розміри порахувані від [LocalSize.current], тому вигляд плавно
  * підлаштовується під зміну розміру віджета на робочому столі.
+ *
+ * Рядки KPI лежать у [LazyVerticalGrid]: на вузькому віджеті — одна колонка
+ * (рядки стовпчиком, як раніше), на широкому — дві колонки (рядки пліч-о-пліч).
+ * [GridCells.Fixed] обрано замість [GridCells.Adaptive] свідомо — Adaptive
+ * потребує API 31+, а minSdk застосунку — 26.
  */
 @OptIn(ExperimentalGlancePreviewApi::class)
 @SuppressLint("RestrictedApi")
@@ -134,6 +142,13 @@ fun WidgetUi(
     val rowSpacing = (BaseSpacing.dp * scale).coerceIn(4.dp, 14.dp)
     val outerPadding = (BasePadding.dp * scale).coerceIn(8.dp, 16.dp)
 
+    val columns = if (size.width >= WideWidthThreshold.dp) 2 else 1
+    val firstItemSpacing = if (columns > 1) {
+        GlanceModifier.padding(end = rowSpacing)
+    } else {
+        GlanceModifier.padding(bottom = rowSpacing)
+    }
+
     GlanceTheme {
         Box(
             modifier = GlanceModifier
@@ -143,31 +158,36 @@ fun WidgetUi(
                 .clickable(actionStartActivity(AppActivity::class.java))
                 .padding(outerPadding),
         ) {
-            Column(
+            LazyVerticalGrid(
+                gridCells = GridCells.Fixed(columns),
                 modifier = GlanceModifier.fillMaxSize(),
-                verticalAlignment = Alignment.Top,
+                horizontalAlignment = Alignment.Start,
             ) {
-                KpiRow(
-                    icon = R.drawable.ic_widget_trend_down,
-                    amount = debtorsAmount,
-                    contentDescription = debtorsDescription,
-                    accentColor = RepayColor,
-                    badgeColor = RepayBadgeColor,
-                    badgeSize = badgeSize,
-                    iconSize = iconSize,
-                    fontSize = amountFontSize,
-                )
-                Spacer(modifier = GlanceModifier.height(rowSpacing))
-                KpiRow(
-                    icon = R.drawable.ic_widget_trend_up,
-                    amount = creditorsAmount,
-                    contentDescription = creditorsDescription,
-                    accentColor = DebtColor,
-                    badgeColor = DebtBadgeColor,
-                    badgeSize = badgeSize,
-                    iconSize = iconSize,
-                    fontSize = amountFontSize,
-                )
+                item {
+                    KpiRow(
+                        icon = R.drawable.ic_widget_trend_down,
+                        amount = debtorsAmount,
+                        contentDescription = debtorsDescription,
+                        accentColor = RepayColor,
+                        badgeColor = RepayBadgeColor,
+                        badgeSize = badgeSize,
+                        iconSize = iconSize,
+                        fontSize = amountFontSize,
+                        modifier = firstItemSpacing,
+                    )
+                }
+                item {
+                    KpiRow(
+                        icon = R.drawable.ic_widget_trend_up,
+                        amount = creditorsAmount,
+                        contentDescription = creditorsDescription,
+                        accentColor = DebtColor,
+                        badgeColor = DebtBadgeColor,
+                        badgeSize = badgeSize,
+                        iconSize = iconSize,
+                        fontSize = amountFontSize,
+                    )
+                }
             }
         }
     }
@@ -185,8 +205,9 @@ private fun KpiRow(
     badgeSize: Dp,
     iconSize: Dp,
     fontSize: TextUnit,
+    modifier: GlanceModifier = GlanceModifier,
 ) {
-    Row(verticalAlignment = Alignment.Vertical.CenterVertically) {
+    Row(modifier = modifier, verticalAlignment = Alignment.Vertical.CenterVertically) {
         Box(
             modifier = GlanceModifier
                 .size(badgeSize)
