@@ -2,6 +2,8 @@ package org.bigblackowl.debttracker.androidApp.widget
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
@@ -61,6 +63,7 @@ class DebtSummaryWidget : GlanceAppWidget() {
     /** Реальний поточний розмір (а не лише minWidth/minHeight) — потрібен для [WidgetUi] масштабування. */
     override val sizeMode: SizeMode = SizeMode.Exact
 
+    @RequiresApi(Build.VERSION_CODES.S)
     @SuppressLint("RestrictedApi")
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val koin = GlobalContext.get()
@@ -122,6 +125,7 @@ private const val WideWidthThreshold = 260
  * [GridCells.Fixed] обрано замість [GridCells.Adaptive] свідомо — Adaptive
  * потребує API 31+, а minSdk застосунку — 26.
  */
+@RequiresApi(Build.VERSION_CODES.S)
 @OptIn(ExperimentalGlancePreviewApi::class)
 @SuppressLint("RestrictedApi")
 @Preview(300,150)
@@ -139,15 +143,7 @@ fun WidgetUi(
     val badgeSize = (BaseBadgeSize.dp * scale).coerceIn(22.dp, 44.dp)
     val iconSize = badgeSize * 0.55f
     val amountFontSize = (BaseFontSize * scale).coerceIn(13f, 22f).sp
-    val rowSpacing = (BaseSpacing.dp * scale).coerceIn(4.dp, 14.dp)
     val outerPadding = (BasePadding.dp * scale).coerceIn(8.dp, 16.dp)
-
-    val columns = if (size.width >= WideWidthThreshold.dp) 2 else 1
-    val firstItemSpacing = if (columns > 1) {
-        GlanceModifier.padding(end = rowSpacing)
-    } else {
-        GlanceModifier.padding(bottom = rowSpacing)
-    }
 
     GlanceTheme {
         Box(
@@ -157,10 +153,10 @@ fun WidgetUi(
                 .cornerRadius(24.dp)
                 .clickable(actionStartActivity(AppActivity::class.java))
                 .padding(outerPadding),
+            contentAlignment = Alignment.Center
         ) {
             LazyVerticalGrid(
-                gridCells = GridCells.Fixed(columns),
-                modifier = GlanceModifier.fillMaxSize(),
+                gridCells = GridCells.Adaptive(200.dp),
                 horizontalAlignment = Alignment.Start,
             ) {
                 item {
@@ -173,7 +169,6 @@ fun WidgetUi(
                         badgeSize = badgeSize,
                         iconSize = iconSize,
                         fontSize = amountFontSize,
-                        modifier = firstItemSpacing,
                     )
                 }
                 item {
@@ -205,7 +200,7 @@ private fun KpiRow(
     badgeSize: Dp,
     iconSize: Dp,
     fontSize: TextUnit,
-    modifier: GlanceModifier = GlanceModifier,
+    modifier: GlanceModifier = GlanceModifier.padding(vertical = 5.dp),
 ) {
     Row(modifier = modifier, verticalAlignment = Alignment.Vertical.CenterVertically) {
         Box(

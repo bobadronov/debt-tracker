@@ -10,7 +10,6 @@ data class SettingsState(
     val protectionConfirmError: String? = null,
     val deleteDone: Boolean = false,
     val deleteError: Boolean = false,
-    val isCheckingInAppUpdate: Boolean = false,
     val updateState: UpdateCheckState = UpdateCheckState.Idle,
 )
 

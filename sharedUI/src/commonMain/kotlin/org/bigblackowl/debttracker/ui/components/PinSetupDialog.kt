@@ -56,7 +56,14 @@ fun PinSetupDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
     fun trySubmit() {
         when {
             pin.length < PIN_LENGTH -> error = strings.settingsPinTooShort
-            pin != confirmPin -> error = strings.settingsPinMismatch
+            pin != confirmPin -> {
+                // Mismatch: clear both PINs and send the user back to the first page to retype from
+                // scratch, same as the wrong-PIN recovery on the unlock screen.
+                error = strings.settingsPinMismatch
+                pin = ""
+                confirmPin = ""
+                scope.launch { pagerState.animateScrollToPage(NEW_PIN_PAGE) }
+            }
             else -> onConfirm(pin)
         }
     }

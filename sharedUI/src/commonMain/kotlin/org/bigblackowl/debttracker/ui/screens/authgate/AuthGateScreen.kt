@@ -1,5 +1,8 @@
 package org.bigblackowl.debttracker.ui.screens.authgate
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -9,7 +12,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -17,6 +19,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.platform.AppPlatform
 import org.bigblackowl.debttracker.core.platform.currentPlatform
@@ -76,9 +79,12 @@ fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinVi
             }
         } else {
             LaunchedEffect(Unit) { pinFocusRequester.requestFocus() }
+            // After a wrong PIN the field is cleared (see AuthGateViewModel) — refocus so the
+            // cursor sits back on the first digit for the retry.
+            LaunchedEffect(state.error) { if (state.error != null) pinFocusRequester.requestFocus() }
 
             Text(strings.authGateEnterPin)
-            Spacer(Modifier.height(Dimens.space8))
+            Spacer(Modifier.height(Dimens.space16))
             PinCodeField(
                 value = state.pinInput,
                 onValueChange = { viewModel.onIntent(AuthGateIntent.PinChanged(it)) },
@@ -87,9 +93,9 @@ fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinVi
                 keyboardActions = KeyboardActions(onDone = { viewModel.onIntent(AuthGateIntent.TryUnlockWithPin) }),
                 modifier = Modifier.fillMaxWidth(),
             )
-            state.error?.let {
+            AnimatedVisibility(state.error != null, enter = slideInVertically { -it }, exit = slideOutVertically { it }) {
                 Spacer(Modifier.height(Dimens.space8))
-                Text(it, color = MaterialTheme.debtAccentColors.debt)
+                Text(state.error ?: "", color = MaterialTheme.debtAccentColors.debt)
             }
             Spacer(Modifier.height(Dimens.space16))
             Button(onClick = { viewModel.onIntent(AuthGateIntent.TryUnlockWithPin) }) { Text(strings.authGateUnlock) }

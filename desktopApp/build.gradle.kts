@@ -40,17 +40,17 @@ compose.desktop {
             packageVersion = appVersionName
 
             linux {
-                iconFile.set(project.file("appIcons/LinuxIcon.png"))
+                iconFile.set(project.file("src/main/resources/appIcons/LinuxIcon.png"))
             }
 
             windows {
-                iconFile.set(project.file("appIcons/WindowsIcon.ico"))
+                iconFile.set(project.file("src/main/resources/appIcons/WindowsIcon.ico"))
                 shortcut = true
                 dirChooser= false
             }
 
             macOS {
-                iconFile.set(project.file("appIcons/MacosIcon.icns"))
+                iconFile.set(project.file("src/main/resources/appIcons/MacosIcon.icns"))
                 bundleID = "org.bigblackowl.debttracker.desktopApp"
             }
 

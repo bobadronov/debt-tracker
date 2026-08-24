@@ -50,7 +50,9 @@ class AuthGateViewModel(private val settings: AppSettings) : ViewModel() {
         if (pin.isNotEmpty() && settings.verifyPinCode(pin)) {
             viewModelScope.launch { effectsChannel.send(AuthGateEffect.Unlocked) }
         } else {
-            _state.update { it.copy(error = resolveStrings(settings.locale).authGateWrongPin) }
+            // Wrong PIN: clear the input so the user retypes from scratch rather than editing digits
+            // they already know are wrong.
+            _state.update { it.copy(pinInput = "", error = resolveStrings(settings.locale).authGateWrongPin) }
         }
     }
 }

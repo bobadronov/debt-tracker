@@ -5,19 +5,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,56 +56,73 @@ fun PinCodeField(
     length: Int = PIN_LENGTH,
     imeAction: ImeAction = ImeAction.Done,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
+    fillColor: Color = MaterialTheme.colorScheme.inverseOnSurface,
+    borderColor: Color = MaterialTheme.colorScheme.outline,
+    selectedColor: Color = MaterialTheme.colorScheme.primary,
 ) {
     val strings = LocalStrings.current
 
     var isFocused by remember { mutableStateOf(false) }
     var pinVisible by remember { mutableStateOf(false) }
 
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(Dimens.space16),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            repeat(length) { index ->
-                PinDot(
-                    char = value.getOrNull(index),
-                    highlighted = isFocused && index == value.length,
-                    visible = pinVisible,
-                )
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Dimens.space16),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(length) { index ->
+                    PinDot(
+                        char = value.getOrNull(index),
+                        highlighted = isFocused && index == value.length,
+                        visible = pinVisible,
+                        fillColor = fillColor,
+                        borderColor = borderColor,
+                        selectedColor = selectedColor,
+                    )
+                }
             }
-            IconButton(onClick = { pinVisible = !pinVisible }) {
-                Icon(
-                    if (pinVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                    contentDescription = if (pinVisible) strings.hidePin else strings.showPin,
-                )
-            }
+            BasicTextField(
+                value = value,
+                onValueChange = { new ->
+                    if (new.length <= length && new.all(Char::isDigit)) onValueChange(new)
+                },
+                modifier = Modifier.matchParentSize().alpha(0f)
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { isFocused = it.isFocused },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = imeAction),
+                keyboardActions = keyboardActions,
+            )
         }
-        BasicTextField(
-            value = value,
-            onValueChange = { new ->
-                if (new.length <= length && new.all(Char::isDigit)) onValueChange(new)
-            },
-            modifier = Modifier.matchParentSize().alpha(0f)
-                .focusRequester(focusRequester)
-                .onFocusChanged { isFocused = it.isFocused },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = imeAction),
-            keyboardActions = keyboardActions,
-        )
+        TextButton(onClick = { pinVisible = !pinVisible }) {
+            Text(if (pinVisible) strings.hidePin else strings.showPin)
+            Checkbox(pinVisible, onCheckedChange = { pinVisible = !pinVisible }, modifier = Modifier.clip(RoundedCornerShape(Dimens.space3)))
+        }
     }
 }
 
-/** Індикатор одного розряду PIN — незаповнене коло-контур, заповнене суцільним кольором (Android-style lock dots). */
+/**
+ * Індикатор одного розряду PIN — незаповнене коло-контур, заповнене суцільним кольором (Android-style lock dots).
+ * [fillColor], [borderColor] і [selectedColor] розведені по окремих параметрах, щоб їх можна було
+ * незалежно кастомізувати (border — контур у стані спокою, selectedColor — контур сфокусованого/наступного розряду).
+ */
 @Composable
-private fun PinDot(char: Char?, highlighted: Boolean, visible: Boolean) {
+private fun PinDot(
+    char: Char?,
+    highlighted: Boolean,
+    visible: Boolean,
+    fillColor: Color = MaterialTheme.colorScheme.errorContainer,
+    borderColor: Color = MaterialTheme.colorScheme.outline,
+    selectedColor: Color = MaterialTheme.colorScheme.primary,
+) {
     val filled = char != null
-    val borderColor by animateColorAsState(
-        if (highlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+    val animatedBorderColor by animateColorAsState(
+        if (highlighted) selectedColor else borderColor,
         label = "pin-dot-border",
     )
-    val fillColor by animateColorAsState(
-        if (filled && !visible) MaterialTheme.colorScheme.secondary else Color.Transparent,
+    val animatedFillColor by animateColorAsState(
+        if (filled && !visible) fillColor else Color.Transparent,
         label = "pin-dot-fill",
     )
 
@@ -113,12 +130,13 @@ private fun PinDot(char: Char?, highlighted: Boolean, visible: Boolean) {
         modifier = Modifier
             .size(Dimens.space40)
             .clip(CircleShape)
-            .background(fillColor)
+            .background(animatedFillColor)
             .border(
                 width = if (highlighted) Dimens.space3 else Dimens.space1,
-                color = borderColor,
+                color = animatedBorderColor,
                 shape = CircleShape
-            ),
+            )
+            .padding(if (filled) Dimens.space3 else Dimens.space1),
         contentAlignment = Alignment.Center,
     ) {
         if (visible && filled) {
@@ -129,18 +147,10 @@ private fun PinDot(char: Char?, highlighted: Boolean, visible: Boolean) {
 
 @Composable
 private fun PinCodeFieldSample() {
-    var pin by remember { mutableStateOf("12") }
+    var pin by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
     PinCodeField(value = pin, onValueChange = { pin = it }, focusRequester = focusRequester)
 }
-
-@Preview
-@Composable
-private fun PinCodeFieldLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { PinCodeFieldSample() }
-
-@Preview
-@Composable
-private fun PinCodeFieldDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { PinCodeFieldSample() }
 
 @Preview(device = DESKTOP)
 @Composable

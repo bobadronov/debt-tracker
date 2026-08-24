@@ -2,7 +2,6 @@ package org.bigblackowl.debttracker.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,7 +12,6 @@ import org.bigblackowl.debttracker.core.security.BiometricResult
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.domain.usecase.DeleteAllDataUseCase
 import org.bigblackowl.debttracker.domain.usecase.ForceSignOutUseCase
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Owns every async/business flow behind [SettingsScreen]: app-lock enable/disable (biometric or PIN),
@@ -75,14 +73,10 @@ class SettingsViewModel(
                     .onFailure { _state.update { it.copy(deleteError = true) } }
             }
 
-            is SettingsIntent.CheckForInAppUpdate -> viewModelScope.launch {
-                _state.update { it.copy(isCheckingInAppUpdate = true) }
-                intent.launcher.checkForUpdate()
-                // Play's API has no "no update found" signal to await — checkForUpdate() either
-                // starts a background download or does nothing, so just show a brief spinner.
-                delay(2_000.milliseconds)
-                _state.update { it.copy(isCheckingInAppUpdate = false) }
-            }
+            // Progress lives on the launcher itself (updateStatus/updateReadyToInstall StateFlows,
+            // collected directly in SettingsScreen) — Play's update manager is already the source
+            // of truth, so there's nothing for this ViewModel to track.
+            is SettingsIntent.CheckForInAppUpdate -> intent.launcher.checkForUpdate()
 
             is SettingsIntent.CheckForUpdate -> viewModelScope.launch {
                 _state.update { it.copy(updateState = UpdateCheckState.Checking) }

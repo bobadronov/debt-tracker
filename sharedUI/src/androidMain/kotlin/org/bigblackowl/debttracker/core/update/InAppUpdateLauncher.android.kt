@@ -36,33 +36,57 @@ private class PlayInAppUpdateLauncher(
     private val _updateReadyToInstall = MutableStateFlow(false)
     override val updateReadyToInstall: StateFlow<Boolean> = _updateReadyToInstall.asStateFlow()
 
+    private val _updateStatus = MutableStateFlow<InAppUpdateStatus>(InAppUpdateStatus.Idle)
+    override val updateStatus: StateFlow<InAppUpdateStatus> = _updateStatus.asStateFlow()
+
     init {
         appUpdateManager.registerListener(InstallStateUpdatedListener { state ->
-            _updateReadyToInstall.value = state.installStatus() == InstallStatus.DOWNLOADED
+            when (state.installStatus()) {
+                InstallStatus.DOWNLOADED -> {
+                    _updateReadyToInstall.value = true
+                    _updateStatus.value = InAppUpdateStatus.Idle
+                }
+                InstallStatus.DOWNLOADING, InstallStatus.PENDING -> _updateStatus.value = InAppUpdateStatus.Downloading
+                InstallStatus.FAILED -> _updateStatus.value = InAppUpdateStatus.DownloadFailed
+                else -> Unit
+            }
         })
     }
 
     override fun checkForUpdate() {
         scope.launch {
-            val info = runCatching { appUpdateManager.requestAppUpdateInfo() }.getOrNull() ?: return@launch
+            _updateStatus.value = InAppUpdateStatus.Checking
+            val info = runCatching { appUpdateManager.requestAppUpdateInfo() }.getOrElse {
+                _updateStatus.value = InAppUpdateStatus.CheckFailed
+                return@launch
+            }
             when {
-                info.installStatus() == InstallStatus.DOWNLOADED -> _updateReadyToInstall.value = true
+                info.installStatus() == InstallStatus.DOWNLOADED -> {
+                    _updateReadyToInstall.value = true
+                    _updateStatus.value = InAppUpdateStatus.Idle
+                }
 
                 // An immediate update (resuming here means one was already in flight, e.g. app got backgrounded mid-update) — resume it.
-                info.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS ->
+                info.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS -> {
+                    _updateStatus.value = InAppUpdateStatus.Downloading
                     runCatching {
                         appUpdateManager.startUpdateFlowForResult(
                             info, updateFlowLauncher, AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build(),
                         )
-                    }
+                    }.onFailure { _updateStatus.value = InAppUpdateStatus.DownloadFailed }
+                }
 
                 info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE &&
-                    info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE) ->
+                    info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE) -> {
+                    _updateStatus.value = InAppUpdateStatus.Downloading
                     runCatching {
                         appUpdateManager.startUpdateFlowForResult(
                             info, updateFlowLauncher, AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build(),
                         )
-                    }
+                    }.onFailure { _updateStatus.value = InAppUpdateStatus.DownloadFailed }
+                }
+
+                else -> _updateStatus.value = InAppUpdateStatus.UpToDate
             }
         }
     }

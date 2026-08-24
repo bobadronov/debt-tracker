@@ -61,6 +61,7 @@ import org.bigblackowl.debttracker.core.platform.AppPlatform
 import org.bigblackowl.debttracker.core.platform.currentPlatform
 import org.bigblackowl.debttracker.core.security.rememberBiometricAuthenticator
 import org.bigblackowl.debttracker.core.settings.AppSettings
+import org.bigblackowl.debttracker.core.update.InAppUpdateStatus
 import org.bigblackowl.debttracker.core.update.appUpdateSupported
 import org.bigblackowl.debttracker.core.update.inAppUpdateSupported
 import org.bigblackowl.debttracker.core.update.rememberAppUpdateChecker
@@ -133,6 +134,7 @@ fun SettingsScreen(
     val updateChecker = rememberAppUpdateChecker()
     val inAppUpdateLauncher = rememberInAppUpdateLauncher()
     val inAppUpdateReady by inAppUpdateLauncher.updateReadyToInstall.collectAsStateWithLifecycle()
+    val inAppUpdateStatus by inAppUpdateLauncher.updateStatus.collectAsStateWithLifecycle()
 
     PlaceholderScreen(title = strings.settingsTitle, onBack = onBack) {
 
@@ -374,7 +376,11 @@ fun SettingsScreen(
                     val versionSubtitle = if (currentPlatform == AppPlatform.ANDROID) {
                         when {
                             inAppUpdateReady -> strings.updateReadyToInstall
-                            state.isCheckingInAppUpdate -> "$versionLine · ${strings.settingsCheckingForUpdates}"
+                            inAppUpdateStatus == InAppUpdateStatus.Checking -> "$versionLine · ${strings.settingsCheckingForUpdates}"
+                            inAppUpdateStatus == InAppUpdateStatus.UpToDate -> "$versionLine · ${strings.settingsUpToDate}"
+                            inAppUpdateStatus == InAppUpdateStatus.CheckFailed -> "$versionLine · ${strings.updateFailed}"
+                            inAppUpdateStatus == InAppUpdateStatus.Downloading -> strings.updateDownloading
+                            inAppUpdateStatus == InAppUpdateStatus.DownloadFailed -> strings.updateFailed
                             else -> versionLine
                         }
                     } else {
@@ -399,7 +405,7 @@ fun SettingsScreen(
                                         Icon(Icons.Filled.Download, contentDescription = strings.updateRestartNow)
                                     }
 
-                                    state.isCheckingInAppUpdate ->
+                                    inAppUpdateStatus == InAppUpdateStatus.Checking || inAppUpdateStatus == InAppUpdateStatus.Downloading ->
                                         CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
 
                                     else -> IconButton(onClick = { viewModel.onIntent(SettingsIntent.CheckForInAppUpdate(inAppUpdateLauncher)) }) {
