@@ -64,9 +64,12 @@ private data class SessionDto(
 /**
  * No defaults (unlike [SessionDto]) so kotlinx.serialization always emits every field — needed
  * because supabase-kt's Postgrest Json drops default-valued fields, which would otherwise mean
- * every register/touch upsert silently skips bumping `last_seen_at`. `revoked_at`/`created_at`
- * are intentionally absent here so a touch never un-revokes or resets when the device already
- * has a row.
+ * every register/touch upsert silently skips bumping `last_seen_at`. `revoked_at` is included
+ * (always `null`) so a fresh sign-in reclaims a previously-revoked row for this device — without
+ * it, a device kicked once via "Active devices" could never sign in again, since [registerOrTouchSession]
+ * only ever runs right after a successful auth transition (see [revokedElsewhere]), never as a
+ * periodic heartbeat while already signed in. `created_at` is still intentionally absent, so upsert
+ * never resets it.
  */
 @Serializable
 private data class SessionUpsertDto(
@@ -76,6 +79,7 @@ private data class SessionUpsertDto(
     val platform: String,
     @SerialName("app_version") val appVersion: String,
     @SerialName("last_seen_at") val lastSeenAt: String,
+    @SerialName("revoked_at") val revokedAt: String?,
 )
 
 /** [SessionRepository] backed by `public.user_sessions` — see migration 0006 for the revoke model. */
@@ -155,6 +159,7 @@ class SupabaseSessionRepository(
                 platform = currentPlatform.name,
                 appVersion = BuildConfig.APP_VERSION,
                 lastSeenAt = Clock.System.now().toString(),
+                revokedAt = null,
             )
         )
     }
