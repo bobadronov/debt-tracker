@@ -21,15 +21,29 @@ Android, iOS, Desktop (JVM), and Web (JS/Wasm).
   to **Account+Sync** and get realtime updates across devices, with
   last-write-wins conflict resolution on `updatedAt`.
 - **App lock** — biometric prompt (BiometricPrompt / LocalAuthentication)
-  with PIN fallback, toggled per device in Settings.
+  with PIN fallback, toggled per device in Settings; devices without
+  biometric hardware/enrollment fall back to PIN-only protection instead of
+  just offering to skip it.
 - **Transaction history per contact** — record lending/borrowing and
   partial/full repayments, each transaction signed (`+`/`-`) to derive its
   type and color from the amount alone.
 - **Stats screen** — total owed in each direction, top debtors/creditors,
   and a 6-month trend chart.
 - **Export** — CSV/PDF export of transaction history, filtered by direction
-  and date range, generated natively on each platform.
-- **Android home-screen widget** (Glance) showing the two running totals.
+  and date range, generated natively on each platform via FileKit; Web
+  renders the PDF as an HTML report printed through the browser's own
+  "Save as PDF".
+- **QR contact exchange** — share your contact card (name/phone/email) as a
+  QR code, generated the same way on every platform (including Web) via
+  `qrose`. Android/iOS scan it live with the camera; Desktop/Web have no
+  camera scanner, so the same button instead opens an image picker and
+  decodes a picked screenshot (ZXing on Desktop, the browser's native
+  `BarcodeDetector` on Web). A scanned/opened `debttracker://contact?...`
+  link (also openable directly from other apps, e.g. Google Lens) prefills a
+  new debtor or creditor form.
+- **Android home-screen widget** (Glance) with size-adaptive icon-badge KPI
+  rows for the two running totals, reflowing from one to two columns as the
+  widget is resized.
 - **Runtime language switcher** — System / Українська / English / Polski,
   each with a flag icon, switchable without restarting the app.
 - **Search, sort, filter, swipe-to-delete**, sound feedback on key actions,
@@ -50,6 +64,8 @@ Android, iOS, Desktop (JVM), and Web (JS/Wasm).
 | Async | Kotlin Coroutines & Flow |
 | Precision math | `bignum` (`BigDecimal`, for money) |
 | Settings | `multiplatform-settings` |
+| File export/picking | FileKit (`filekit-dialogs-compose`) |
+| QR codes | `qrose` (generate, all platforms), QRKit (camera scan, Android/iOS), ZXing (Desktop image decode) |
 
 ## Architecture
 
@@ -69,8 +85,10 @@ sharedUI/src
 │   │   ├── di/            # Koin modules (appModule + expect platformDataModule)
 │   │   ├── settings/      # AppSettings (Compose-reactive user prefs)
 │   │   ├── security/      # expect BiometricAuthenticator
-│   │   ├── export/        # expect FileExporter (CSV/PDF)
+│   │   ├── export/        # expect FileExporter (CSV/PDF), FileKit-backed on Android/iOS/Desktop
 │   │   ├── sound/         # expect SoundPlayer
+│   │   ├── qr/            # QR contact-exchange: generate (qrose), scan (QRKit)/decode (ZXing/BarcodeDetector), deep links
+│   │   ├── media/         # FileKit-backed cross-platform image picker
 │   │   ├── i18n/          # Strings.kt catalog, translate/ (one file per language), AppLocale.kt
 │   │   └── shortcuts/     # Desktop hotkey → search-focus bridge
 │   ├── ui/
@@ -85,7 +103,7 @@ sharedUI/src
 ├── pdfMain/                # PdfKmp vector-DSL PDF report builder (Android/iOS/JVM — not Web)
 ├── androidMain/ iosMain/ jvmMain/ webMain/
 │                           # actual implementations of the expect declarations above
-└── webMain                 # shared JS + Wasm source set (no Room, no PDF export — online-only on Web)
+└── webMain                 # shared JS + Wasm source set (no Room — online-only on Web)
 ```
 
 **Screen pattern (MVI):** each screen's `Contract` file defines an immutable

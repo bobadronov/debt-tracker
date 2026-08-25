@@ -54,17 +54,49 @@ one shot on a fresh Supabase project) to recover both the app and its backend.
 - **Contact autofill by email** — when adding a debtor/creditor, looking up
   their email against other registered users' profiles offers their display
   name + avatar for autofill (via a `SECURITY DEFINER` RPC, since RLS
-  otherwise blocks reading another user's profile — see schema §9 below).
+  otherwise blocks reading another user's profile — see schema §7 below).
+  The resulting `avatarUrl` is shown everywhere that debtor/creditor appears:
+  list rows, detail screen, stats top-lists, and the name-suggestion
+  autocomplete dropdown — there is no manual per-contact avatar upload, only
+  this lookup-based autofill (contrast with the user's own profile photo,
+  which *is* user-uploaded — see §7's `avatars` Storage bucket).
+- **QR contact exchange** — share your own contact card (name/phone/email,
+  autofilled from the account when signed in) as a QR code, and scan someone
+  else's to prefill a new debtor/creditor form. See §6a below for the full
+  design (this needs its own section since scan capability differs sharply
+  by platform).
 - **App lock** — biometric prompt (BiometricPrompt / LocalAuthentication)
-  with PIN fallback, toggled per device in Settings.
+  with PIN fallback, toggled per device in Settings. Devices with no
+  biometric hardware or no enrolled biometric fall back to **PIN-only**
+  protection during onboarding and in Settings, rather than only offering a
+  "Skip" — biometric absence must never silently leave the app unlocked.
 - **Transaction history per contact** — record lending/borrowing and
   partial/full repayments, each transaction signed (`+`/`-`) to derive its
   type and color from the amount alone.
 - **Stats screen** — total owed in each direction, top debtors/creditors,
   and a 6-month trend chart.
 - **Export** — CSV/PDF export of transaction history, filtered by direction
-  and date range, generated natively on each platform.
-- **Android home-screen widget** (Glance) showing the two running totals.
+  and date range. CSV is UTF-8 with a leading BOM (so Excel, which otherwise
+  guesses the system codepage for a BOM-less file, renders Cyrillic content
+  correctly). Android/iOS/Desktop generate the PDF as a real vector document
+  (PdfKmp) and save both files via FileKit's cross-platform save dialog; Web
+  has no PdfKmp target and no bundled-Unicode-font JS PDF library available,
+  so it renders the report as HTML into a hidden iframe and calls the
+  browser's own `print()`, letting the user "Save as PDF" through the OS/
+  browser dialog with correct Cyrillic via the browser's native text
+  rendering.
+- **Android home-screen widget** (Glance) — a `LazyVerticalGrid` with
+  `GridCells.Adaptive`, reflowing from one to two columns as the widget is
+  resized, each row an icon-badge KPI (colored circular badge + trend icon,
+  matching the Stats screen's accent colors) showing one of the two running
+  totals. Ships a static XML widget-preview so Android's widget picker shows
+  a realistic thumbnail before placement.
+- **In-app update check (Android)** — uses Google Play's in-app update API
+  (`app-update-ktx`), not GitHub; Settings shows live status (`Checking`,
+  `UpToDate`, `CheckFailed`, `Downloading`, `DownloadFailed`) next to the
+  manual "check for update" button. Desktop instead polls GitHub Releases
+  (`AppUpdateChecker`) since there's no Play Store there; iOS/Web have
+  neither.
 - **Delete all data** — a double-confirmation "Delete all data" action that
   hard-deletes everything server-side via a `SECURITY DEFINER` RPC scoped to
   `auth.uid()` (settings/profile row itself is left untouched).
@@ -97,7 +129,12 @@ snapshot:
 | Settings | `multiplatform-settings` |
 | Images | Coil 3 (`coil-compose`, `coil-network-ktor3`) |
 | Android widget | AndroidX Glance |
-| PDF export | PdfKmp (`io.github.conamobiledev:pdfkmp` + `pdfkmp-viewer`) — vector DSL, Android/Desktop/iOS only |
+| PDF export | PdfKmp (`io.github.conamobiledev:pdfkmp` + `pdfkmp-viewer`) — vector DSL, Android/Desktop/iOS only; Web uses browser print instead (no PdfKmp target) |
+| File export/picking | FileKit (`io.github.vinceglb:filekit-dialogs-compose`) — cross-platform save dialog + image picker, replaces per-platform expect/actual for both |
+| QR generate | `qrose` (`io.github.alexzhirkevich:qrose`) — pure Kotlin, only QR library here that publishes a working js/wasmJs target |
+| QR scan (camera) | QRKit (`network.chaintech:qr-kit`) — Android/iOS only; excluded on Desktop to avoid its heavy native transitive deps (javacv/opencv/ffmpeg, ~900MB) |
+| QR decode (picked image) | ZXing (`com.google.zxing:core`) on Desktop; the browser's native `BarcodeDetector` API on Web (Chrome/Edge only — falls back to "unsupported" elsewhere); no camera scanner on either platform |
+| Android in-app update | `com.google.android.play:app-update-ktx` |
 
 Android: `compileSdk = 37`, `minSdk = 26` (biometric API stability), `targetSdk = 37`.
 JVM target for Android/JVM source sets: **17**.
@@ -115,8 +152,11 @@ sharedUI/src
 │   │   ├── di/            # Koin modules (appModule + expect platformDataModule)
 │   │   ├── settings/      # AppSettings (Compose-reactive user prefs)
 │   │   ├── security/      # expect BiometricAuthenticator
-│   │   ├── export/        # expect FileExporter (CSV/PDF)
+│   │   ├── export/        # expect FileExporter (CSV/PDF), FileKit-backed on Android/iOS/Desktop
 │   │   ├── sound/         # expect SoundPlayer
+│   │   ├── qr/            # QR contact-exchange: generate/scan/decode, deep links (see §6a)
+│   │   ├── media/         # FileKit-backed cross-platform image picker (no expect/actual needed)
+│   │   ├── update/        # expect InAppUpdateLauncher (Play in-app update on Android, GitHub polling on Desktop)
 │   │   ├── i18n/          # Strings.kt catalog + AppLocale.kt + translate/ (see §6)
 │   │   └── shortcuts/     # Desktop hotkey → search-focus bridge
 │   ├── ui/
@@ -131,7 +171,7 @@ sharedUI/src
 ├── pdfMain/                # PdfKmp vector-DSL PDF report builder (Android/iOS/JVM — not Web)
 ├── androidMain/ iosMain/ jvmMain/ webMain/
 │                           # actual implementations of the expect declarations above
-└── webMain                 # shared JS + Wasm source set (no Room, no PDF export — online-only on Web)
+└── webMain                 # shared JS + Wasm source set (no Room — online-only on Web)
 ```
 
 Note: `roomMain` and `pdfMain` are **custom intermediate source sets**, which
@@ -227,10 +267,55 @@ every file under `core/i18n/translate/` rather than reaching for
 `core/i18n/translate/XxStrings.kt` file and an entry in `AppLocale.kt`'s
 `supportedLanguages` map and the language picker's option list.
 
+## 6a. QR contact exchange
+
+A "Share/Scan" hub screen (`ui/screens/qr/QrHubScreen.kt`, reachable from the
+Home top bar) with two modes:
+
+- **Share (default)** — renders your own contact card (name/phone/email —
+  autofilled from the account when signed in, or entered/saved locally when
+  signed out) as a QR image (`core/qr/ContactQrImage.kt`,
+  `rememberContactQrPainter`), encoding a deep link:
+  `debttracker://contact?name=...&phone=...&email=...` (query params
+  UTF-8 percent-encoded via Ktor's `Parameters`/`formUrlEncode` —
+  `domain/model/ContactQrPayload.kt`). Generation uses **qrose**, a pure-
+  Kotlin QR library with no expect/actual split — the same code path renders
+  the code on every platform including Web/wasmJs. The QR module color
+  flips to stay visible on dark backgrounds; the app logo is centered on the
+  code.
+- **Scan** — a single button on the Share screen adapts by platform
+  (`core/qr/QrScanSupport.kt`'s `QR_SCAN_CAPABLE_PLATFORMS = {ANDROID, IOS}`):
+  - **Android/iOS** ("Scan"): switches to live-camera scanning via QRKit's
+    `QrScanner` (`ContactQrScanner.android.kt`/`.ios.kt`), which owns its own
+    camera-permission flow.
+  - **Desktop/Web** ("Select image", no camera scanner available): opens the
+    OS file picker directly (FileKit's `rememberImagePicker`) and decodes the
+    picked image via `decodeQrFromImage` — Desktop uses ZXing
+    (hand-rolled `BufferedImageLuminanceSource`); Web uses the browser's
+    native `BarcodeDetector` API (Chrome/Edge only — returns
+    `QrDecodeResult.Unsupported` elsewhere, no bundled decode library on
+    Web). QRKit's own image-picker path is deliberately not used anywhere —
+    it crashes against this project's Material3 version.
+- A successful scan/decode shows a dialog asking "add as debtor or
+  creditor?", then navigates to the matching Add form prefilled from the
+  decoded contact.
+- The custom `debttracker://contact?...` scheme is also registered as an
+  Android intent-filter and iOS `CFBundleURLTypes`, so third-party scanners
+  (e.g. Google Lens, the stock camera app) can open the app directly with
+  the contact prefilled, without going through the in-app scanner at all.
+  `core/qr/ContactDeepLinks.kt` bridges an externally-opened link
+  (`AppActivity.onCreate`/`onNewIntent` on Android, `onOpenURL` on iOS — no
+  equivalent on Desktop/Web, which have no OS-level URL-scheme handoff into
+  a running app in the same way) into the nav graph via a
+  `StateFlow<String?>`.
+- This feature carries **no schema changes** — it's pure client-side
+  deep-link/payload plumbing; the QR payload itself never includes an
+  avatar, only name/phone/email.
+
 ## 7. Database schema (Supabase / Postgres)
 
 Full, ready-to-run schema: **`supabase/full_backup.sql`** (versioned,
-incremental history: `supabase/migrations/0001..0004`). Summary:
+incremental history: `supabase/migrations/0001..0006`). Summary:
 
 - `profiles` — 1:1 with `auth.users`; app settings (theme, locale, biometric/
   sound/haptic toggles) + `display_name`/`avatar_url`/`email` for the

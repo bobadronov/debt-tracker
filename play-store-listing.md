@@ -35,6 +35,7 @@ KEY FEATURES
 • Multi-currency: UAH, USD, PLN, EUR, per contact
 • Works fully offline — no account required
 • Optional free account to sync across your devices in real time
+• Add contacts by scanning a QR code — no typing names or numbers
 • App lock via fingerprint/face unlock or PIN
 • Stats screen: totals, top debtors/creditors, 6-month trend
 • Export transaction history to CSV or PDF
@@ -52,7 +53,7 @@ sync — see the privacy policy for exactly what that involves.
 Стежте, хто винен вам і кому винні ви — офлайн, синхронізація за бажанням.
 ```
 
-**Повний опис** (uk-UA, 4000 символів макс, 922 використано):
+**Повний опис** (uk-UA, 4000 символів макс, 1056 використано):
 ```
 DebtTracker веде облік грошей в обидва боки — хто винен вам, і кому винні ви, — не згортаючи одне в інше.
 
@@ -62,6 +63,7 @@ DebtTracker веде облік грошей в обидва боки — хто
 • Мультивалютність: UAH, USD, PLN, EUR — окремо для кожного контакту
 • Повністю офлайн — акаунт не обов'язковий
 • Безкоштовний акаунт за бажанням для синхронізації між пристроями в реальному часі
+• Додавання контактів через сканування QR-коду — без введення імені чи номера
 • Блокування застосунку відбитком пальця, обличчям або PIN-кодом
 • Екран статистики: загальні суми, топ боржників/кредиторів, тренд за 6 місяців
 • Експорт історії транзакцій у CSV або PDF
@@ -78,7 +80,7 @@ DebtTracker веде облік грошей в обидва боки — хто
 Śledź, kto jest winien Tobie i komu winien Ty — offline, synchronizacja online.
 ```
 
-**Pełny opis** (pl-PL, 4000 znaków maks., 1013 użyto):
+**Pełny opis** (pl-PL, 4000 znaków maks., 1097 użyto):
 ```
 Debt Tracker śledzi pieniądze pożyczone w obie strony — kto jest winien Tobie i komu Ty jesteś winien — bez wzajemnego rozliczania.
 
@@ -88,6 +90,7 @@ GŁÓWNE FUNKCJE
 • Wiele walut: UAH, USD, PLN, EUR — osobno dla każdego kontaktu
 • Działa całkowicie offline — konto nie jest wymagane
 • Opcjonalne bezpłatne konto do synchronizacji między urządzeniami w czasie rzeczywistym
+• Dodawanie kontaktów przez skanowanie kodu QR — bez wpisywania nazwiska czy numeru
 • Blokada aplikacji odciskiem palca, twarzą lub kodem PIN
 • Ekran statystyk: sumy, najwięksi dłużnicy/wierzyciele, trend z 6 miesięcy
 • Eksport historii transakcji do CSV lub PDF
