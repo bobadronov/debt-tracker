@@ -49,7 +49,9 @@ fun CreditorDetailScreen(
     }
 
     ContactDetailScaffold(
+        id = creditorId,
         title = state.creditor?.fullName ?: strings.creditorDetailTitleFallback,
+        avatarUrl = state.creditor?.avatarUrl,
         onBack = onBack,
         exportLabel = strings.creditorDetailExport,
         onExport = onExport,

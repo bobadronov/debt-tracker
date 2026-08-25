@@ -1,6 +1,7 @@
 package org.bigblackowl.debttracker.ui.screens.qr
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -25,15 +26,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
-import org.bigblackowl.debttracker.core.platform.AppPlatform
 import org.bigblackowl.debttracker.core.platform.currentPlatform
 import org.bigblackowl.debttracker.core.qr.ContactQrScanner
 import org.bigblackowl.debttracker.core.qr.QR_SCAN_CAPABLE_PLATFORMS
@@ -53,7 +54,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * QR contact-exchange hub (Home top bar → QR icon). Shows your own contact card as a QR code —
- * auto-filled from your account once signed in (no fields to edit here), or a locally-saved card
+ * autofill from your account once signed in (no fields to edit here), or a locally-saved card
  * you fill in via Edit while signed out. On Android/iOS a Scan button switches the same screen
  * into camera mode; on Desktop/Web there's no Scan button at all (see [QR_SCAN_CAPABLE_PLATFORMS]).
  * A valid scan asks whether to add the person as a debtor or creditor before navigating to the
@@ -87,10 +88,12 @@ fun QrHubScreen(
             )
         }
     ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            when (state.mode) {
-                QrHubMode.SHARE -> ShareContent(state = state, onIntent = viewModel::onIntent)
-                QrHubMode.SCAN -> ScanContent(state = state, onIntent = viewModel::onIntent)
+        Crossfade(state.mode) {
+            Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+                when (it) {
+                    QrHubMode.SHARE -> ShareContent(state = state, onIntent = viewModel::onIntent)
+                    QrHubMode.SCAN -> ScanContent(state = state, onIntent = viewModel::onIntent)
+                }
             }
         }
     }
@@ -126,32 +129,32 @@ private fun ShareContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + shrinkVertically(),
         ) {
-            state.qrPayload?.let { payload ->
-                val painter = rememberContactQrPainter(payload)
-                painter?.let {
-                    Image(
-                        painter = it,
-                        contentDescription = null,
-                        modifier = Modifier.widthIn(max = Dimens.contentMaxWidth).fillMaxWidth().aspectRatio(1f),
-                    )
-                }
-            } ?: Text(strings.qrHubMyCardHint, style = MaterialTheme.typography.bodyMedium)
-        }
-        Column (
-            verticalArrangement = Arrangement.spacedBy(Dimens.space8),
+            Column(
+                verticalArrangement = Arrangement.spacedBy(Dimens.space8),
+            ) {
+                state.qrPayload?.let { payload ->
+                    val painter = rememberContactQrPainter(payload)
+                    painter?.let {
+                        Image(
+                            painter = it,
+                            contentDescription = null,
+                            modifier = Modifier.widthIn(max = Dimens.contentMaxWidth).fillMaxWidth().aspectRatio(1f),
+                        )
 
-            ){
-
-
-            if (currentPlatform in QR_SCAN_CAPABLE_PLATFORMS) {
-                Button(
-                    onClick = { onIntent(QrHubIntent.SwitchToScan) },
-                    modifier = Modifier.widthIn(max = Dimens.contentMaxWidth).fillMaxWidth(),
-                ) { Text(strings.qrHubScanTab) }
+                        Text(strings.qrHubDescription, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
+                    }
+                } ?: Text(strings.qrHubMyCardHint, style = MaterialTheme.typography.bodyMedium)
             }
+        }
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(Dimens.space8),
+        ) {
 
             // Signed-in users' card comes straight from the account — nothing local to edit here.
             if (!state.isAuthenticated) {
+                // Always visible (not just while expanded) — this is the only entry point into
+                // the fields, and its label doubles as Save once they're open.
                 OutlinedButton(
                     onClick = { onIntent(QrHubIntent.EditClicked) },
                     modifier = Modifier.widthIn(max = Dimens.contentMaxWidth).fillMaxWidth(),
@@ -192,6 +195,20 @@ private fun ShareContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
                     }
                 }
             }
+            // Scan hides while entering your own data (SHARE/SCAN don't make sense at once) —
+            // it comes back once fields collapse, whether by Save or by data already present.
+            AnimatedVisibility(
+                visible = !state.fieldsExpanded,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+            ) {
+                if (currentPlatform in QR_SCAN_CAPABLE_PLATFORMS) {
+                    Button(
+                        onClick = { onIntent(QrHubIntent.SwitchToScan) },
+                        modifier = Modifier.widthIn(max = Dimens.contentMaxWidth).fillMaxWidth(),
+                    ) { Text(strings.qrHubScanTab) }
+                }
+            }
         }
     }
 }
@@ -213,6 +230,7 @@ private fun ScanContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
         }
     } else {
         ContactQrScanner(
+            description = "",
             modifier = Modifier.fillMaxSize(),
             flashlightOn = false,
             onResult = { payload -> onIntent(QrHubIntent.ScanResult(payload)) },
@@ -287,7 +305,7 @@ private val PREVIEW_STATE_SIGNED_IN = QrHubState(isAuthenticated = true, myName 
 @Composable
 private fun QrHubShareSignedInLightPreview() = DebtTrackerPreview(darkTheme = false) { QrHubSharePreviewContent(PREVIEW_STATE_SIGNED_IN) }
 
-@Preview
+@Preview(device = DESKTOP)
 @Composable
 private fun QrHubShareSignedInDarkPreview() = DebtTrackerPreview(darkTheme = true) { QrHubSharePreviewContent(PREVIEW_STATE_SIGNED_IN) }
 

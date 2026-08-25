@@ -239,7 +239,8 @@ val UkStrings = Strings(
 
     homeQr = "QR-код",
     qrHubScanTab = "Сканувати",
-    qrHubMyCardHint = "Вкажіть своє ім'я — і ми перетворимо вас на QR-код",
+    qrHubMyCardHint = "Вкажіть своє ім'я — і я створю QR-код для поширення",
+    qrHubDescription = "Покажіть своєму другу цей код для передачі своїх даних",
     qrHubCameraPermissionRationale = "Потрібен доступ до камери, щоб сканувати QR-код",
     qrHubCameraPermissionRetry = "Спробувати ще раз",
     qrHubScannedDialogTitle = "Додати контакт",

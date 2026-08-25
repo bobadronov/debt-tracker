@@ -43,6 +43,7 @@ import org.bigblackowl.debttracker.domain.model.formatTotals
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
+import org.bigblackowl.debttracker.ui.components.EntityAvatar
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
 import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
 import org.bigblackowl.debttracker.ui.components.SettingsSection
@@ -92,7 +93,9 @@ fun StatsScreen(
                     state.topDebtors.forEachIndexed { index, item ->
                         TopRow(
                             rank = index + 1,
+                            id = item.debtor.id,
                             name = item.debtor.fullName,
+                            avatarUrl = item.debtor.avatarUrl,
                             balance = item.balance,
                             currency = item.debtor.currency,
                             onClick = { onOpenDebtor(item.debtor.id) },
@@ -105,7 +108,9 @@ fun StatsScreen(
                     state.topCreditors.forEachIndexed { index, item ->
                         TopRow(
                             rank = index + 1,
+                            id = item.creditor.id,
                             name = item.creditor.fullName,
+                            avatarUrl = item.creditor.avatarUrl,
                             balance = item.balance,
                             currency = item.creditor.currency,
                             onClick = { onOpenCreditor(item.creditor.id) },
@@ -194,9 +199,9 @@ private fun KpiCard(
     }
 }
 
-/** Рядок топ-списку з номером місця у tonal-колі замість голого тексту. */
+/** Рядок топ-списку: аватарка контакту з бейджем місця поверх неї замість голого номера. */
 @Composable
-private fun TopRow(rank: Int, name: String, balance: BigDecimal, currency: Currency, onClick: () -> Unit) {
+private fun TopRow(rank: Int, id: String, name: String, avatarUrl: String?, balance: BigDecimal, currency: Currency, onClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth()
             .clickable(onClick = onClick)
@@ -205,16 +210,22 @@ private fun TopRow(rank: Int, name: String, balance: BigDecimal, currency: Curre
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier.size(Dimens.space28).clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    "$rank",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+            Box {
+                EntityAvatar(id = id, name = name, avatarUrl = avatarUrl)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .size(Dimens.space16)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        "$rank",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
             }
             Spacer(Modifier.width(Dimens.space12))
             Text(name, style = MaterialTheme.typography.bodyLarge)

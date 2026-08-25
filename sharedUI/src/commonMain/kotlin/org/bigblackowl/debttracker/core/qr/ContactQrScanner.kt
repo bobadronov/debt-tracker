@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
  */
 @Composable
 expect fun ContactQrScanner(
+    description: String,
     modifier: Modifier,
     flashlightOn: Boolean,
     onResult: (String) -> Unit,

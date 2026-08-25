@@ -53,6 +53,7 @@ fun ContactQrScanOverlay(onScanned: (ScannedContact) -> Unit, onClose: () -> Uni
                 }
             } else {
                 ContactQrScanner(
+                    description = "",
                     modifier = Modifier.fillMaxSize(),
                     flashlightOn = false,
                     onResult = { raw -> ContactQrPayload.decode(raw)?.let(onScanned) },

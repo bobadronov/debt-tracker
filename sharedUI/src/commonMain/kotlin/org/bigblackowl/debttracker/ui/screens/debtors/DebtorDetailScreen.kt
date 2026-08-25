@@ -49,7 +49,9 @@ fun DebtorDetailScreen(
     }
 
     ContactDetailScaffold(
+        id = debtorId,
         title = state.debtor?.fullName ?: strings.debtorDetailTitleFallback,
+        avatarUrl = state.debtor?.avatarUrl,
         onBack = onBack,
         exportLabel = strings.debtorDetailExport,
         onExport = onExport,

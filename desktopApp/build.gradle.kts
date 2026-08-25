@@ -41,6 +41,7 @@ compose.desktop {
 
             linux {
                 iconFile.set(project.file("src/main/resources/appIcons/LinuxIcon.png"))
+                modules("jdk.security.auth") // FileKit's Linux (XDG portal/D-Bus) file dialogs need this jlink module
             }
 
             windows {

@@ -25,7 +25,6 @@ object Dimens {
     val space28 = 28.dp
     val space30 = 30.dp
     val space40 = 40.dp
-    val space48 = 48.dp
     val space56 = 56.dp
     val space60 = 60.dp
     val space72 = 72.dp

@@ -12,6 +12,7 @@ actual fun rememberContactQrPainter(data: String): Painter? = null
 
 @Composable
 actual fun ContactQrScanner(
+    description: String,
     modifier: Modifier,
     flashlightOn: Boolean,
     onResult: (String) -> Unit,

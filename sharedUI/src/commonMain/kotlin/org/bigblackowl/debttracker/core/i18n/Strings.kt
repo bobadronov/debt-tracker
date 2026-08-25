@@ -259,6 +259,7 @@ data class Strings(
     val homeQr: String,
     val qrHubScanTab: String,
     val qrHubMyCardHint: String,
+    val qrHubDescription: String,
     val qrHubCameraPermissionRationale: String,
     val qrHubCameraPermissionRetry: String,
     val qrHubScannedDialogTitle: String,

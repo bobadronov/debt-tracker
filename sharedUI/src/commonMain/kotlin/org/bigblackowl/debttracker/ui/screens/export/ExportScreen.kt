@@ -2,7 +2,7 @@ package org.bigblackowl.debttracker.ui.screens.export
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -24,7 +24,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.bigblackowl.debttracker.core.export.ExportDirection
@@ -80,11 +80,11 @@ fun ExportScreen(
 
     PlaceholderScreen(title = strings.exportTitle, onBack = onBack) {
         Column(
-            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+            modifier = Modifier.fillMaxHeight().width(Dimens.contentMaxWidth).verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column(
-                modifier = Modifier.width(Dimens.contentMaxWidth),
                 verticalArrangement = Arrangement.spacedBy(Dimens.space12),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -177,21 +177,21 @@ fun ExportScreen(
                         color = MaterialTheme.debtAccentColors.repay
                     )
                 }
-
-                LoadingButton(
-                    onClick = { viewModel.onIntent(ExportIntent.Export(fileExporter, fromDate, toDate)) },
-                    isLoading = state.isExporting,
-                    modifier = Modifier.fillMaxWidth(),
-                    leadingIcon = {
-                        Icon(
-                            Icons.Filled.Download,
-                            contentDescription = null,
-                            modifier = Modifier.padding(end = Dimens.space8)
-                        )
-                    },
-                    label = { Text(strings.exportSubmit) },
-                )
             }
+            LoadingButton(
+                onClick = { viewModel.onIntent(ExportIntent.Export(fileExporter, fromDate, toDate)) },
+                isLoading = state.isExporting,
+                modifier = Modifier.fillMaxWidth(),
+                leadingIcon = {
+                    Icon(
+                        Icons.Filled.Download,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = Dimens.space8)
+                    )
+                },
+                label = { Text(strings.exportSubmit) },
+            )
+
         }
     }
     if (showDateRangePicker) {

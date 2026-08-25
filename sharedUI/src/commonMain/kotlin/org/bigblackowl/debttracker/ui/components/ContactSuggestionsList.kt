@@ -3,14 +3,17 @@ package org.bigblackowl.debttracker.ui.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,7 +44,10 @@ fun ContactSuggestionsList(
                         .fillMaxWidth()
                         .clickable { onSelect(suggestion) }
                         .padding(horizontal = Dimens.space12, vertical = Dimens.space8),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    EntityAvatar(id = suggestion.fullName, name = suggestion.fullName, avatarUrl = null, size = Dimens.space28)
+                    Spacer(Modifier.width(Dimens.space12))
                     Column {
                         Text(
                             suggestion.fullName,

@@ -1,18 +1,16 @@
-import androidx.compose.material3.Card
-import androidx.compose.material3.Icon
-import androidx.compose.runtime.Composable
+
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Tray
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import io.github.vinceglb.filekit.FileKit
 import org.bigblackowl.debttracker.App
 import org.bigblackowl.debttracker.core.di.initKoin
 import org.bigblackowl.debttracker.core.i18n.resolveStrings
@@ -23,6 +21,7 @@ import java.awt.Dimension
 
 /** Desktop (JVM) entry point: starts Koin + background sync, then opens the app window. */
 fun main() {
+    FileKit.init(appId = "org.bigblackowl.debttracker") // required for FileKit's Save-As dialogs and cache/files dirs on JVM
     val koinApp = initKoin()
     koinApp.koin.get<SyncCoordinator>().start()
     startApp(koinApp.koin.get())
@@ -34,27 +33,31 @@ fun main() {
  * background sync keeps running; off, it behaves like a normal window and exits the process.
  */
 private fun startApp(settings: AppSettings) = application {
+
     var isWindowVisible by remember { mutableStateOf(true) }
-    val icon = remember { windowIcon() }
-    // Skia only decodes ICO/PNG (see windowIcon() below) — on platforms where that returns null
-    // (macOS) there's no tray icon to show, so the tray is skipped there rather than crashing.
+
+    val appIcon = remember { windowIcon() }
+
     val strings = remember(settings.locale) { resolveStrings(settings.locale) }
 
-    if (settings.runInBackground && icon != null) {
+    if (settings.runInBackground && appIcon != null) {
         Tray(
-            icon = icon,
+            icon = appIcon,
             tooltip = "Debt Tracker",
             onAction = { isWindowVisible = true },
             menu = {
-                Item(strings.trayOpen, onClick = { isWindowVisible = true })
-                Item(strings.trayQuit, onClick = ::exitApplication)
+                // No icon= here: the tray popup menu is backed by java.awt.Menu, which has no
+                // icon support at all (unlike Swing's JMenuItem) — passing one throws
+                // UnsupportedOperationException at runtime (Menu.desktop.kt's AwtMenuScope.Item).
+                Item(text = strings.trayOpen, onClick = { isWindowVisible = true })
+                Item(text = strings.trayQuit, onClick = ::exitApplication)
             },
         )
     }
 
     Window(
         title = "Debt Tracker",
-        icon = icon,
+        icon = appIcon,
         state = rememberWindowState(width = 800.dp, height = 600.dp),
         visible = isWindowVisible,
         onCloseRequest = {
@@ -63,15 +66,6 @@ private fun startApp(settings: AppSettings) = application {
     ) {
         window.minimumSize = Dimension(350, 600)
         App()
-    }
-}
-
-@Preview
-@Composable
-private fun Preview() {
-    val icon = remember { windowIcon() }
-    Card {
-        icon?.let { Icon(painter = it, contentDescription = null) }
     }
 }
 
@@ -89,9 +83,13 @@ private fun windowIcon(): Painter? {
     val os = System.getProperty("os.name").lowercase()
     val resourcePath = when {
         os.contains("win") -> "appIcons/WindowsIcon.ico"
-        os.contains("mac") -> return null
+        os.contains("mac") -> "appIcons/MacosIcon.icns"
         else -> "appIcons/LinuxIcon.png"
     }
+    return resourcePainter(resourcePath)
+}
+
+private fun resourcePainter(resourcePath: String): Painter? {
     val bytes = ClassLoader.getSystemResourceAsStream(resourcePath)?.use { it.readAllBytes() }
         ?: return null
     return BitmapPainter(bytes.decodeToImageBitmap())

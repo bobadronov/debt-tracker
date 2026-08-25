@@ -121,6 +121,7 @@ kotlin {
             implementation(libs.multiplatformSettings)
             implementation(libs.kotlinx.datetime)
             implementation(libs.bignum)
+            api(libs.filekit.dialogs.compose) // cross-platform file pick/save (avatar picker, CSV/PDF export); api so desktopApp's main() can call FileKit.init()
             // room-runtime is NOT here: Room has no js/wasmJs target (spec §1 — Web has no local DB).
 
             implementation(project.dependencies.platform(libs.supabase.bom))

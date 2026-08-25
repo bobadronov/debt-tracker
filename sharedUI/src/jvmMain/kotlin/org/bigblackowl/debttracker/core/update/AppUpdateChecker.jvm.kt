@@ -3,6 +3,9 @@ package org.bigblackowl.debttracker.core.update
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import io.github.aakira.napier.Napier
+import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.cacheDir
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
@@ -92,7 +95,11 @@ private class DesktopAppUpdateChecker : AppUpdateChecker {
     override suspend fun download(update: AppUpdateInfo, onProgress: (DownloadProgress) -> Unit): String =
         withContext(Dispatchers.IO) {
             Napier.d(tag = TAG) { "download: starting from ${update.downloadUrl}" }
-            val target = File.createTempFile("debt-tracker-update-", currentAssetExtension())
+            // FileKit.cacheDir instead of File.createTempFile: it's an app-scoped, already-existing
+            // directory (see FileKit.init() in desktopApp's main()), and the timestamp keeps this
+            // unique the same way createTempFile's random suffix did.
+            val fileName = "debt-tracker-update-${System.currentTimeMillis()}${currentAssetExtension() ?: ".tmp"}"
+            val target = PlatformFile(FileKit.cacheDir, fileName).file
             // Overall average since the download started, not an instantaneous per-chunk rate —
             // onDownload fires for every small buffer, so an instant delta would be too jumpy to show.
             val startedAtNanos = System.nanoTime()
@@ -125,32 +132,50 @@ private class DesktopAppUpdateChecker : AppUpdateChecker {
         }
 
     override suspend fun installAndExit(filePath: String): Unit = withContext(Dispatchers.IO) {
-        Napier.i(tag = TAG) { "installAndExit: launching installer for $filePath" }
-        // Captured before running the installer: for a jpackage-installed app this is the native
-        // launcher's own exe, at the same path the (in-place) upgrade just wrote back to.
+        Napier.i(tag = TAG) { "installAndExit: scheduling installer for $filePath" }
+        // Captured before exiting: for a jpackage-installed app this is the native launcher's own
+        // exe, at the same path the (in-place) upgrade will write back to.
         val relaunchCommand = ProcessHandle.current().info().command().orElse(null)
+        val pid = ProcessHandle.current().pid()
         try {
-            runInstallerSilently(File(filePath))
+            // msiexec/dpkg upgrade this app's own exe/DLLs in place, which stay locked while this
+            // JVM is running — installing now (then exiting) would fail or corrupt the install.
+            // Instead hand off to a detached helper that waits for this process to exit, THEN
+            // installs, THEN relaunches — and exit immediately so the locks are released.
+            spawnDetachedInstaller(File(filePath), pid, relaunchCommand)
         } catch (e: Exception) {
-            Napier.e(tag = TAG, throwable = e) { "installAndExit: installer failed" }
+            Napier.e(tag = TAG, throwable = e) { "installAndExit: failed to schedule installer" }
             throw e
         }
-        Napier.i(tag = TAG) { "installAndExit: install succeeded, relaunching via $relaunchCommand and exiting" }
-        relaunchCommand?.let { runCatching { ProcessBuilder(it).start() } }
+        Napier.i(tag = TAG) { "installAndExit: installer scheduled, exiting so it can replace locked files" }
         exitProcess(0)
     }
 
-    /** Runs the platform installer with no wizard UI and waits for it to finish; throws if it fails. */
-    private fun runInstallerSilently(installer: File) {
+    /**
+     * Starts a detached process (survives this JVM exiting) that waits for [waitForPid] to die,
+     * runs the platform installer with no wizard UI, then relaunches [relaunchCommand] if given.
+     */
+    private fun spawnDetachedInstaller(installer: File, waitForPid: Long, relaunchCommand: String?) {
         val os = System.getProperty("os.name").lowercase()
         val command = when {
-            os.contains("win") -> listOf("msiexec", "/i", installer.absolutePath, "/passive", "/norestart")
+            os.contains("win") -> listOf(
+                "powershell", "-NoProfile", "-WindowStyle", "Hidden", "-Command",
+                "Wait-Process -Id $waitForPid -ErrorAction SilentlyContinue; " +
+                    "Start-Process msiexec.exe -ArgumentList '/i','${installer.absolutePath}','/passive','/norestart' -Wait; " +
+                    (relaunchCommand?.let { "Start-Process '$it'" } ?: ""),
+            )
             os.contains("mac") -> error("No macOS release exists to install")
-            else -> listOf("pkexec", "dpkg", "-i", installer.absolutePath)
+            else -> listOf(
+                "sh", "-c",
+                "while kill -0 $waitForPid 2>/dev/null; do sleep 1; done; " +
+                    "pkexec dpkg -i '${installer.absolutePath}'; " +
+                    (relaunchCommand?.let { "'$it' &" } ?: ""),
+            )
         }
-        val exitCode = ProcessBuilder(command).start().waitFor()
-        // 3010 = success, reboot required — shouldn't happen with /norestart, but treat it as success too.
-        check(exitCode == 0 || exitCode == 3010) { "Installer exited with code $exitCode" }
+        ProcessBuilder(command)
+            .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+            .redirectError(ProcessBuilder.Redirect.DISCARD)
+            .start()
     }
 }
 

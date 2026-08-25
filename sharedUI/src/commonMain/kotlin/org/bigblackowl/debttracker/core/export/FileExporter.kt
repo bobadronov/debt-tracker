@@ -3,7 +3,8 @@ package org.bigblackowl.debttracker.core.export
 import androidx.compose.runtime.Composable
 
 /**
- * CSV: share sheet (Android/iOS) or a Save As dialog (Desktop), локальна генерація (спек §6, п.8).
+ * CSV: FileKit's native save dialog (Android/iOS/Desktop, `pdfMain` source set) or a browser
+ * download (Web, `webMain`) — локальна генерація (спек §6, п.8).
  * PDF: built with the PdfKmp vector DSL ([org.bigblackowl.debttracker.core.export.buildReportDocument],
  * `pdfMain` source set) and opened in PdfKmp's own in-app viewer instead of an immediate share/save —
  * see [savePdf].

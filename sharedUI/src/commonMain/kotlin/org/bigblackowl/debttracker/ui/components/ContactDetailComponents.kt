@@ -34,6 +34,7 @@ import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
@@ -54,7 +55,9 @@ import kotlin.time.Instant
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContactDetailScaffold(
+    id: String,
     title: String,
+    avatarUrl: String?,
     onBack: () -> Unit,
     exportLabel: String,
     onExport: () -> Unit,
@@ -92,15 +95,19 @@ fun ContactDetailScaffold(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Card(modifier = Modifier.fillMaxWidth().padding(Dimens.space16)) {
-                    Column(modifier = Modifier.padding(Dimens.space16)) {
-                        phone?.let { Text(it) }
-                        comment?.let { Text(it) }
-                        Spacer(Modifier.height(Dimens.space8))
-                        Text(
-                            balanceText,
-                            color = MaterialTheme.debtAccentColors.debt,
-                            style = MaterialTheme.typography.titleLarge,
-                        )
+                    Row(modifier = Modifier.padding(Dimens.space16), verticalAlignment = Alignment.CenterVertically) {
+                        EntityAvatar(id = id, name = title, avatarUrl = avatarUrl, size = Dimens.space56)
+                        Spacer(Modifier.width(Dimens.space12))
+                        Column {
+                            phone?.let { Text(it) }
+                            comment?.let { Text(it) }
+                            Spacer(Modifier.height(Dimens.space8))
+                            Text(
+                                balanceText,
+                                color = MaterialTheme.debtAccentColors.debt,
+                                style = MaterialTheme.typography.titleLarge,
+                            )
+                        }
                     }
                 }
 
@@ -158,7 +165,9 @@ fun TransactionRow(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(method.name)
-                Text(createdAt.toLocalDateTime(TimeZone.currentSystemDefault()).date.toString())
+                Text(createdAt.toLocalDateTime(TimeZone.currentSystemDefault()).date.let {
+                    "${it.day.toString().padStart(2, '0')}.${it.month.number.toString().padStart(2, '0')}.${it.year}"
+                })
             }
         }
     }
@@ -181,7 +190,9 @@ private val sampleTransactions = listOf(
 private fun ContactDetailComponentsSample() {
     val snackbarHostState = remember { SnackbarHostState() }
     ContactDetailScaffold(
+        id = "1",
         title = "Олена Коваль",
+        avatarUrl = null,
         onBack = {},
         exportLabel = "Export",
         onExport = {},
