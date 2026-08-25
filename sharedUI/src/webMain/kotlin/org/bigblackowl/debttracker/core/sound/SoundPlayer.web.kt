@@ -2,6 +2,7 @@ package org.bigblackowl.debttracker.core.sound
 
 import debt_tracker.sharedui.generated.resources.Res
 import org.w3c.dom.Audio
+import kotlin.js.ExperimentalWasmJsInterop
 
 actual fun createSoundPlayer(): SoundPlayer = WebSoundPlayer()
 
@@ -11,6 +12,7 @@ private class WebSoundPlayer : SoundPlayer {
         Audio(Res.getUri(effect.assetFileName))
     }
 
+    @OptIn(ExperimentalWasmJsInterop::class)
     override fun play(sound: SoundEffect) {
         val audio = audioElements[sound] ?: return
         audio.currentTime = 0.0

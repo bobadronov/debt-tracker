@@ -3,7 +3,10 @@ package org.bigblackowl.debttracker.core.qr
 import kotlinx.coroutines.await
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlin.js.ExperimentalWasmJsInterop
+import kotlin.js.JsString
 import kotlin.js.Promise
+import kotlin.js.js
 
 /**
  * Web has no QRKit scanner at all (see [ContactQrScanner]), so [ContactQrFilePickerContent] decodes
@@ -14,7 +17,7 @@ import kotlin.js.Promise
  * that's the one representation both the js() and wasmJs() Kotlin backends pass through uniformly —
  * a raw `ByteArray` doesn't share a single interop story between the two.
  */
-@OptIn(ExperimentalEncodingApi::class)
+@OptIn(ExperimentalEncodingApi::class, ExperimentalWasmJsInterop::class)
 private fun detectQrCodeBase64(base64: String): Promise<JsString> = js(
     """
     (function () {
@@ -35,7 +38,7 @@ private fun detectQrCodeBase64(base64: String): Promise<JsString> = js(
     """
 )
 
-@OptIn(ExperimentalEncodingApi::class)
+@OptIn(ExperimentalEncodingApi::class, ExperimentalWasmJsInterop::class)
 actual suspend fun decodeQrFromImage(bytes: ByteArray): QrDecodeResult {
     val base64 = Base64.encode(bytes)
     val result = runCatching { detectQrCodeBase64(base64).await().toString() }.getOrElse { return QrDecodeResult.NotFound }
