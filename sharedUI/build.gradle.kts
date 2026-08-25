@@ -72,6 +72,7 @@ kotlin {
             dependsOn(pdfMain)
             dependsOn(qrMain)
         }
+
         getByName("iosArm64Main") { dependsOn(iosMain) }
         getByName("iosSimulatorArm64Main") { dependsOn(iosMain) }
 
@@ -122,6 +123,7 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(libs.bignum)
             api(libs.filekit.dialogs.compose) // cross-platform file pick/save (avatar picker, CSV/PDF export); api so desktopApp's main() can call FileKit.init()
+            implementation(libs.qrose) // contact-card QR display — pure Kotlin, unlike qr-kit publishes a real js/wasmJs target, so this needs no expect/actual
             // room-runtime is NOT here: Room has no js/wasmJs target (spec §1 — Web has no local DB).
 
             implementation(project.dependencies.platform(libs.supabase.bom))
@@ -150,6 +152,7 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.zxing.core) // decodes a QR code from a locally-picked image file (Desktop has no camera scanner)
         }
 
         webMain.dependencies {

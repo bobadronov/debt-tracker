@@ -20,9 +20,11 @@ import org.bigblackowl.debttracker.domain.repository.AuthRepository
  * comes straight from the account, nothing local to edit; signed-out users get an Edit button
  * ([QrHubState.fieldsExpanded]) that reveals them, and every edit persists immediately (same
  * instant-persist UX as other [AppSettings] fields).
- * Scan: Android/iOS only (see [QrHubScreen]). [ContactQrPayload.decode] rejects anything that
- * isn't a Debt Tracker contact card silently (foreign QR codes are simply not recognized, no
- * error shown); a valid decode pops the debtor/creditor chooser via [QrHubState.scannedContact].
+ * Scan: camera on Android/iOS, a local-file picker on Desktop/Web (see [QrHubScreen],
+ * QR_SCAN_CAPABLE_PLATFORMS) — either way it lands here as the same raw [QrHubIntent.ScanResult].
+ * [ContactQrPayload.decode] rejects anything that isn't a Debt Tracker contact card silently
+ * (foreign QR codes are simply not recognized, no error shown); a valid decode pops the
+ * debtor/creditor chooser via [QrHubState.scannedContact].
  */
 class QrHubViewModel(
     private val appSettings: AppSettings,

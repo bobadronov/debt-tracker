@@ -26,7 +26,7 @@ actual fun ContactQrScanner(
             // Material3's ModalBottomSheet with a signature from an older material3 than this
             // project pins (libs.versions.toml) — NoSuchMethodError at runtime if ever composed.
             // Camera-only scanning avoids that code path entirely.
-            openImagePicker = true,
+            openImagePicker = false,
             onCompletion = onResult,
             imagePickerHandler = {},
             onFailure = onImageDecodeFailure,

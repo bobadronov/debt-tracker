@@ -85,7 +85,9 @@ fun AddEditContactForm(
     onCardLastDigitsChange: (String) -> Unit,
     isSaving: Boolean,
     onSave: () -> Unit,
-    /** Non-null shows a QR-scan action in the top bar (Android/iOS only — see QR_SCAN_CAPABLE_PLATFORMS); fires with the decoded contact instead of navigating anywhere. */
+    /** Non-null shows a QR-scan action in the top bar (camera on Android/iOS, a local-file picker
+     * on Desktop/Web — see QR_SCAN_CAPABLE_PLATFORMS); fires with the decoded contact instead of
+     * navigating anywhere. */
     onScannedContact: ((ScannedContact) -> Unit)? = null,
 ) {
     val strings = LocalStrings.current

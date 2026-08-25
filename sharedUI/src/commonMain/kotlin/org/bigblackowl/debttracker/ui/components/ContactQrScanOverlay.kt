@@ -19,18 +19,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
+import org.bigblackowl.debttracker.core.platform.currentPlatform
+import org.bigblackowl.debttracker.core.qr.ContactQrFilePickerContent
 import org.bigblackowl.debttracker.core.qr.ContactQrScanner
+import org.bigblackowl.debttracker.core.qr.QR_SCAN_CAPABLE_PLATFORMS
 import org.bigblackowl.debttracker.domain.model.ContactQrPayload
 import org.bigblackowl.debttracker.domain.model.ScannedContact
 import org.bigblackowl.debttracker.theme.Dimens
 
 /**
- * Full-screen camera scanner for a Debt Tracker contact-card QR code, with its own top bar
- * (close button) and the same permission-denied rationale/retry as [org.bigblackowl.debttracker.ui.screens.qr.QrHubScreen]'s
- * scan mode. Reused wherever a screen wants an inline "scan a contact" entry point (QrHubScreen,
- * AddEditContactForm) instead of routing through the QR hub. A decoded code that isn't a Debt
- * Tracker contact card is silently ignored (see [ContactQrPayload.decode]) — the camera just keeps
- * scanning, no error shown.
+ * Full-screen QR scanner for a Debt Tracker contact-card code, with its own top bar (close
+ * button). Live camera + the same permission-denied rationale/retry as [org.bigblackowl.debttracker.ui.screens.qr.QrHubScreen]'s
+ * scan mode on [QR_SCAN_CAPABLE_PLATFORMS] (Android/iOS); a local-file picker on Desktop/Web,
+ * which have no camera scanner. Reused wherever a screen wants an inline "scan a contact" entry
+ * point (QrHubScreen, AddEditContactForm) instead of routing through the QR hub. A decoded code
+ * that isn't a Debt Tracker contact card is silently ignored (see [ContactQrPayload.decode]) — the
+ * camera just keeps scanning / the file picker shows no error, no error shown either way.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,7 +44,12 @@ fun ContactQrScanOverlay(onScanned: (ScannedContact) -> Unit, onClose: () -> Uni
 
     Scaffold(topBar = { BackTopAppBar(title = "", onBack = onClose) }) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            if (permissionDenied) {
+            if (currentPlatform !in QR_SCAN_CAPABLE_PLATFORMS) {
+                ContactQrFilePickerContent(
+                    modifier = Modifier.fillMaxSize(),
+                    onResult = { raw -> ContactQrPayload.decode(raw)?.let(onScanned) },
+                )
+            } else if (permissionDenied) {
                 Column(
                     modifier = Modifier.fillMaxSize().padding(Dimens.space16),
                     horizontalAlignment = Alignment.CenterHorizontally,

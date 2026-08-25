@@ -239,6 +239,7 @@ val PlStrings = Strings(
 
     homeQr = "Kod QR",
     qrHubScanTab = "Skanuj",
+    qrHubSelectImageTab = "Wybierz zdjęcie",
     qrHubMyCardHint = "Podaj swoje imię, a stworzę kod QR do udostępnienia",
     qrHubDescription = "Pokaż ten kod znajomemu, aby przekazać swoje dane",
     qrHubCameraPermissionRationale = "Potrzebny jest dostęp do aparatu, aby zeskanować kod QR",
@@ -247,4 +248,8 @@ val PlStrings = Strings(
     qrHubScannedDialogMessage = { name -> "Kim jest $name?" },
     qrHubScannedAsDebtor = "Mój dłużnik",
     qrHubScannedAsCreditor = "Mój wierzyciel",
+    qrHubPickFileHint = "Wybierz zdjęcie z kodem QR, aby dodać kontakt",
+    qrHubPickFileButton = "Wybierz plik",
+    qrHubPickFileNotFound = "Nie znaleziono kodu QR na tym obrazie",
+    qrHubPickFileUnsupported = "Twoja przeglądarka nie obsługuje skanowania obrazów — spróbuj Chrome lub Edge",
 )

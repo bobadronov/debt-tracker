@@ -239,6 +239,7 @@ val UkStrings = Strings(
 
     homeQr = "QR-код",
     qrHubScanTab = "Сканувати",
+    qrHubSelectImageTab = "Обрати зображення",
     qrHubMyCardHint = "Вкажіть своє ім'я — і я створю QR-код для поширення",
     qrHubDescription = "Покажіть своєму другу цей код для передачі своїх даних",
     qrHubCameraPermissionRationale = "Потрібен доступ до камери, щоб сканувати QR-код",
@@ -247,4 +248,8 @@ val UkStrings = Strings(
     qrHubScannedDialogMessage = { name -> "Хто це — $name?" },
     qrHubScannedAsDebtor = "Мій боржник",
     qrHubScannedAsCreditor = "Мій кредитор",
+    qrHubPickFileHint = "Оберіть фото з QR-кодом, щоб додати контакт",
+    qrHubPickFileButton = "Обрати файл",
+    qrHubPickFileNotFound = "Не вдалося знайти QR-код на цьому зображенні",
+    qrHubPickFileUnsupported = "Ваш браузер не підтримує розпізнавання зображень — спробуйте Chrome або Edge",
 )

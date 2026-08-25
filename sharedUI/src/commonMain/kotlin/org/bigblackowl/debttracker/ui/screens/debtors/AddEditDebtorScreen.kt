@@ -9,8 +9,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
-import org.bigblackowl.debttracker.core.platform.currentPlatform
-import org.bigblackowl.debttracker.core.qr.QR_SCAN_CAPABLE_PLATFORMS
 import org.bigblackowl.debttracker.domain.model.ScannedContact
 import org.bigblackowl.debttracker.domain.validation.sanitizeAmountInput
 import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
@@ -78,9 +76,7 @@ fun AddEditDebtorScreen(
         onCardLastDigitsChange = { viewModel.onIntent(AddEditDebtorIntent.CardLastDigitsChanged(it)) },
         isSaving = state.isSaving,
         onSave = { viewModel.onIntent(AddEditDebtorIntent.Save) },
-        onScannedContact = if (currentPlatform in QR_SCAN_CAPABLE_PLATFORMS) {
-            { contact -> viewModel.onIntent(AddEditDebtorIntent.ApplyScannedContact(contact)) }
-        } else null,
+        onScannedContact = { contact -> viewModel.onIntent(AddEditDebtorIntent.ApplyScannedContact(contact)) },
     )
 }
 

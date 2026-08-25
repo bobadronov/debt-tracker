@@ -56,8 +56,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
-import org.bigblackowl.debttracker.core.platform.AppPlatform
-import org.bigblackowl.debttracker.core.platform.currentPlatform
 import org.bigblackowl.debttracker.domain.model.SyncUiStatus
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
@@ -101,10 +99,7 @@ fun HomeScreen(
                     }
                 },
                 actions = {
-                    // QRKit (core/qr) publishes no working Web scanner — hide the entry point there entirely.
-                    if (currentPlatform != AppPlatform.WEB) {
-                        TopBarActionIcon(icon = Icons.Filled.QrCode, description = strings.homeQr, onClick = onOpenQr)
-                    }
+                    TopBarActionIcon(icon = Icons.Filled.QrCode, description = strings.homeQr, onClick = onOpenQr)
                     TopBarActionIcon(icon = Icons.Filled.QueryStats, description = strings.homeStats, onClick = onOpenStats)
                     TopBarActionIcon(icon = Icons.Filled.Settings, description = strings.homeSettings, onClick = onOpenSettings)
                 }

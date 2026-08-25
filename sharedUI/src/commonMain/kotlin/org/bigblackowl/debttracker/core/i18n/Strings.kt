@@ -255,9 +255,12 @@ data class Strings(
     val widgetDebtorsTotal: (amount: String) -> String,
     val widgetCreditorsTotal: (amount: String) -> String,
 
-    // qr (org.bigblackowl.debttracker.ui.screens.qr — Android/iOS/Desktop only, hidden on Web)
+    // qr (org.bigblackowl.debttracker.ui.screens.qr)
     val homeQr: String,
     val qrHubScanTab: String,
+    // Desktop/Web (QR_SCAN_CAPABLE_PLATFORMS): the single share-screen button opens the OS file
+    // picker directly instead of the camera scanner.
+    val qrHubSelectImageTab: String,
     val qrHubMyCardHint: String,
     val qrHubDescription: String,
     val qrHubCameraPermissionRationale: String,
@@ -266,4 +269,9 @@ data class Strings(
     val qrHubScannedDialogMessage: (name: String) -> String,
     val qrHubScannedAsDebtor: String,
     val qrHubScannedAsCreditor: String,
+    // Desktop/Web have no camera scanner (QR_SCAN_CAPABLE_PLATFORMS) — ContactQrFilePickerContent
+    val qrHubPickFileHint: String,
+    val qrHubPickFileButton: String,
+    val qrHubPickFileNotFound: String,
+    val qrHubPickFileUnsupported: String,
 )

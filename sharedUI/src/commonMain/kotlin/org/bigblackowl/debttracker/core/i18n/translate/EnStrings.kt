@@ -239,6 +239,7 @@ val EnStrings = Strings(
 
     homeQr = "QR code",
     qrHubScanTab = "Scan",
+    qrHubSelectImageTab = "Select image",
     qrHubMyCardHint = "Add your name and I'll create a QR code for sharing",
     qrHubDescription = "Show this code to your friend to share your details",
     qrHubCameraPermissionRationale = "Camera access is needed to scan a QR code",
@@ -247,4 +248,8 @@ val EnStrings = Strings(
     qrHubScannedDialogMessage = { name -> "Who is $name?" },
     qrHubScannedAsDebtor = "Owes me",
     qrHubScannedAsCreditor = "I owe them",
+    qrHubPickFileHint = "Choose a photo of a QR code to add a contact",
+    qrHubPickFileButton = "Choose file",
+    qrHubPickFileNotFound = "Couldn't find a QR code in that image",
+    qrHubPickFileUnsupported = "Your browser can't scan images — try Chrome or Edge",
 )

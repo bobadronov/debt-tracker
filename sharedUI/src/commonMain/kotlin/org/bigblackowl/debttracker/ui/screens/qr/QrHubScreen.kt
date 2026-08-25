@@ -38,6 +38,7 @@ import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.platform.currentPlatform
 import org.bigblackowl.debttracker.core.qr.ContactQrScanner
 import org.bigblackowl.debttracker.core.qr.QR_SCAN_CAPABLE_PLATFORMS
+import org.bigblackowl.debttracker.core.qr.rememberContactQrImagePicker
 import org.bigblackowl.debttracker.core.qr.rememberContactQrPainter
 import org.bigblackowl.debttracker.domain.model.ContactQrPayload
 import org.bigblackowl.debttracker.domain.model.ScannedContact
@@ -55,10 +56,11 @@ import org.koin.compose.viewmodel.koinViewModel
 /**
  * QR contact-exchange hub (Home top bar → QR icon). Shows your own contact card as a QR code —
  * autofill from your account once signed in (no fields to edit here), or a locally-saved card
- * you fill in via Edit while signed out. On Android/iOS a Scan button switches the same screen
- * into camera mode; on Desktop/Web there's no Scan button at all (see [QR_SCAN_CAPABLE_PLATFORMS]).
- * A valid scan asks whether to add the person as a debtor or creditor before navigating to the
- * matching pre-filled form.
+ * you fill in via Edit while signed out. A single scan-entry button adapts to the platform (see
+ * [QR_SCAN_CAPABLE_PLATFORMS]): on Android/iOS it switches the same screen into scan mode for the
+ * live camera; on Desktop/Web — no camera there — it opens the OS file picker directly. A valid
+ * scan asks whether to add the person as a debtor or creditor before navigating to the matching
+ * pre-filled form.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,6 +114,9 @@ fun QrHubScreen(
 private fun ShareContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
     val strings = LocalStrings.current
     val clipboardText by rememberClipboardText()
+    // Desktop/Web have no camera (QR_SCAN_CAPABLE_PLATFORMS) — the single scan-entry button below
+    // opens the OS file picker directly there instead of switching to SCAN mode.
+    val imagePicker = rememberContactQrImagePicker(onResult = { onIntent(QrHubIntent.ScanResult(it)) })
 
     Column(
         modifier = Modifier
@@ -130,7 +135,7 @@ private fun ShareContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
             exit = fadeOut() + shrinkVertically(),
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(Dimens.space8),
+                verticalArrangement = Arrangement.spacedBy(Dimens.space16),
             ) {
                 state.qrPayload?.let { payload ->
                     val painter = rememberContactQrPainter(payload)
@@ -202,17 +207,27 @@ private fun ShareContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically(),
             ) {
-                if (currentPlatform in QR_SCAN_CAPABLE_PLATFORMS) {
+                val canScanWithCamera = currentPlatform in QR_SCAN_CAPABLE_PLATFORMS
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.space8)) {
                     Button(
-                        onClick = { onIntent(QrHubIntent.SwitchToScan) },
+                        onClick = { if (canScanWithCamera) onIntent(QrHubIntent.SwitchToScan) else imagePicker.pick() },
                         modifier = Modifier.widthIn(max = Dimens.contentMaxWidth).fillMaxWidth(),
-                    ) { Text(strings.qrHubScanTab) }
+                    ) { Text(if (canScanWithCamera) strings.qrHubScanTab else strings.qrHubSelectImageTab) }
+
+                    if (!canScanWithCamera) {
+                        imagePicker.errorMessage?.let {
+                            Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
+                        }
+                    }
                 }
             }
         }
     }
 }
 
+// Only reachable via SwitchToScan, which ShareContent's button sends solely on
+// QR_SCAN_CAPABLE_PLATFORMS (Desktop/Web open the file picker directly instead) — so this is
+// always the camera path.
 @Composable
 private fun ScanContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
     val strings = LocalStrings.current
@@ -339,9 +354,7 @@ private fun QrHubShareSignedOutExpandedLightPreview() = DebtTrackerPreview(darkT
 @Composable
 private fun QrHubShareSignedOutExpandedDarkPreview() = DebtTrackerPreview(darkTheme = true) { QrHubSharePreviewContent(PREVIEW_STATE_SIGNED_OUT_EXPANDED) }
 
-/** Scan mode, camera permission denied: rationale text + retry, the only Scan-mode sub-state that
- * renders meaningfully outside a real device (the granted-permission camera view needs actual
- * hardware — see QR_SCAN_CAPABLE_PLATFORMS, Desktop/Web never reach it in the real app either). */
+/** Scan mode, camera permission denied: rationale text + retry. */
 private val PREVIEW_STATE_SCAN_DENIED = QrHubState(mode = QrHubMode.SCAN, cameraPermissionDenied = true)
 
 @Preview
