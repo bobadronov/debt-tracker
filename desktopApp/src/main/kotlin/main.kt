@@ -51,7 +51,7 @@ private fun startApp(settings: AppSettings) = application {
                 // icon support at all (unlike Swing's JMenuItem) — passing one throws
                 // UnsupportedOperationException at runtime (Menu.desktop.kt's AwtMenuScope.Item).
                 Item(text = "\uD83D\uDDD4 " + strings.trayOpen, onClick = { isWindowVisible = true })
-                Item(text = strings.trayQuit, onClick = ::exitApplication)
+                Item(text = "\uD83D\uDDD9 " + strings.trayQuit, onClick = ::exitApplication)
             },
         )
     }
