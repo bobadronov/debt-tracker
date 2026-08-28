@@ -11,7 +11,6 @@ val PlStrings = Strings(
     back = "Wstecz",
     cash = "Gotówka",
     card = "Karta",
-    cardLastDigits = "Ostatnie cyfry karty",
     fullName = "Imię",
     fullNamePlaceholder = "Imię i nazwisko",
     phone = "Telefon",
@@ -39,6 +38,7 @@ val PlStrings = Strings(
     homeSettings = "Ustawienia",
     homeTabDebtors = "Winni mi",
     homeTabCreditors = "Moje długi",
+    homeMenu = "Menu",
 
     authTitleSignUp = "Rejestracja",
     authTitleSignIn = "Logowanie",
@@ -252,4 +252,13 @@ val PlStrings = Strings(
     qrHubPickFileButton = "Wybierz plik",
     qrHubPickFileNotFound = "Nie znaleziono kodu QR na tym obrazie",
     qrHubPickFileUnsupported = "Twoja przeglądarka nie obsługuje skanowania obrazów — spróbuj Chrome lub Edge",
+
+    notificationsTitle = "Powiadomienia",
+    notificationsEmpty = "Brak powiadomień",
+    notificationsMarkAllRead = "Oznacz wszystkie jako przeczytane",
+    notificationsBell = "Powiadomienia",
+    notificationBodyDebtorLinked = { name, amount, currency -> "$name: jesteś winien/winna $amount $currency" },
+    notificationBodyCreditorLinked = { name, amount, currency -> "$name jest Ci winien/winna $amount $currency" },
+    notificationBodyDebtTransactionAdded = { name, amount, currency -> "$name dodał(a) transakcję: $amount $currency" },
+    notificationBodyCreditTransactionAdded = { name, amount, currency -> "$name dodał(a) transakcję: $amount $currency" },
 )

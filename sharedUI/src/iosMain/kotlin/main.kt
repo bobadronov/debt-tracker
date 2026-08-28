@@ -3,6 +3,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.window.ComposeUIViewController
 import org.bigblackowl.debttracker.App
 import org.bigblackowl.debttracker.core.di.initKoin
+import org.bigblackowl.debttracker.core.notifications.NotificationsPoller
 import org.bigblackowl.debttracker.data.sync.SyncCoordinator
 import platform.UIKit.UIApplication
 import platform.UIKit.UIStatusBarStyleDarkContent
@@ -17,6 +18,7 @@ fun MainViewController(): UIViewController {
     if (!koinInitialized) {
         val koinApp = initKoin()
         koinApp.koin.get<SyncCoordinator>().start()
+        koinApp.koin.get<NotificationsPoller>().start()
         koinInitialized = true
     }
     return ComposeUIViewController {

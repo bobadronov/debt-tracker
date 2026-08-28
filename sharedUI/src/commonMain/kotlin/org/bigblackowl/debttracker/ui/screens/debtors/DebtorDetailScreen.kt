@@ -83,8 +83,8 @@ fun DebtorDetailScreen(
             prefillAmount = if (state.balance > BigDecimal.ZERO) state.balance.toStringExpanded() else "",
             currency = currency,
             onDismiss = { showRepaySheet = false },
-            onConfirm = { amount, method, cardDigits ->
-                viewModel.onIntent(DebtorDetailIntent.Repay(amount, method, cardDigits))
+            onConfirm = { amount, method ->
+                viewModel.onIntent(DebtorDetailIntent.Repay(amount, method))
                 showRepaySheet = false
             },
         )
@@ -95,8 +95,8 @@ fun DebtorDetailScreen(
             title = strings.debtorDetailLendSheetTitle,
             currency = currency,
             onDismiss = { showLendSheet = false },
-            onConfirm = { amount, method, cardDigits ->
-                viewModel.onIntent(DebtorDetailIntent.LendMore(amount, method, cardDigits))
+            onConfirm = { amount, method ->
+                viewModel.onIntent(DebtorDetailIntent.LendMore(amount, method))
                 showLendSheet = false
             },
         )

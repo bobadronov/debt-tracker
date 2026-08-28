@@ -1,8 +1,13 @@
 package org.bigblackowl.debttracker.data.repository
 
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.rpc
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import org.bigblackowl.debttracker.data.local.dao.DebtTransactionDao
 import org.bigblackowl.debttracker.data.local.dao.DebtorDao
 import org.bigblackowl.debttracker.data.local.mapper.toDomain
@@ -14,7 +19,11 @@ import org.bigblackowl.debttracker.domain.model.SyncStatus
 import org.bigblackowl.debttracker.domain.model.debtorBalance
 import org.bigblackowl.debttracker.domain.model.toDebtStatus
 import org.bigblackowl.debttracker.domain.model.toDebtTransactionType
+import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.DebtorRepository
+
+@Serializable
+private data class LinkDebtorParams(@SerialName("p_debtor_id") val debtorId: String)
 
 /**
  * Offline-first (спек §5): усі write-операції йдуть у Room із `syncStatus = PENDING`.
@@ -23,6 +32,8 @@ import org.bigblackowl.debttracker.domain.repository.DebtorRepository
 class RoomDebtorRepository(
     private val debtorDao: DebtorDao,
     private val transactionDao: DebtTransactionDao,
+    private val client: SupabaseClient,
+    private val authRepository: AuthRepository,
 ) : DebtorRepository {
 
     override fun observeDebtors(): Flow<List<DebtorWithBalance>> =
@@ -77,6 +88,15 @@ class RoomDebtorRepository(
     override suspend fun clearLocalCache() {
         transactionDao.deleteAll()
         debtorDao.deleteAll()
+    }
+
+    // Онлайн-only RPC (не Room) — оновлений debtors-рядок повертається назад через звичайний
+    // Realtime pull SyncCoordinator'а, окремо тут його в Room не пишемо.
+    override suspend fun linkToRegisteredUser(debtorId: String): String? {
+        if (!authRepository.isAuthenticated.value) return null
+        return runCatching {
+            client.postgrest.rpc("link_debtor_to_registered_user", LinkDebtorParams(debtorId)).decodeAs<String?>()
+        }.getOrNull()
     }
 
     /** Мірор Postgres-тригера з Фази 0 (recalc_debtor_status): status/updatedAt рахуються з транзакцій. */

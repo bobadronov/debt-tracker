@@ -21,4 +21,10 @@ interface DebtorRepository {
     suspend fun deleteAllData()
     /** Wipes this device's local cache only, leaving Supabase data untouched — Room: clears Room; Web: no-op (no local cache). */
     suspend fun clearLocalCache()
+    /**
+     * Прив'язує боржника до зареєстрованого користувача за телефоном/email (RPC
+     * `link_debtor_to_registered_user`, ідемпотентна) — дзеркалить наявні транзакції й сповіщає.
+     * Онлайн-only операція (потребує сесію): повертає `null` без сесії/мережі/збігу.
+     */
+    suspend fun linkToRegisteredUser(debtorId: String): String?
 }

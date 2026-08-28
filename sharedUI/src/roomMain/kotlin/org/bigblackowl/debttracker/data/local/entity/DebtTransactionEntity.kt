@@ -28,11 +28,11 @@ data class DebtTransactionEntity(
     val amount: BigDecimal,
     val type: TransactionType,
     val method: PaymentMethod,
-    val cardLastDigits: String?,
     val date: kotlin.time.Instant,
     val comment: String?,
     val createdAt: kotlin.time.Instant,
     val updatedAt: kotlin.time.Instant,
     val syncStatus: SyncStatus,
-    val isDeleted: Boolean = false
+    val isDeleted: Boolean = false,
+    val mirrorTransactionId: String? = null,
 )

@@ -19,7 +19,9 @@ data class Creditor(
     val status: DebtStatus,       // той самий enum ACTIVE/CLOSED, що й у Debtor
     val syncStatus: SyncStatus,
     val currency: Currency = Currency.UAH,
-    val isDeleted: Boolean = false
+    val isDeleted: Boolean = false,
+    val linkedUserId: String? = null,    // auth.uid() зареєстрованого користувача, знайденого за phone/email
+    val mirrorDebtorId: String? = null,  // id дзеркального рядка в акаунті linkedUserId
 )
 
 data class CreditorTransaction(
@@ -28,13 +30,13 @@ data class CreditorTransaction(
     val amount: BigDecimal,       // ЗІ ЗНАКОМ: додатне (+) = я повернув (RETURN), від'ємне (−) = я взяв у борг (BORROW).
     val type: MyDebtTransactionType, // type = if (amount.isPositive) RETURN else BORROW
     val method: PaymentMethod,
-    val cardLastDigits: String?,
     val date: kotlin.time.Instant,
     val comment: String?,
     val createdAt: kotlin.time.Instant,
     val updatedAt: kotlin.time.Instant,
     val syncStatus: SyncStatus,
-    val isDeleted: Boolean = false
+    val isDeleted: Boolean = false,
+    val mirrorTransactionId: String? = null, // заповнено лише якщо цей рядок сам є авто-дзеркалом транзакції з іншого акаунту
 )
 
 /** balance = -Σ(amount): скільки я ще винен цій людині. Та сама формула, що й у [debtorBalance]. */

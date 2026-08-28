@@ -20,5 +20,7 @@ data class CreditorEntity(
     val status: DebtStatus,
     val syncStatus: SyncStatus,
     val currency: Currency = Currency.UAH,
-    val isDeleted: Boolean = false
+    val isDeleted: Boolean = false,
+    val linkedUserId: String? = null,
+    val mirrorDebtorId: String? = null,
 )

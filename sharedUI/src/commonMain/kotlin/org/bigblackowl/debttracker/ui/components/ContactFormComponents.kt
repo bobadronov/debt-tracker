@@ -81,8 +81,6 @@ fun AddEditContactForm(
     onCurrencyChange: (Currency) -> Unit,
     method: PaymentMethod,
     onMethodChange: (PaymentMethod) -> Unit,
-    cardLastDigits: String,
-    onCardLastDigitsChange: (String) -> Unit,
     isSaving: Boolean,
     onSave: () -> Unit,
     /** Non-null shows a QR-scan action in the top bar (camera on Android/iOS, a local-file picker
@@ -193,22 +191,13 @@ fun AddEditContactForm(
                         selected = currency,
                         onSelect = onCurrencyChange,
                         label = strings.currency,
-                        modifier = Modifier.widthIn(max = Dimens.space120),
+                        modifier = Modifier.weight(1f),
                     )
                 }
                 PaymentMethodChipRow(
                     selected = method,
                     onSelect = onMethodChange,
                 )
-                if (method == PaymentMethod.CARD) {
-                    PasteableOutlinedTextField(
-                        value = cardLastDigits,
-                        onValueChange = onCardLastDigitsChange,
-                        label = strings.cardLastDigits,
-                        clipboardText = clipboardText,
-                        isPasteRelevant = { it.filter(Char::isDigit).length in 3..6 },
-                    )
-                }
             }
             LoadingButton(
                 onClick = onSave,
@@ -239,7 +228,6 @@ private fun AddEditContactFormSample() {
     var amount by remember { mutableStateOf("") }
     var currency by remember { mutableStateOf(Currency.UAH) }
     var method by remember { mutableStateOf(PaymentMethod.CASH) }
-    var cardLastDigits by remember { mutableStateOf("") }
     val snackbarHostState = remember { SnackbarHostState() }
 
     AddEditContactForm(
@@ -268,8 +256,6 @@ private fun AddEditContactFormSample() {
         onCurrencyChange = { currency = it },
         method = method,
         onMethodChange = { method = it },
-        cardLastDigits = cardLastDigits,
-        onCardLastDigitsChange = { cardLastDigits = it },
         isSaving = false,
         onSave = {},
     )

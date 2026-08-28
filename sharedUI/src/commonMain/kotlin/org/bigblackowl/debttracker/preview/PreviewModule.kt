@@ -1,11 +1,16 @@
 package org.bigblackowl.debttracker.preview
 
+import kotlinx.coroutines.CoroutineScope
+import org.bigblackowl.debttracker.core.di.ApplicationScope
+import org.bigblackowl.debttracker.core.notifications.LocalNotifier
+import org.bigblackowl.debttracker.core.notifications.NotificationsPoller
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
 import org.bigblackowl.debttracker.core.sound.SoundPlayer
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.CreditorRepository
 import org.bigblackowl.debttracker.domain.repository.DebtorRepository
+import org.bigblackowl.debttracker.domain.repository.NotificationRepository
 import org.bigblackowl.debttracker.domain.repository.ProfileLookupRepository
 import org.bigblackowl.debttracker.domain.repository.SessionRepository
 import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
@@ -17,12 +22,14 @@ import org.bigblackowl.debttracker.domain.usecase.ObserveContactSuggestionsUseCa
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddCreditorTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddOrUpdateCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.DeleteCreditorUseCase
+import org.bigblackowl.debttracker.domain.usecase.creditor.LinkCreditorToRegisteredUserUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorTransactionsUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorsUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.AddDebtTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.AddOrUpdateDebtorUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.DeleteDebtorUseCase
+import org.bigblackowl.debttracker.domain.usecase.debtor.LinkDebtorToRegisteredUserUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorTransactionsUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorsUseCase
@@ -37,6 +44,7 @@ import org.bigblackowl.debttracker.ui.screens.debtors.DebtorDetailViewModel
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorListViewModel
 import org.bigblackowl.debttracker.ui.screens.export.ExportViewModel
 import org.bigblackowl.debttracker.ui.screens.home.HomeViewModel
+import org.bigblackowl.debttracker.ui.screens.notifications.NotificationsViewModel
 import org.bigblackowl.debttracker.ui.screens.protectiononboarding.ProtectionOnboardingViewModel
 import org.bigblackowl.debttracker.ui.screens.qr.QrHubViewModel
 import org.bigblackowl.debttracker.ui.screens.settings.ActiveSessionsViewModel
@@ -70,6 +78,10 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     single<SyncStatusProvider> { FakeSyncStatusProvider() }
     single<ProfileLookupRepository> { FakeProfileLookupRepository() }
     single<SessionRepository> { FakeSessionRepository() }
+    single<NotificationRepository> { FakeNotificationRepository() }
+    single<LocalNotifier> { NoOpLocalNotifier() }
+    single<CoroutineScope> { ApplicationScope() }
+    single { NotificationsPoller(get(), get(), get(), get(), get()) }
     factoryOf(::DeleteAllDataUseCase)
     factoryOf(::ClearLocalCacheUseCase)
     factoryOf(::FindProfileByEmailUseCase)
@@ -81,6 +93,7 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     factoryOf(::AddOrUpdateDebtorUseCase)
     factoryOf(::DeleteDebtorUseCase)
     factoryOf(::AddDebtTransactionUseCase)
+    factoryOf(::LinkDebtorToRegisteredUserUseCase)
 
     factoryOf(::ObserveCreditorsUseCase)
     factoryOf(::ObserveCreditorUseCase)
@@ -88,6 +101,7 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     factoryOf(::AddOrUpdateCreditorUseCase)
     factoryOf(::DeleteCreditorUseCase)
     factoryOf(::AddCreditorTransactionUseCase)
+    factoryOf(::LinkCreditorToRegisteredUserUseCase)
 
     factoryOf(::ObserveContactSuggestionsUseCase)
 
@@ -108,6 +122,7 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     viewModelOf(::HomeViewModel)
     viewModelOf(::SettingsViewModel)
     viewModelOf(::QrHubViewModel)
+    viewModelOf(::NotificationsViewModel)
     viewModel { (debtorId: String?, creditorId: String?) ->
         ExportViewModel(debtorId, creditorId, get(), get(), get(), get(), get(), get(), get(), get())
     }

@@ -72,8 +72,6 @@ fun AddEditDebtorScreen(
         onCurrencyChange = { viewModel.onIntent(AddEditDebtorIntent.CurrencyChanged(it)) },
         method = state.method,
         onMethodChange = { viewModel.onIntent(AddEditDebtorIntent.MethodChanged(it)) },
-        cardLastDigits = state.cardLastDigits,
-        onCardLastDigitsChange = { viewModel.onIntent(AddEditDebtorIntent.CardLastDigitsChanged(it)) },
         isSaving = state.isSaving,
         onSave = { viewModel.onIntent(AddEditDebtorIntent.Save) },
         onScannedContact = { contact -> viewModel.onIntent(AddEditDebtorIntent.ApplyScannedContact(contact)) },

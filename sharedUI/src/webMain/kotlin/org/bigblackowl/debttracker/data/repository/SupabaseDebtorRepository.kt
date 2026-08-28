@@ -2,9 +2,11 @@ package org.bigblackowl.debttracker.data.repository
 
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseExperimental
+import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.filter.FilterOperation
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
+import io.github.jan.supabase.postgrest.rpc
 import io.github.jan.supabase.realtime.selectAsFlow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -12,6 +14,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import org.bigblackowl.debttracker.data.remote.dto.DebtTransactionDto
 import org.bigblackowl.debttracker.data.remote.dto.DebtorDto
 import org.bigblackowl.debttracker.data.remote.mapper.toDomain
@@ -24,6 +28,9 @@ import org.bigblackowl.debttracker.domain.model.toDebtStatus
 import org.bigblackowl.debttracker.domain.model.toDebtTransactionType
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.DebtorRepository
+
+@Serializable
+private data class LinkDebtorParams(@SerialName("p_debtor_id") val debtorId: String)
 
 /**
  * Web: online-only [DebtorRepository] — no local cache (Room has no wasmJs/js target, спек §1),
@@ -126,6 +133,13 @@ class SupabaseDebtorRepository(
 
     // No local cache on web (see class doc) — nothing to clear on sign-out.
     override suspend fun clearLocalCache() {}
+
+    override suspend fun linkToRegisteredUser(debtorId: String): String? {
+        if (!authRepository.isAuthenticated.value) return null
+        return runCatching {
+            client.postgrest.rpc("link_debtor_to_registered_user", LinkDebtorParams(debtorId)).decodeAs<String?>()
+        }.getOrNull()
+    }
 
     /** Мірор Room-репозиторію: status рахується з транзакцій, а не приходить з Postgres-тригера напряму сюди. */
     private suspend fun recalcDebtorStatus(debtorId: String, userId: String) {

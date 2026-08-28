@@ -3,6 +3,7 @@ package org.bigblackowl.debttracker.core.di
 import com.russhwolf.settings.Settings
 import io.github.jan.supabase.SupabaseClient
 import kotlinx.coroutines.CoroutineScope
+import org.bigblackowl.debttracker.core.notifications.NotificationsPoller
 import org.bigblackowl.debttracker.core.remote.createAppSupabaseClient
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
@@ -11,9 +12,11 @@ import org.bigblackowl.debttracker.core.sound.NoopSoundPlayer
 import org.bigblackowl.debttracker.core.sound.SoundPlayer
 import org.bigblackowl.debttracker.core.sound.createSoundPlayer
 import org.bigblackowl.debttracker.data.remote.SupabaseAuthRepository
+import org.bigblackowl.debttracker.data.remote.SupabaseNotificationRepository
 import org.bigblackowl.debttracker.data.remote.SupabaseProfileLookupRepository
 import org.bigblackowl.debttracker.data.remote.SupabaseSessionRepository
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
+import org.bigblackowl.debttracker.domain.repository.NotificationRepository
 import org.bigblackowl.debttracker.domain.repository.ProfileLookupRepository
 import org.bigblackowl.debttracker.domain.repository.SessionRepository
 import org.bigblackowl.debttracker.domain.usecase.ClearLocalCacheUseCase
@@ -24,12 +27,14 @@ import org.bigblackowl.debttracker.domain.usecase.ObserveContactSuggestionsUseCa
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddCreditorTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddOrUpdateCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.DeleteCreditorUseCase
+import org.bigblackowl.debttracker.domain.usecase.creditor.LinkCreditorToRegisteredUserUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorTransactionsUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorsUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.AddDebtTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.AddOrUpdateDebtorUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.DeleteDebtorUseCase
+import org.bigblackowl.debttracker.domain.usecase.debtor.LinkDebtorToRegisteredUserUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorTransactionsUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorsUseCase
@@ -42,6 +47,7 @@ import org.bigblackowl.debttracker.ui.screens.debtors.DebtorListViewModel
 import org.bigblackowl.debttracker.ui.screens.accountonboarding.AccountOnboardingViewModel
 import org.bigblackowl.debttracker.ui.screens.authgate.AuthGateViewModel
 import org.bigblackowl.debttracker.ui.screens.home.HomeViewModel
+import org.bigblackowl.debttracker.ui.screens.notifications.NotificationsViewModel
 import org.bigblackowl.debttracker.ui.screens.protectiononboarding.ProtectionOnboardingViewModel
 import org.bigblackowl.debttracker.ui.screens.qr.QrHubViewModel
 import org.bigblackowl.debttracker.ui.screens.splash.SplashViewModel
@@ -70,6 +76,8 @@ val appModule = module {
     single<AuthRepository> { SupabaseAuthRepository(get(), get()) }
     single<ProfileLookupRepository> { SupabaseProfileLookupRepository(get(), get()) }
     single<SessionRepository> { SupabaseSessionRepository(get(), get()) }
+    single<NotificationRepository> { SupabaseNotificationRepository(get(), get()) }
+    single { NotificationsPoller(get(), get(), get(), get(), get()) }
     factoryOf(::DeleteAllDataUseCase)
     factoryOf(::ClearLocalCacheUseCase)
     factoryOf(::FindProfileByEmailUseCase)
@@ -81,6 +89,7 @@ val appModule = module {
     factoryOf(::AddOrUpdateDebtorUseCase)
     factoryOf(::DeleteDebtorUseCase)
     factoryOf(::AddDebtTransactionUseCase)
+    factoryOf(::LinkDebtorToRegisteredUserUseCase)
 
     factoryOf(::ObserveCreditorsUseCase)
     factoryOf(::ObserveCreditorUseCase)
@@ -88,6 +97,7 @@ val appModule = module {
     factoryOf(::AddOrUpdateCreditorUseCase)
     factoryOf(::DeleteCreditorUseCase)
     factoryOf(::AddCreditorTransactionUseCase)
+    factoryOf(::LinkCreditorToRegisteredUserUseCase)
 
     factoryOf(::ObserveContactSuggestionsUseCase)
 
@@ -108,6 +118,7 @@ val appModule = module {
     viewModelOf(::HomeViewModel)
     viewModelOf(::SettingsViewModel)
     viewModelOf(::QrHubViewModel)
+    viewModelOf(::NotificationsViewModel)
     viewModel { (debtorId: String?, creditorId: String?) ->
         ExportViewModel(debtorId, creditorId, get(), get(), get(), get(), get(), get(), get(), get())
     }

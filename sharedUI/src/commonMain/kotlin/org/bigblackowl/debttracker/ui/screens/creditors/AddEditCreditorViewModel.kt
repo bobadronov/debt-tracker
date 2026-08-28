@@ -31,6 +31,7 @@ import org.bigblackowl.debttracker.domain.usecase.ObserveContactSuggestionsUseCa
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddCreditorTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddOrUpdateCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.DeleteCreditorUseCase
+import org.bigblackowl.debttracker.domain.usecase.creditor.LinkCreditorToRegisteredUserUseCase
 import org.bigblackowl.debttracker.domain.validation.isValidEmail
 import org.bigblackowl.debttracker.domain.validation.isValidFullName
 import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
@@ -57,6 +58,7 @@ class AddEditCreditorViewModel(
     private val soundPlayer: SoundPlayer,
     private val findProfileByEmail: FindProfileByEmailUseCase,
     private val observeContactSuggestions: ObserveContactSuggestionsUseCase,
+    private val linkCreditorToRegisteredUser: LinkCreditorToRegisteredUserUseCase,
 ) : ViewModel() {
 
     private var emailLookupJob: Job? = null
@@ -89,7 +91,6 @@ class AddEditCreditorViewModel(
             is AddEditCreditorIntent.InitialAmountChanged -> _state.update { it.copy(initialAmountText = intent.value, amountError = null) }
             is AddEditCreditorIntent.CurrencyChanged -> _state.update { it.copy(currency = intent.value) }
             is AddEditCreditorIntent.MethodChanged -> _state.update { it.copy(method = intent.value) }
-            is AddEditCreditorIntent.CardLastDigitsChanged -> _state.update { it.copy(cardLastDigits = intent.value) }
             AddEditCreditorIntent.ApplyProfileSuggestion -> applySuggestion()
             AddEditCreditorIntent.DismissProfileSuggestion -> _state.update { it.copy(profileSuggestion = null) }
             is AddEditCreditorIntent.NameSuggestionSelected -> applyNameSuggestion(intent.suggestion)
@@ -210,7 +211,6 @@ class AddEditCreditorViewModel(
                         amount = parsedAmount.negate(),
                         type = MyDebtTransactionType.BORROW,
                         method = current.method,
-                        cardLastDigits = current.cardLastDigits.trim().ifBlank { null },
                         date = now,
                         comment = null,
                         createdAt = now,
@@ -230,6 +230,10 @@ class AddEditCreditorViewModel(
             _state.update { it.copy(isSaving = false) }
             if (appSettings.soundEnabled) soundPlayer.play(SoundEffect.ADD)
             effectsChannel.send(AddEditCreditorEffect.Saved)
+
+            // Fire-and-forget: те саме, що AddEditDebtorViewModel.save() — прив'язка до
+            // зареєстрованого користувача ніколи не повинна блокувати вже завершене збереження.
+            viewModelScope.launch { runCatching { linkCreditorToRegisteredUser(creditor.id) } }
         }
     }
 }

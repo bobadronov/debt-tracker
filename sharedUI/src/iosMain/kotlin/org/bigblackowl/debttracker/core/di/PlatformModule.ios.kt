@@ -1,5 +1,7 @@
 package org.bigblackowl.debttracker.core.di
 
+import org.bigblackowl.debttracker.core.notifications.IosLocalNotifier
+import org.bigblackowl.debttracker.core.notifications.LocalNotifier
 import org.bigblackowl.debttracker.data.local.DebtTrackerDatabase
 import org.bigblackowl.debttracker.data.local.buildDatabase
 import org.bigblackowl.debttracker.data.repository.RoomCreditorRepository
@@ -18,10 +20,11 @@ actual fun platformDataModule(): Module = module {
     single { get<DebtTrackerDatabase>().debtTransactionDao() }
     single { get<DebtTrackerDatabase>().creditorDao() }
     single { get<DebtTrackerDatabase>().creditorTransactionDao() }
-    single<DebtorRepository> { RoomDebtorRepository(get(), get()) }
-    single<CreditorRepository> { RoomCreditorRepository(get(), get()) }
+    single<DebtorRepository> { RoomDebtorRepository(get(), get(), get(), get()) }
+    single<CreditorRepository> { RoomCreditorRepository(get(), get(), get(), get()) }
     single { SyncCoordinator(get(), get(), get(), get(), get(), get(), get()) }
     single<SyncStatusProvider> { get<SyncCoordinator>() }
+    single<LocalNotifier> { IosLocalNotifier() }
 }
 
 actual val requiresRemoteAuthGate: Boolean = false

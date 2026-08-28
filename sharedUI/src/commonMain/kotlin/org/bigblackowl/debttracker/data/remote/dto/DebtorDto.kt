@@ -16,6 +16,8 @@ data class DebtorDto(
     val status: String,
     val currency: String = "UAH",
     @SerialName("is_deleted") val isDeleted: Boolean,
+    @SerialName("linked_user_id") val linkedUserId: String? = null,
+    @SerialName("mirror_creditor_id") val mirrorCreditorId: String? = null,
     @SerialName("created_at") val createdAt: String,
     @SerialName("updated_at") val updatedAt: String,
 )
@@ -31,10 +33,10 @@ data class DebtTransactionDto(
     // в межах numeric(14,2) Double не втрачає точності.
     val amount: Double,
     val method: String,
-    @SerialName("card_last_digits") val cardLastDigits: String? = null,
     @SerialName("transaction_date") val transactionDate: String,
     val comment: String? = null,
     @SerialName("is_deleted") val isDeleted: Boolean,
+    @SerialName("mirror_transaction_id") val mirrorTransactionId: String? = null,
     @SerialName("created_at") val createdAt: String,
     @SerialName("updated_at") val updatedAt: String,
 )

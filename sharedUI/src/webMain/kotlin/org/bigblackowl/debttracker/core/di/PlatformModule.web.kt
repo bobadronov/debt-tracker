@@ -1,6 +1,8 @@
 package org.bigblackowl.debttracker.core.di
 
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.bigblackowl.debttracker.core.notifications.LocalNotifier
+import org.bigblackowl.debttracker.core.notifications.WebLocalNotifier
 import org.bigblackowl.debttracker.data.repository.SupabaseCreditorRepository
 import org.bigblackowl.debttracker.data.repository.SupabaseDebtorRepository
 import org.bigblackowl.debttracker.domain.model.SyncUiStatus
@@ -25,6 +27,7 @@ actual fun platformDataModule(): Module = module {
             override suspend fun refreshNow() {}
         }
     }
+    single<LocalNotifier> { WebLocalNotifier() }
 }
 
 actual val requiresRemoteAuthGate: Boolean = true

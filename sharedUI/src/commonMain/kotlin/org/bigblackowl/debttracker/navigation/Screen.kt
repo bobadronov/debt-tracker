@@ -20,6 +20,7 @@ sealed interface Screen {
     data object EditAccount : Screen
     data object ActiveSessions : Screen
     data object QrHub : Screen
+    data object Notifications : Screen
     data class Export(val debtorId: String? = null, val creditorId: String? = null) : Screen
     data class Auth(val isGate: Boolean = false) : Screen
 }

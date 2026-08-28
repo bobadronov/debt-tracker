@@ -66,8 +66,6 @@ fun AddEditCreditorScreen(
         onCurrencyChange = { viewModel.onIntent(AddEditCreditorIntent.CurrencyChanged(it)) },
         method = state.method,
         onMethodChange = { viewModel.onIntent(AddEditCreditorIntent.MethodChanged(it)) },
-        cardLastDigits = state.cardLastDigits,
-        onCardLastDigitsChange = { viewModel.onIntent(AddEditCreditorIntent.CardLastDigitsChanged(it)) },
         isSaving = state.isSaving,
         onSave = { viewModel.onIntent(AddEditCreditorIntent.Save) },
         onScannedContact = { contact -> viewModel.onIntent(AddEditCreditorIntent.ApplyScannedContact(contact)) },

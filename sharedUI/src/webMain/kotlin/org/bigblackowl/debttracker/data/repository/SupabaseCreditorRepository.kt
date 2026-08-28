@@ -2,9 +2,11 @@ package org.bigblackowl.debttracker.data.repository
 
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseExperimental
+import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.filter.FilterOperation
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
+import io.github.jan.supabase.postgrest.rpc
 import io.github.jan.supabase.realtime.selectAsFlow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -12,6 +14,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import org.bigblackowl.debttracker.data.remote.dto.CreditorDto
 import org.bigblackowl.debttracker.data.remote.dto.CreditorTransactionDto
 import org.bigblackowl.debttracker.data.remote.mapper.toDomain
@@ -24,6 +28,9 @@ import org.bigblackowl.debttracker.domain.model.toCreditorTransactionType
 import org.bigblackowl.debttracker.domain.model.toDebtStatus
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.CreditorRepository
+
+@Serializable
+private data class LinkCreditorParams(@SerialName("p_creditor_id") val creditorId: String)
 
 /** Дзеркало [SupabaseDebtorRepository] для напрямку "Я винен" (спек §4.1). */
 @OptIn(SupabaseExperimental::class, ExperimentalCoroutinesApi::class)
@@ -122,6 +129,13 @@ class SupabaseCreditorRepository(
 
     // No local cache on web (see SupabaseDebtorRepository's class doc) — nothing to clear on sign-out.
     override suspend fun clearLocalCache() {}
+
+    override suspend fun linkToRegisteredUser(creditorId: String): String? {
+        if (!authRepository.isAuthenticated.value) return null
+        return runCatching {
+            client.postgrest.rpc("link_creditor_to_registered_user", LinkCreditorParams(creditorId)).decodeAs<String?>()
+        }.getOrNull()
+    }
 
     private suspend fun recalcCreditorStatus(creditorId: String, userId: String) {
         val creditor = client.from("creditors")

@@ -16,7 +16,6 @@ data class AddEditDebtorState(
     val initialAmountText: String = "",
     val currency: Currency = Currency.UAH,
     val method: PaymentMethod = PaymentMethod.CASH,
-    val cardLastDigits: String = "",
     val fullNameError: String? = null,
     val amountError: String? = null,
     /** Ненульове поки не знайдено збіг за email, не застосовано або не відхилено (§ProfileLookup autofill). */
@@ -34,7 +33,6 @@ sealed interface AddEditDebtorIntent {
     data class InitialAmountChanged(val value: String) : AddEditDebtorIntent
     data class CurrencyChanged(val value: Currency) : AddEditDebtorIntent
     data class MethodChanged(val value: PaymentMethod) : AddEditDebtorIntent
-    data class CardLastDigitsChanged(val value: String) : AddEditDebtorIntent
     data object ApplyProfileSuggestion : AddEditDebtorIntent
     data object DismissProfileSuggestion : AddEditDebtorIntent
     data class NameSuggestionSelected(val suggestion: ContactSuggestion) : AddEditDebtorIntent

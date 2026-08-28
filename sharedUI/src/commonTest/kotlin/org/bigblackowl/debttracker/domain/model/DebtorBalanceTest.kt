@@ -15,7 +15,6 @@ class DebtorBalanceTest {
         amount = BigDecimal.parseString(amount),
         type = BigDecimal.parseString(amount).toDebtTransactionType(),
         method = PaymentMethod.CASH,
-        cardLastDigits = null,
         date = now,
         comment = null,
         createdAt = now,

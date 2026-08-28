@@ -19,6 +19,8 @@ fun DebtorEntity.toDomain() = Debtor(
     syncStatus = syncStatus,
     currency = currency,
     isDeleted = isDeleted,
+    linkedUserId = linkedUserId,
+    mirrorCreditorId = mirrorCreditorId,
 )
 
 fun Debtor.toEntity() = DebtorEntity(
@@ -34,6 +36,8 @@ fun Debtor.toEntity() = DebtorEntity(
     syncStatus = syncStatus,
     currency = currency,
     isDeleted = isDeleted,
+    linkedUserId = linkedUserId,
+    mirrorCreditorId = mirrorCreditorId,
 )
 
 fun DebtTransactionEntity.toDomain() = DebtTransaction(
@@ -42,13 +46,13 @@ fun DebtTransactionEntity.toDomain() = DebtTransaction(
     amount = amount,
     type = type,
     method = method,
-    cardLastDigits = cardLastDigits,
     date = date,
     comment = comment,
     createdAt = createdAt,
     updatedAt = updatedAt,
     syncStatus = syncStatus,
     isDeleted = isDeleted,
+    mirrorTransactionId = mirrorTransactionId,
 )
 
 fun DebtTransaction.toEntity() = DebtTransactionEntity(
@@ -57,11 +61,11 @@ fun DebtTransaction.toEntity() = DebtTransactionEntity(
     amount = amount,
     type = type,
     method = method,
-    cardLastDigits = cardLastDigits,
     date = date,
     comment = comment,
     createdAt = createdAt,
     updatedAt = updatedAt,
     syncStatus = syncStatus,
     isDeleted = isDeleted,
+    mirrorTransactionId = mirrorTransactionId,
 )

@@ -24,7 +24,7 @@ import org.bigblackowl.debttracker.data.local.entity.DebtorEntity
         CreditorEntity::class,
         CreditorTransactionEntity::class,
     ],
-    version = 3,
+    version = 5,
 )
 @TypeConverters(Converters::class)
 @ConstructedBy(DebtTrackerDatabaseConstructor::class)
@@ -48,6 +48,26 @@ val MIGRATION_2_3: Migration = object : Migration(2, 3) {
     override fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE creditors ADD COLUMN email TEXT")
         connection.execSQL("ALTER TABLE debtors ADD COLUMN email TEXT")
+    }
+}
+
+/** v3 → v4: колонки для двосторонньої синхронізації з дзеркальним акаунтом (linked_user_id/mirror_*_id) — спек §7, міграція 0007. */
+val MIGRATION_3_4: Migration = object : Migration(3, 4) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("ALTER TABLE debtors ADD COLUMN linkedUserId TEXT")
+        connection.execSQL("ALTER TABLE debtors ADD COLUMN mirrorCreditorId TEXT")
+        connection.execSQL("ALTER TABLE creditors ADD COLUMN linkedUserId TEXT")
+        connection.execSQL("ALTER TABLE creditors ADD COLUMN mirrorDebtorId TEXT")
+        connection.execSQL("ALTER TABLE debt_transactions ADD COLUMN mirrorTransactionId TEXT")
+        connection.execSQL("ALTER TABLE creditor_transactions ADD COLUMN mirrorTransactionId TEXT")
+    }
+}
+
+/** v4 → v5: видалено фічу "останні цифри картки" (cardLastDigits) — колонка більше не збирається/не показується. */
+val MIGRATION_4_5: Migration = object : Migration(4, 5) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("ALTER TABLE debt_transactions DROP COLUMN cardLastDigits")
+        connection.execSQL("ALTER TABLE creditor_transactions DROP COLUMN cardLastDigits")
     }
 }
 

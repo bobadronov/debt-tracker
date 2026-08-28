@@ -45,6 +45,7 @@ import org.bigblackowl.debttracker.ui.components.ScannedContactDialog
 import org.bigblackowl.debttracker.ui.screens.accountonboarding.AccountOnboardingScreen
 import org.bigblackowl.debttracker.ui.screens.authgate.AuthGateScreen
 import org.bigblackowl.debttracker.ui.screens.home.HomeScreen
+import org.bigblackowl.debttracker.ui.screens.notifications.NotificationsScreen
 import org.bigblackowl.debttracker.ui.screens.protectiononboarding.ProtectionOnboardingScreen
 import org.bigblackowl.debttracker.ui.screens.qr.QrHubScreen
 import org.bigblackowl.debttracker.ui.screens.splash.SplashDestination
@@ -232,6 +233,14 @@ fun DebtTrackerNavGraph(
                     onOpenStats = { navigate(Screen.Stats) },
                     onOpenSettings = { navigate(Screen.Settings) },
                     onOpenQr = { navigate(Screen.QrHub) },
+                    onOpenNotifications = { navigate(Screen.Notifications) },
+                )
+            }
+            entry<Screen.Notifications> {
+                NotificationsScreen(
+                    onBack = { back() },
+                    onNavigateToDebtor = { id -> navigate(Screen.DebtorDetail(id)) },
+                    onNavigateToCreditor = { id -> navigate(Screen.CreditorDetail(id)) },
                 )
             }
             entry<Screen.AddEditDebtor> { screen ->

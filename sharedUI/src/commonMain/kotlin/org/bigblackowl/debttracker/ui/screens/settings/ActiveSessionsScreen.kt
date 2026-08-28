@@ -27,11 +27,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.platform.AppPlatform
 import org.bigblackowl.debttracker.domain.model.DeviceSession
+import org.bigblackowl.debttracker.domain.model.formatDateTime
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
@@ -78,11 +77,7 @@ fun ActiveSessionsScreen(
                         subtitle = if (session.isCurrentDevice) {
                             strings.activeSessionsCurrentDevice
                         } else {
-                            strings.activeSessionsLastActive(
-                                session.lastSeenAt.toLocalDateTime(TimeZone.currentSystemDefault()).let { dt ->
-                                    "${dt.date} ${dt.hour.toString().padStart(2, '0')}:${dt.minute.toString().padStart(2, '0')}"
-                                }
-                            )
+                            strings.activeSessionsLastActive(session.lastSeenAt.formatDateTime())
                         },
                         trailing = if (!session.isCurrentDevice) {
                             {

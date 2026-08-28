@@ -15,7 +15,6 @@ data class Strings(
     val back: String,
     val cash: String,
     val card: String,
-    val cardLastDigits: String,
     val fullName: String,
     val fullNamePlaceholder: String,
     val phone: String,
@@ -45,6 +44,7 @@ data class Strings(
     val homeSettings: String,
     val homeTabDebtors: String,
     val homeTabCreditors: String,
+    val homeMenu: String,
 
     // auth
     val authTitleSignUp: String,
@@ -274,4 +274,14 @@ data class Strings(
     val qrHubPickFileButton: String,
     val qrHubPickFileNotFound: String,
     val qrHubPickFileUnsupported: String,
+
+    // notifications (org.bigblackowl.debttracker.ui.screens.notifications, core/notifications/NotificationsPoller)
+    val notificationsTitle: String,
+    val notificationsEmpty: String,
+    val notificationsMarkAllRead: String,
+    val notificationsBell: String,
+    val notificationBodyDebtorLinked: (name: String, amount: String, currency: String) -> String,
+    val notificationBodyCreditorLinked: (name: String, amount: String, currency: String) -> String,
+    val notificationBodyDebtTransactionAdded: (name: String, amount: String, currency: String) -> String,
+    val notificationBodyCreditTransactionAdded: (name: String, amount: String, currency: String) -> String,
 )

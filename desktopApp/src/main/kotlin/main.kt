@@ -14,16 +14,18 @@ import io.github.vinceglb.filekit.FileKit
 import org.bigblackowl.debttracker.App
 import org.bigblackowl.debttracker.core.di.initKoin
 import org.bigblackowl.debttracker.core.i18n.resolveStrings
+import org.bigblackowl.debttracker.core.notifications.NotificationsPoller
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.data.sync.SyncCoordinator
 import org.jetbrains.compose.resources.decodeToImageBitmap
 import java.awt.Dimension
 
-/** Desktop (JVM) entry point: starts Koin + background sync, then opens the app window. */
+/** Desktop (JVM) entry point: starts Koin + background sync/notifications, then opens the app window. */
 fun main() {
     FileKit.init(appId = "org.bigblackowl.debttracker") // required for FileKit's Save-As dialogs and cache/files dirs on JVM
     val koinApp = initKoin()
     koinApp.koin.get<SyncCoordinator>().start()
+    koinApp.koin.get<NotificationsPoller>().start()
     startApp(koinApp.koin.get())
 }
 

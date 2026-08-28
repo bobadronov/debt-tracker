@@ -8,8 +8,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import org.bigblackowl.debttracker.core.notifications.LocalNotifier
 import org.bigblackowl.debttracker.core.sound.SoundEffect
 import org.bigblackowl.debttracker.core.sound.SoundPlayer
+import org.bigblackowl.debttracker.domain.model.AppNotification
 import org.bigblackowl.debttracker.domain.model.Creditor
 import org.bigblackowl.debttracker.domain.model.CreditorTransaction
 import org.bigblackowl.debttracker.domain.model.CreditorWithBalance
@@ -30,6 +32,7 @@ import org.bigblackowl.debttracker.domain.model.debtorBalance
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.CreditorRepository
 import org.bigblackowl.debttracker.domain.repository.DebtorRepository
+import org.bigblackowl.debttracker.domain.repository.NotificationRepository
 import org.bigblackowl.debttracker.domain.repository.ProfileLookupRepository
 import org.bigblackowl.debttracker.domain.repository.SessionRepository
 import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
@@ -84,7 +87,6 @@ private fun previewDebtorTransactions() = listOf(
         amount = BigDecimal.parseString("-1500"),
         type = TransactionType.LEND,
         method = PaymentMethod.CASH,
-        cardLastDigits = null,
         date = previewNow,
         comment = "Позика на ремонт",
         createdAt = previewNow,
@@ -97,7 +99,6 @@ private fun previewDebtorTransactions() = listOf(
         amount = BigDecimal.parseString("500"),
         type = TransactionType.REPAY,
         method = PaymentMethod.CARD,
-        cardLastDigits = "4321",
         date = previewNow,
         comment = "Часткове повернення",
         createdAt = previewNow,
@@ -110,7 +111,6 @@ private fun previewDebtorTransactions() = listOf(
         amount = BigDecimal.parseString("-2000"),
         type = TransactionType.LEND,
         method = PaymentMethod.CASH,
-        cardLastDigits = null,
         date = previewNow,
         comment = "Додаткова позика",
         createdAt = previewNow,
@@ -123,7 +123,6 @@ private fun previewDebtorTransactions() = listOf(
         amount = BigDecimal.parseString("-800"),
         type = TransactionType.LEND,
         method = PaymentMethod.CASH,
-        cardLastDigits = null,
         date = previewNow,
         comment = null,
         createdAt = previewNow,
@@ -136,7 +135,6 @@ private fun previewDebtorTransactions() = listOf(
         amount = BigDecimal.parseString("300"),
         type = TransactionType.REPAY,
         method = PaymentMethod.CARD,
-        cardLastDigits = "9911",
         date = previewNow,
         comment = "Часткове повернення",
         createdAt = previewNow,
@@ -149,7 +147,6 @@ private fun previewDebtorTransactions() = listOf(
         amount = BigDecimal.parseString("-1200"),
         type = TransactionType.LEND,
         method = PaymentMethod.CARD,
-        cardLastDigits = "5566",
         date = previewNow,
         comment = "Позика на навчання",
         createdAt = previewNow,
@@ -193,7 +190,6 @@ private fun previewCreditorTransactions() = listOf(
         amount = BigDecimal.parseString("-3000"),
         type = MyDebtTransactionType.BORROW,
         method = PaymentMethod.CARD,
-        cardLastDigits = "1234",
         date = previewNow,
         comment = "Позика на авто",
         createdAt = previewNow,
@@ -206,7 +202,6 @@ private fun previewCreditorTransactions() = listOf(
         amount = BigDecimal.parseString("1000"),
         type = MyDebtTransactionType.RETURN,
         method = PaymentMethod.CASH,
-        cardLastDigits = null,
         date = previewNow,
         comment = "Часткове повернення",
         createdAt = previewNow,
@@ -219,7 +214,6 @@ private fun previewCreditorTransactions() = listOf(
         amount = BigDecimal.parseString("-500"),
         type = MyDebtTransactionType.BORROW,
         method = PaymentMethod.CASH,
-        cardLastDigits = null,
         date = previewNow,
         comment = "Додатково позичив",
         createdAt = previewNow,
@@ -232,7 +226,6 @@ private fun previewCreditorTransactions() = listOf(
         amount = BigDecimal.parseString("-2200"),
         type = MyDebtTransactionType.BORROW,
         method = PaymentMethod.CARD,
-        cardLastDigits = "7788",
         date = previewNow,
         comment = "Позика на ремонт квартири",
         createdAt = previewNow,
@@ -245,7 +238,6 @@ private fun previewCreditorTransactions() = listOf(
         amount = BigDecimal.parseString("2200"),
         type = MyDebtTransactionType.RETURN,
         method = PaymentMethod.CASH,
-        cardLastDigits = null,
         date = previewNow,
         comment = "Повернув повністю",
         createdAt = previewNow,
@@ -258,7 +250,6 @@ private fun previewCreditorTransactions() = listOf(
         amount = BigDecimal.parseString("-750"),
         type = MyDebtTransactionType.BORROW,
         method = PaymentMethod.CARD,
-        cardLastDigits = "4432",
         date = previewNow,
         comment = "Позика на техніку",
         createdAt = previewNow,
@@ -314,6 +305,8 @@ class FakeDebtorRepository(
         debtors.update { emptyList() }
         transactions.update { emptyList() }
     }
+
+    override suspend fun linkToRegisteredUser(debtorId: String): String? = null
 }
 
 /** In-memory реалізація [CreditorRepository] для @Preview — без Room/Supabase. */
@@ -363,6 +356,8 @@ class FakeCreditorRepository(
         creditors.update { emptyList() }
         transactions.update { emptyList() }
     }
+
+    override suspend fun linkToRegisteredUser(creditorId: String): String? = null
 }
 
 /** Local-only режим (не автентифікований) — без мережевих викликів до Supabase. */
@@ -416,6 +411,25 @@ class FakeSyncStatusProvider : SyncStatusProvider {
 /** Ніколи не знаходить збіг — @Preview не робить мережевих викликів. */
 class FakeProfileLookupRepository : ProfileLookupRepository {
     override suspend fun findProfileByEmail(email: String): ProfileSuggestion? = null
+}
+
+/** Порожня історія — @Preview не робить мережевих викликів до `notifications`. */
+class FakeNotificationRepository : NotificationRepository {
+    override suspend fun fetchSince(after: kotlin.time.Instant?): List<AppNotification> = emptyList()
+    override suspend fun fetchAll(): List<AppNotification> = emptyList()
+    override suspend fun unreadCount(): Int = 0
+    override suspend fun markRead(id: String) {}
+    override suspend fun markAllRead() {}
+    override suspend fun delete(id: String) {}
+}
+
+/**
+ * No-op [LocalNotifier] для @Preview — реальні реалізації чіпають платформні API сповіщень,
+ * яких немає в пісочниці Android Studio Layoutlib.
+ */
+class NoOpLocalNotifier : LocalNotifier {
+    override suspend fun requestPermission(): Boolean = true
+    override fun notify(title: String, body: String) = Unit
 }
 
 /**

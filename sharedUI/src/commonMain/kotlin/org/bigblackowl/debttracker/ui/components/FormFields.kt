@@ -3,6 +3,7 @@ package org.bigblackowl.debttracker.ui.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
@@ -20,6 +21,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -148,16 +150,19 @@ fun PaymentMethodChipRow(
             alignment = Alignment.CenterHorizontally
         ),
     ) {
+        val chipModifier = Modifier.weight(1f).defaultMinSize(minHeight = OutlinedTextFieldDefaults.MinHeight)
         FilterChip(
             selected = selected == PaymentMethod.CASH,
             onClick = { onSelect(PaymentMethod.CASH) },
             label = { Text(strings.cash) },
+            modifier = chipModifier,
             trailingIcon = { Icon(Icons.Default.Money, null) },
         )
         FilterChip(
             selected = selected == PaymentMethod.CARD,
             onClick = { onSelect(PaymentMethod.CARD) },
             label = { Text(strings.card) },
+            modifier = chipModifier,
             trailingIcon = { Icon(Icons.Default.CreditCard, null) },
         )
     }

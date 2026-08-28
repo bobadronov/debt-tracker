@@ -16,7 +16,6 @@ data class AddEditCreditorState(
     val initialAmountText: String = "",
     val currency: Currency = Currency.UAH,
     val method: PaymentMethod = PaymentMethod.CASH,
-    val cardLastDigits: String = "",
     val fullNameError: String? = null,
     val amountError: String? = null,
     /** Ненульове поки не знайдено збіг за email, не застосовано або не відхилено (§ProfileLookup autofill). */
@@ -34,7 +33,6 @@ sealed interface AddEditCreditorIntent {
     data class InitialAmountChanged(val value: String) : AddEditCreditorIntent
     data class CurrencyChanged(val value: Currency) : AddEditCreditorIntent
     data class MethodChanged(val value: PaymentMethod) : AddEditCreditorIntent
-    data class CardLastDigitsChanged(val value: String) : AddEditCreditorIntent
     data object ApplyProfileSuggestion : AddEditCreditorIntent
     data object DismissProfileSuggestion : AddEditCreditorIntent
     data class NameSuggestionSelected(val suggestion: ContactSuggestion) : AddEditCreditorIntent

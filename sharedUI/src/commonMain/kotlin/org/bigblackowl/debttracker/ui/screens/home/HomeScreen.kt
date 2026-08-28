@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,38 +20,39 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TooltipAnchorPosition
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.launch
@@ -79,6 +81,7 @@ fun HomeScreen(
     onOpenStats: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenQr: () -> Unit,
+    onOpenNotifications: () -> Unit,
     viewModel: HomeViewModel = koinViewModel(),
 ) {
     val pagerState = rememberPagerState(pageCount = { 2 })
@@ -99,9 +102,14 @@ fun HomeScreen(
                     }
                 },
                 actions = {
-                    TopBarActionIcon(icon = Icons.Filled.QrCode, description = strings.homeQr, onClick = onOpenQr)
-                    TopBarActionIcon(icon = Icons.Filled.QueryStats, description = strings.homeStats, onClick = onOpenStats)
-                    TopBarActionIcon(icon = Icons.Filled.Settings, description = strings.homeSettings, onClick = onOpenSettings)
+                    HomeOverflowMenu(
+                        state = state,
+                        strings = strings,
+                        onOpenNotifications = onOpenNotifications,
+                        onOpenQr = onOpenQr,
+                        onOpenStats = onOpenStats,
+                        onOpenSettings = onOpenSettings,
+                    )
                 }
             )
         }
@@ -153,16 +161,58 @@ fun HomeScreen(
     }
 }
 
-/** Іконка дій top bar із M3 [TooltipBox] — підказка на довге натискання/наведення (Google-style app bar). */
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Дії top bar (сповіщення/QR/статистика/налаштування), згорнуті в один overflow-меню (⋮) зі
+ * значками й підписами замість окремих кнопок — бейдж непрочитаних сповіщень лишається видимим
+ * прямо на кнопці меню, не чекаючи, поки список розгорнуть.
+ */
 @Composable
-private fun TopBarActionIcon(icon: ImageVector, description: String, onClick: () -> Unit) {
-    TooltipBox(
-        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
-        tooltip = { PlainTooltip { Text(description) } },
-        state = rememberTooltipState(),
-    ) {
-        IconButton(onClick = onClick) { Icon(icon, contentDescription = description) }
+private fun HomeOverflowMenu(
+    state: HomeState,
+    strings: Strings,
+    onOpenNotifications: () -> Unit,
+    onOpenQr: () -> Unit,
+    onOpenStats: () -> Unit,
+    onOpenSettings: () -> Unit,
+) {
+    var menuOpen by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { menuOpen = true }) {
+            if (state.isAuthenticated && state.unreadNotifications > 0) {
+                BadgedBox(badge = { Badge { Text(state.unreadNotifications.toString()) } }) {
+                    Icon(Icons.Filled.MoreVert, contentDescription = strings.homeMenu)
+                }
+            } else {
+                Icon(Icons.Filled.MoreVert, contentDescription = strings.homeMenu)
+            }
+        }
+        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+            if (state.isAuthenticated) {
+                DropdownMenuItem(
+                    text = { Text(strings.notificationsBell) },
+                    leadingIcon = { Icon(Icons.Filled.Notifications, contentDescription = null) },
+                    trailingIcon = if (state.unreadNotifications > 0) {
+                        { Badge { Text(state.unreadNotifications.toString()) } }
+                    } else null,
+                    onClick = { menuOpen = false; onOpenNotifications() },
+                )
+            }
+            DropdownMenuItem(
+                text = { Text(strings.homeQr) },
+                leadingIcon = { Icon(Icons.Filled.QrCode, contentDescription = null) },
+                onClick = { menuOpen = false; onOpenQr() },
+            )
+            DropdownMenuItem(
+                text = { Text(strings.homeStats) },
+                leadingIcon = { Icon(Icons.Filled.QueryStats, contentDescription = null) },
+                onClick = { menuOpen = false; onOpenStats() },
+            )
+            DropdownMenuItem(
+                text = { Text(strings.homeSettings) },
+                leadingIcon = { Icon(Icons.Filled.Settings, contentDescription = null) },
+                onClick = { menuOpen = false; onOpenSettings() },
+            )
+        }
     }
 }
 
@@ -218,6 +268,7 @@ private fun HomeScreenPreviewContent() {
         onOpenStats = {},
         onOpenSettings = {},
         onOpenQr = {},
+        onOpenNotifications = {},
     )
 }
 

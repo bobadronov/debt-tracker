@@ -26,6 +26,6 @@ fun buildDatabase(): DebtTrackerDatabase {
     return Room.databaseBuilder<DebtTrackerDatabase>(name = dbFilePath)
         .setDriver(BundledSQLiteDriver())
         .setQueryCoroutineContext(Dispatchers.Default)
-        .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
         .build()
 }

@@ -28,6 +28,7 @@ import org.bigblackowl.debttracker.domain.usecase.ObserveContactSuggestionsUseCa
 import org.bigblackowl.debttracker.domain.usecase.debtor.AddDebtTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.AddOrUpdateDebtorUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.DeleteDebtorUseCase
+import org.bigblackowl.debttracker.domain.usecase.debtor.LinkDebtorToRegisteredUserUseCase
 import org.bigblackowl.debttracker.domain.validation.isValidEmail
 import org.bigblackowl.debttracker.domain.validation.isValidFullName
 import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
@@ -57,6 +58,7 @@ class AddEditDebtorViewModel(
     private val soundPlayer: SoundPlayer,
     private val findProfileByEmail: FindProfileByEmailUseCase,
     private val observeContactSuggestions: ObserveContactSuggestionsUseCase,
+    private val linkDebtorToRegisteredUser: LinkDebtorToRegisteredUserUseCase,
 ) : ViewModel() {
 
     private var emailLookupJob: Job? = null
@@ -89,7 +91,6 @@ class AddEditDebtorViewModel(
             is AddEditDebtorIntent.InitialAmountChanged -> _state.update { it.copy(initialAmountText = intent.value, amountError = null) }
             is AddEditDebtorIntent.CurrencyChanged -> _state.update { it.copy(currency = intent.value) }
             is AddEditDebtorIntent.MethodChanged -> _state.update { it.copy(method = intent.value) }
-            is AddEditDebtorIntent.CardLastDigitsChanged -> _state.update { it.copy(cardLastDigits = intent.value) }
             AddEditDebtorIntent.ApplyProfileSuggestion -> applySuggestion()
             AddEditDebtorIntent.DismissProfileSuggestion -> _state.update { it.copy(profileSuggestion = null) }
             is AddEditDebtorIntent.NameSuggestionSelected -> applyNameSuggestion(intent.suggestion)
@@ -210,7 +211,6 @@ class AddEditDebtorViewModel(
                         amount = parsedAmount.negate(),
                         type = TransactionType.LEND,
                         method = current.method,
-                        cardLastDigits = current.cardLastDigits.trim().ifBlank { null },
                         date = now,
                         comment = null,
                         createdAt = now,
@@ -230,6 +230,12 @@ class AddEditDebtorViewModel(
             _state.update { it.copy(isSaving = false) }
             if (appSettings.soundEnabled) soundPlayer.play(SoundEffect.ADD)
             effectsChannel.send(AddEditDebtorEffect.Saved)
+
+            // Fire-and-forget: якщо телефон/email збігається із зареєстрованим користувачем,
+            // прив'язує боржника до нього (дзеркалить транзакцію, шле сповіщення). Ніколи не
+            // повинно блокувати/переривати вже завершене збереження — той самий підхід, що й
+            // email-lookup для автозаповнення вище.
+            viewModelScope.launch { runCatching { linkDebtorToRegisteredUser(debtor.id) } }
         }
     }
 }

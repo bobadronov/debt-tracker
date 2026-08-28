@@ -1,6 +1,14 @@
 package org.bigblackowl.debttracker.domain.model
 
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+
+/** "2026-08-28 18:13" у поточному часовому поясі пристрою — спільний формат для списків сесій/сповіщень. */
+fun kotlin.time.Instant.formatDateTime(): String =
+    toLocalDateTime(TimeZone.currentSystemDefault()).let { dt ->
+        "${dt.date} ${dt.hour.toString().padStart(2, '0')}:${dt.minute.toString().padStart(2, '0')}"
+    }
 
 /** "1234.56 ₴" — сума + символ валюти, без locale-специфічного групування розрядів. */
 fun BigDecimal.formatMoney(currency: Currency): String = "${toStringExpanded()} ${currency.symbol}"

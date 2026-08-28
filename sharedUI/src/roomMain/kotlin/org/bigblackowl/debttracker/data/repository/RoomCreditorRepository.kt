@@ -1,8 +1,13 @@
 package org.bigblackowl.debttracker.data.repository
 
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.rpc
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import org.bigblackowl.debttracker.data.local.dao.CreditorDao
 import org.bigblackowl.debttracker.data.local.dao.CreditorTransactionDao
 import org.bigblackowl.debttracker.data.local.mapper.toDomain
@@ -14,12 +19,18 @@ import org.bigblackowl.debttracker.domain.model.SyncStatus
 import org.bigblackowl.debttracker.domain.model.creditorBalance
 import org.bigblackowl.debttracker.domain.model.toCreditorTransactionType
 import org.bigblackowl.debttracker.domain.model.toDebtStatus
+import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.CreditorRepository
+
+@Serializable
+private data class LinkCreditorParams(@SerialName("p_creditor_id") val creditorId: String)
 
 /** Дзеркало [RoomDebtorRepository] для напрямку "Я винен" (спек §4.1, §5). */
 class RoomCreditorRepository(
     private val creditorDao: CreditorDao,
     private val transactionDao: CreditorTransactionDao,
+    private val client: SupabaseClient,
+    private val authRepository: AuthRepository,
 ) : CreditorRepository {
 
     override fun observeCreditors(): Flow<List<CreditorWithBalance>> =
@@ -74,6 +85,13 @@ class RoomCreditorRepository(
     override suspend fun clearLocalCache() {
         transactionDao.deleteAll()
         creditorDao.deleteAll()
+    }
+
+    override suspend fun linkToRegisteredUser(creditorId: String): String? {
+        if (!authRepository.isAuthenticated.value) return null
+        return runCatching {
+            client.postgrest.rpc("link_creditor_to_registered_user", LinkCreditorParams(creditorId)).decodeAs<String?>()
+        }.getOrNull()
     }
 
     private suspend fun recalcCreditorStatus(creditorId: String) {

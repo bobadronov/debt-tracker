@@ -50,6 +50,21 @@ class AppSettings(private val settings: Settings) {
         }
     }
 
+    /**
+     * ISO-8601 (`kotlin.time.Instant.toString()`) курсор для [org.bigblackowl.debttracker.core.notifications.NotificationsPoller] —
+     * `created_at` останнього вже показаного системного сповіщення на цьому пристрої. `null` —
+     * ще жодного не показано. Не Compose-реактивне (не UI-стан), тож звичайний get/set поверх Settings.
+     */
+    var lastSeenNotificationAt: String?
+        get() = settings.getStringOrNull(KEY_LAST_SEEN_NOTIFICATION_AT)
+        set(value) {
+            if (value == null) settings.remove(KEY_LAST_SEEN_NOTIFICATION_AT)
+            else settings.putString(KEY_LAST_SEEN_NOTIFICATION_AT, value)
+        }
+
+    /** Whether the app has already asked the OS for notification permission (Android 13+/iOS/Web) — asked once, not on every launch. */
+    var notificationsPermissionRequested: Boolean by SettingsBooleanState(settings, KEY_NOTIFICATIONS_PERMISSION_REQUESTED, false)
+
     /** Salts+hashes [pin] before persisting it (see [PinHasher]) — the raw PIN is never stored. */
     fun setPinCode(pin: String) {
         val salt = PinHasher.newSalt()
@@ -88,6 +103,8 @@ class AppSettings(private val settings: Settings) {
         const val KEY_MY_CARD_NAME = "my_card_name"
         const val KEY_MY_CARD_PHONE = "my_card_phone"
         const val KEY_MY_CARD_EMAIL = "my_card_email"
+        const val KEY_LAST_SEEN_NOTIFICATION_AT = "last_seen_notification_at"
+        const val KEY_NOTIFICATIONS_PERMISSION_REQUESTED = "notifications_permission_requested"
     }
 }
 

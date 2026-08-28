@@ -11,7 +11,6 @@ val EnStrings = Strings(
     back = "Back",
     cash = "Cash",
     card = "Card",
-    cardLastDigits = "Card last digits",
     fullName = "Name",
     fullNamePlaceholder = "First and last name",
     phone = "Phone",
@@ -39,6 +38,7 @@ val EnStrings = Strings(
     homeSettings = "Settings",
     homeTabDebtors = "Owed to me",
     homeTabCreditors = "I owe",
+    homeMenu = "Menu",
 
     authTitleSignUp = "Sign up",
     authTitleSignIn = "Sign in",
@@ -252,4 +252,13 @@ val EnStrings = Strings(
     qrHubPickFileButton = "Choose file",
     qrHubPickFileNotFound = "Couldn't find a QR code in that image",
     qrHubPickFileUnsupported = "Your browser can't scan images — try Chrome or Edge",
+
+    notificationsTitle = "Notifications",
+    notificationsEmpty = "No notifications yet",
+    notificationsMarkAllRead = "Mark all as read",
+    notificationsBell = "Notifications",
+    notificationBodyDebtorLinked = { name, amount, currency -> "$name: you owe $amount $currency" },
+    notificationBodyCreditorLinked = { name, amount, currency -> "$name owes you $amount $currency" },
+    notificationBodyDebtTransactionAdded = { name, amount, currency -> "$name added a transaction: $amount $currency" },
+    notificationBodyCreditTransactionAdded = { name, amount, currency -> "$name added a transaction: $amount $currency" },
 )

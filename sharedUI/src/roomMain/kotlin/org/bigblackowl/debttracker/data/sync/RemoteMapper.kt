@@ -35,6 +35,8 @@ fun DebtorEntity.toDto(userId: String) = DebtorDto(
     status = status.name,
     currency = currency.name,
     isDeleted = isDeleted,
+    linkedUserId = linkedUserId,
+    mirrorCreditorId = mirrorCreditorId,
     createdAt = createdAt.toString(),
     updatedAt = updatedAt.toString(),
 )
@@ -52,6 +54,8 @@ fun DebtorDto.toEntity() = DebtorEntity(
     syncStatus = SyncStatus.SYNCED,
     currency = Currency.valueOf(currency),
     isDeleted = isDeleted,
+    linkedUserId = linkedUserId,
+    mirrorCreditorId = mirrorCreditorId,
 )
 
 fun DebtTransactionEntity.toDto(userId: String) = DebtTransactionDto(
@@ -60,10 +64,10 @@ fun DebtTransactionEntity.toDto(userId: String) = DebtTransactionDto(
     userId = userId,
     amount = amount.toStringExpanded().toDouble(),
     method = method.name,
-    cardLastDigits = cardLastDigits,
     transactionDate = date.toString(),
     comment = comment,
     isDeleted = isDeleted,
+    mirrorTransactionId = mirrorTransactionId,
     createdAt = createdAt.toString(),
     updatedAt = updatedAt.toString(),
 )
@@ -76,13 +80,13 @@ fun DebtTransactionDto.toEntity(): DebtTransactionEntity {
         amount = parsedAmount,
         type = parsedAmount.toDebtTransactionType(),
         method = PaymentMethod.valueOf(method),
-        cardLastDigits = cardLastDigits,
         date = kotlin.time.Instant.parse(transactionDate),
         comment = comment,
         createdAt = kotlin.time.Instant.parse(createdAt),
         updatedAt = kotlin.time.Instant.parse(updatedAt),
         syncStatus = SyncStatus.SYNCED,
         isDeleted = isDeleted,
+        mirrorTransactionId = mirrorTransactionId,
     )
 }
 
@@ -97,6 +101,8 @@ fun CreditorEntity.toDto(userId: String) = CreditorDto(
     status = status.name,
     currency = currency.name,
     isDeleted = isDeleted,
+    linkedUserId = linkedUserId,
+    mirrorDebtorId = mirrorDebtorId,
     createdAt = createdAt.toString(),
     updatedAt = updatedAt.toString(),
 )
@@ -114,6 +120,8 @@ fun CreditorDto.toEntity() = CreditorEntity(
     syncStatus = SyncStatus.SYNCED,
     currency = Currency.valueOf(currency),
     isDeleted = isDeleted,
+    linkedUserId = linkedUserId,
+    mirrorDebtorId = mirrorDebtorId,
 )
 
 fun CreditorTransactionEntity.toDto(userId: String) = CreditorTransactionDto(
@@ -122,10 +130,10 @@ fun CreditorTransactionEntity.toDto(userId: String) = CreditorTransactionDto(
     userId = userId,
     amount = amount.toStringExpanded().toDouble(),
     method = method.name,
-    cardLastDigits = cardLastDigits,
     transactionDate = date.toString(),
     comment = comment,
     isDeleted = isDeleted,
+    mirrorTransactionId = mirrorTransactionId,
     createdAt = createdAt.toString(),
     updatedAt = updatedAt.toString(),
 )
@@ -138,12 +146,12 @@ fun CreditorTransactionDto.toEntity(): CreditorTransactionEntity {
         amount = parsedAmount,
         type = parsedAmount.toCreditorTransactionType(),
         method = PaymentMethod.valueOf(method),
-        cardLastDigits = cardLastDigits,
         date = kotlin.time.Instant.parse(transactionDate),
         comment = comment,
         createdAt = kotlin.time.Instant.parse(createdAt),
         updatedAt = kotlin.time.Instant.parse(updatedAt),
         syncStatus = SyncStatus.SYNCED,
         isDeleted = isDeleted,
+        mirrorTransactionId = mirrorTransactionId,
     )
 }

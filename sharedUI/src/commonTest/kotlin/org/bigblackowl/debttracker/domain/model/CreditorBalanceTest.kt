@@ -15,7 +15,6 @@ class CreditorBalanceTest {
         amount = BigDecimal.parseString(amount),
         type = BigDecimal.parseString(amount).toCreditorTransactionType(),
         method = PaymentMethod.CASH,
-        cardLastDigits = null,
         date = now,
         comment = null,
         createdAt = now,

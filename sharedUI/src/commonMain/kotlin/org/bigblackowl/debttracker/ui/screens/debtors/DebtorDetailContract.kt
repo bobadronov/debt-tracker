@@ -18,8 +18,8 @@ data class DebtorDetailState(
 }
 
 sealed interface DebtorDetailIntent {
-    data class Repay(val amount: BigDecimal, val method: PaymentMethod, val cardLastDigits: String?) : DebtorDetailIntent
-    data class LendMore(val amount: BigDecimal, val method: PaymentMethod, val cardLastDigits: String?) : DebtorDetailIntent
+    data class Repay(val amount: BigDecimal, val method: PaymentMethod) : DebtorDetailIntent
+    data class LendMore(val amount: BigDecimal, val method: PaymentMethod) : DebtorDetailIntent
     data object Refresh : DebtorDetailIntent
 }
 

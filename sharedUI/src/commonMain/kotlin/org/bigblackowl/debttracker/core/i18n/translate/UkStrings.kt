@@ -11,7 +11,6 @@ val UkStrings = Strings(
     back = "Назад",
     cash = "Готівка",
     card = "Картка",
-    cardLastDigits = "Останні цифри картки",
     fullName = "Ім'я",
     fullNamePlaceholder = "Ім'я та прізвище",
     phone = "Телефон",
@@ -39,6 +38,7 @@ val UkStrings = Strings(
     homeSettings = "Налаштування",
     homeTabDebtors = "Мені винні",
     homeTabCreditors = "Мої борги",
+    homeMenu = "Меню",
 
     authTitleSignUp = "Реєстрація",
     authTitleSignIn = "Вхід в акаунт",
@@ -252,4 +252,13 @@ val UkStrings = Strings(
     qrHubPickFileButton = "Обрати файл",
     qrHubPickFileNotFound = "Не вдалося знайти QR-код на цьому зображенні",
     qrHubPickFileUnsupported = "Ваш браузер не підтримує розпізнавання зображень — спробуйте Chrome або Edge",
+
+    notificationsTitle = "Сповіщення",
+    notificationsEmpty = "Поки немає сповіщень",
+    notificationsMarkAllRead = "Позначити все прочитаним",
+    notificationsBell = "Сповіщення",
+    notificationBodyDebtorLinked = { name, amount, currency -> "$name: ви винні $amount $currency" },
+    notificationBodyCreditorLinked = { name, amount, currency -> "$name винен(на) вам $amount $currency" },
+    notificationBodyDebtTransactionAdded = { name, amount, currency -> "$name додав(ла) операцію на $amount $currency" },
+    notificationBodyCreditTransactionAdded = { name, amount, currency -> "$name додав(ла) операцію на $amount $currency" },
 )

@@ -54,8 +54,8 @@ class CreditorDetailViewModel(
 
     fun onIntent(intent: CreditorDetailIntent) {
         when (intent) {
-            is CreditorDetailIntent.Return -> record(intent.amount, intent.method, intent.cardLastDigits)
-            is CreditorDetailIntent.BorrowMore -> record(intent.amount.negate(), intent.method, intent.cardLastDigits)
+            is CreditorDetailIntent.Return -> record(intent.amount, intent.method)
+            is CreditorDetailIntent.BorrowMore -> record(intent.amount.negate(), intent.method)
             CreditorDetailIntent.Refresh -> refresh()
         }
     }
@@ -69,7 +69,7 @@ class CreditorDetailViewModel(
         }
     }
 
-    private fun record(signedAmount: BigDecimal, method: PaymentMethod, cardLastDigits: String?) {
+    private fun record(signedAmount: BigDecimal, method: PaymentMethod) {
         viewModelScope.launch {
             runCatching {
                 val now = Clock.System.now()
@@ -80,7 +80,6 @@ class CreditorDetailViewModel(
                         amount = signedAmount,
                         type = signedAmount.toCreditorTransactionType(),
                         method = method,
-                        cardLastDigits = cardLastDigits,
                         date = now,
                         comment = null,
                         createdAt = now,

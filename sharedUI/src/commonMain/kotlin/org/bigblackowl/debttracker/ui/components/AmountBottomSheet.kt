@@ -49,11 +49,10 @@ fun AmountBottomSheet(
     prefillAmount: String = "",
     currency: Currency = Currency.UAH,
     onDismiss: () -> Unit,
-    onConfirm: (amount: BigDecimal, method: PaymentMethod, cardLastDigits: String?) -> Unit,
+    onConfirm: (amount: BigDecimal, method: PaymentMethod) -> Unit,
 ) {
     var amountText by remember { mutableStateOf(prefillAmount) }
     var method by remember { mutableStateOf(PaymentMethod.CASH) }
-    var cardLastDigits by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     val sheetState = rememberModalBottomSheetState()
     val appSettings = koinInject<AppSettings>()
@@ -89,15 +88,6 @@ fun AmountBottomSheet(
                 onPaste = { amountText = sanitizeAmountInput(it); error = null },
             )
             PaymentMethodChipRow(selected = method, onSelect = { method = it })
-            if (method == PaymentMethod.CARD) {
-                PasteableOutlinedTextField(
-                    value = cardLastDigits,
-                    onValueChange = { cardLastDigits = it },
-                    label = strings.cardLastDigits,
-                    clipboardText = clipboardText,
-                    isPasteRelevant = { it.filter(Char::isDigit).length in 3..6 },
-                )
-            }
             Button(
                 onClick = {
                     val parsed = runCatching { BigDecimal.parseString(amountText.trim()) }.getOrNull()
@@ -106,7 +96,7 @@ fun AmountBottomSheet(
                         return@Button
                     }
                     if (appSettings.hapticEnabled) haptics.performHapticFeedback(HapticFeedbackType.Confirm)
-                    onConfirm(parsed, method, cardLastDigits.trim().ifBlank { null })
+                    onConfirm(parsed, method)
                 },
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(strings.confirm) }
@@ -121,7 +111,7 @@ private fun AmountBottomSheetLightPhonePreview() = DebtTrackerPreview(darkTheme 
         title = "Repay debt",
         currency = Currency.UAH,
         onDismiss = {},
-        onConfirm = { _, _, _ -> },
+        onConfirm = { _, _ -> },
     )
 }
 
@@ -132,7 +122,7 @@ private fun AmountBottomSheetDarkPhonePreview() = DebtTrackerPreview(darkTheme =
         title = "Repay debt",
         currency = Currency.UAH,
         onDismiss = {},
-        onConfirm = { _, _, _ -> },
+        onConfirm = { _, _ -> },
     )
 }
 
@@ -143,7 +133,7 @@ private fun AmountBottomSheetLightDesktopPreview() = DebtTrackerPreview(darkThem
         title = "Repay debt",
         currency = Currency.UAH,
         onDismiss = {},
-        onConfirm = { _, _, _ -> },
+        onConfirm = { _, _ -> },
     )
 }
 
@@ -154,6 +144,6 @@ private fun AmountBottomSheetDarkDesktopPreview() = DebtTrackerPreview(darkTheme
         title = "Repay debt",
         currency = Currency.UAH,
         onDismiss = {},
-        onConfirm = { _, _, _ -> },
+        onConfirm = { _, _ -> },
     )
 }

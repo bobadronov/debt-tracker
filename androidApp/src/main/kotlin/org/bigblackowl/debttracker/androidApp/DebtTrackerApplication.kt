@@ -2,11 +2,12 @@ package org.bigblackowl.debttracker.androidApp
 
 import android.app.Application
 import org.bigblackowl.debttracker.core.di.initKoin
+import org.bigblackowl.debttracker.core.notifications.NotificationsPoller
 import org.bigblackowl.debttracker.data.sync.SyncCoordinator
 import org.koin.android.ext.koin.androidContext
 import qrgenerator.AppContext
 
-/** Starts Koin and the background [SyncCoordinator] once for the process, before any Activity or the widget runs. */
+/** Starts Koin and the background [SyncCoordinator]/[NotificationsPoller] once for the process, before any Activity or the widget runs. */
 class DebtTrackerApplication : Application() {
     override fun onCreate() {
         super.onCreate()
@@ -15,5 +16,6 @@ class DebtTrackerApplication : Application() {
             androidContext(this@DebtTrackerApplication)
         }
         koinApp.koin.get<SyncCoordinator>().start()
+        koinApp.koin.get<NotificationsPoller>().start()
     }
 }

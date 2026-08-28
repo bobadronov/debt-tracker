@@ -17,4 +17,6 @@ interface CreditorRepository {
     suspend fun deleteAllData()
     /** Wipes this device's local cache only, leaving Supabase data untouched — Room: clears Room; Web: no-op (no local cache). */
     suspend fun clearLocalCache()
+    /** Дзеркало [DebtorRepository.linkToRegisteredUser] — RPC `link_creditor_to_registered_user`. */
+    suspend fun linkToRegisteredUser(creditorId: String): String?
 }
