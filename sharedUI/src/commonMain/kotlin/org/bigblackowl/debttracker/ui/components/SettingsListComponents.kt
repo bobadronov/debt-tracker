@@ -174,6 +174,28 @@ fun SettingsRow(
     }
 }
 
+/**
+ * [SettingsRow] whose trailing control is a [Switch] — the shape every on/off preference
+ * (protection, sound, haptic, run-in-background…) otherwise repeats inline.
+ */
+@Composable
+fun SettingsSwitchRow(
+    icon: ImageVector,
+    title: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+) {
+    SettingsRow(
+        icon = icon,
+        title = title,
+        modifier = modifier,
+        subtitle = subtitle,
+        trailing = { Switch(checked = checked, onCheckedChange = onCheckedChange) },
+    )
+}
+
 @Composable
 fun SettingsRowDivider() {
     HorizontalDivider(

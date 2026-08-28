@@ -114,7 +114,7 @@ fun CurrencyDropdownField(
         modifier = modifier,
     ) {
         OutlinedTextField(
-            value = selected.symbol,
+            value = selected.label,
             onValueChange = {},
             readOnly = true,
             label = { Text(label) },
@@ -124,7 +124,7 @@ fun CurrencyDropdownField(
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             Currency.entries.forEach { currency ->
                 DropdownMenuItem(
-                    text = { Text(currency.symbol) },
+                    text = { Text(currency.label) },
                     onClick = {
                         onSelect(currency)
                         expanded = false

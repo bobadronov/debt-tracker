@@ -28,6 +28,7 @@ fun PlaceholderScreen(
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
+    verticalArrangement: Arrangement.Vertical = Arrangement.Center,
     content: @Composable ColumnScope.() -> Unit = {
         CircularWavyProgressIndicator(
             modifier = Modifier.size(Dimens.space60)
@@ -41,7 +42,7 @@ fun PlaceholderScreen(
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).padding(Dimens.space16),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = verticalArrangement,
             content = content
         )
     }
