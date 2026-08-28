@@ -9,17 +9,39 @@ import java.awt.TrayIcon
 import java.awt.image.BufferedImage
 
 /**
+ * Set by the desktop app's `main()` so a clicked tray notification can bring the (possibly
+ * hidden — Settings → "Run in background") window back to the front. `null` on every other
+ * platform / before the window exists.
+ */
+object DesktopNotificationWindow {
+    @Volatile
+    var bringToFront: (() -> Unit)? = null
+}
+
+/**
  * Desktop: `java.awt.SystemTray`/`TrayIcon.displayMessage` — вбудований AWT баланс-тост, без
  * зовнішніх залежностей. Немає окремого дозволу на показ (на відміну від Android/iOS/Web), тож
  * [requestPermission] завжди `true`. Якщо трей не підтримується ОС ([SystemTray.isSupported]) —
  * тихий no-op (банер усередині застосунку все одно показує подію).
+ *
+ * Клік по банеру (`TrayIcon.addActionListener`) відкриває застосунок на екрані останнього
+ * сповіщення через [NotificationDeepLinks] + [DesktopNotificationWindow].
  */
 internal class DesktopLocalNotifier : LocalNotifier {
+    // Only the most recent notification's banner is realistically clickable, so one slot is enough.
+    @Volatile
+    private var pendingDeepLink: String? = null
+
     private val trayIcon: TrayIcon? by lazy {
         if (!SystemTray.isSupported()) return@lazy null
         runCatching {
             val icon = TrayIcon(notificationIconImage(), "DebtTracker")
             icon.isImageAutoSize = true
+            icon.addActionListener {
+                val link = pendingDeepLink ?: return@addActionListener
+                NotificationDeepLinks.onIncomingLink(link)
+                DesktopNotificationWindow.bringToFront?.invoke()
+            }
             SystemTray.getSystemTray().add(icon)
             icon
         }.getOrNull()
@@ -27,7 +49,8 @@ internal class DesktopLocalNotifier : LocalNotifier {
 
     override suspend fun requestPermission(): Boolean = true
 
-    override fun notify(title: String, body: String) {
+    override fun notify(title: String, body: String, deepLink: String?) {
+        pendingDeepLink = deepLink
         runCatching { trayIcon?.displayMessage(title, body, TrayIcon.MessageType.INFO) }
     }
 }

@@ -10,7 +10,13 @@ package org.bigblackowl.debttracker.core.notifications
 interface LocalNotifier {
     /** Запитує дозвіл на сповіщення, якщо платформа цього вимагає (Android 13+, iOS, Web); no-op/true там, де дозвіл не потрібен (Desktop). */
     suspend fun requestPermission(): Boolean
-    fun notify(title: String, body: String)
+
+    /**
+     * Показує сповіщення. [deepLink] (див. [NotificationDeepLinks.linkFor]) — куди навігувати при
+     * тапі: платформа чіпляє його до сповіщення й повертає в [NotificationDeepLinks] при кліку.
+     * `null` — сповіщення без переходу (тап лише розгортає застосунок).
+     */
+    fun notify(title: String, body: String, deepLink: String? = null)
 }
 
 // Немає `expect fun createLocalNotifier()` (на відміну від SoundPlayer) — Android-реалізація

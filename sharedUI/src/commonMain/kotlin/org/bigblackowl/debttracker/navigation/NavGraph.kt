@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.Modifier
@@ -32,13 +33,16 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.NavDisplay
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.di.requiresRemoteAuthGate
+import org.bigblackowl.debttracker.core.notifications.NotificationDeepLinks
 import org.bigblackowl.debttracker.core.qr.ContactDeepLinks
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
 import org.bigblackowl.debttracker.domain.model.ContactQrPayload
 import org.bigblackowl.debttracker.domain.model.ScannedContact
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
+import org.bigblackowl.debttracker.domain.repository.NotificationRepository
 import org.bigblackowl.debttracker.domain.repository.SessionRepository
 import org.bigblackowl.debttracker.domain.usecase.ForceSignOutUseCase
 import org.bigblackowl.debttracker.ui.components.ScannedContactDialog
@@ -66,6 +70,19 @@ import org.koin.compose.koinInject
 
 private const val NAV_TRANSITION_DURATION_MILLIS = 300
 
+private fun NotificationDeepLinks.Target.toScreen(): Screen = when (this) {
+    is NotificationDeepLinks.Target.Debtor -> Screen.DebtorDetail(id)
+    is NotificationDeepLinks.Target.Creditor -> Screen.CreditorDetail(id)
+    NotificationDeepLinks.Target.History -> Screen.Notifications
+}
+
+/** Screens where a notification deep link may be acted on — i.e. the user is already unlocked. */
+private fun Screen.isPastUnlock(): Boolean = when (this) {
+    Screen.Splash, Screen.Onboarding, Screen.AuthGate, Screen.AccountOnboarding -> false
+    is Screen.Auth -> !isGate
+    else -> true
+}
+
 /** iOS already gets a native-feeling slide from Navigation 3's platform default; Desktop/Web get
  * none at all out of the box. Setting this explicitly gives every platform the same slide+fade
  * for every screen change instead of an inconsistent (or missing) default. [towards] is the
@@ -90,9 +107,11 @@ fun DebtTrackerNavGraph(
     sessionRepository: SessionRepository = koinInject(),
     forceSignOut: ForceSignOutUseCase = koinInject(),
     settings: AppSettings = koinInject(),
+    notificationRepository: NotificationRepository = koinInject(),
 ) {
     val backStack = remember { mutableStateListOf<Screen>(Screen.Splash) }
     val focusRequester = remember { FocusRequester() }
+    val coroutineScope = rememberCoroutineScope()
 
     fun navigate(screen: Screen) {
         backStack.add(screen)
@@ -151,6 +170,31 @@ fun DebtTrackerNavGraph(
             ContactDeepLinks.consume()
             ContactQrPayload.decode(rawLink)?.let { pendingDeepLinkContact = it }
         }
+    }
+
+    // Tapping a system notification (core/notifications/NotificationDeepLinks) — the OS-level twin
+    // of tapping a row on NotificationsScreen. Held until the user is past the lock/onboarding
+    // screens (a link can arrive on a cold start straight from the notification), then pushed like
+    // any other navigation.
+    var pendingNotificationRoute by remember { mutableStateOf<NotificationDeepLinks.Route?>(null) }
+    LaunchedEffect(Unit) {
+        NotificationDeepLinks.pendingLink.collect { rawLink ->
+            if (rawLink == null) return@collect
+            NotificationDeepLinks.consume()
+            NotificationDeepLinks.parse(rawLink)?.let { pendingNotificationRoute = it }
+        }
+    }
+    LaunchedEffect(pendingNotificationRoute, backStack.lastOrNull()) {
+        val route = pendingNotificationRoute ?: return@LaunchedEffect
+        if (backStack.lastOrNull()?.isPastUnlock() != true) return@LaunchedEffect
+        pendingNotificationRoute = null
+        // Tapping the OS notification counts as opening it, same as tapping the in-app row.
+        // On coroutineScope (not this effect's) so re-keying here doesn't cancel the write.
+        route.notificationId?.let { id ->
+            coroutineScope.launch { runCatching { notificationRepository.markRead(id) } }
+        }
+        val screen = route.target.toScreen()
+        if (backStack.lastOrNull() != screen) navigate(screen)
     }
 
     Box(

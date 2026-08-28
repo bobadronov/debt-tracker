@@ -61,7 +61,9 @@ class NotificationsPoller(
         val fresh = freshDeferred.await()
         if (fresh.isNotEmpty()) {
             val strings = resolveStrings(appSettings.locale)
-            fresh.forEach { notification -> localNotifier.notify(strings.appName, notification.formatBody(strings)) }
+            fresh.forEach { notification ->
+                localNotifier.notify(strings.appName, notification.formatBody(strings), NotificationDeepLinks.linkFor(notification))
+            }
         }
         // fetchSince повертає найновіші спочатку (SupabaseNotificationRepository), тож перший
         // елемент — найсвіжіший, без потреби повторно сканувати список компаратором.

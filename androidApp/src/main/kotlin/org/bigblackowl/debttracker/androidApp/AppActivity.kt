@@ -17,6 +17,8 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.FragmentActivity
 import org.bigblackowl.debttracker.App
+import org.bigblackowl.debttracker.core.notifications.EXTRA_NOTIFICATION_DEEP_LINK
+import org.bigblackowl.debttracker.core.notifications.NotificationDeepLinks
 import org.bigblackowl.debttracker.core.qr.ContactDeepLinks
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.koin.core.context.GlobalContext
@@ -60,7 +62,12 @@ class AppActivity : FragmentActivity() {
     }
 
     private fun forwardDeepLink(intent: Intent?) {
-        intent?.data?.let { ContactDeepLinks.onIncomingLink(it.toString()) }
+        intent ?: return
+        intent.data?.let { ContactDeepLinks.onIncomingLink(it.toString()) }
+        intent.getStringExtra(EXTRA_NOTIFICATION_DEEP_LINK)?.let { link ->
+            NotificationDeepLinks.onIncomingLink(link)
+            intent.removeExtra(EXTRA_NOTIFICATION_DEEP_LINK) // don't re-fire on a later Activity recreate
+        }
     }
 }
 

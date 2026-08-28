@@ -1,3 +1,4 @@
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -13,6 +14,7 @@ import io.github.vinceglb.filekit.FileKit
 import org.bigblackowl.debttracker.App
 import org.bigblackowl.debttracker.core.di.initKoin
 import org.bigblackowl.debttracker.core.i18n.resolveStrings
+import org.bigblackowl.debttracker.core.notifications.DesktopNotificationWindow
 import org.bigblackowl.debttracker.core.notifications.NotificationsPoller
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.data.sync.SyncCoordinator
@@ -36,6 +38,13 @@ fun main() {
 private fun startApp(settings: AppSettings) = application {
 
     var isWindowVisible by remember { mutableStateOf(true) }
+
+    // Tapping a system notification's banner (core/notifications) un-hides the window when
+    // "Run in background" had tucked it away behind the tray.
+    DisposableEffect(Unit) {
+        DesktopNotificationWindow.bringToFront = { isWindowVisible = true }
+        onDispose { DesktopNotificationWindow.bringToFront = null }
+    }
 
     val appIcon = remember { windowIcon() }
 

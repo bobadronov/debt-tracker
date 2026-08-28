@@ -429,7 +429,7 @@ class FakeNotificationRepository : NotificationRepository {
  */
 class NoOpLocalNotifier : LocalNotifier {
     override suspend fun requestPermission(): Boolean = true
-    override fun notify(title: String, body: String) = Unit
+    override fun notify(title: String, body: String, deepLink: String?) = Unit
 }
 
 /**
