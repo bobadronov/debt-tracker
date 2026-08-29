@@ -15,6 +15,7 @@
   }
   h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
   h2 { font-size: 1.15rem; margin-top: 2.25rem; }
+  h3 { font-size: 1rem; margin-top: 1.5rem; }
   .meta { opacity: 0.7; font-size: 0.9rem; margin-bottom: 2rem; }
   code { font-size: 0.9em; }
   ul { padding-left: 1.25rem; }
@@ -26,7 +27,7 @@
 <body>
 
 <h1>DebtTracker — Privacy Policy</h1>
-<p class="meta">Last updated: August 8, 2026</p>
+<p class="meta">Last updated: August 29, 2026</p>
 
 <p>
   DebtTracker ("the app") is a personal debt-tracking app built by Bohdan
@@ -49,7 +50,8 @@
   <li>
     <strong>Account+Sync</strong> (opt-in): you create an account so your
     data can sync across your own devices in real time. This is where the
-    data described below is collected.
+    data described below is collected, and it's the only mode in which your
+    data can reach our servers or another person.
   </li>
 </ul>
 
@@ -57,18 +59,86 @@
 <table>
   <tr><th>Data</th><th>Why</th></tr>
   <tr><td>Email address &amp; password</td><td>Account sign-in (handled by our backend provider, Supabase — we never see your password in plain text)</td></tr>
-  <tr><td>Display name, profile photo (optional)</td><td>Shown on your own account, and used to auto-fill your name/photo when another DebtTracker user who knows your email adds you as a contact</td></tr>
+  <tr><td>Display name, phone number, profile photo (all optional)</td><td>Shown on your own account; used to auto-fill your name/photo for another DebtTracker user who adds you as a contact by your email or phone number; and used to link mirrored debts (see "Sharing a debt with the other person" below)</td></tr>
   <tr><td>Names, phone numbers, emails of people <em>you</em> add as debtors/creditors</td><td>The core feature of the app — tracking who owes you and who you owe</td></tr>
   <tr><td>Transaction records (amounts, dates, payment method, notes)</td><td>The core feature of the app</td></tr>
   <tr><td>App preferences (theme, language, sound/haptics on/off)</td><td>Restoring your settings across devices</td></tr>
+  <tr><td>Active-device list: a device name, platform (Android/iOS/Desktop/Web), app version, and first-seen / last-seen timestamps for each device you sign in on</td><td>Powering the "Active devices" screen in Settings, so you can see where you're signed in and remotely sign a device out</td></tr>
+  <tr><td>In-app notifications (who acted, amount, currency, which debt) generated when a mirrored debt is linked or updated</td><td>Telling you about activity on a debt you share with another DebtTracker user</td></tr>
 </table>
 
+<h2>Contact lookup by email or phone</h2>
 <p>
-  If a person you add as a debtor/creditor happens to have their own
-  DebtTracker account under the same email, the app can look up their public
-  display name and photo to help you fill in their contact card faster. That
-  lookup only ever returns a name and photo — never anyone's email, password,
-  or financial data — and it never exposes your data to them either.
+  When you add a debtor or creditor and enter an email address or phone
+  number that belongs to another registered DebtTracker account, the app can
+  look up that account's public display name and photo to help you fill in
+  the contact card faster. That lookup only ever returns a name and photo —
+  never anyone's email, password, transactions, or balances.
+</p>
+
+<h2>Sharing a debt with the other person (mirrored debts)</h2>
+<p>
+  This only happens in <strong>Account+Sync</strong> mode. If you add a
+  debtor or creditor whose phone number or email address matches another
+  registered DebtTracker user, the app <strong>automatically links</strong>
+  that debt to their account. There is no separate confirmation step — adding
+  a contact whose details match a registered user is what triggers it.
+</p>
+<p>When a debt is linked:</p>
+<ul>
+  <li>
+    A contact card for you — your profile display name, phone, email, and
+    photo — is created in the other person's account.
+  </li>
+  <li>
+    Every transaction already on that debt (amount, date, payment method,
+    note) is copied into their account, and every transaction you later add
+    or edit on that debt is copied to their mirrored record. Anything they
+    add or edit on their side is copied back to yours the same way.
+  </li>
+  <li>
+    They receive an in-app notification that identifies you by name and shows
+    the amount and currency.
+  </li>
+</ul>
+<p>
+  In other words: for a debt that both people track in Account+Sync mode with
+  matching contact details, both people can see that debt's transaction
+  history. Local-only mode never participates in any of this. If you don't
+  want a debt shared, don't enter the other person's registered email or
+  phone number, or track that debt in Local-only mode.
+</p>
+<p>
+  Once data has been copied into the other person's account it belongs to
+  their account. Deleting the debt, deleting all your data, or deleting your
+  account does <strong>not</strong> remove copies already mirrored to them —
+  the same way you can't take back information you've already shared with
+  someone. The reverse is also true: mirrored copies you received stay in
+  your account until you delete them.
+</p>
+
+<h2>Notifications</h2>
+<p>
+  When you're signed in, the app checks our <code>notifications</code> table
+  every 15 seconds and shows a system notification for anything new. It does
+  <strong>not</strong> use Firebase Cloud Messaging, Apple Push Notification
+  service, or any other third-party push provider — there is no push token,
+  and no third party is involved in delivering a notification to your device.
+  You can mark notifications read or delete them in the app; they're deleted
+  with your account.
+</p>
+
+<h2>Sharing a contact by QR code</h2>
+<p>
+  The QR hub screen can show a QR code containing a small contact card (name,
+  and optionally phone and email) for another DebtTracker user to scan, and
+  can scan someone else's. This is entirely on-device: the code is generated
+  and read locally, and scanning uses your device camera (or, on Desktop/Web,
+  a local image file you pick). Nothing about the QR exchange is sent to our
+  servers. If you're signed in, the card shown is your account profile; if
+  you're not, it's whatever you typed into the "My card" fields, stored only
+  on your device. Adding a scanned contact whose details match a registered
+  user can then trigger a mirrored debt, as described above.
 </p>
 
 <h2>What we do <em>not</em> do</h2>
@@ -76,6 +146,7 @@
   <li>No advertising, and no ad-tracking SDKs.</li>
   <li>No analytics or crash-reporting SDKs that phone home to a third party.</li>
   <li>We do not sell or share your data with third parties for marketing.</li>
+  <li>No third-party push-notification service (see "Notifications" above).</li>
   <li>
     App-lock (fingerprint/Face ID/PIN) is handled entirely by your device's
     own operating system. The app only ever receives a yes/no "unlocked"
@@ -89,7 +160,15 @@
   <a href="https://supabase.com" target="_blank" rel="noopener">Supabase</a>,
   on servers in the EU. Access to your data is restricted to your own signed-in
   account by row-level security policies enforced by the database itself —
-  not just by the app.
+  not just by the app. The one exception is a mirrored debt: data you've
+  shared that way is, by design, also readable by the account you shared it
+  with.
+</p>
+<p>
+  The Android and Desktop builds are distributed through Google Play and
+  GitHub Releases; the Android app uses Google Play's in-app update mechanism
+  to tell you when a new version is available. These channels are subject to
+  Google's and GitHub's own privacy policies.
 </p>
 
 <h2 id="data-deletion">Deleting your data — DebtTracker (developer: Bohdan Dronov)</h2>
@@ -115,9 +194,11 @@
 <table>
   <tr><th>Data</th><th>Deleted?</th><th>When</th></tr>
   <tr><td>Debtors, creditors, transaction records</td><td>Deleted</td><td>Immediately (Option 1 or 2)</td></tr>
-  <tr><td>Display name, avatar photo</td><td>Deleted</td><td>Immediately on account deletion (Option 2)</td></tr>
+  <tr><td>Display name, phone, avatar photo</td><td>Deleted</td><td>Immediately on account deletion (Option 2)</td></tr>
   <tr><td>Account/login (email, password hash)</td><td>Deleted</td><td>Immediately on account deletion (Option 2)</td></tr>
+  <tr><td>Active-device list, in-app notifications</td><td>Deleted</td><td>Immediately on account deletion (Option 2)</td></tr>
   <tr><td>Data stored only locally on your device</td><td>Deleted</td><td>Whenever you uninstall the app — this is outside our servers entirely</td></tr>
+  <tr><td>Copies of a shared debt already mirrored into another DebtTracker user's account</td><td>Not deleted</td><td>They belong to that person's account; only the link back to you is cleared. They can delete them from their own app.</td></tr>
   <tr><td>Residual copies in routine infrastructure backups</td><td>Purged</td><td>On our hosting provider's normal backup rotation, not immediately, but not kept indefinitely</td></tr>
 </table>
 <p>
