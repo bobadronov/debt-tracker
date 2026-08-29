@@ -59,6 +59,15 @@ android {
             if (hasReleaseSigning) {
                 signingConfig = signingConfigs.getByName("release")
             }
+
+            // AGP 9.3+ unified optimizer DSL (developer.android.com/topic/performance/app-optimization):
+            // turns on R8 code shrinking + optimization + obfuscation AND optimized resource
+            // shrinking in one switch, with the default Android keep rules
+            // (equivalent to proguard-android-optimize.txt) built in.
+            // App/library keep rules R8 can't infer live in src/main/keepRules/*.keep.
+            optimization {
+                enable = true
+            }
         }
     }
 }
@@ -95,4 +104,5 @@ dependencies {
     debugImplementation(libs.compose.ui.tooling) // ComposeViewAdapter — потрібен рендереру Preview-панелі в IDE
     implementation(libs.bignum) // DebtSummaryWidget рахує BigDecimal-суми напряму
     implementation(libs.qr.kit) // AppContext.set(...) in DebtTrackerApplication (QRKit setup requirement)
+    implementation(libs.coil) // DebtTrackerApplication tunes the singleton Coil ImageLoader (memory-cache sizing)
 }

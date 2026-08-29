@@ -170,6 +170,21 @@ jobs:
           path: androidApp/build/outputs/bundle/release/*.aab
           if-no-files-found: error
 
+      # R8 obfuscates the release bundle — ship the mapping so Play Console can
+      # de-obfuscate crash stack traces (see `optimization { enable = true }` in androidApp/build.gradle.kts).
+      # mapping.txt is consumed as-is by the play-store job; the other three (seeds/usage/
+      # configuration) are the rest of the R8 shrink report, attached to the GitHub Release.
+      - name: Upload R8 mapping
+        uses: actions/upload-artifact@v4
+        with:
+          name: debt-tracker-mapping
+          path: |
+            androidApp/build/outputs/mapping/release/mapping.txt
+            androidApp/build/outputs/mapping/release/seeds.txt
+            androidApp/build/outputs/mapping/release/usage.txt
+            androidApp/build/outputs/mapping/release/configuration.txt
+          if-no-files-found: error
+
 
   # ============================================================
   # Google Play — upload the .aab
@@ -200,6 +215,12 @@ jobs:
           name: debt-tracker-aab
           path: aab
 
+      - name: Download R8 mapping
+        uses: actions/download-artifact@v4
+        with:
+          name: debt-tracker-mapping
+          path: mapping
+
       - name: Upload to Google Play
         if: ${{ env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != '' }}
         uses: r0adkll/upload-google-play@v1
@@ -207,6 +228,7 @@ jobs:
           serviceAccountJsonPlainText: ${{ env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: org.bigblackowl.debttracker.androidApp
           releaseFiles: aab/*.aab
+          mappingFile: mapping/mapping.txt
           track: ${{ inputs.play_track || 'internal' }}
 
 
@@ -372,6 +394,7 @@ jobs:
   github-release:
     needs:
       - android-apk
+      - android-aab
       - windows-msi
       - linux-deb
 
@@ -393,6 +416,19 @@ jobs:
             echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
           fi
 
+      # Bundle the R8/ProGuard mapping + shrink report into one compressed asset so a
+      # crash stack trace from this release's APK/.aab can be de-obfuscated later
+      # (retrace -m mapping.txt). mapping.txt alone is tens of MB, so it's zipped.
+      - name: Bundle R8 mapping files
+        shell: bash
+        run: |
+          mkdir -p release-extra
+          zip -j "release-extra/mapping-${{ steps.release-tag.outputs.tag }}.zip" \
+            artifacts/debt-tracker-mapping/mapping.txt \
+            artifacts/debt-tracker-mapping/seeds.txt \
+            artifacts/debt-tracker-mapping/usage.txt \
+            artifacts/debt-tracker-mapping/configuration.txt
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -402,3 +438,4 @@ jobs:
             artifacts/debt-tracker-apk/*.apk
             artifacts/debt-tracker-msi/*.msi
             artifacts/debt-tracker-deb/*.deb
+            release-extra/mapping-*.zip
