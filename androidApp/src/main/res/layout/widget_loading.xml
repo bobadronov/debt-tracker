@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Shown for the brief moment before Glance renders WidgetUi. A rounded surface-coloured
+     card (matching WidgetUi's background) so the first frame doesn't flash a hard rectangle. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0F0B1E" />
+    android:background="@drawable/widget_preview_card" />

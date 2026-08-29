@@ -51,6 +51,8 @@ val UkStrings = Strings(
     authToggleToSignIn = "Вже з нами? Увійти",
     authToggleToSignUp = "Ще не з нами? Приєднуйтесь",
     authError = "Не вдалося увійти",
+    authOfferSignUpPrompt = "Ще не маєте акаунта?",
+    authOfferSignUpAction = "Створити акаунт",
     showPassword = "Показати пароль",
     hidePassword = "Приховати пароль",
 
@@ -152,6 +154,8 @@ val UkStrings = Strings(
     settingsProtection = "Захист входу",
     settingsSound = "Звук",
     settingsHaptic = "Вібровідгук",
+    settingsNotifications = "Сповіщення",
+    settingsNotificationsBlocked = "Увімкніть їх для Debt Tracker у налаштуваннях пристрою",
     settingsRunInBackground = "Працювати у фоні",
     settingsRunInBackgroundSubtitle = "Продовжувати синхронізацію в треї замість виходу при закритті",
     trayOpen = "Відкрити Debt Tracker",

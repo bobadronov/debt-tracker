@@ -52,6 +52,8 @@ val NlStrings = Strings(
     authToggleToSignIn = "Al een van ons? Inloggen",
     authToggleToSignUp = "Nieuw hier? Registreren",
     authError = "Er ging iets mis bij het inloggen",
+    authOfferSignUpPrompt = "Nog geen account?",
+    authOfferSignUpAction = "Account aanmaken",
     showPassword = "Wachtwoord tonen",
     hidePassword = "Wachtwoord verbergen",
 
@@ -153,6 +155,8 @@ val NlStrings = Strings(
     settingsProtection = "App-vergrendeling",
     settingsSound = "Geluid",
     settingsHaptic = "Haptische feedback",
+    settingsNotifications = "Meldingen",
+    settingsNotificationsBlocked = "Schakel ze in voor Debt Tracker in de apparaatinstellingen",
     settingsRunInBackground = "Op de achtergrond uitvoeren",
     settingsRunInBackgroundSubtitle = "Blijf synchroniseren in het systeemvak in plaats van afsluiten bij sluiten",
     trayOpen = "Debt Tracker openen",

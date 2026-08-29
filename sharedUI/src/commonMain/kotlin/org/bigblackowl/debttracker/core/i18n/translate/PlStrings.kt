@@ -51,6 +51,8 @@ val PlStrings = Strings(
     authToggleToSignIn = "Masz już u nas konto? Zaloguj się",
     authToggleToSignUp = "Jeszcze nie z nami? Dołącz",
     authError = "Nie udało się zalogować",
+    authOfferSignUpPrompt = "Nie masz jeszcze konta?",
+    authOfferSignUpAction = "Utwórz konto",
     showPassword = "Pokaż hasło",
     hidePassword = "Ukryj hasło",
 
@@ -152,6 +154,8 @@ val PlStrings = Strings(
     settingsProtection = "Blokada aplikacji",
     settingsSound = "Dźwięk",
     settingsHaptic = "Wibracje",
+    settingsNotifications = "Powiadomienia",
+    settingsNotificationsBlocked = "Włącz je dla Debt Tracker w ustawieniach urządzenia",
     settingsRunInBackground = "Działaj w tle",
     settingsRunInBackgroundSubtitle = "Kontynuuj synchronizację w zasobniku systemowym zamiast zamykać po zamknięciu okna",
     trayOpen = "Otwórz Debt Tracker",

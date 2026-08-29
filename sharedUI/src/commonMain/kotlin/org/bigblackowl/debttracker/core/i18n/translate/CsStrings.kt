@@ -52,6 +52,8 @@ val CsStrings = Strings(
     authToggleToSignIn = "Už jste jedním z nás? Přihlaste se",
     authToggleToSignUp = "Jste tu nový? Zaregistrujte se",
     authError = "Při přihlašování se něco pokazilo",
+    authOfferSignUpPrompt = "Ještě nemáte účet?",
+    authOfferSignUpAction = "Vytvořit účet",
     showPassword = "Zobrazit heslo",
     hidePassword = "Skrýt heslo",
 
@@ -153,6 +155,8 @@ val CsStrings = Strings(
     settingsProtection = "Zámek aplikace",
     settingsSound = "Zvuk",
     settingsHaptic = "Haptická odezva",
+    settingsNotifications = "Oznámení",
+    settingsNotificationsBlocked = "Zapněte je pro Debt Tracker v nastavení zařízení",
     settingsRunInBackground = "Spouštět na pozadí",
     settingsRunInBackgroundSubtitle = "Po zavření pokračovat v synchronizaci na liště místo ukončení",
     trayOpen = "Otevřít Debt Tracker",

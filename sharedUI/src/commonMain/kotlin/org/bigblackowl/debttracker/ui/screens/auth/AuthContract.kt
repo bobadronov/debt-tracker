@@ -16,6 +16,13 @@ data class AuthState(
     val error: String? = null,
     val fullNameError: String? = null,
     val confirmPasswordError: String? = null,
+    /**
+     * Set after a failed sign-in so the screen can offer to switch to registration. Supabase Auth
+     * deliberately returns the same `invalid_credentials` error for an unknown email and a wrong
+     * password (anti-enumeration), so this can't be limited to a true "user not found" — the prompt
+     * is worded to cover both.
+     */
+    val offerRegistration: Boolean = false,
 )
 
 sealed interface AuthIntent {
@@ -26,6 +33,8 @@ sealed interface AuthIntent {
     data class PhoneChanged(val value: String) : AuthIntent
     data class AvatarPicked(val picked: PickedImage) : AuthIntent
     data object ToggleMode : AuthIntent
+    /** Jump from a failed sign-in straight into registration, carrying the email/password already typed. */
+    data object SwitchToSignUp : AuthIntent
     data object ContinueFromEmailStep : AuthIntent
     data object EditEmail : AuthIntent
     data object Submit : AuthIntent

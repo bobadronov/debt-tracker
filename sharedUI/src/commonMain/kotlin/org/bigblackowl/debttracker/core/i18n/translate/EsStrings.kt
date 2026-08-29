@@ -52,6 +52,8 @@ val EsStrings = Strings(
     authToggleToSignIn = "¿Ya eres de los nuestros? Inicia sesión",
     authToggleToSignUp = "¿Nuevo por aquí? Regístrate",
     authError = "Algo salió mal al iniciar sesión",
+    authOfferSignUpPrompt = "¿Aún no tienes una cuenta?",
+    authOfferSignUpAction = "Crear una cuenta",
     showPassword = "Mostrar contraseña",
     hidePassword = "Ocultar contraseña",
 
@@ -153,6 +155,8 @@ val EsStrings = Strings(
     settingsProtection = "Bloqueo de la app",
     settingsSound = "Sonido",
     settingsHaptic = "Respuesta háptica",
+    settingsNotifications = "Notificaciones",
+    settingsNotificationsBlocked = "Actívalas para Debt Tracker en los ajustes del dispositivo",
     settingsRunInBackground = "Ejecutar en segundo plano",
     settingsRunInBackgroundSubtitle = "Seguir sincronizando en la bandeja en lugar de salir al cerrar",
     trayOpen = "Abrir Debt Tracker",

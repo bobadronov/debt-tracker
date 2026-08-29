@@ -33,6 +33,8 @@ import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
@@ -60,6 +62,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.bigblackowl.debttracker.BuildConfig
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
+import org.bigblackowl.debttracker.core.notifications.NotificationPermissionRequester
+import org.bigblackowl.debttracker.core.notifications.rememberNotificationPermissionRequester
 import org.bigblackowl.debttracker.core.platform.AppPlatform
 import org.bigblackowl.debttracker.core.platform.currentPlatform
 import org.bigblackowl.debttracker.core.security.BiometricAuthenticator
@@ -110,6 +114,7 @@ fun SettingsScreen(
     val settings = koinInject<AppSettings>()
     val authRepository = koinInject<AuthRepository>()
     val biometricAuthenticator = rememberBiometricAuthenticator()
+    val notificationPermissionRequester = rememberNotificationPermissionRequester()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val strings = LocalStrings.current
 
@@ -141,7 +146,9 @@ fun SettingsScreen(
                     settings = settings,
                     biometricHardwareAvailable = state.biometricHardwareAvailable,
                     protectionConfirmError = state.protectionConfirmError,
+                    notificationsPermissionBlocked = state.notificationsPermissionBlocked,
                     biometricAuthenticator = biometricAuthenticator,
+                    notificationPermissionRequester = notificationPermissionRequester,
                     onIntent = viewModel::onIntent,
                     onRequestPinSetup = { showPinSetupDialog = true },
                     onOpenLanguage = onOpenLanguage,
@@ -295,7 +302,9 @@ private fun PreferencesSection(
     settings: AppSettings,
     biometricHardwareAvailable: Boolean,
     protectionConfirmError: String?,
+    notificationsPermissionBlocked: Boolean,
     biometricAuthenticator: BiometricAuthenticator,
+    notificationPermissionRequester: NotificationPermissionRequester,
     onIntent: (SettingsIntent) -> Unit,
     onRequestPinSetup: () -> Unit,
     onOpenLanguage: () -> Unit,
@@ -341,6 +350,15 @@ private fun PreferencesSection(
             )
             SettingsRowDivider()
         }
+
+        SettingsSwitchRow(
+            icon = if (settings.notificationsEnabled) Icons.Filled.Notifications else Icons.Filled.NotificationsOff,
+            title = strings.settingsNotifications,
+            subtitle = if (settings.notificationsEnabled && notificationsPermissionBlocked) strings.settingsNotificationsBlocked else null,
+            checked = settings.notificationsEnabled,
+            onCheckedChange = { onIntent(SettingsIntent.ToggleNotifications(it, notificationPermissionRequester)) },
+        )
+        SettingsRowDivider()
 
         if (BuildConfig.SOUND_ENABLED) {
             SettingsSwitchRow(

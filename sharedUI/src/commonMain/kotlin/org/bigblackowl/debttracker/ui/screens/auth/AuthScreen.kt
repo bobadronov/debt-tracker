@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -229,6 +230,21 @@ fun AuthScreen(
                             .focusRequester(passwordFocusRequester)
                             .semantics { contentType = if (state.isSignUpMode) ContentType.NewPassword else ContentType.Password },
                     )
+
+                    // After a failed sign-in — Supabase Auth can't tell an unknown email from a wrong
+                    // password (anti-enumeration), so this covers both by inviting the user to register.
+                    AnimatedVisibility(visible = state.offerRegistration && !state.isSignUpMode) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(strings.authOfferSignUpPrompt)
+                            TextButton(onClick = { viewModel.onIntent(AuthIntent.SwitchToSignUp) }) {
+                                Text(strings.authOfferSignUpAction)
+                            }
+                        }
+                    }
 
                     SignUpOnlyFields(visible = state.isSignUpMode) {
                         OutlinedTextField(

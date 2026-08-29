@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.i18n.resolveStrings
+import org.bigblackowl.debttracker.core.notifications.NotificationPermissionStatus
 import org.bigblackowl.debttracker.core.security.BiometricResult
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.domain.usecase.DeleteAllDataUseCase
@@ -38,6 +39,16 @@ class SettingsViewModel(
             is SettingsIntent.TogglePinProtection -> {
                 _state.update { it.copy(protectionConfirmError = null) }
                 appSettings.protectionEnabled = intent.enabled
+            }
+
+            is SettingsIntent.ToggleNotifications -> {
+                appSettings.notificationsEnabled = intent.enabled
+                if (!intent.enabled) {
+                    _state.update { it.copy(notificationsPermissionBlocked = false) }
+                } else viewModelScope.launch {
+                    val granted = intent.requester.request() == NotificationPermissionStatus.GRANTED
+                    _state.update { it.copy(notificationsPermissionBlocked = !granted) }
+                }
             }
 
             is SettingsIntent.SetupPinAndEnableProtection -> {

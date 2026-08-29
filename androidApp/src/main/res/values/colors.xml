@@ -5,10 +5,13 @@
 
     <!-- Matches SurfaceContainerLowLight in sharedUI theme/Color.kt, and the debt/repay accent
          duplicated in DebtSummaryWidget.kt (DebtLight/RepayLight, mirrors internal
-         DebtAccentColors.kt) — used by res/layout/widget_preview.xml to mimic WidgetUi. -->
+         DebtAccentColors.kt) — used by res/layout/widget_preview.xml to mimic WidgetUi.
+         `_pill` ≈ accent @ 10% (row background), `_badge` ≈ accent @ 22% (icon circle). -->
     <color name="widget_preview_background">#F3F3F4</color>
     <color name="widget_preview_repay">#2E7D32</color>
     <color name="widget_preview_debt">#BB152C</color>
-    <color name="widget_preview_repay_badge">#1F2E7D32</color>
-    <color name="widget_preview_debt_badge">#1FBB152C</color>
+    <color name="widget_preview_repay_pill">#1A2E7D32</color>
+    <color name="widget_preview_debt_pill">#1ABB152C</color>
+    <color name="widget_preview_repay_badge">#382E7D32</color>
+    <color name="widget_preview_debt_badge">#38BB152C</color>
 </resources>

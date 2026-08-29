@@ -52,6 +52,8 @@ val FrStrings = Strings(
     authToggleToSignIn = "Déjà des nôtres ? Connectez-vous",
     authToggleToSignUp = "Nouveau ici ? Créez un compte",
     authError = "Un problème est survenu lors de la connexion",
+    authOfferSignUpPrompt = "Vous n'avez pas encore de compte ?",
+    authOfferSignUpAction = "Créer un compte",
     showPassword = "Afficher le mot de passe",
     hidePassword = "Masquer le mot de passe",
 
@@ -153,6 +155,8 @@ val FrStrings = Strings(
     settingsProtection = "Verrouillage de l'app",
     settingsSound = "Son",
     settingsHaptic = "Retour haptique",
+    settingsNotifications = "Notifications",
+    settingsNotificationsBlocked = "Activez-les pour Debt Tracker dans les réglages de l'appareil",
     settingsRunInBackground = "Exécuter en arrière-plan",
     settingsRunInBackgroundSubtitle = "Continuer la synchro dans la barre d'état plutôt que de quitter à la fermeture",
     trayOpen = "Ouvrir Debt Tracker",

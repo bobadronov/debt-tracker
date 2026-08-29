@@ -51,6 +51,8 @@ val EnStrings = Strings(
     authToggleToSignIn = "Already one of us? Sign in",
     authToggleToSignUp = "New here? Sign up",
     authError = "Something went wrong signing you in",
+    authOfferSignUpPrompt = "Don't have an account yet?",
+    authOfferSignUpAction = "Create an account",
     showPassword = "Show password",
     hidePassword = "Hide password",
 
@@ -152,6 +154,8 @@ val EnStrings = Strings(
     settingsProtection = "App lock",
     settingsSound = "Sound",
     settingsHaptic = "Haptic feedback",
+    settingsNotifications = "Notifications",
+    settingsNotificationsBlocked = "Turn them on for Debt Tracker in your device settings",
     settingsRunInBackground = "Run in background",
     settingsRunInBackgroundSubtitle = "Keep syncing in the tray instead of quitting when closed",
     trayOpen = "Open Debt Tracker",

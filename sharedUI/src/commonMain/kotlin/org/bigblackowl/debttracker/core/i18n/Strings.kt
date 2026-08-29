@@ -58,6 +58,9 @@ data class Strings(
     val authToggleToSignIn: String,
     val authToggleToSignUp: String,
     val authError: String,
+    /** Shown after a failed sign-in, next to [authOfferSignUpAction], inviting the user to register instead. */
+    val authOfferSignUpPrompt: String,
+    val authOfferSignUpAction: String,
     val showPassword: String,
     val hidePassword: String,
 
@@ -172,6 +175,9 @@ data class Strings(
     val settingsProtection: String,
     val settingsSound: String,
     val settingsHaptic: String,
+    val settingsNotifications: String,
+    /** Subtitle shown under the Notifications row when the OS permission was denied. */
+    val settingsNotificationsBlocked: String,
     // Desktop-only (see AppSettings.runInBackground / desktopApp's main.kt).
     val settingsRunInBackground: String,
     val settingsRunInBackgroundSubtitle: String,

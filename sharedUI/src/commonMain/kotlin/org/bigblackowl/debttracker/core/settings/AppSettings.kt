@@ -26,6 +26,8 @@ class AppSettings(private val settings: Settings) {
     var hasSeenAccountOnboarding: Boolean by SettingsBooleanState(settings, KEY_ACCOUNT_ONBOARDING_SEEN, false)
     var soundEnabled: Boolean by SettingsBooleanState(settings, KEY_SOUND_ENABLED, true)
     var hapticEnabled: Boolean by SettingsBooleanState(settings, KEY_HAPTIC_ENABLED, true)
+    /** User's own on/off switch for system notifications from [org.bigblackowl.debttracker.core.notifications.NotificationsPoller] (Settings → Preferences) — independent of, and gated behind, the OS-level permission. On by default. */
+    var notificationsEnabled: Boolean by SettingsBooleanState(settings, KEY_NOTIFICATIONS_ENABLED, true)
     var theme: String by SettingsStringState(settings, KEY_THEME, "system")
     /** "system" | "uk" | "en" — resolved to a [org.bigblackowl.debttracker.core.i18n.Strings] set via [org.bigblackowl.debttracker.core.i18n.resolveStrings]. */
     var locale: String by SettingsStringState(settings, KEY_LOCALE, "system")
@@ -105,6 +107,7 @@ class AppSettings(private val settings: Settings) {
         const val KEY_PIN_HASH = "pin_hash"
         const val KEY_SOUND_ENABLED = "sound_enabled"
         const val KEY_HAPTIC_ENABLED = "haptic_enabled"
+        const val KEY_NOTIFICATIONS_ENABLED = "notifications_enabled"
         const val KEY_THEME = "theme"
         const val KEY_LOCALE = "locale"
         const val KEY_DEVICE_SESSION_ID = "device_session_id"

@@ -43,7 +43,7 @@ class NotificationsPoller(
                     _unreadCount.value = 0
                     return@collectLatest
                 }
-                localNotifier.requestPermission()
+                if (appSettings.notificationsEnabled) localNotifier.requestPermission()
                 while (currentCoroutineContext().isActive) {
                     runCatching { poll() }
                     delay(POLL_INTERVAL_MS.milliseconds)
@@ -59,7 +59,10 @@ class NotificationsPoller(
         val unreadDeferred = async { notificationRepository.unreadCount() }
 
         val fresh = freshDeferred.await()
-        if (fresh.isNotEmpty()) {
+        // appSettings.notificationsEnabled — перемикач користувача (Settings → Preferences). Вимкнено:
+        // курсор lastSeenNotificationAt усе одно рухаємо (щоб повторне ввімкнення не показало лавину
+        // пропущених), а лічильник непрочитаних оновлюється незалежно нижче — тож дзвіночок у застосунку живий.
+        if (fresh.isNotEmpty() && appSettings.notificationsEnabled) {
             val strings = resolveStrings(appSettings.locale)
             fresh.forEach { notification ->
                 localNotifier.notify(strings.appName, notification.formatBody(strings), NotificationDeepLinks.linkFor(notification))

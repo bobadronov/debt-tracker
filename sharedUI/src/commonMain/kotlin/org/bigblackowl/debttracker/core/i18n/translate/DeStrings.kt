@@ -52,6 +52,8 @@ val DeStrings = Strings(
     authToggleToSignIn = "Schon dabei? Anmelden",
     authToggleToSignUp = "Neu hier? Registrieren",
     authError = "Bei der Anmeldung ist etwas schiefgelaufen",
+    authOfferSignUpPrompt = "Noch kein Konto?",
+    authOfferSignUpAction = "Konto erstellen",
     showPassword = "Passwort anzeigen",
     hidePassword = "Passwort verbergen",
 
@@ -153,6 +155,8 @@ val DeStrings = Strings(
     settingsProtection = "App-Sperre",
     settingsSound = "Ton",
     settingsHaptic = "Haptisches Feedback",
+    settingsNotifications = "Benachrichtigungen",
+    settingsNotificationsBlocked = "In den Geräteeinstellungen für Debt Tracker aktivieren",
     settingsRunInBackground = "Im Hintergrund ausführen",
     settingsRunInBackgroundSubtitle = "Beim Schließen im Tray weitersynchronisieren, statt zu beenden",
     trayOpen = "Debt Tracker öffnen",

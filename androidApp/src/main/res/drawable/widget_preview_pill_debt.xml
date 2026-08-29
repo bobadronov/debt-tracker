@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tonal row background for the debt ("I owe") pill in widget_preview.xml — mirrors
+     DebtPillColor in DebtSummaryWidget.kt. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/widget_preview_debt_pill" />
+    <corners android:radius="18dp" />
+</shape>

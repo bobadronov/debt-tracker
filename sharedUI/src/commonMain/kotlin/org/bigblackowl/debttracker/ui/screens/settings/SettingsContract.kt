@@ -1,5 +1,6 @@
 package org.bigblackowl.debttracker.ui.screens.settings
 
+import org.bigblackowl.debttracker.core.notifications.NotificationPermissionRequester
 import org.bigblackowl.debttracker.core.security.BiometricAuthenticator
 import org.bigblackowl.debttracker.core.update.AppUpdateChecker
 import org.bigblackowl.debttracker.core.update.AppUpdateInfo
@@ -8,6 +9,8 @@ import org.bigblackowl.debttracker.core.update.InAppUpdateLauncher
 data class SettingsState(
     val biometricHardwareAvailable: Boolean = false,
     val protectionConfirmError: String? = null,
+    /** Set after the user turns notifications on but the OS permission request comes back denied — the row then points them at system settings. */
+    val notificationsPermissionBlocked: Boolean = false,
     val deleteDone: Boolean = false,
     val deleteError: Boolean = false,
     val updateState: UpdateCheckState = UpdateCheckState.Idle,
@@ -30,6 +33,8 @@ sealed interface SettingsIntent {
     /** Toggles protection when it's PIN-backed — Desktop (no biometric at all) or mobile with no biometric hardware/enrollment. */
     data class TogglePinProtection(val enabled: Boolean) : SettingsIntent
     data class SetupPinAndEnableProtection(val pin: String) : SettingsIntent
+    /** Flips the user's notification switch; when turning it on, also asks the OS for permission via [requester]. */
+    data class ToggleNotifications(val enabled: Boolean, val requester: NotificationPermissionRequester) : SettingsIntent
     data class EnableMobileProtection(val authenticator: BiometricAuthenticator) : SettingsIntent
     data object DisableMobileProtection : SettingsIntent
     data object SignOut : SettingsIntent

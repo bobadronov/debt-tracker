@@ -31,19 +31,24 @@ class AuthViewModel(
 
     fun onIntent(intent: AuthIntent) {
         when (intent) {
-            is AuthIntent.EmailChanged -> _state.update { it.copy(email = intent.value, error = null) }
-            is AuthIntent.PasswordChanged -> _state.update { it.copy(password = intent.value, error = null, confirmPasswordError = null) }
+            is AuthIntent.EmailChanged -> _state.update { it.copy(email = intent.value, error = null, offerRegistration = false) }
+            is AuthIntent.PasswordChanged -> _state.update { it.copy(password = intent.value, error = null, confirmPasswordError = null, offerRegistration = false) }
             is AuthIntent.ConfirmPasswordChanged -> _state.update { it.copy(confirmPassword = intent.value, confirmPasswordError = null) }
             is AuthIntent.FullNameChanged -> _state.update { it.copy(fullName = intent.value, fullNameError = null) }
             is AuthIntent.PhoneChanged -> _state.update { it.copy(phone = intent.value) }
             is AuthIntent.AvatarPicked -> _state.update { it.copy(avatarPicked = intent.picked) }
             AuthIntent.ToggleMode -> _state.update {
-                it.copy(isSignUpMode = !it.isSignUpMode, isEmailStepDone = false, error = null, fullNameError = null, confirmPasswordError = null)
+                it.copy(isSignUpMode = !it.isSignUpMode, isEmailStepDone = false, error = null, fullNameError = null, confirmPasswordError = null, offerRegistration = false)
+            }
+            AuthIntent.SwitchToSignUp -> _state.update {
+                // Keep the email/password already typed and stay past the email step — the user just
+                // needs to add a name to finish registering.
+                it.copy(isSignUpMode = true, confirmPassword = it.password, error = null, offerRegistration = false)
             }
             AuthIntent.ContinueFromEmailStep -> _state.update {
                 if (it.email.trim().isNotBlank()) it.copy(isEmailStepDone = true) else it
             }
-            AuthIntent.EditEmail -> _state.update { it.copy(isEmailStepDone = false) }
+            AuthIntent.EditEmail -> _state.update { it.copy(isEmailStepDone = false, offerRegistration = false) }
             AuthIntent.Submit -> submit()
         }
     }
@@ -89,7 +94,15 @@ class AuthViewModel(
                     effectsChannel.send(AuthEffect.Success)
                 }
                 .onFailure {
-                    _state.update { it.copy(isLoading = false, error = resolveStrings(appSettings.locale).authError) }
+                    // On a failed sign-in, offer registration: Supabase can't tell us whether the
+                    // email is unknown or the password is just wrong, so the prompt covers both.
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            error = resolveStrings(appSettings.locale).authError,
+                            offerRegistration = !current.isSignUpMode,
+                        )
+                    }
                 }
         }
     }
