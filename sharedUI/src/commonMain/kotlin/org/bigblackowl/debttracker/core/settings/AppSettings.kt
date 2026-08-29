@@ -65,6 +65,15 @@ class AppSettings(private val settings: Settings) {
     /** Whether the app has already asked the OS for notification permission (Android 13+/iOS/Web) — asked once, not on every launch. */
     var notificationsPermissionRequested: Boolean by SettingsBooleanState(settings, KEY_NOTIFICATIONS_PERMISSION_REQUESTED, false)
 
+    /**
+     * Whether an OS restore credential (zero-tap sign-in) has already been registered for the
+     * account signed in on this install — a local guard so [org.bigblackowl.debttracker.data.remote.RestoreCredentialCoordinator]
+     * doesn't re-run the register round trip on every sign-in. Cleared on sign-out. Not UI state.
+     */
+    var restoreCredentialRegistered: Boolean
+        get() = settings.getBoolean(KEY_RESTORE_CREDENTIAL_REGISTERED, false)
+        set(value) = settings.putBoolean(KEY_RESTORE_CREDENTIAL_REGISTERED, value)
+
     /** Salts+hashes [pin] before persisting it (see [PinHasher]) — the raw PIN is never stored. */
     fun setPinCode(pin: String) {
         val salt = PinHasher.newSalt()
@@ -105,6 +114,7 @@ class AppSettings(private val settings: Settings) {
         const val KEY_MY_CARD_EMAIL = "my_card_email"
         const val KEY_LAST_SEEN_NOTIFICATION_AT = "last_seen_notification_at"
         const val KEY_NOTIFICATIONS_PERMISSION_REQUESTED = "notifications_permission_requested"
+        const val KEY_RESTORE_CREDENTIAL_REGISTERED = "restore_credential_registered"
     }
 }
 

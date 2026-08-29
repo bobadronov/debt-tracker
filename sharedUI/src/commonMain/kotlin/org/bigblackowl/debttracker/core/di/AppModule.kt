@@ -11,6 +11,7 @@ import org.bigblackowl.debttracker.BuildConfig
 import org.bigblackowl.debttracker.core.sound.NoopSoundPlayer
 import org.bigblackowl.debttracker.core.sound.SoundPlayer
 import org.bigblackowl.debttracker.core.sound.createSoundPlayer
+import org.bigblackowl.debttracker.data.remote.RestoreCredentialCoordinator
 import org.bigblackowl.debttracker.data.remote.SupabaseAuthRepository
 import org.bigblackowl.debttracker.data.remote.SupabaseNotificationRepository
 import org.bigblackowl.debttracker.data.remote.SupabaseProfileLookupRepository
@@ -18,6 +19,7 @@ import org.bigblackowl.debttracker.data.remote.SupabaseSessionRepository
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.NotificationRepository
 import org.bigblackowl.debttracker.domain.repository.ProfileLookupRepository
+import org.bigblackowl.debttracker.domain.repository.RestoreCredentialGateway
 import org.bigblackowl.debttracker.domain.repository.SessionRepository
 import org.bigblackowl.debttracker.domain.usecase.ClearLocalCacheUseCase
 import org.bigblackowl.debttracker.domain.usecase.DeleteAllDataUseCase
@@ -74,6 +76,7 @@ val appModule = module {
     single { SearchFocusRequests() }
     single<SupabaseClient> { createAppSupabaseClient() }
     single<AuthRepository> { SupabaseAuthRepository(get(), get()) }
+    single<RestoreCredentialGateway> { RestoreCredentialCoordinator(get(), get(), get()) }
     single<ProfileLookupRepository> { SupabaseProfileLookupRepository(get(), get()) }
     single<SessionRepository> { SupabaseSessionRepository(get(), get()) }
     single<NotificationRepository> { SupabaseNotificationRepository(get(), get()) }

@@ -13,12 +13,14 @@ import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.i18n.resolveStrings
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
+import org.bigblackowl.debttracker.domain.repository.RestoreCredentialGateway
 import org.bigblackowl.debttracker.domain.validation.isValidFullName
 
 /** Reduces [AuthIntent]s into [AuthState], delegating sign up/in to [AuthRepository]. */
 class AuthViewModel(
     private val authRepository: AuthRepository,
     private val appSettings: AppSettings,
+    private val restoreCredentials: RestoreCredentialGateway,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AuthState())
@@ -79,6 +81,10 @@ class AuthViewModel(
                             }
                         }
                     }
+                    // Register an OS restore credential so this account can be restored with zero
+                    // taps on the user's next device. Best-effort and no-op unless the feature is
+                    // enabled — fire-and-forget so it never delays or fails the sign-in.
+                    viewModelScope.launch { restoreCredentials.registerForCurrentSession() }
                     _state.update { it.copy(isLoading = false) }
                     effectsChannel.send(AuthEffect.Success)
                 }

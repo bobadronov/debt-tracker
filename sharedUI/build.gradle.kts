@@ -146,6 +146,9 @@ kotlin {
             implementation(libs.androidx.biometric)
             implementation(libs.androidx.fragment)
             implementation(libs.play.app.update.ktx)
+            // Restore Credentials API (zero-tap sign-in on a new device) — see AndroidRestoreCredentialClient.
+            implementation(libs.androidx.credentials)
+            implementation(libs.androidx.credentials.play.services.auth)
         }
 
         jvmMain.dependencies {
@@ -224,6 +227,15 @@ buildConfig {
     buildConfigField("APP_AUTHOR", "BigBlackOwl")
     buildConfigField("SOUND_ENABLED", false)
     buildConfigField("DEBUG", isDebugBuild)
+    // Restore Credentials (zero-tap sign-in). OFF until its backend prerequisites are met:
+    //  1. Supabase dashboard → Auth → enable the Passkeys provider (beta) with a Relying Party ID
+    //     that is a real domain the app owns, plus its allowed origins.
+    //  2. That domain must serve /.well-known/assetlinks.json with this app's signing-cert SHA-256
+    //     (Android app-links / Digital Asset Links) so the platform trusts the RP.
+    //  3. supabase-kt's @SupabaseExperimental passkey API must still be present (it is, 3.7.0).
+    // Client scaffolding (RestoreCredentialCoordinator + AndroidRestoreCredentialClient) is wired
+    // and compiled regardless — flip this to true once 1–2 are done.
+    buildConfigField("RESTORE_CREDENTIALS_ENABLED", false)
 }
 
 room {

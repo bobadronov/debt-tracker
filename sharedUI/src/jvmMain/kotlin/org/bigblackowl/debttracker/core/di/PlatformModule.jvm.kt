@@ -2,6 +2,8 @@ package org.bigblackowl.debttracker.core.di
 
 import org.bigblackowl.debttracker.core.notifications.DesktopLocalNotifier
 import org.bigblackowl.debttracker.core.notifications.LocalNotifier
+import org.bigblackowl.debttracker.core.security.RestoreCredentialClient
+import org.bigblackowl.debttracker.core.security.UnsupportedRestoreCredentialClient
 import org.bigblackowl.debttracker.data.local.DebtTrackerDatabase
 import org.bigblackowl.debttracker.data.local.buildDatabase
 import org.bigblackowl.debttracker.data.repository.RoomCreditorRepository
@@ -25,6 +27,7 @@ actual fun platformDataModule(): Module = module {
     single { SyncCoordinator(get(), get(), get(), get(), get(), get(), get()) }
     single<SyncStatusProvider> { get<SyncCoordinator>() }
     single<LocalNotifier> { DesktopLocalNotifier() }
+    single<RestoreCredentialClient> { UnsupportedRestoreCredentialClient }
 }
 
 actual val requiresRemoteAuthGate: Boolean = false
