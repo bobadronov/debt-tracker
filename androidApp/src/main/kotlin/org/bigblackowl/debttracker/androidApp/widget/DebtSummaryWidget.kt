@@ -103,11 +103,8 @@ private val RepayBadgeColor = ColorProvider(day = RepayLight.copy(alpha = 0.12f)
 private const val ReferenceHeight = 110
 private const val BaseBadgeSize = 36
 private const val BaseFontSize = 17f
-private const val BaseSpacing = 10
 private const val BasePadding = 12
 
-/** Від цієї ширини рядки KPI переходять з одної колонки (стовпчиком) у дві (пліч-о-пліч). */
-private const val WideWidthThreshold = 260
 
 /**
  * Чиста, без сайд-ефектів composable-функція — дані приходять готовими
@@ -128,7 +125,7 @@ private const val WideWidthThreshold = 260
 @RequiresApi(Build.VERSION_CODES.S)
 @OptIn(ExperimentalGlancePreviewApi::class)
 @SuppressLint("RestrictedApi")
-@Preview(300,150)
+@Preview(200,150)
 @Composable
 @GlanceComposable
 fun WidgetUi(
@@ -140,9 +137,9 @@ fun WidgetUi(
     val size = LocalSize.current
     val scale = (size.height / ReferenceHeight.dp).coerceIn(0.55f, 1.6f)
 
-    val badgeSize = (BaseBadgeSize.dp * scale).coerceIn(22.dp, 44.dp)
+    val badgeSize = (BaseBadgeSize.dp * scale).coerceIn(22.dp, 40.dp)
     val iconSize = badgeSize * 0.55f
-    val amountFontSize = (BaseFontSize * scale).coerceIn(13f, 22f).sp
+    val amountFontSize = (BaseFontSize * scale).coerceIn(13f, 20f).sp
     val outerPadding = (BasePadding.dp * scale).coerceIn(8.dp, 16.dp)
 
     GlanceTheme {
