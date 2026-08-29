@@ -114,8 +114,19 @@ jobs:
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.keystore"
           echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
 
+      # Retry on transient Maven Central failures (HTTP 429 Too Many Requests,
+      # 5xx, connection resets). Gradle's own dependency-download retry does not
+      # cover 429, so wrap the whole invocation.
       - name: Build release APK
-        run: ./gradlew :androidApp:assembleRelease --stacktrace
+        shell: bash
+        run: |
+          n=0
+          until ./gradlew :androidApp:assembleRelease --stacktrace; do
+            n=$((n + 1))
+            if [ "$n" -ge 3 ]; then echo "All 3 attempts failed" >&2; exit 1; fi
+            echo "Attempt $n failed; retrying in $((n * 30))s..." >&2
+            sleep $((n * 30))
+          done
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -160,8 +171,17 @@ jobs:
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.keystore"
           echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
 
+      # Retry on transient Maven Central failures — see the APK job above.
       - name: Build release App Bundle
-        run: ./gradlew :androidApp:bundleRelease --stacktrace
+        shell: bash
+        run: |
+          n=0
+          until ./gradlew :androidApp:bundleRelease --stacktrace; do
+            n=$((n + 1))
+            if [ "$n" -ge 3 ]; then echo "All 3 attempts failed" >&2; exit 1; fi
+            echo "Attempt $n failed; retrying in $((n * 30))s..." >&2
+            sleep $((n * 30))
+          done
 
       - name: Upload App Bundle
         uses: actions/upload-artifact@v4
@@ -261,8 +281,20 @@ jobs:
 
       # Compose Desktop downloads WiX Toolset automatically when
       # packageMsi requires it.
+      #
+      # Retry on transient Maven Central failures (HTTP 429 Too Many Requests,
+      # 5xx, connection resets) — Gradle's own dependency-download retry does not
+      # cover 429.
       - name: Package Windows installer
-        run: ./gradlew :desktopApp:packageMsi --stacktrace
+        shell: bash
+        run: |
+          n=0
+          until ./gradlew :desktopApp:packageMsi --stacktrace; do
+            n=$((n + 1))
+            if [ "$n" -ge 3 ]; then echo "All 3 attempts failed" >&2; exit 1; fi
+            echo "Attempt $n failed; retrying in $((n * 30))s..." >&2
+            sleep $((n * 30))
+          done
 
       - name: Decode code-signing certificate
         if: ${{ env.WINDOWS_CODE_SIGN_CERT_BASE64 != '' }}
@@ -315,8 +347,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y fakeroot dpkg-dev
 
+      # Retry on transient Maven Central failures (HTTP 429 Too Many Requests,
+      # 5xx, connection resets) — Gradle's own dependency-download retry does not
+      # cover 429. This job has hit 429 on filekit-dialogs-compose before.
       - name: Package Debian package
-        run: ./gradlew :desktopApp:packageDeb --stacktrace
+        shell: bash
+        run: |
+          n=0
+          until ./gradlew :desktopApp:packageDeb --stacktrace; do
+            n=$((n + 1))
+            if [ "$n" -ge 3 ]; then echo "All 3 attempts failed" >&2; exit 1; fi
+            echo "Attempt $n failed; retrying in $((n * 30))s..." >&2
+            sleep $((n * 30))
+          done
 
       - name: Upload Debian package
         uses: actions/upload-artifact@v4
