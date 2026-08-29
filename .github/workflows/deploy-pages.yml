@@ -1,0 +1,99 @@
+
+name: Deploy Pages
+
+# Standalone GitHub Pages deploy — builds only the web distribution and
+# publishes it, with none of the release machinery (no GitHub Release, no
+# Google Play upload, no APK/MSI/DEB).
+#
+# Use this to push a web-only change live (e.g. an updated legal/*.html) without
+# cutting a full tagged release. The `Release` workflow still deploys Pages too,
+# as part of a real release.
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+    paths:
+      - 'legal/**'
+      - 'webApp/**'
+      - 'sharedUI/**'
+      - '.github/workflows/deploy-pages.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Serialize against other Pages deploys (including the one in `Release`).
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  # The anon key is intentionally public. RLS protects the data, not the key.
+  # Both values are required by sharedUI/build.gradle.kts during Gradle
+  # configuration because they feed the BuildConfig block.
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+jobs:
+
+  web:
+    # wasm-opt/Binaryen currently crashes on the Ubuntu runner for this
+    # project's wasmJs production optimization. Windows avoids the problematic
+    # Binaryen binary. (Same reason as the `web` job in release.yml.)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build web distribution
+        # Kotlin/JS's first webpack invocation in a fresh checkout can fail with
+        # "Cannot find node module ... webpack/bin/webpack.js" — a known Kotlin/JS
+        # Gradle plugin race where npm modules are still being materialized. A
+        # second invocation in the same environment (modules now on disk) succeeds.
+        # Retry also covers transient Maven Central failures (HTTP 429).
+        shell: bash
+        run: |
+          n=0
+          until ./gradlew :webApp:composeCompatibilityBrowserDistribution --stacktrace; do
+            n=$((n + 1))
+            if [ "$n" -ge 3 ]; then echo "All 3 attempts failed" >&2; exit 1; fi
+            echo "Attempt $n failed; retrying in $((n * 30))s..." >&2
+            sleep $((n * 30))
+          done
+
+      - name: Add legal pages (privacy policy, for Play Store etc.)
+        shell: bash
+        run: cp legal/*.html webApp/build/dist/composeWebCompatibility/productionExecutable/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: webApp/build/dist/composeWebCompatibility/productionExecutable
+
+  deploy-pages:
+    needs: web
+
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
