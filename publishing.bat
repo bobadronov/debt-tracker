@@ -5,8 +5,10 @@ REM
 REM Flow:
 REM   1) enter the new version number (blank = auto-bump the patch number)
 REM   2) select the Play Store track (internal / alpha / beta / production)
-REM   3) confirm, then update version.properties, commit, and push to main
+REM   3) confirm, then bump version.properties and commit + push ALL pending
+REM      changes to main in one "Bump to vX.Y.Z" commit
 REM   4) dispatch the "Release" GitHub Actions workflow (.github/workflows/release.yml)
+REM      and show the run so it can be watched in Actions
 REM
 REM NOTE: this intentionally does NOT push a git tag. Pushing a `v*` tag
 REM separately triggers the workflow's own `on: push: tags:` path, which
@@ -86,7 +88,10 @@ echo     VERSION_CODE=%CURRENT_CODE%  -^>  !NEW_CODE!
 echo   Play Store track: %PLAY_TRACK%
 echo ============================================
 echo.
-set /p CONFIRM="Commit, push to main, and dispatch the Release workflow now? (y/N): "
+echo   All of the following pending changes will be committed and pushed:
+git status --short
+echo.
+set /p CONFIRM="Bump the version, commit + push ALL of the above to main, and dispatch the Release workflow now? (y/N): "
 if /i not "%CONFIRM%"=="y" (
     echo Aborted. No changes made.
     goto :end
@@ -100,17 +105,14 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM --- Warn about any other uncommitted changes; this script only commits version.properties ---
-git status --porcelain | findstr /v /i "version.properties" > "%TEMP%\dtr_release_status.tmp"
-for %%A in ("%TEMP%\dtr_release_status.tmp") do set OTHER_DIRTY_SIZE=%%~zA
-del "%TEMP%\dtr_release_status.tmp" >nul 2>nul
-if not "%OTHER_DIRTY_SIZE%"=="0" (
-    echo NOTE: you have other uncommitted changes besides version.properties.
-    echo They will NOT be included in this release commit. Run "git status" to review.
-    echo.
+REM --- Stage and commit EVERYTHING (version bump + any other pending changes),
+REM     so the release is built from exactly what's on disk right now ---
+git add -A
+if errorlevel 1 (
+    echo ERROR: git add failed.
+    exit /b 1
 )
 
-git add version.properties
 git commit -m "Bump to v!NEW_NAME!"
 if errorlevel 1 (
     echo ERROR: git commit failed.
@@ -119,7 +121,9 @@ if errorlevel 1 (
 
 git push origin main
 if errorlevel 1 (
-    echo ERROR: git push origin main failed.
+    echo ERROR: git push origin main failed. The commit is local only; fix the
+    echo push (e.g. pull/rebase) and re-run, or push manually then dispatch with:
+    echo   gh workflow run release.yml --ref main -f release_tag=v!NEW_NAME! -f play_track=%PLAY_TRACK%
     exit /b 1
 )
 
@@ -135,11 +139,19 @@ if errorlevel 1 (
 
 echo Waiting for the run to register...
 timeout /t 8 /nobreak >nul
-gh run list --workflow=release.yml --limit 3
 
-echo.
-echo To watch it live, run:
-echo   gh run watch --exit-status
+set RUN_ID=
+for /f "usebackq tokens=* delims=" %%i in (`gh run list --workflow=release.yml --limit 1 --json databaseId --jq ".[0].databaseId"`) do set RUN_ID=%%i
+
+if "%RUN_ID%"=="" (
+    echo Could not resolve the run id; listing recent runs instead:
+    gh run list --workflow=release.yml --limit 3
+    echo Watch it with: gh run watch --exit-status
+) else (
+    echo Watching release run %RUN_ID% ^(Ctrl+C to stop watching -- the run keeps going^):
+    gh run watch %RUN_ID% --exit-status
+)
+
 echo.
 echo Once it completes, run "git fetch --tags" to pull down the v!NEW_NAME! tag
 echo that the release job creates on GitHub.
