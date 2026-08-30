@@ -83,6 +83,11 @@ val UkStrings = Strings(
     addEditDebtorTitleNew = "Новий боржник",
     addEditDebtorInitialAmount = "Сума виданої позики",
 
+    contactPickerTitle = "Оберіть контакт",
+    contactPickerNewContact = "Новий контакт",
+    contactPickerSearchPlaceholder = "Пошук контакту",
+    contactPickerEmpty = "Поки що немає контактів",
+
     creditorDetailTitleFallback = "Кредитор",
     creditorDetailExport = "Експорт",
     creditorDetailBalance = { amount -> "Мій борг: $amount" },

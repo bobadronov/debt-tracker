@@ -83,6 +83,11 @@ val PlStrings = Strings(
     addEditDebtorTitleNew = "Nowy dłużnik",
     addEditDebtorInitialAmount = "Kwota udzielonej pożyczki",
 
+    contactPickerTitle = "Wybierz kontakt",
+    contactPickerNewContact = "Nowy kontakt",
+    contactPickerSearchPlaceholder = "Szukaj kontaktów",
+    contactPickerEmpty = "Brak kontaktów",
+
     creditorDetailTitleFallback = "Wierzyciel",
     creditorDetailExport = "Eksport",
     creditorDetailBalance = { amount -> "Mój dług: $amount" },

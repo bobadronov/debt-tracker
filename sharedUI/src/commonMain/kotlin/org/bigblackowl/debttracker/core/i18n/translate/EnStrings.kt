@@ -83,6 +83,11 @@ val EnStrings = Strings(
     addEditDebtorTitleNew = "New debtor",
     addEditDebtorInitialAmount = "How much I lent",
 
+    contactPickerTitle = "Choose a contact",
+    contactPickerNewContact = "New contact",
+    contactPickerSearchPlaceholder = "Search contacts",
+    contactPickerEmpty = "No contacts yet",
+
     creditorDetailTitleFallback = "Creditor",
     creditorDetailExport = "Export",
     creditorDetailBalance = { amount -> "I owe: $amount" },

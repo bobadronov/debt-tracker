@@ -40,7 +40,9 @@ import org.bigblackowl.debttracker.core.qr.ContactDeepLinks
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
 import org.bigblackowl.debttracker.domain.model.ContactQrPayload
+import org.bigblackowl.debttracker.domain.model.DebtDirection
 import org.bigblackowl.debttracker.domain.model.ScannedContact
+import org.bigblackowl.debttracker.domain.model.toPrefill
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.NotificationRepository
 import org.bigblackowl.debttracker.domain.repository.SessionRepository
@@ -55,9 +57,9 @@ import org.bigblackowl.debttracker.ui.screens.qr.QrHubScreen
 import org.bigblackowl.debttracker.ui.screens.splash.SplashDestination
 import org.bigblackowl.debttracker.ui.screens.splash.SplashScreen
 import org.bigblackowl.debttracker.ui.screens.auth.AuthScreen
-import org.bigblackowl.debttracker.ui.screens.creditors.AddEditCreditorScreen
+import org.bigblackowl.debttracker.ui.screens.contacts.AddEditContactScreen
+import org.bigblackowl.debttracker.ui.screens.contacts.ContactPickerScreen
 import org.bigblackowl.debttracker.ui.screens.creditors.CreditorDetailScreen
-import org.bigblackowl.debttracker.ui.screens.debtors.AddEditDebtorScreen
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorDetailScreen
 import org.bigblackowl.debttracker.ui.screens.export.ExportScreen
 import org.bigblackowl.debttracker.ui.screens.settings.AccountInfoScreen
@@ -124,6 +126,16 @@ fun DebtTrackerNavGraph(
 
     fun back() {
         if (backStack.size > 1) backStack.removeLastOrNull()
+    }
+
+    /** Pops entries until [target] is on top — used after saving a record to skip past the
+     * contact-picker step that led to the form. Falls back to a single [back] if not found. */
+    fun popTo(target: Screen) {
+        if (backStack.none { it == target }) {
+            back()
+            return
+        }
+        while (backStack.size > 1 && backStack.last() != target) backStack.removeLastOrNull()
     }
 
     // Web has no local cache (спек §1) — repositories need a signed-in Supabase session to
@@ -210,11 +222,11 @@ fun DebtTrackerNavGraph(
                         true
                     }
                     event.isCtrlPressed && event.key == Key.N && event.isShiftPressed -> {
-                        navigate(Screen.AddEditCreditor())
+                        navigate(Screen.ContactPicker(DebtDirection.CREDITOR))
                         true
                     }
                     event.isCtrlPressed && event.key == Key.N -> {
-                        navigate(Screen.AddEditDebtor())
+                        navigate(Screen.ContactPicker(DebtDirection.DEBTOR))
                         true
                     }
                     event.isCtrlPressed && event.key == Key.F -> {
@@ -270,9 +282,9 @@ fun DebtTrackerNavGraph(
             }
             entry<Screen.Home> {
                 HomeScreen(
-                    onAddDebtor = { navigate(Screen.AddEditDebtor()) },
+                    onAddDebtor = { navigate(Screen.ContactPicker(DebtDirection.DEBTOR)) },
                     onOpenDebtor = { id -> navigate(Screen.DebtorDetail(id)) },
-                    onAddCreditor = { navigate(Screen.AddEditCreditor()) },
+                    onAddCreditor = { navigate(Screen.ContactPicker(DebtDirection.CREDITOR)) },
                     onOpenCreditor = { id -> navigate(Screen.CreditorDetail(id)) },
                     onOpenStats = { navigate(Screen.Stats) },
                     onOpenSettings = { navigate(Screen.Settings) },
@@ -287,8 +299,21 @@ fun DebtTrackerNavGraph(
                     onNavigateToCreditor = { id -> navigate(Screen.CreditorDetail(id)) },
                 )
             }
-            entry<Screen.AddEditDebtor> { screen ->
-                AddEditDebtorScreen(onDone = { back() }, prefill = screen.prefill)
+            entry<Screen.ContactPicker> { screen ->
+                ContactPickerScreen(
+                    onBack = { back() },
+                    onNewContact = { navigate(Screen.AddEditContact(screen.direction)) },
+                    onPickContact = { contact ->
+                        navigate(Screen.AddEditContact(screen.direction, contact.toPrefill()))
+                    },
+                )
+            }
+            entry<Screen.AddEditContact> { screen ->
+                AddEditContactScreen(
+                    direction = screen.direction,
+                    prefill = screen.prefill,
+                    onDone = { popTo(Screen.Home) },
+                )
             }
             entry<Screen.DebtorDetail> { screen ->
                 DebtorDetailScreen(
@@ -296,9 +321,6 @@ fun DebtTrackerNavGraph(
                     onBack = { back() },
                     onExport = { navigate(Screen.Export(debtorId = screen.debtorId)) }
                 )
-            }
-            entry<Screen.AddEditCreditor> { screen ->
-                AddEditCreditorScreen(onDone = { back() }, prefill = screen.prefill)
             }
             entry<Screen.CreditorDetail> { screen ->
                 CreditorDetailScreen(
@@ -345,8 +367,12 @@ fun DebtTrackerNavGraph(
             entry<Screen.QrHub> {
                 QrHubScreen(
                     onBack = { back() },
-                    onNavigateToAddDebtor = { contact -> navigate(Screen.AddEditDebtor(prefill = contact)) },
-                    onNavigateToAddCreditor = { contact -> navigate(Screen.AddEditCreditor(prefill = contact)) },
+                    onNavigateToAddDebtor = { contact ->
+                        navigate(Screen.AddEditContact(DebtDirection.DEBTOR, contact.toPrefill()))
+                    },
+                    onNavigateToAddCreditor = { contact ->
+                        navigate(Screen.AddEditContact(DebtDirection.CREDITOR, contact.toPrefill()))
+                    },
                 )
             }
             entry<Screen.Auth> { screen ->
@@ -366,11 +392,11 @@ fun DebtTrackerNavGraph(
             onDismiss = { pendingDeepLinkContact = null },
             onAddAsDebtor = {
                 pendingDeepLinkContact = null
-                navigate(Screen.AddEditDebtor(prefill = contact))
+                navigate(Screen.AddEditContact(DebtDirection.DEBTOR, contact.toPrefill()))
             },
             onAddAsCreditor = {
                 pendingDeepLinkContact = null
-                navigate(Screen.AddEditCreditor(prefill = contact))
+                navigate(Screen.AddEditContact(DebtDirection.CREDITOR, contact.toPrefill()))
             },
         )
     }

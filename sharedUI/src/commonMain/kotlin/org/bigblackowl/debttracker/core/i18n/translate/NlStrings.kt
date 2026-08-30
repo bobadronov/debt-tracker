@@ -84,6 +84,11 @@ val NlStrings = Strings(
     addEditDebtorTitleNew = "Nieuwe debiteur",
     addEditDebtorInitialAmount = "Hoeveel ik heb uitgeleend",
 
+    contactPickerTitle = "Kies een contact",
+    contactPickerNewContact = "Nieuw contact",
+    contactPickerSearchPlaceholder = "Contacten zoeken",
+    contactPickerEmpty = "Nog geen contacten",
+
     creditorDetailTitleFallback = "Crediteur",
     creditorDetailExport = "Exporteren",
     creditorDetailBalance = { amount -> "Ik ben schuldig: $amount" },

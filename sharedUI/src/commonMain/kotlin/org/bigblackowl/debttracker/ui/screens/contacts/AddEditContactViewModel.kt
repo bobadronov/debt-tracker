@@ -1,4 +1,4 @@
-package org.bigblackowl.debttracker.ui.screens.debtors
+package org.bigblackowl.debttracker.ui.screens.contacts
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,19 +12,31 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import org.bigblackowl.debttracker.core.i18n.resolveStrings
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.sound.SoundEffect
 import org.bigblackowl.debttracker.core.sound.SoundPlayer
+import org.bigblackowl.debttracker.domain.model.ContactPrefill
 import org.bigblackowl.debttracker.domain.model.ContactSuggestion
+import org.bigblackowl.debttracker.domain.model.Creditor
+import org.bigblackowl.debttracker.domain.model.CreditorTransaction
+import org.bigblackowl.debttracker.domain.model.DebtDirection
 import org.bigblackowl.debttracker.domain.model.DebtStatus
 import org.bigblackowl.debttracker.domain.model.DebtTransaction
 import org.bigblackowl.debttracker.domain.model.Debtor
+import org.bigblackowl.debttracker.domain.model.MyDebtTransactionType
 import org.bigblackowl.debttracker.domain.model.ScannedContact
 import org.bigblackowl.debttracker.domain.model.SyncStatus
 import org.bigblackowl.debttracker.domain.model.TransactionType
 import org.bigblackowl.debttracker.domain.usecase.FindProfileByEmailUseCase
 import org.bigblackowl.debttracker.domain.usecase.ObserveContactSuggestionsUseCase
+import org.bigblackowl.debttracker.domain.usecase.creditor.AddCreditorTransactionUseCase
+import org.bigblackowl.debttracker.domain.usecase.creditor.AddOrUpdateCreditorUseCase
+import org.bigblackowl.debttracker.domain.usecase.creditor.DeleteCreditorUseCase
+import org.bigblackowl.debttracker.domain.usecase.creditor.LinkCreditorToRegisteredUserUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.AddDebtTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.AddOrUpdateDebtorUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.DeleteDebtorUseCase
@@ -32,42 +44,54 @@ import org.bigblackowl.debttracker.domain.usecase.debtor.LinkDebtorToRegisteredU
 import org.bigblackowl.debttracker.domain.validation.isValidEmail
 import org.bigblackowl.debttracker.domain.validation.isValidFullName
 import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
-import kotlin.time.Clock
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 private const val EMAIL_LOOKUP_DEBOUNCE_MS = 500L
 private const val NAME_SUGGESTIONS_LIMIT = 5
 
 /**
- * Validates the form and saves a new [org.bigblackowl.debttracker.domain.model.Debtor] (plus its
- * opening transaction) on [Save][AddEditDebtorIntent.Save].
- * While the user types an [AddEditDebtorIntent.EmailChanged] email, debounces a lookup against
- * [findProfileByEmail] to offer a name/photo autofill suggestion if that email belongs to a
- * registered app user (§ProfileLookup) — purely additive, never blocks saving.
- * Separately, [observeContactSuggestions] feeds a live name-autocomplete list of past
- * debtors/creditors matching what's typed in [AddEditDebtorIntent.FullNameChanged] — picking one
- * ([AddEditDebtorIntent.NameSuggestionSelected]) carries over its phone/email/comment too.
+ * Validates the merged "Add record" form and saves a new debtor or creditor (plus its opening
+ * transaction) on [AddEditContactIntent.Save], choosing the target by [AddEditContactState.direction]
+ * ([AddEditContactIntent.DirectionChanged]). Merges the former `AddEditDebtorViewModel` and
+ * `AddEditCreditorViewModel`, which were identical apart from those domain types.
+ *
+ * While the user types an email, debounces a lookup against [findProfileByEmail] to offer a
+ * name/photo autofill suggestion (§ProfileLookup) — purely additive, never blocks saving.
+ * Separately, [observeContactSuggestions] feeds the inline name-autocomplete list; picking one
+ * ([AddEditContactIntent.NameSuggestionSelected]) carries over its phone/email/comment too.
  */
 @OptIn(ExperimentalUuidApi::class)
-class AddEditDebtorViewModel(
+class AddEditContactViewModel(
+    direction: DebtDirection,
+    prefill: ContactPrefill?,
     private val addOrUpdateDebtor: AddOrUpdateDebtorUseCase,
-    private val addTransaction: AddDebtTransactionUseCase,
+    private val addDebtTransaction: AddDebtTransactionUseCase,
     private val deleteDebtor: DeleteDebtorUseCase,
+    private val linkDebtorToRegisteredUser: LinkDebtorToRegisteredUserUseCase,
+    private val addOrUpdateCreditor: AddOrUpdateCreditorUseCase,
+    private val addCreditorTransaction: AddCreditorTransactionUseCase,
+    private val deleteCreditor: DeleteCreditorUseCase,
+    private val linkCreditorToRegisteredUser: LinkCreditorToRegisteredUserUseCase,
     private val appSettings: AppSettings,
     private val soundPlayer: SoundPlayer,
     private val findProfileByEmail: FindProfileByEmailUseCase,
     private val observeContactSuggestions: ObserveContactSuggestionsUseCase,
-    private val linkDebtorToRegisteredUser: LinkDebtorToRegisteredUserUseCase,
 ) : ViewModel() {
 
     private var emailLookupJob: Job? = null
     private var allContacts: List<ContactSuggestion> = emptyList()
 
-    private val _state = MutableStateFlow(AddEditDebtorState())
-    val state: StateFlow<AddEditDebtorState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(
+        AddEditContactState(
+            direction = direction,
+            fullName = prefill?.fullName.orEmpty(),
+            phone = prefill?.phone?.let(::sanitizePhoneInput).orEmpty(),
+            email = prefill?.email.orEmpty(),
+            comment = prefill?.comment.orEmpty(),
+        )
+    )
+    val state: StateFlow<AddEditContactState> = _state.asStateFlow()
 
-    private val effectsChannel = Channel<AddEditDebtorEffect>()
+    private val effectsChannel = Channel<AddEditContactEffect>()
     val effects = effectsChannel.receiveAsFlow()
 
     init {
@@ -79,23 +103,24 @@ class AddEditDebtorViewModel(
         }
     }
 
-    fun onIntent(intent: AddEditDebtorIntent) {
+    fun onIntent(intent: AddEditContactIntent) {
         when (intent) {
-            is AddEditDebtorIntent.FullNameChanged -> {
+            is AddEditContactIntent.DirectionChanged -> _state.update { it.copy(direction = intent.value) }
+            is AddEditContactIntent.FullNameChanged -> {
                 _state.update { it.copy(fullName = intent.value, fullNameError = null) }
                 updateNameSuggestions()
             }
-            is AddEditDebtorIntent.PhoneChanged -> _state.update { it.copy(phone = intent.value) }
-            is AddEditDebtorIntent.EmailChanged -> onEmailChanged(intent.value)
-            is AddEditDebtorIntent.CommentChanged -> _state.update { it.copy(comment = intent.value) }
-            is AddEditDebtorIntent.InitialAmountChanged -> _state.update { it.copy(initialAmountText = intent.value, amountError = null) }
-            is AddEditDebtorIntent.CurrencyChanged -> _state.update { it.copy(currency = intent.value) }
-            is AddEditDebtorIntent.MethodChanged -> _state.update { it.copy(method = intent.value) }
-            AddEditDebtorIntent.ApplyProfileSuggestion -> applySuggestion()
-            AddEditDebtorIntent.DismissProfileSuggestion -> _state.update { it.copy(profileSuggestion = null) }
-            is AddEditDebtorIntent.NameSuggestionSelected -> applyNameSuggestion(intent.suggestion)
-            is AddEditDebtorIntent.ApplyScannedContact -> applyScannedContact(intent.contact)
-            AddEditDebtorIntent.Save -> save()
+            is AddEditContactIntent.PhoneChanged -> _state.update { it.copy(phone = intent.value) }
+            is AddEditContactIntent.EmailChanged -> onEmailChanged(intent.value)
+            is AddEditContactIntent.CommentChanged -> _state.update { it.copy(comment = intent.value) }
+            is AddEditContactIntent.InitialAmountChanged -> _state.update { it.copy(initialAmountText = intent.value, amountError = null) }
+            is AddEditContactIntent.CurrencyChanged -> _state.update { it.copy(currency = intent.value) }
+            is AddEditContactIntent.MethodChanged -> _state.update { it.copy(method = intent.value) }
+            AddEditContactIntent.ApplyProfileSuggestion -> applySuggestion()
+            AddEditContactIntent.DismissProfileSuggestion -> _state.update { it.copy(profileSuggestion = null) }
+            is AddEditContactIntent.NameSuggestionSelected -> applyNameSuggestion(intent.suggestion)
+            is AddEditContactIntent.ApplyScannedContact -> applyScannedContact(intent.contact)
+            AddEditContactIntent.Save -> save()
         }
     }
 
@@ -119,6 +144,7 @@ class AddEditDebtorViewModel(
                 phone = suggestion.phone ?: it.phone,
                 email = suggestion.email ?: it.email,
                 comment = suggestion.comment ?: it.comment,
+                suggestedAvatarUrl = suggestion.avatarUrl ?: it.suggestedAvatarUrl,
                 nameSuggestions = emptyList(),
             )
         }
@@ -131,8 +157,7 @@ class AddEditDebtorViewModel(
                 fullNameError = null,
                 // sanitizePhoneInput: the phone field's UkrainianPhoneVisualTransformation expects
                 // a bare national number (no "+380"/spaces) — a scanned contact.phone can be in
-                // whatever format its owner typed into their own "My card" QR (which doesn't
-                // sanitize as you type), so it needs the same cleanup manual entry gets.
+                // whatever format its owner typed into their own "My card" QR.
                 phone = contact.phone?.let(::sanitizePhoneInput) ?: it.phone,
                 email = contact.email ?: it.email,
             )
@@ -166,7 +191,6 @@ class AddEditDebtorViewModel(
 
     private fun save() {
         val current = _state.value
-
         val strings = resolveStrings(appSettings.locale)
 
         if (!isValidFullName(current.fullName)) {
@@ -180,6 +204,13 @@ class AddEditDebtorViewModel(
             return
         }
 
+        when (current.direction) {
+            DebtDirection.DEBTOR -> saveDebtor(current, parsedAmount, strings.saveError)
+            DebtDirection.CREDITOR -> saveCreditor(current, parsedAmount, strings.saveError)
+        }
+    }
+
+    private fun saveDebtor(current: AddEditContactState, amount: BigDecimal, saveError: String) {
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true) }
             val now = Clock.System.now()
@@ -199,16 +230,16 @@ class AddEditDebtorViewModel(
 
             runCatching { addOrUpdateDebtor(debtor) }.onFailure {
                 _state.update { it.copy(isSaving = false) }
-                effectsChannel.send(AddEditDebtorEffect.Error(strings.saveError))
+                effectsChannel.send(AddEditContactEffect.Error(saveError))
                 return@launch
             }
 
             runCatching {
-                addTransaction(
+                addDebtTransaction(
                     DebtTransaction(
                         id = Uuid.random().toString(),
                         debtorId = debtor.id,
-                        amount = parsedAmount.negate(),
+                        amount = amount.negate(),
                         type = TransactionType.LEND,
                         method = current.method,
                         date = now,
@@ -219,23 +250,73 @@ class AddEditDebtorViewModel(
                     )
                 )
             }.onFailure {
-                // The debtor write already committed but its opening transaction didn't —
-                // don't leave an orphaned 0-balance debtor behind; undo the half-finished save.
+                // The debtor write committed but its opening transaction didn't — undo it.
                 runCatching { deleteDebtor(debtor.id) }
                 _state.update { it.copy(isSaving = false) }
-                effectsChannel.send(AddEditDebtorEffect.Error(strings.saveError))
+                effectsChannel.send(AddEditContactEffect.Error(saveError))
                 return@launch
             }
 
-            _state.update { it.copy(isSaving = false) }
-            if (appSettings.soundEnabled) soundPlayer.play(SoundEffect.ADD)
-            effectsChannel.send(AddEditDebtorEffect.Saved)
-
-            // Fire-and-forget: якщо телефон/email збігається із зареєстрованим користувачем,
-            // прив'язує боржника до нього (дзеркалить транзакцію, шле сповіщення). Ніколи не
-            // повинно блокувати/переривати вже завершене збереження — той самий підхід, що й
-            // email-lookup для автозаповнення вище.
+            finishSave()
             viewModelScope.launch { runCatching { linkDebtorToRegisteredUser(debtor.id) } }
         }
+    }
+
+    private fun saveCreditor(current: AddEditContactState, amount: BigDecimal, saveError: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(isSaving = true) }
+            val now = Clock.System.now()
+            val creditor = Creditor(
+                id = Uuid.random().toString(),
+                fullName = current.fullName.trim(),
+                phone = current.phone.trim().ifBlank { null },
+                email = current.email.trim().ifBlank { null },
+                avatarUrl = current.suggestedAvatarUrl,
+                comment = current.comment.trim().ifBlank { null },
+                createdAt = now,
+                updatedAt = now,
+                status = DebtStatus.ACTIVE,
+                syncStatus = SyncStatus.PENDING,
+                currency = current.currency,
+            )
+
+            runCatching { addOrUpdateCreditor(creditor) }.onFailure {
+                _state.update { it.copy(isSaving = false) }
+                effectsChannel.send(AddEditContactEffect.Error(saveError))
+                return@launch
+            }
+
+            runCatching {
+                addCreditorTransaction(
+                    CreditorTransaction(
+                        id = Uuid.random().toString(),
+                        creditorId = creditor.id,
+                        amount = amount.negate(),
+                        type = MyDebtTransactionType.BORROW,
+                        method = current.method,
+                        date = now,
+                        comment = null,
+                        createdAt = now,
+                        updatedAt = now,
+                        syncStatus = SyncStatus.PENDING,
+                    )
+                )
+            }.onFailure {
+                // The creditor write committed but its opening transaction didn't — undo it.
+                runCatching { deleteCreditor(creditor.id) }
+                _state.update { it.copy(isSaving = false) }
+                effectsChannel.send(AddEditContactEffect.Error(saveError))
+                return@launch
+            }
+
+            finishSave()
+            viewModelScope.launch { runCatching { linkCreditorToRegisteredUser(creditor.id) } }
+        }
+    }
+
+    private suspend fun finishSave() {
+        _state.update { it.copy(isSaving = false) }
+        if (appSettings.soundEnabled) soundPlayer.play(SoundEffect.ADD)
+        effectsChannel.send(AddEditContactEffect.Saved)
     }
 }

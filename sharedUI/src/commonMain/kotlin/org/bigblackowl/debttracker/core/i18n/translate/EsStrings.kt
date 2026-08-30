@@ -84,6 +84,11 @@ val EsStrings = Strings(
     addEditDebtorTitleNew = "Nuevo deudor",
     addEditDebtorInitialAmount = "Cuánto presté",
 
+    contactPickerTitle = "Elige un contacto",
+    contactPickerNewContact = "Nuevo contacto",
+    contactPickerSearchPlaceholder = "Buscar contactos",
+    contactPickerEmpty = "Aún no hay contactos",
+
     creditorDetailTitleFallback = "Acreedor",
     creditorDetailExport = "Exportar",
     creditorDetailBalance = { amount -> "Debo: $amount" },

@@ -98,6 +98,12 @@ data class Strings(
     val addEditDebtorTitleNew: String,
     val addEditDebtorInitialAmount: String,
 
+    // contact picker (step before the Add record form — pick a previously entered person or start fresh)
+    val contactPickerTitle: String,
+    val contactPickerNewContact: String,
+    val contactPickerSearchPlaceholder: String,
+    val contactPickerEmpty: String,
+
     // creditor detail
     val creditorDetailTitleFallback: String,
     val creditorDetailExport: String,

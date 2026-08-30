@@ -1,6 +1,7 @@
 package org.bigblackowl.debttracker.navigation
 
-import org.bigblackowl.debttracker.domain.model.ScannedContact
+import org.bigblackowl.debttracker.domain.model.ContactPrefill
+import org.bigblackowl.debttracker.domain.model.DebtDirection
 
 /** Типізовані маршрути навігаційного графа (спек §6). */
 sealed interface Screen {
@@ -9,9 +10,17 @@ sealed interface Screen {
     data object AccountOnboarding : Screen
     data object AuthGate : Screen
     data object Home : Screen
-    data class AddEditDebtor(val prefill: ScannedContact? = null) : Screen
+
+    /** Крок вибору раніше введеного контакту перед формою «Додати запис». */
+    data class ContactPicker(val direction: DebtDirection) : Screen
+
+    /** Об'єднана форма «Додати запис» (боржник або кредитор — за [direction]). */
+    data class AddEditContact(
+        val direction: DebtDirection,
+        val prefill: ContactPrefill? = null,
+    ) : Screen
+
     data class DebtorDetail(val debtorId: String) : Screen
-    data class AddEditCreditor(val prefill: ScannedContact? = null) : Screen
     data class CreditorDetail(val creditorId: String) : Screen
     data object Stats : Screen
     data object Settings : Screen

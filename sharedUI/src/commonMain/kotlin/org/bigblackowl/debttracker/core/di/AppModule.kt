@@ -40,10 +40,12 @@ import org.bigblackowl.debttracker.domain.usecase.debtor.LinkDebtorToRegisteredU
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorTransactionsUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorsUseCase
-import org.bigblackowl.debttracker.ui.screens.creditors.AddEditCreditorViewModel
+import org.bigblackowl.debttracker.domain.model.ContactPrefill
+import org.bigblackowl.debttracker.domain.model.DebtDirection
+import org.bigblackowl.debttracker.ui.screens.contacts.AddEditContactViewModel
+import org.bigblackowl.debttracker.ui.screens.contacts.ContactPickerViewModel
 import org.bigblackowl.debttracker.ui.screens.creditors.CreditorDetailViewModel
 import org.bigblackowl.debttracker.ui.screens.creditors.CreditorListViewModel
-import org.bigblackowl.debttracker.ui.screens.debtors.AddEditDebtorViewModel
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorDetailViewModel
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorListViewModel
 import org.bigblackowl.debttracker.ui.screens.accountonboarding.AccountOnboardingViewModel
@@ -106,8 +108,13 @@ val appModule = module {
 
     viewModelOf(::DebtorListViewModel)
     viewModelOf(::CreditorListViewModel)
-    viewModelOf(::AddEditDebtorViewModel)
-    viewModelOf(::AddEditCreditorViewModel)
+    viewModelOf(::ContactPickerViewModel)
+    viewModel { (direction: DebtDirection, prefill: ContactPrefill?) ->
+        AddEditContactViewModel(
+            direction, prefill,
+            get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),
+        )
+    }
     viewModel { (debtorId: String) -> DebtorDetailViewModel(debtorId, get(), get(), get(), get(), get()) }
     viewModel { (creditorId: String) -> CreditorDetailViewModel(creditorId, get(), get(), get(), get(), get()) }
     viewModelOf(::AuthViewModel)

@@ -17,7 +17,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Visibility
@@ -32,7 +31,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +48,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.media.rememberImagePicker
 import org.bigblackowl.debttracker.domain.validation.isPhonePasteRelevant
@@ -94,9 +93,6 @@ fun AuthScreen(
                 AuthEffect.Success -> onAuthenticated()
             }
         }
-    }
-    LaunchedEffect(state.isEmailStepDone) {
-        if (state.isEmailStepDone) passwordFocusRequester.requestFocus()
     }
 
     Scaffold(
@@ -152,22 +148,12 @@ fun AuthScreen(
                         viewModel.onIntent(AuthIntent.EmailChanged(it))
                     },
                     label = strings.authEmail,
-                    readOnly = state.isEmailStepDone,
-                    trailingIcon = if (state.isEmailStepDone) {
-                        {
-                            IconButton(onClick = { viewModel.onIntent(AuthIntent.EditEmail) }) {
-                                Icon(Icons.Filled.Edit, contentDescription = strings.back)
-                            }
-                        }
-                    } else null,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email,
                         imeAction = ImeAction.Next,
                     ),
                     keyboardActions = KeyboardActions(
-                        onNext = {
-                            viewModel.onIntent(AuthIntent.ContinueFromEmailStep)
-                        },
+                        onNext = { passwordFocusRequester.requestFocus() },
                     ),
                     modifier = Modifier
                         .focusRequester(emailFocusRequester)
@@ -176,48 +162,102 @@ fun AuthScreen(
                     isPasteRelevant = ::isValidEmail,
                 )
 
-                SignUpOnlyFields(visible = state.isEmailStepDone) {
-                    OutlinedTextField(
-                        value = state.password,
-                        onValueChange = {
-                            viewModel.onIntent(AuthIntent.PasswordChanged(it))
+                OutlinedTextField(
+                    value = state.password,
+                    onValueChange = {
+                        viewModel.onIntent(AuthIntent.PasswordChanged(it))
+                    },
+                    label = { Text(strings.authPassword) },
+                    singleLine = true,
+                    visualTransformation = if (passwordVisible) {
+                        VisualTransformation.None
+                    } else {
+                        PasswordVisualTransformation()
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = if (state.isSignUpMode) ImeAction.Next else ImeAction.Done,
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { confirmPasswordFocusRequester.requestFocus() },
+                        onDone = {
+                            if (!state.isLoading) {
+                                viewModel.onIntent(AuthIntent.Submit)
+                            }
                         },
-                        label = { Text(strings.authPassword) },
+                    ),
+                    isError = state.error != null,
+                    supportingText = {
+                        state.error?.let { Text(it) }
+                    },
+                    trailingIcon = {
+                        IconButton(
+                            onClick = {
+                                passwordVisible = !passwordVisible
+                            },
+                        ) {
+                            Icon(
+                                imageVector = if (passwordVisible) {
+                                    Icons.Default.VisibilityOff
+                                } else {
+                                    Icons.Default.Visibility
+                                },
+                                contentDescription = if (passwordVisible) {
+                                    strings.hidePassword
+                                } else {
+                                    strings.showPassword
+                                },
+                            )
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(passwordFocusRequester)
+                        .semantics { contentType = if (state.isSignUpMode) ContentType.NewPassword else ContentType.Password },
+                )
+
+                // After a failed sign-in — Supabase Auth can't tell an unknown email from a wrong
+                // password (anti-enumeration), so this covers both by inviting the user to register.
+                AnimatedVisibility(visible = state.offerRegistration && !state.isSignUpMode) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(strings.authOfferSignUpPrompt)
+                        TextButton(onClick = { viewModel.onIntent(AuthIntent.SwitchToSignUp) }) {
+                            Text(strings.authOfferSignUpAction)
+                        }
+                    }
+                }
+
+                SignUpOnlyFields(visible = state.isSignUpMode) {
+                    OutlinedTextField(
+                        value = state.confirmPassword,
+                        onValueChange = { viewModel.onIntent(AuthIntent.ConfirmPasswordChanged(it)) },
+                        label = { Text(strings.authConfirmPassword) },
                         singleLine = true,
-                        visualTransformation = if (passwordVisible) {
+                        visualTransformation = if (confirmPasswordVisible) {
                             VisualTransformation.None
                         } else {
                             PasswordVisualTransformation()
                         },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
-                            imeAction = if (state.isSignUpMode) ImeAction.Next else ImeAction.Done,
+                            imeAction = ImeAction.Next,
                         ),
-                        keyboardActions = KeyboardActions(
-                            onNext = { confirmPasswordFocusRequester.requestFocus() },
-                            onDone = {
-                                if (!state.isLoading) {
-                                    viewModel.onIntent(AuthIntent.Submit)
-                                }
-                            },
-                        ),
-                        isError = state.error != null,
-                        supportingText = {
-                            state.error?.let { Text(it) }
-                        },
+                        keyboardActions = KeyboardActions(onNext = { phoneFocusRequester.requestFocus() }),
+                        isError = state.confirmPasswordError != null,
+                        supportingText = { state.confirmPasswordError?.let { Text(it) } },
                         trailingIcon = {
-                            IconButton(
-                                onClick = {
-                                    passwordVisible = !passwordVisible
-                                },
-                            ) {
+                            IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                                 Icon(
-                                    imageVector = if (passwordVisible) {
+                                    imageVector = if (confirmPasswordVisible) {
                                         Icons.Default.VisibilityOff
                                     } else {
                                         Icons.Default.Visibility
                                     },
-                                    contentDescription = if (passwordVisible) {
+                                    contentDescription = if (confirmPasswordVisible) {
                                         strings.hidePassword
                                     } else {
                                         strings.showPassword
@@ -227,106 +267,40 @@ fun AuthScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .focusRequester(passwordFocusRequester)
-                            .semantics { contentType = if (state.isSignUpMode) ContentType.NewPassword else ContentType.Password },
+                            .focusRequester(confirmPasswordFocusRequester)
+                            .semantics { contentType = ContentType.NewPassword },
                     )
 
-                    // After a failed sign-in — Supabase Auth can't tell an unknown email from a wrong
-                    // password (anti-enumeration), so this covers both by inviting the user to register.
-                    AnimatedVisibility(visible = state.offerRegistration && !state.isSignUpMode) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(strings.authOfferSignUpPrompt)
-                            TextButton(onClick = { viewModel.onIntent(AuthIntent.SwitchToSignUp) }) {
-                                Text(strings.authOfferSignUpAction)
-                            }
-                        }
-                    }
-
-                    SignUpOnlyFields(visible = state.isSignUpMode) {
-                        OutlinedTextField(
-                            value = state.confirmPassword,
-                            onValueChange = { viewModel.onIntent(AuthIntent.ConfirmPasswordChanged(it)) },
-                            label = { Text(strings.authConfirmPassword) },
-                            singleLine = true,
-                            visualTransformation = if (confirmPasswordVisible) {
-                                VisualTransformation.None
-                            } else {
-                                PasswordVisualTransformation()
-                            },
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Password,
-                                imeAction = ImeAction.Next,
-                            ),
-                            keyboardActions = KeyboardActions(onNext = { phoneFocusRequester.requestFocus() }),
-                            isError = state.confirmPasswordError != null,
-                            supportingText = { state.confirmPasswordError?.let { Text(it) } },
-                            trailingIcon = {
-                                IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
-                                    Icon(
-                                        imageVector = if (confirmPasswordVisible) {
-                                            Icons.Default.VisibilityOff
-                                        } else {
-                                            Icons.Default.Visibility
-                                        },
-                                        contentDescription = if (confirmPasswordVisible) {
-                                            strings.hidePassword
-                                        } else {
-                                            strings.showPassword
-                                        },
-                                    )
+                    PasteableOutlinedTextField(
+                        value = state.phone,
+                        onValueChange = { viewModel.onIntent(AuthIntent.PhoneChanged(sanitizePhoneInput(it))) },
+                        label = strings.phone,
+                        leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null) },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Phone,
+                            imeAction = ImeAction.Done,
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                if (!state.isLoading) {
+                                    viewModel.onIntent(AuthIntent.Submit)
                                 }
                             },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .focusRequester(confirmPasswordFocusRequester)
-                                .semantics { contentType = ContentType.NewPassword },
-                        )
-
-                        PasteableOutlinedTextField(
-                            value = state.phone,
-                            onValueChange = { viewModel.onIntent(AuthIntent.PhoneChanged(sanitizePhoneInput(it))) },
-                            label = strings.phone,
-                            leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null) },
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Phone,
-                                imeAction = ImeAction.Done,
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    if (!state.isLoading) {
-                                        viewModel.onIntent(AuthIntent.Submit)
-                                    }
-                                },
-                            ),
-                            visualTransformation = remember { UkrainianPhoneVisualTransformation() },
-                            modifier = Modifier.focusRequester(phoneFocusRequester).semantics { contentType = ContentType.PhoneNumber },
-                            clipboardText = clipboardText,
-                            isPasteRelevant = ::isPhonePasteRelevant,
-                        )
-                    }
+                        ),
+                        visualTransformation = remember { UkrainianPhoneVisualTransformation() },
+                        modifier = Modifier.focusRequester(phoneFocusRequester).semantics { contentType = ContentType.PhoneNumber },
+                        clipboardText = clipboardText,
+                        isPasteRelevant = ::isPhonePasteRelevant,
+                    )
                 }
 
                 Spacer(Modifier.height(Dimens.space30))
-                if (state.isEmailStepDone) {
-                    LoadingButton(
-                        onClick = { viewModel.onIntent(AuthIntent.Submit) },
-                        isLoading = state.isLoading,
-                        modifier = Modifier.fillMaxWidth(.8f),
-                        label = { Text(if (state.isSignUpMode) strings.authSubmitSignUp else strings.authSubmitSignIn) },
-                    )
-                } else {
-                    LoadingButton(
-                        onClick = { viewModel.onIntent(AuthIntent.ContinueFromEmailStep) },
-                        isLoading = false,
-                        enabled = state.email.trim().isNotBlank(),
-                        modifier = Modifier.fillMaxWidth(.8f),
-                        label = { Text(strings.continueLabel) },
-                    )
-                }
+                LoadingButton(
+                    onClick = { viewModel.onIntent(AuthIntent.Submit) },
+                    isLoading = state.isLoading,
+                    modifier = Modifier.fillMaxWidth(.8f),
+                    label = { Text(if (state.isSignUpMode) strings.authSubmitSignUp else strings.authSubmitSignIn) },
+                )
                 TextButton(onClick = { viewModel.onIntent(AuthIntent.ToggleMode) }) {
                     Text(if (state.isSignUpMode) strings.authToggleToSignIn else strings.authToggleToSignUp)
                 }

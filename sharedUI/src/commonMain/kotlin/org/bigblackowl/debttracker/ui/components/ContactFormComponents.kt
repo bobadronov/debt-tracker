@@ -13,11 +13,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.CallMade
+import androidx.compose.material.icons.automirrored.filled.CallReceived
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -37,6 +42,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.ContactSuggestion
 import org.bigblackowl.debttracker.domain.model.Currency
+import org.bigblackowl.debttracker.domain.model.DebtDirection
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.domain.model.ProfileSuggestion
 import org.bigblackowl.debttracker.domain.model.ScannedContact
@@ -48,10 +54,9 @@ import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 
 /**
- * Shared create form for AddEditDebtorScreen/AddEditCreditorScreen (спек §4.1): identical
- * fields and layout over a different domain model, mirroring how [ContactListScaffold]/
- * [ContactDetailScaffold] do it for the list/detail screens — each screen only supplies its own
- * state values and intent-dispatching callbacks.
+ * Create form used by the merged AddEditContactScreen (спек §4.1). Supplies the fields and layout;
+ * the screen passes its own state values and intent-dispatching callbacks, and (optionally) a
+ * [direction] toggle that decides whether Save creates a debtor or a creditor.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,6 +64,11 @@ fun AddEditContactForm(
     title: String,
     onDone: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    /** Non-null shows the "owes me / I owe" segmented toggle at the top of the form. */
+    direction: DebtDirection? = null,
+    onDirectionChange: (DebtDirection) -> Unit = {},
+    /** Shown in the header avatar next to [fullName] — the profile-lookup / picked-contact photo. */
+    avatarUrl: String? = null,
     fullName: String,
     onFullNameChange: (String) -> Unit,
     fullNameError: String?,
@@ -123,6 +133,28 @@ fun AddEditContactForm(
                 verticalArrangement = Arrangement.spacedBy(Dimens.space12),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+                if (direction != null) {
+                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                        SegmentedButton(
+                            selected = direction == DebtDirection.DEBTOR,
+                            onClick = { onDirectionChange(DebtDirection.DEBTOR) },
+                            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                            icon = { Icon(Icons.AutoMirrored.Filled.CallReceived, contentDescription = null) },
+                        ) { Text(strings.homeTabDebtors) }
+                        SegmentedButton(
+                            selected = direction == DebtDirection.CREDITOR,
+                            onClick = { onDirectionChange(DebtDirection.CREDITOR) },
+                            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                            icon = { Icon(Icons.AutoMirrored.Filled.CallMade, contentDescription = null) },
+                        ) { Text(strings.homeTabCreditors) }
+                    }
+                }
+                EntityAvatar(
+                    id = fullName.ifBlank { "?" },
+                    name = fullName,
+                    avatarUrl = avatarUrl,
+                    size = Dimens.space72,
+                )
                 PasteableOutlinedTextField(
                     value = fullName,
                     onValueChange = onFullNameChange,
@@ -228,12 +260,15 @@ private fun AddEditContactFormSample() {
     var amount by remember { mutableStateOf("") }
     var currency by remember { mutableStateOf(Currency.UAH) }
     var method by remember { mutableStateOf(PaymentMethod.CASH) }
+    var direction by remember { mutableStateOf(DebtDirection.DEBTOR) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     AddEditContactForm(
-        title = "New debtor",
+        title = "New record",
         onDone = {},
         snackbarHostState = snackbarHostState,
+        direction = direction,
+        onDirectionChange = { direction = it },
         fullName = fullName,
         onFullNameChange = { fullName = it },
         fullNameError = null,

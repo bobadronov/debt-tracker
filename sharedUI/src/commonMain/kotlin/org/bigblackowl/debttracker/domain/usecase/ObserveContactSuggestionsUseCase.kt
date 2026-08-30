@@ -24,6 +24,6 @@ class ObserveContactSuggestionsUseCase(
             (fromDebtors + fromCreditors).distinctBy { Triple(it.fullName.lowercase(), it.phone, it.email) }
         }
 
-    private fun Debtor.toSuggestion() = ContactSuggestion(fullName, phone, email, comment)
-    private fun Creditor.toSuggestion() = ContactSuggestion(fullName, phone, email, comment)
+    private fun Debtor.toSuggestion() = ContactSuggestion(fullName, phone, email, comment, avatarUrl)
+    private fun Creditor.toSuggestion() = ContactSuggestion(fullName, phone, email, comment, avatarUrl)
 }

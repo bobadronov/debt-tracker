@@ -84,6 +84,11 @@ val ItStrings = Strings(
     addEditDebtorTitleNew = "Nuovo debitore",
     addEditDebtorInitialAmount = "Quanto ho prestato",
 
+    contactPickerTitle = "Scegli un contatto",
+    contactPickerNewContact = "Nuovo contatto",
+    contactPickerSearchPlaceholder = "Cerca contatti",
+    contactPickerEmpty = "Ancora nessun contatto",
+
     creditorDetailTitleFallback = "Creditore",
     creditorDetailExport = "Esporta",
     creditorDetailBalance = { amount -> "Devo: $amount" },

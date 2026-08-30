@@ -144,6 +144,7 @@ fun SettingsScreen(
                 )
                 PreferencesSection(
                     settings = settings,
+                    authRepository = authRepository,
                     biometricHardwareAvailable = state.biometricHardwareAvailable,
                     protectionConfirmError = state.protectionConfirmError,
                     notificationsPermissionBlocked = state.notificationsPermissionBlocked,
@@ -300,6 +301,7 @@ private fun ContactLine(icon: ImageVector, value: String) {
 @Composable
 private fun PreferencesSection(
     settings: AppSettings,
+    authRepository: AuthRepository,
     biometricHardwareAvailable: Boolean,
     protectionConfirmError: String?,
     notificationsPermissionBlocked: Boolean,
@@ -310,6 +312,10 @@ private fun PreferencesSection(
     onOpenLanguage: () -> Unit,
 ) {
     val strings = LocalStrings.current
+
+    // Сповіщення (§7) стосуються лише дзеркальних боргів у Supabase — без входу в акаунт
+    // їх нема звідки отримувати, тож перемикач показуємо тільки залогіненим.
+    val isAuthenticated by authRepository.isAuthenticated.collectAsStateWithLifecycle()
 
     // Web: захисту немає взагалі — вхід уже вимагає email/пароль (Account+Sync-only на Web).
     val showProtectionRow = currentPlatform != AppPlatform.WEB
@@ -351,14 +357,16 @@ private fun PreferencesSection(
             SettingsRowDivider()
         }
 
-        SettingsSwitchRow(
-            icon = if (settings.notificationsEnabled) Icons.Filled.Notifications else Icons.Filled.NotificationsOff,
-            title = strings.settingsNotifications,
-            subtitle = if (settings.notificationsEnabled && notificationsPermissionBlocked) strings.settingsNotificationsBlocked else null,
-            checked = settings.notificationsEnabled,
-            onCheckedChange = { onIntent(SettingsIntent.ToggleNotifications(it, notificationPermissionRequester)) },
-        )
-        SettingsRowDivider()
+        if (isAuthenticated) {
+            SettingsSwitchRow(
+                icon = if (settings.notificationsEnabled) Icons.Filled.Notifications else Icons.Filled.NotificationsOff,
+                title = strings.settingsNotifications,
+                subtitle = if (settings.notificationsEnabled && notificationsPermissionBlocked) strings.settingsNotificationsBlocked else null,
+                checked = settings.notificationsEnabled,
+                onCheckedChange = { onIntent(SettingsIntent.ToggleNotifications(it, notificationPermissionRequester)) },
+            )
+            SettingsRowDivider()
+        }
 
         if (BuildConfig.SOUND_ENABLED) {
             SettingsSwitchRow(

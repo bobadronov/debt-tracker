@@ -11,7 +11,6 @@ data class AuthState(
     val phone: String = "",
     val avatarPicked: PickedImage? = null,
     val isSignUpMode: Boolean = false,
-    val isEmailStepDone: Boolean = false,
     val isLoading: Boolean = false,
     val error: String? = null,
     val fullNameError: String? = null,
@@ -35,8 +34,6 @@ sealed interface AuthIntent {
     data object ToggleMode : AuthIntent
     /** Jump from a failed sign-in straight into registration, carrying the email/password already typed. */
     data object SwitchToSignUp : AuthIntent
-    data object ContinueFromEmailStep : AuthIntent
-    data object EditEmail : AuthIntent
     data object Submit : AuthIntent
 }
 

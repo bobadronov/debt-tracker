@@ -84,6 +84,11 @@ val CsStrings = Strings(
     addEditDebtorTitleNew = "Nový dlužník",
     addEditDebtorInitialAmount = "Kolik jsem půjčil",
 
+    contactPickerTitle = "Vyberte kontakt",
+    contactPickerNewContact = "Nový kontakt",
+    contactPickerSearchPlaceholder = "Hledat kontakty",
+    contactPickerEmpty = "Zatím žádné kontakty",
+
     creditorDetailTitleFallback = "Věřitel",
     creditorDetailExport = "Exportovat",
     creditorDetailBalance = { amount -> "Dlužím: $amount" },

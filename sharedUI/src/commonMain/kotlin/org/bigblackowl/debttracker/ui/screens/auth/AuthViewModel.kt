@@ -38,24 +38,18 @@ class AuthViewModel(
             is AuthIntent.PhoneChanged -> _state.update { it.copy(phone = intent.value) }
             is AuthIntent.AvatarPicked -> _state.update { it.copy(avatarPicked = intent.picked) }
             AuthIntent.ToggleMode -> _state.update {
-                it.copy(isSignUpMode = !it.isSignUpMode, isEmailStepDone = false, error = null, fullNameError = null, confirmPasswordError = null, offerRegistration = false)
+                it.copy(isSignUpMode = !it.isSignUpMode, error = null, fullNameError = null, confirmPasswordError = null, offerRegistration = false)
             }
             AuthIntent.SwitchToSignUp -> _state.update {
-                // Keep the email/password already typed and stay past the email step — the user just
-                // needs to add a name to finish registering.
+                // Keep the email/password already typed — the user just needs to add a name to register.
                 it.copy(isSignUpMode = true, confirmPassword = it.password, error = null, offerRegistration = false)
             }
-            AuthIntent.ContinueFromEmailStep -> _state.update {
-                if (it.email.trim().isNotBlank()) it.copy(isEmailStepDone = true) else it
-            }
-            AuthIntent.EditEmail -> _state.update { it.copy(isEmailStepDone = false, offerRegistration = false) }
             AuthIntent.Submit -> submit()
         }
     }
 
     private fun submit() {
         val current = _state.value
-        if (!current.isEmailStepDone) return
         val strings = resolveStrings(appSettings.locale)
 
         if (current.isSignUpMode) {

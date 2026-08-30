@@ -84,6 +84,11 @@ val FrStrings = Strings(
     addEditDebtorTitleNew = "Nouveau débiteur",
     addEditDebtorInitialAmount = "Combien j'ai prêté",
 
+    contactPickerTitle = "Choisir un contact",
+    contactPickerNewContact = "Nouveau contact",
+    contactPickerSearchPlaceholder = "Rechercher des contacts",
+    contactPickerEmpty = "Aucun contact pour l'instant",
+
     creditorDetailTitleFallback = "Créancier",
     creditorDetailExport = "Exporter",
     creditorDetailBalance = { amount -> "Je dois : $amount" },

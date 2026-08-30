@@ -46,7 +46,7 @@ fun ContactSuggestionsList(
                         .padding(horizontal = Dimens.space12, vertical = Dimens.space8),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    EntityAvatar(id = suggestion.fullName, name = suggestion.fullName, avatarUrl = null, size = Dimens.space28)
+                    EntityAvatar(id = suggestion.fullName, name = suggestion.fullName, avatarUrl = suggestion.avatarUrl, size = Dimens.space28)
                     Spacer(Modifier.width(Dimens.space12))
                     Column {
                         Text(

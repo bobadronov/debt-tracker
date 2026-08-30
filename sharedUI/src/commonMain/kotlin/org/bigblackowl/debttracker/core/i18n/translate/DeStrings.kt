@@ -84,6 +84,11 @@ val DeStrings = Strings(
     addEditDebtorTitleNew = "Neuer Schuldner",
     addEditDebtorInitialAmount = "Wie viel ich verliehen habe",
 
+    contactPickerTitle = "Kontakt auswählen",
+    contactPickerNewContact = "Neuer Kontakt",
+    contactPickerSearchPlaceholder = "Kontakte suchen",
+    contactPickerEmpty = "Noch keine Kontakte",
+
     creditorDetailTitleFallback = "Gläubiger",
     creditorDetailExport = "Exportieren",
     creditorDetailBalance = { amount -> "Ich schulde: $amount" },
