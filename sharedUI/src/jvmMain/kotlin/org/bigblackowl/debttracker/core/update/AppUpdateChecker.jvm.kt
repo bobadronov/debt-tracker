@@ -17,6 +17,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
+import io.ktor.client.statement.bodyAsText
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.jvm.javaio.copyTo
 import kotlinx.coroutines.Dispatchers
@@ -61,7 +62,9 @@ private class DesktopAppUpdateChecker : AppUpdateChecker {
     }
 
     override suspend fun checkForUpdate(): AppUpdateInfo? = withContext(Dispatchers.IO) {
-        Napier.d(tag = TAG) { "checkForUpdate: local version = ${BuildConfig.APP_VERSION}" }
+        Napier.d(tag = TAG) {
+            "checkForUpdate: local version = ${BuildConfig.APP_VERSION} (code ${BuildConfig.APP_VERSION_CODE})"
+        }
         val assetExtension = currentAssetExtension() ?: return@withContext null
 
         // Deliberately not caught here — a network/GitHub failure must not look identical to
@@ -76,8 +79,27 @@ private class DesktopAppUpdateChecker : AppUpdateChecker {
         }
 
         val latestVersion = release.tagName.removePrefix("v")
-        Napier.d(tag = TAG) { "checkForUpdate: latest GitHub tag = ${release.tagName} -> $latestVersion" }
-        if (!isNewerVersion(latestVersion, BuildConfig.APP_VERSION)) {
+        // Compare VERSION_CODE, not the "vX.Y.Z" name: the code is a plain integer that's
+        // bumped +1 on every release (see version.properties / publishing.bat), so ">" on it
+        // is unambiguous, while name ordering breaks the moment a hotfix or scheme change
+        // makes it non-monotonic. version.properties is the single source of truth and lives
+        // at the repo root, so read it straight from the released tag's tree.
+        val latestVersionCode = try {
+            client.get("https://raw.githubusercontent.com/$REPO/${release.tagName}/version.properties")
+                .bodyAsText()
+                .let { VERSION_CODE_REGEX.find(it)?.groupValues?.get(1)?.toInt() }
+        } catch (e: Exception) {
+            Napier.e(tag = TAG, throwable = e) { "checkForUpdate: version.properties fetch failed" }
+            throw e
+        }
+        if (latestVersionCode == null) {
+            Napier.w(tag = TAG) { "checkForUpdate: no VERSION_CODE in ${release.tagName}'s version.properties" }
+            return@withContext null
+        }
+        Napier.d(tag = TAG) {
+            "checkForUpdate: latest GitHub tag = ${release.tagName} -> $latestVersion (code $latestVersionCode)"
+        }
+        if (latestVersionCode <= BuildConfig.APP_VERSION_CODE) {
             Napier.d(tag = TAG) { "checkForUpdate: no newer version available" }
             return@withContext null
         }
@@ -192,14 +214,5 @@ private fun currentAssetExtension(): String? {
     }
 }
 
-/** Both versions are plain "major.minor.patch" (see version.properties) — no pre-release qualifiers to handle. */
-private fun isNewerVersion(remote: String, local: String): Boolean {
-    val remoteParts = remote.split(".").mapNotNull { it.toIntOrNull() }
-    val localParts = local.split(".").mapNotNull { it.toIntOrNull() }
-    for (i in 0 until maxOf(remoteParts.size, localParts.size)) {
-        val r = remoteParts.getOrElse(i) { 0 }
-        val l = localParts.getOrElse(i) { 0 }
-        if (r != l) return r > l
-    }
-    return false
-}
+/** Pulls `VERSION_CODE=<int>` out of the repo-root version.properties file. */
+private val VERSION_CODE_REGEX = Regex("""^\s*VERSION_CODE\s*=\s*(\d+)""", RegexOption.MULTILINE)
