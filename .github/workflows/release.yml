@@ -193,7 +193,8 @@ jobs:
       # R8 obfuscates the release bundle — ship the mapping so Play Console can
       # de-obfuscate crash stack traces (see `optimization { enable = true }` in androidApp/build.gradle.kts).
       # mapping.txt is consumed as-is by the play-store job; the other three (seeds/usage/
-      # configuration) are the rest of the R8 shrink report, attached to the GitHub Release.
+      # configuration) are the rest of the R8 shrink report. This artifact is kept for
+      # download from the workflow run but is not attached to the GitHub Release.
       - name: Upload R8 mapping
         uses: actions/upload-artifact@v4
         with:
@@ -459,19 +460,10 @@ jobs:
             echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
           fi
 
-      # Bundle the R8/ProGuard mapping + shrink report into one compressed asset so a
-      # crash stack trace from this release's APK/.aab can be de-obfuscated later
-      # (retrace -m mapping.txt). mapping.txt alone is tens of MB, so it's zipped.
-      - name: Bundle R8 mapping files
-        shell: bash
-        run: |
-          mkdir -p release-extra
-          zip -j "release-extra/mapping-${{ steps.release-tag.outputs.tag }}.zip" \
-            artifacts/debt-tracker-mapping/mapping.txt \
-            artifacts/debt-tracker-mapping/seeds.txt \
-            artifacts/debt-tracker-mapping/usage.txt \
-            artifacts/debt-tracker-mapping/configuration.txt
-
+      # The R8/ProGuard mapping + shrink report are intentionally NOT attached to the
+      # GitHub Release. They still reach Play Console via the play-store job, and stay
+      # downloadable from this run's `debt-tracker-mapping` workflow artifact for
+      # de-obfuscating a crash stack trace later (retrace -m mapping.txt).
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -481,4 +473,3 @@ jobs:
             artifacts/debt-tracker-apk/*.apk
             artifacts/debt-tracker-msi/*.msi
             artifacts/debt-tracker-deb/*.deb
-            release-extra/mapping-*.zip
