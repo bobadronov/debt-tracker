@@ -9,12 +9,10 @@ import debt_tracker.sharedui.generated.resources.Res
 import debt_tracker.sharedui.generated.resources.ic_app_logo
 import io.github.alexzhirkevich.qrose.options.QrBallShape
 import io.github.alexzhirkevich.qrose.options.QrBrush
-import io.github.alexzhirkevich.qrose.options.QrCodeShape
 import io.github.alexzhirkevich.qrose.options.QrFrameShape
 import io.github.alexzhirkevich.qrose.options.QrLogoPadding
 import io.github.alexzhirkevich.qrose.options.QrLogoShape
 import io.github.alexzhirkevich.qrose.options.QrPixelShape
-import io.github.alexzhirkevich.qrose.options.circle
 import io.github.alexzhirkevich.qrose.options.roundCorners
 import io.github.alexzhirkevich.qrose.options.solid
 import io.github.alexzhirkevich.qrose.rememberQrCodePainter
@@ -43,13 +41,12 @@ fun rememberContactQrPainter(data: String): Painter? {
             painter = logoPainter
             padding = QrLogoPadding.Natural(.15f)
             shape = QrLogoShape.roundCorners(.25f)
-            size = 0.125f
+            size = 0.15f
         }
         shapes(centralSymmetry = true) {
-            pattern = QrCodeShape.circle(padding = .99f)
-            ball = QrBallShape.roundCorners(.25f, bottomRight = false)
+            ball = QrBallShape.roundCorners(.1f, bottomRight = false)
             darkPixel = QrPixelShape.roundCorners()
-            frame = QrFrameShape.roundCorners(.25f, bottomRight = false)
+            frame = QrFrameShape.roundCorners(.1f, bottomRight = false)
         }
         colors {
             dark = brush
