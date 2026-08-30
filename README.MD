@@ -15,6 +15,12 @@ Android, iOS, Desktop (JVM), and Web (JS/Wasm).
   винен" (people I owe), each with its own list, detail screen, and running
   total. The same person can appear in both lists independently; balances
   are never netted against each other.
+- **One "Add record" screen** — a single form with an "owes me / I owe"
+  toggle, reached through a contact picker that lets you reuse someone
+  entered before (name/phone/email/photo prefilled) or start fresh. The
+  picker list is derived from past debtors/creditors, so for signed-in users
+  it stays the same across devices. If an entered email belongs to a
+  registered user, their name/photo are offered as autofill.
 - **Offline-first, optional sync** — every write lands in a local Room
   database first (`syncStatus = PENDING`) and is pushed to Supabase in the
   background. Works fully offline in **Local-only** mode; sign in to switch
@@ -39,16 +45,17 @@ Android, iOS, Desktop (JVM), and Web (JS/Wasm).
   camera scanner, so the same button instead opens an image picker and
   decodes a picked screenshot (ZXing on Desktop, the browser's native
   `BarcodeDetector` on Web). A scanned/opened `debttracker://contact?...`
-  link (also openable directly from other apps, e.g. Google Lens) prefills a
-  new debtor or creditor form.
+  link (also openable directly from other apps, e.g. Google Lens) prefills
+  the Add record form, skipping the contact picker.
 - **Android home-screen widget** (Glance) with size-adaptive icon-badge KPI
   rows for the two running totals, reflowing from one to two columns as the
   widget is resized.
-- **Runtime language switcher** — System / Українська / English / Polski,
+- **Runtime language switcher** — System / Українська / English / Deutsch /
+  Español / Français / Italiano / Nederlands / Polski / Português / Čeština,
   each with a flag icon, switchable without restarting the app.
 - **Search, sort, filter, swipe-to-delete**, sound feedback on key actions,
-  and Desktop keyboard shortcuts (`Ctrl+N` new debtor, `Ctrl+Shift+N` new
-  creditor, `Ctrl+F` search, `Esc` back).
+  and Desktop keyboard shortcuts (`Ctrl+N` add record — owes me,
+  `Ctrl+Shift+N` add record — I owe, `Ctrl+F` search, `Esc` back).
 
 ## Tech stack
 
@@ -92,9 +99,10 @@ sharedUI/src
 │   │   ├── i18n/          # Strings.kt catalog, translate/ (one file per language), AppLocale.kt
 │   │   └── shortcuts/     # Desktop hotkey → search-focus bridge
 │   ├── ui/
-│   │   ├── screens/{debtors,creditors,auth,settings,export,stats}/
+│   │   ├── screens/{contacts,debtors,creditors,auth,settings,export,stats}/
 │   │   │   # each screen is MVI: <Name>Contract.kt (State/Intent/Effect),
 │   │   │   # <Name>ViewModel.kt, <Name>Screen.kt (Composable)
+│   │   │   # contacts/ = the merged Add record screen + the contact picker
 │   │   └── components/    # shared composables (AmountBottomSheet, PlaceholderScreen, ...)
 │   ├── navigation/        # sealed Screen routes + NavDisplay graph
 │   ├── theme/             # Material 3 color schemes, debt/repay accent colors
@@ -110,8 +118,9 @@ sharedUI/src
 `State`, a sealed `Intent` for user actions, and a sealed `Effect` for
 one-shot events (navigation, snackbars). The `ViewModel` reduces intents into
 state and exposes it as a `StateFlow`; the `Screen` composable is a thin
-render of that state plus `onIntent` dispatch. `Debtor`/`Creditor` screens
-are structurally identical, mirrored one-to-one.
+render of that state plus `onIntent` dispatch. The `Debtor`/`Creditor` list
+and detail screens are structurally identical, mirrored one-to-one; creating
+a record is a single screen shared by both directions.
 
 **Platform code:** `commonMain` never contains platform-specific code — where
 a real per-platform implementation is unavoidable (biometrics, file export,
