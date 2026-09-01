@@ -240,10 +240,10 @@ until you set it up, one time:
    variables → Actions).
 
 After that, every `vX.Y.Z` tag push builds the `.aab` and uploads it to the
-`internal` track by default (change via the `play_track` input when running
-the workflow manually). You'll still need to promote internal → production
-in Play Console yourself, at least until you're comfortable automating that
-too.
+`production` track by default (change via the `play_track` input when running
+the workflow manually, or use `publishing.bat`, which always dispatches with
+`play_track=production`). Play Console still applies its staged-rollout /
+review rules before the release actually goes live.
 
 ## 6. Recap: what's already done vs. what's left
 

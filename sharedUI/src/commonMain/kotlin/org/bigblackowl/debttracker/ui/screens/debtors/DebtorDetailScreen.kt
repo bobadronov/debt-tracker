@@ -31,6 +31,7 @@ fun DebtorDetailScreen(
     debtorId: String,
     onBack: () -> Unit,
     onExport: () -> Unit,
+    onEdit: () -> Unit = {},
     viewModel: DebtorDetailViewModel = koinViewModel { parametersOf(debtorId) },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -55,6 +56,7 @@ fun DebtorDetailScreen(
         onBack = onBack,
         exportLabel = strings.debtorDetailExport,
         onExport = onExport,
+        onEdit = onEdit.takeIf { state.debtor != null },
         snackbarHostState = snackbarHostState,
         phone = state.debtor?.phone,
         comment = state.debtor?.comment,

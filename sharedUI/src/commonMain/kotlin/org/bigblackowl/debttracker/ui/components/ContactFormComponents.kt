@@ -64,6 +64,9 @@ fun AddEditContactForm(
     title: String,
     onDone: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    /** Editing an existing contact: the opening-amount field and payment-method row are hidden
+     * (they only ever seeded the first transaction). */
+    isEditMode: Boolean = false,
     /** Non-null shows the "owes me / I owe" segmented toggle at the top of the form. */
     direction: DebtDirection? = null,
     onDirectionChange: (DebtDirection) -> Unit = {},
@@ -91,6 +94,10 @@ fun AddEditContactForm(
     onCurrencyChange: (Currency) -> Unit,
     method: PaymentMethod,
     onMethodChange: (PaymentMethod) -> Unit,
+    dueDate: kotlin.time.Instant? = null,
+    onDueDateChange: (kotlin.time.Instant?) -> Unit = {},
+    reminderLeadDays: Set<Int> = emptySet(),
+    onToggleReminderLead: (Int) -> Unit = {},
     isSaving: Boolean,
     onSave: () -> Unit,
     /** Non-null shows a QR-scan action in the top bar (camera on Android/iOS, a local-file picker
@@ -203,32 +210,47 @@ fun AddEditContactForm(
                     isPasteRelevant = { it.trim().length in 1..500 },
                 )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.space5),
-                ) {
-                    PasteableOutlinedTextField(
-                        value = initialAmountText,
-                        onValueChange = onInitialAmountChange,
-                        label = initialAmountLabel,
-                        isError = amountError != null,
-                        supportingText = amountError,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        clipboardText = clipboardText,
-                        isPasteRelevant = ::isValidAmountText,
-                        onPaste = onInitialAmountChange,
-                        modifier = Modifier.weight(1f),
-                    )
+                if (isEditMode) {
                     CurrencyDropdownField(
                         selected = currency,
                         onSelect = onCurrencyChange,
                         label = strings.currency,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.space5),
+                    ) {
+                        PasteableOutlinedTextField(
+                            value = initialAmountText,
+                            onValueChange = onInitialAmountChange,
+                            label = initialAmountLabel,
+                            isError = amountError != null,
+                            supportingText = amountError,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            clipboardText = clipboardText,
+                            isPasteRelevant = ::isValidAmountText,
+                            onPaste = onInitialAmountChange,
+                            modifier = Modifier.weight(1f),
+                        )
+                        CurrencyDropdownField(
+                            selected = currency,
+                            onSelect = onCurrencyChange,
+                            label = strings.currency,
+                            modifier = Modifier.weight(.6f),
+                        )
+                    }
+                    PaymentMethodChipRow(
+                        selected = method,
+                        onSelect = onMethodChange,
                     )
                 }
-                PaymentMethodChipRow(
-                    selected = method,
-                    onSelect = onMethodChange,
+                DueReminderField(
+                    dueDate = dueDate,
+                    onDueDateChange = onDueDateChange,
+                    reminderLeadDays = reminderLeadDays,
+                    onToggleReminderLead = onToggleReminderLead,
                 )
             }
             LoadingButton(

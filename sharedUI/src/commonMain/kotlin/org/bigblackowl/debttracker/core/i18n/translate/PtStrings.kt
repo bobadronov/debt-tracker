@@ -1,11 +1,13 @@
 package org.bigblackowl.debttracker.core.i18n.translate
 
+import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 
 // Primeira tradução automática – a rever por um falante nativo.
 val PtStrings = Strings(
     cancel = "Cancelar",
     save = "Guardar",
+    edit = "Editar",
     delete = "Eliminar",
     deleteForever = "Eliminar permanentemente",
     continueLabel = "Continuar",
@@ -65,6 +67,9 @@ val PtStrings = Strings(
     authGateUnlock = "Desbloquear",
     authGateBiometricFailed = "Não foi possível verificar",
     authGateWrongPin = "PIN incorreto",
+    authGateUsePinCode = "Usar código PIN",
+    authGateUseBiometric = "Usar biometria",
+    authGateBackspace = "Apagar dígito",
     biometricUnlockReason = "Desbloquear o DebtTracker",
     biometricEnableReason = "Confirme para ativar o bloqueio da app",
     showPin = "Mostrar PIN",
@@ -79,9 +84,11 @@ val PtStrings = Strings(
     onboardingAccountBody = "Inicie sessão para fazer uma cópia de segurança dos seus devedores, credores e transações e vê-los em qualquer dispositivo — sim, até aquela vez em que o seu primo pediu dinheiro emprestado e jura que já pagou. Pode ignorar e ficar apenas local; inicie sessão mais tarde nas Definições.",
 
     addEditCreditorTitleNew = "Novo credor",
+    addEditCreditorTitleEdit = "Editar credor",
     addEditCreditorInitialAmount = "Quanto pedi emprestado",
 
     addEditDebtorTitleNew = "Novo devedor",
+    addEditDebtorTitleEdit = "Editar devedor",
     addEditDebtorInitialAmount = "Quanto emprestei",
 
     contactPickerTitle = "Escolha um contacto",
@@ -164,7 +171,9 @@ val PtStrings = Strings(
     settingsNotificationsBlocked = "Ative-as para o Debt Tracker nas configurações do dispositivo",
     settingsRunInBackground = "Executar em segundo plano",
     settingsRunInBackgroundSubtitle = "Continuar a sincronizar na bandeja em vez de sair ao fechar",
-    trayOpen = "Abrir o Debt Tracker",
+    trayOpen = "Mostrar janela",
+    trayHide = "Ocultar na bandeja",
+    traySyncNow = "Sincronizar agora",
     trayQuit = "Sair",
     settingsTheme = "Tema",
     settingsThemeSystem = "Sistema",
@@ -271,4 +280,17 @@ val PtStrings = Strings(
     notificationBodyCreditorLinked = { name, amount, currency -> "$name deve-lhe $amount $currency" },
     notificationBodyDebtTransactionAdded = { name, amount, currency -> "$name adicionou uma transação: $amount $currency" },
     notificationBodyCreditTransactionAdded = { name, amount, currency -> "$name adicionou uma transação: $amount $currency" },
+    deleteContactConfirmTitle = "Eliminar contacto?",
+    deleteContactConfirmText = { name -> "$name e todo o histórico de transações serão eliminados permanentemente." },
+    dueReminder = DueReminderStrings(
+        label = "Lembrete de devolução",
+        notSet = "Não definido",
+        clear = "Limpar",
+        leadOnDay = "No próprio dia",
+        lead1Day = "1 dia antes",
+        lead2Days = "2 dias antes",
+        debtorBody = { name, whenText -> "$name deve devolver-lhe a dívida: $whenText" },
+        creditorBody = { name, whenText -> "Tem de pagar a dívida a $name: $whenText" },
+        whenToday = { time -> "hoje às $time" },
+    ),
 )

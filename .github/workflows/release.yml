@@ -51,7 +51,7 @@ on:
         description: 'Google Play track to publish to'
         required: false
         type: choice
-        default: internal
+        default: production
         options:
           - internal
           - alpha
@@ -250,7 +250,7 @@ jobs:
           packageName: org.bigblackowl.debttracker.androidApp
           releaseFiles: aab/*.aab
           mappingFile: mapping/mapping.txt
-          track: ${{ inputs.play_track || 'internal' }}
+          track: ${{ inputs.play_track || 'production' }}
 
 
   # ============================================================

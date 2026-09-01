@@ -18,6 +18,8 @@ data class CreditorDto(
     @SerialName("is_deleted") val isDeleted: Boolean,
     @SerialName("linked_user_id") val linkedUserId: String? = null,
     @SerialName("mirror_debtor_id") val mirrorDebtorId: String? = null,
+    @SerialName("due_date") val dueDate: String? = null,
+    @SerialName("reminder_lead_days") val reminderLeadDays: String = "",
     @SerialName("created_at") val createdAt: String,
     @SerialName("updated_at") val updatedAt: String,
 )

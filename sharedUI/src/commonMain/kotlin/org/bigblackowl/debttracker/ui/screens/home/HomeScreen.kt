@@ -43,6 +43,8 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -61,7 +63,11 @@ import org.bigblackowl.debttracker.core.i18n.Strings
 import org.bigblackowl.debttracker.domain.model.SyncUiStatus
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.navigation.LocalNavPane
+import org.bigblackowl.debttracker.navigation.NavPane
 import org.bigblackowl.debttracker.theme.debtAccentColors
+import org.bigblackowl.debttracker.ui.components.AppOverflowMenu
+import org.bigblackowl.debttracker.ui.components.DesktopTitleBar
 import org.bigblackowl.debttracker.ui.screens.creditors.CreditorListScreen
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorListScreen
 import org.koin.compose.viewmodel.koinViewModel
@@ -78,10 +84,6 @@ fun HomeScreen(
     onOpenDebtor: (String) -> Unit,
     onAddCreditor: () -> Unit,
     onOpenCreditor: (String) -> Unit,
-    onOpenStats: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onOpenQr: () -> Unit,
-    onOpenNotifications: () -> Unit,
     viewModel: HomeViewModel = koinViewModel(),
 ) {
     val pagerState = rememberPagerState(pageCount = { 2 })
@@ -89,8 +91,32 @@ fun HomeScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val strings = LocalStrings.current
 
+    // Desktop: the title (app name) + sync badge go into the native OS title bar (main.kt), which
+    // also renders the shared AppOverflowMenu — so Home draws no TopAppBar, only the tabs below.
+    // Exception: when Home is the *list* pane of a two-pane view it keeps its own bar (the detail
+    // pane owns the title bar).
+    val inDesktopTitleBar = DesktopTitleBar.claimed && LocalNavPane.current == NavPane.Full
+    if (inDesktopTitleBar) {
+        val owner = remember { Any() }
+        SideEffect {
+            DesktopTitleBar.set(
+                owner = owner,
+                title = strings.appName,
+                back = null,
+                actions = {
+                    if (state.isAuthenticated) {
+                        SyncStatusBadge(status = state.syncStatus, strings = strings)
+                        Spacer(Modifier.width(Dimens.space8))
+                    }
+                },
+            )
+        }
+        DisposableEffect(Unit) { onDispose { DesktopTitleBar.release(owner) } }
+    }
+
     Scaffold(
         topBar = {
+            if (inDesktopTitleBar) return@Scaffold
             TopAppBar(
                 title = {
                     Column {
@@ -101,16 +127,7 @@ fun HomeScreen(
                         }
                     }
                 },
-                actions = {
-                    HomeOverflowMenu(
-                        state = state,
-                        strings = strings,
-                        onOpenNotifications = onOpenNotifications,
-                        onOpenQr = onOpenQr,
-                        onOpenStats = onOpenStats,
-                        onOpenSettings = onOpenSettings,
-                    )
-                }
+                actions = { AppOverflowMenu(strings = strings) },
             )
         }
     ) { padding ->
@@ -166,56 +183,6 @@ fun HomeScreen(
  * значками й підписами замість окремих кнопок — бейдж непрочитаних сповіщень лишається видимим
  * прямо на кнопці меню, не чекаючи, поки список розгорнуть.
  */
-@Composable
-private fun HomeOverflowMenu(
-    state: HomeState,
-    strings: Strings,
-    onOpenNotifications: () -> Unit,
-    onOpenQr: () -> Unit,
-    onOpenStats: () -> Unit,
-    onOpenSettings: () -> Unit,
-) {
-    var menuOpen by remember { mutableStateOf(false) }
-    Box {
-        IconButton(onClick = { menuOpen = true }) {
-            if (state.isAuthenticated && state.unreadNotifications > 0) {
-                BadgedBox(badge = { Badge { Text(state.unreadNotifications.toString()) } }) {
-                    Icon(Icons.Filled.MoreVert, contentDescription = strings.homeMenu)
-                }
-            } else {
-                Icon(Icons.Filled.MoreVert, contentDescription = strings.homeMenu)
-            }
-        }
-        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-            if (state.isAuthenticated) {
-                DropdownMenuItem(
-                    text = { Text(strings.notificationsBell) },
-                    leadingIcon = { Icon(Icons.Filled.Notifications, contentDescription = null) },
-                    trailingIcon = if (state.unreadNotifications > 0) {
-                        { Badge { Text(state.unreadNotifications.toString()) } }
-                    } else null,
-                    onClick = { menuOpen = false; onOpenNotifications() },
-                )
-            }
-            DropdownMenuItem(
-                text = { Text(strings.homeQr) },
-                leadingIcon = { Icon(Icons.Filled.QrCode, contentDescription = null) },
-                onClick = { menuOpen = false; onOpenQr() },
-            )
-            DropdownMenuItem(
-                text = { Text(strings.homeStats) },
-                leadingIcon = { Icon(Icons.Filled.QueryStats, contentDescription = null) },
-                onClick = { menuOpen = false; onOpenStats() },
-            )
-            DropdownMenuItem(
-                text = { Text(strings.homeSettings) },
-                leadingIcon = { Icon(Icons.Filled.Settings, contentDescription = null) },
-                onClick = { menuOpen = false; onOpenSettings() },
-            )
-        }
-    }
-}
-
 /** Tonal-бейдж статусу синхронізації (спек §5): іконка, що обертається під час Syncing, + колір за станом. */
 @Composable
 private fun SyncStatusBadge(status: SyncUiStatus, strings: Strings) {
@@ -265,10 +232,6 @@ private fun HomeScreenPreviewContent() {
         onOpenDebtor = {},
         onAddCreditor = {},
         onOpenCreditor = {},
-        onOpenStats = {},
-        onOpenSettings = {},
-        onOpenQr = {},
-        onOpenNotifications = {},
     )
 }
 

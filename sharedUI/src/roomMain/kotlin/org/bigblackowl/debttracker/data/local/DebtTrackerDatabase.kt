@@ -24,7 +24,7 @@ import org.bigblackowl.debttracker.data.local.entity.DebtorEntity
         CreditorEntity::class,
         CreditorTransactionEntity::class,
     ],
-    version = 5,
+    version = 6,
 )
 @TypeConverters(Converters::class)
 @ConstructedBy(DebtTrackerDatabaseConstructor::class)
@@ -68,6 +68,16 @@ val MIGRATION_4_5: Migration = object : Migration(4, 5) {
     override fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE debt_transactions DROP COLUMN cardLastDigits")
         connection.execSQL("ALTER TABLE creditor_transactions DROP COLUMN cardLastDigits")
+    }
+}
+
+/** v5 → v6: per-contact `dueDate` + `reminderLeadDays` (нагадування про повернення боргу) на creditors/debtors — міграція 0010. */
+val MIGRATION_5_6: Migration = object : Migration(5, 6) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("ALTER TABLE debtors ADD COLUMN dueDate INTEGER")
+        connection.execSQL("ALTER TABLE debtors ADD COLUMN reminderLeadDays TEXT NOT NULL DEFAULT ''")
+        connection.execSQL("ALTER TABLE creditors ADD COLUMN dueDate INTEGER")
+        connection.execSQL("ALTER TABLE creditors ADD COLUMN reminderLeadDays TEXT NOT NULL DEFAULT ''")
     }
 }
 

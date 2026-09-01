@@ -1,11 +1,13 @@
 package org.bigblackowl.debttracker.core.i18n.translate
 
+import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 
 // Maschinelle Erstübersetzung – von einem Muttersprachler noch zu prüfen.
 val DeStrings = Strings(
     cancel = "Abbrechen",
     save = "Speichern",
+    edit = "Bearbeiten",
     delete = "Löschen",
     deleteForever = "Endgültig löschen",
     continueLabel = "Weiter",
@@ -65,6 +67,9 @@ val DeStrings = Strings(
     authGateUnlock = "Entsperren",
     authGateBiometricFailed = "Konnte nicht verifiziert werden",
     authGateWrongPin = "Falsche PIN",
+    authGateUsePinCode = "PIN-Code verwenden",
+    authGateUseBiometric = "Biometrie verwenden",
+    authGateBackspace = "Ziffer löschen",
     biometricUnlockReason = "DebtTracker entsperren",
     biometricEnableReason = "Bestätige, um die App-Sperre zu aktivieren",
     showPin = "PIN anzeigen",
@@ -79,9 +84,11 @@ val DeStrings = Strings(
     onboardingAccountBody = "Melde dich an, um deine Schuldner, Gläubiger und Transaktionen zu sichern und auf jedem Gerät zu sehen – ja, sogar für das eine Mal, als dein Cousin sich Geld geliehen hat und schwört, es sei längst zurückgezahlt. Du kannst das überspringen und nur lokal bleiben; melde dich später in den Einstellungen an.",
 
     addEditCreditorTitleNew = "Neuer Gläubiger",
+    addEditCreditorTitleEdit = "Gläubiger bearbeiten",
     addEditCreditorInitialAmount = "Wie viel ich geliehen habe",
 
     addEditDebtorTitleNew = "Neuer Schuldner",
+    addEditDebtorTitleEdit = "Schuldner bearbeiten",
     addEditDebtorInitialAmount = "Wie viel ich verliehen habe",
 
     contactPickerTitle = "Kontakt auswählen",
@@ -164,7 +171,9 @@ val DeStrings = Strings(
     settingsNotificationsBlocked = "In den Geräteeinstellungen für Debt Tracker aktivieren",
     settingsRunInBackground = "Im Hintergrund ausführen",
     settingsRunInBackgroundSubtitle = "Beim Schließen im Tray weitersynchronisieren, statt zu beenden",
-    trayOpen = "Debt Tracker öffnen",
+    trayOpen = "Fenster anzeigen",
+    trayHide = "In Ablage minimieren",
+    traySyncNow = "Jetzt synchronisieren",
     trayQuit = "Beenden",
     settingsTheme = "Design",
     settingsThemeSystem = "System",
@@ -271,4 +280,17 @@ val DeStrings = Strings(
     notificationBodyCreditorLinked = { name, amount, currency -> "$name schuldet dir $amount $currency" },
     notificationBodyDebtTransactionAdded = { name, amount, currency -> "$name hat eine Transaktion hinzugefügt: $amount $currency" },
     notificationBodyCreditTransactionAdded = { name, amount, currency -> "$name hat eine Transaktion hinzugefügt: $amount $currency" },
+    deleteContactConfirmTitle = "Kontakt löschen?",
+    deleteContactConfirmText = { name -> "$name und der gesamte Transaktionsverlauf werden dauerhaft entfernt." },
+    dueReminder = DueReminderStrings(
+        label = "Rückzahlungserinnerung",
+        notSet = "Nicht festgelegt",
+        clear = "Entfernen",
+        leadOnDay = "Am Tag",
+        lead1Day = "1 Tag vorher",
+        lead2Days = "2 Tage vorher",
+        debtorBody = { name, whenText -> "$name soll dir die Schuld zurückzahlen: $whenText" },
+        creditorBody = { name, whenText -> "Du sollst $name die Schuld zahlen: $whenText" },
+        whenToday = { time -> "heute um $time" },
+    ),
 )

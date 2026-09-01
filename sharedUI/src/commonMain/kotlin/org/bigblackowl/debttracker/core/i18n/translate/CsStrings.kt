@@ -1,11 +1,13 @@
 package org.bigblackowl.debttracker.core.i18n.translate
 
+import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 
 // První strojový překlad – ke kontrole rodilým mluvčím.
 val CsStrings = Strings(
     cancel = "Zrušit",
     save = "Uložit",
+    edit = "Upravit",
     delete = "Smazat",
     deleteForever = "Smazat navždy",
     continueLabel = "Pokračovat",
@@ -65,6 +67,9 @@ val CsStrings = Strings(
     authGateUnlock = "Odemknout",
     authGateBiometricFailed = "Nelze ověřit",
     authGateWrongPin = "Nesprávný PIN",
+    authGateUsePinCode = "Použít PIN",
+    authGateUseBiometric = "Použít biometriku",
+    authGateBackspace = "Smazat číslici",
     biometricUnlockReason = "Odemknout DebtTracker",
     biometricEnableReason = "Potvrďte pro zapnutí zámku aplikace",
     showPin = "Zobrazit PIN",
@@ -79,9 +84,11 @@ val CsStrings = Strings(
     onboardingAccountBody = "Přihlaste se, abyste zálohovali své dlužníky, věřitele a transakce a viděli je na jakémkoli zařízení – ano, i tehdy, když si bratranec půjčil peníze a přísahá, že už je vrátil. Můžete to přeskočit a zůstat jen v tomto zařízení; přihlaste se později v Nastavení.",
 
     addEditCreditorTitleNew = "Nový věřitel",
+    addEditCreditorTitleEdit = "Upravit věřitele",
     addEditCreditorInitialAmount = "Kolik jsem si půjčil",
 
     addEditDebtorTitleNew = "Nový dlužník",
+    addEditDebtorTitleEdit = "Upravit dlužníka",
     addEditDebtorInitialAmount = "Kolik jsem půjčil",
 
     contactPickerTitle = "Vyberte kontakt",
@@ -164,7 +171,9 @@ val CsStrings = Strings(
     settingsNotificationsBlocked = "Zapněte je pro Debt Tracker v nastavení zařízení",
     settingsRunInBackground = "Spouštět na pozadí",
     settingsRunInBackgroundSubtitle = "Po zavření pokračovat v synchronizaci na liště místo ukončení",
-    trayOpen = "Otevřít Debt Tracker",
+    trayOpen = "Zobrazit okno",
+    trayHide = "Skrýt do lišty",
+    traySyncNow = "Synchronizovat",
     trayQuit = "Ukončit",
     settingsTheme = "Motiv",
     settingsThemeSystem = "Systém",
@@ -271,4 +280,17 @@ val CsStrings = Strings(
     notificationBodyCreditorLinked = { name, amount, currency -> "$name vám dluží $amount $currency" },
     notificationBodyDebtTransactionAdded = { name, amount, currency -> "$name přidal(a) transakci: $amount $currency" },
     notificationBodyCreditTransactionAdded = { name, amount, currency -> "$name přidal(a) transakci: $amount $currency" },
+    deleteContactConfirmTitle = "Smazat kontakt?",
+    deleteContactConfirmText = { name -> "$name a celá historie transakcí budou trvale odstraněny." },
+    dueReminder = DueReminderStrings(
+        label = "Připomenutí splacení",
+        notSet = "Nenastaveno",
+        clear = "Zrušit",
+        leadOnDay = "V daný den",
+        lead1Day = "1 den předem",
+        lead2Days = "2 dny předem",
+        debtorBody = { name, whenText -> "$name vám má splatit dluh: $whenText" },
+        creditorBody = { name, whenText -> "Máte zaplatit dluh osobě $name: $whenText" },
+        whenToday = { time -> "dnes v $time" },
+    ),
 )

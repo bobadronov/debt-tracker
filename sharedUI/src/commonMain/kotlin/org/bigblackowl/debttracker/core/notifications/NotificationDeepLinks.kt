@@ -17,7 +17,7 @@ import org.bigblackowl.debttracker.domain.model.AppNotification
  * notification is tapped, feeds the link back here:
  *  - Android: a `contentIntent` `PendingIntent` carrying the link as an extra → `AppActivity`
  *  - iOS: `content.userInfo["deepLink"]` → `UNUserNotificationCenterDelegate`
- *  - Desktop: `TrayIcon` balloon click (`ActionListener`)
+ *  - Desktop: the native notification's `onActivated` callback (Nucleus `notification-common`)
  *  - Web: `Notification.onclick`
  */
 object NotificationDeepLinks {
@@ -36,6 +36,19 @@ object NotificationDeepLinks {
             add("id=${notification.id}")
             notification.relatedDebtorId?.let { add("debtor=$it") }
             notification.relatedCreditorId?.let { add("creditor=$it") }
+        }
+        return "$SCHEME?${params.joinToString("&")}"
+    }
+
+    /**
+     * Deep-link URI for a locally-scheduled due-date reminder ([DueReminderCoordinator]) — no
+     * `notifications` table row behind it, so it carries only the party to open. Parsed by [parse]
+     * into a [Route] with a `null` [Route.notificationId], exactly like a bare notification tap.
+     */
+    fun reminderLink(debtorId: String? = null, creditorId: String? = null): String {
+        val params = buildList {
+            debtorId?.let { add("debtor=$it") }
+            creditorId?.let { add("creditor=$it") }
         }
         return "$SCHEME?${params.joinToString("&")}"
     }

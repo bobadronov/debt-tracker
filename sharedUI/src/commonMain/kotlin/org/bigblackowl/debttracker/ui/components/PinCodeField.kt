@@ -56,6 +56,12 @@ fun PinCodeField(
     length: Int = PIN_LENGTH,
     imeAction: ImeAction = ImeAction.Done,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
+    /**
+     * When false the hidden text field is omitted entirely — the dots are display-only and input
+     * comes from elsewhere (e.g. [NumericKeypad]). Used on mobile so the system keyboard never
+     * appears; desktop keeps it true for physical-keyboard typing.
+     */
+    acceptTextInput: Boolean = true,
     fillColor: Color = MaterialTheme.colorScheme.inverseOnSurface,
     borderColor: Color = MaterialTheme.colorScheme.outline,
     selectedColor: Color = MaterialTheme.colorScheme.primary,
@@ -82,18 +88,20 @@ fun PinCodeField(
                     )
                 }
             }
-            BasicTextField(
-                value = value,
-                onValueChange = { new ->
-                    if (new.length <= length && new.all(Char::isDigit)) onValueChange(new)
-                },
-                modifier = Modifier.matchParentSize().alpha(0f)
-                    .focusRequester(focusRequester)
-                    .onFocusChanged { isFocused = it.isFocused },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = imeAction),
-                keyboardActions = keyboardActions,
-            )
+            if (acceptTextInput) {
+                BasicTextField(
+                    value = value,
+                    onValueChange = { new ->
+                        if (new.length <= length && new.all(Char::isDigit)) onValueChange(new)
+                    },
+                    modifier = Modifier.matchParentSize().alpha(0f)
+                        .focusRequester(focusRequester)
+                        .onFocusChanged { isFocused = it.isFocused },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = imeAction),
+                    keyboardActions = keyboardActions,
+                )
+            }
         }
         TextButton(onClick = { pinVisible = !pinVisible }) {
             Text(if (pinVisible) strings.hidePin else strings.showPin)

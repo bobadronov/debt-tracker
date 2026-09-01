@@ -53,14 +53,18 @@ private class AndroidBiometricAuthenticator(private val activity: FragmentActivi
                         ) {
                             BiometricResult.CANCELLED
                         } else {
+                            // Lockout, hardware failure, no enrolled biometric mid-session, etc. —
+                            // the caller ([AuthGateViewModel]) treats this as "fall back to the app PIN".
                             BiometricResult.ERROR
                         }
                         continuation.resume(result)
                     }
 
-                    override fun onAuthenticationFailed() {
-                        if (continuation.isActive) continuation.resume(BiometricResult.FAILED)
-                    }
+                    // A biometric was presented but not recognised. The system prompt STAYS OPEN and
+                    // lets the user try again, so we must NOT resume here — resuming would let the app
+                    // flip to a "failed" state behind a still-visible prompt and then drop the eventual
+                    // success (dead continuation). Only success / error end the suspend.
+                    override fun onAuthenticationFailed() = Unit
                 },
             )
             prompt.authenticate(promptInfo)

@@ -9,13 +9,17 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -34,6 +38,8 @@ import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.NavDisplay
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
 import org.bigblackowl.debttracker.core.di.requiresRemoteAuthGate
 import org.bigblackowl.debttracker.core.notifications.NotificationDeepLinks
 import org.bigblackowl.debttracker.core.qr.ContactDeepLinks
@@ -71,6 +77,28 @@ import org.bigblackowl.debttracker.ui.screens.stats.StatsScreen
 import org.koin.compose.koinInject
 
 private const val NAV_TRANSITION_DURATION_MILLIS = 300
+
+private val backStackJson = Json { ignoreUnknownKeys = true }
+
+/**
+ * Persists the whole nav back stack across Activity recreation / process death (see [Screen]'s
+ * KDoc — without this the graph restarted at [Screen.Splash] and re-showed the [Screen.AuthGate]
+ * lock on every theme/locale change or low-memory kill). Encoded as one JSON string, which is
+ * Bundle-safe; an unreadable blob falls back to a fresh Splash stack.
+ */
+private val BackStackSaver: Saver<SnapshotStateList<Screen>, String> = Saver(
+    save = {
+        runCatching {
+            backStackJson.encodeToString(ListSerializer(Screen.serializer()), it.toList())
+        }.getOrNull()
+    },
+    restore = { raw ->
+        val restored = runCatching {
+            backStackJson.decodeFromString(ListSerializer(Screen.serializer()), raw)
+        }.getOrNull().orEmpty().ifEmpty { listOf(Screen.Splash) }
+        mutableStateListOf<Screen>().apply { addAll(restored) }
+    },
+)
 
 private fun NotificationDeepLinks.Target.toScreen(): Screen = when (this) {
     is NotificationDeepLinks.Target.Debtor -> Screen.DebtorDetail(id)
@@ -111,7 +139,7 @@ fun DebtTrackerNavGraph(
     settings: AppSettings = koinInject(),
     notificationRepository: NotificationRepository = koinInject(),
 ) {
-    val backStack = remember { mutableStateListOf<Screen>(Screen.Splash) }
+    val backStack = rememberSaveable(saver = BackStackSaver) { mutableStateListOf<Screen>(Screen.Splash) }
     val focusRequester = remember { FocusRequester() }
     val coroutineScope = rememberCoroutineScope()
 
@@ -137,6 +165,34 @@ fun DebtTrackerNavGraph(
         }
         while (backStack.size > 1 && backStack.last() != target) backStack.removeLastOrNull()
     }
+
+    // Publish the top screen for the desktop window's title bar (CurrentScreen / Screen.windowTitle)
+    // and bind the always-available app menu (shown once past the lock / onboarding screens).
+    val topScreen = backStack.lastOrNull()
+    LaunchedEffect(topScreen) { CurrentScreen.set(topScreen) }
+    // The currently-open menu destination is hidden from the menu (you're already there).
+    val activeMenuTargets: Set<AppMenu.Target> = when (topScreen) {
+        Screen.Notifications -> setOf(AppMenu.Target.Notifications)
+        Screen.QrHub -> setOf(AppMenu.Target.Qr)
+        Screen.Stats -> setOf(AppMenu.Target.Stats)
+        Screen.Settings -> setOf(AppMenu.Target.Settings)
+        else -> emptySet()
+    }
+    LaunchedEffect(topScreen?.isPastUnlock() == true, activeMenuTargets) {
+        AppMenu.set(
+            AppMenu.State(
+                visible = topScreen?.isPastUnlock() == true,
+                activeTargets = activeMenuTargets,
+                openNotifications = { if (backStack.lastOrNull() != Screen.Notifications) navigate(Screen.Notifications) },
+                openQr = { if (backStack.lastOrNull() != Screen.QrHub) navigate(Screen.QrHub) },
+                openStats = { if (backStack.lastOrNull() != Screen.Stats) navigate(Screen.Stats) },
+                openSettings = { if (backStack.lastOrNull() != Screen.Settings) navigate(Screen.Settings) },
+                addDebtor = { navigate(Screen.ContactPicker(DebtDirection.DEBTOR)) },
+                addCreditor = { navigate(Screen.ContactPicker(DebtDirection.CREDITOR)) },
+            )
+        )
+    }
+    DisposableEffect(Unit) { onDispose { CurrentScreen.set(null); AppMenu.clear() } }
 
     // Web has no local cache (спек §1) — repositories need a signed-in Supabase session to
     // work at all, so it forces the sign-in screen before Home. Other platforms are fully
@@ -251,6 +307,8 @@ fun DebtTrackerNavGraph(
                 rememberSaveableStateHolderNavEntryDecorator(),
                 rememberViewModelStoreNavEntryDecorator(),
             ),
+            // Wide windows (desktop, unfolded): show a marked list + detail side by side.
+            sceneStrategies = listOf(rememberListDetailSceneStrategy()),
             transitionSpec = navSlideTransitionSpec(AnimatedContentTransitionScope.SlideDirection.Left),
             popTransitionSpec = navSlideTransitionSpec(AnimatedContentTransitionScope.SlideDirection.Right),
             entryProvider = entryProvider {
@@ -280,19 +338,16 @@ fun DebtTrackerNavGraph(
             entry<Screen.AuthGate> {
                 AuthGateScreen(onUnlocked = { replaceStackWith(screenAfterUnlock()) })
             }
-            entry<Screen.Home> {
+            entry<Screen.Home>(metadata = listPane()) {
                 HomeScreen(
                     onAddDebtor = { navigate(Screen.ContactPicker(DebtDirection.DEBTOR)) },
                     onOpenDebtor = { id -> navigate(Screen.DebtorDetail(id)) },
                     onAddCreditor = { navigate(Screen.ContactPicker(DebtDirection.CREDITOR)) },
                     onOpenCreditor = { id -> navigate(Screen.CreditorDetail(id)) },
-                    onOpenStats = { navigate(Screen.Stats) },
-                    onOpenSettings = { navigate(Screen.Settings) },
-                    onOpenQr = { navigate(Screen.QrHub) },
-                    onOpenNotifications = { navigate(Screen.Notifications) },
+                    // Stats / Settings / QR / Notifications navigation now goes through AppMenu.
                 )
             }
-            entry<Screen.Notifications> {
+            entry<Screen.Notifications>(metadata = listPane()) {
                 NotificationsScreen(
                     onBack = { back() },
                     onNavigateToDebtor = { id -> navigate(Screen.DebtorDetail(id)) },
@@ -312,21 +367,26 @@ fun DebtTrackerNavGraph(
                 AddEditContactScreen(
                     direction = screen.direction,
                     prefill = screen.prefill,
-                    onDone = { popTo(Screen.Home) },
+                    editId = screen.editId,
+                    // Editing was reached from a detail screen — just pop back to it. Creating came
+                    // through the contact-picker, so skip that step back to Home.
+                    onDone = { if (screen.editId != null) back() else popTo(Screen.Home) },
                 )
             }
-            entry<Screen.DebtorDetail> { screen ->
+            entry<Screen.DebtorDetail>(metadata = detailPane()) { screen ->
                 DebtorDetailScreen(
                     debtorId = screen.debtorId,
                     onBack = { back() },
-                    onExport = { navigate(Screen.Export(debtorId = screen.debtorId)) }
+                    onExport = { navigate(Screen.Export(debtorId = screen.debtorId)) },
+                    onEdit = { navigate(Screen.AddEditContact(DebtDirection.DEBTOR, editId = screen.debtorId)) },
                 )
             }
-            entry<Screen.CreditorDetail> { screen ->
+            entry<Screen.CreditorDetail>(metadata = detailPane()) { screen ->
                 CreditorDetailScreen(
                     creditorId = screen.creditorId,
                     onBack = { back() },
-                    onExport = { navigate(Screen.Export(creditorId = screen.creditorId)) }
+                    onExport = { navigate(Screen.Export(creditorId = screen.creditorId)) },
+                    onEdit = { navigate(Screen.AddEditContact(DebtDirection.CREDITOR, editId = screen.creditorId)) },
                 )
             }
             entry<Screen.Stats> {
@@ -336,7 +396,9 @@ fun DebtTrackerNavGraph(
                     onOpenCreditor = { id -> navigate(Screen.CreditorDetail(id)) },
                 )
             }
-            entry<Screen.Settings> {
+            // Settings + its direct pages get the list/detail split on wide windows. AccountInfo's
+            // own sub-pages (EditAccount, ActiveSessions) stay full-width — deeper flows, not a list.
+            entry<Screen.Settings>(metadata = listPane()) {
                 SettingsScreen(
                     onBack = { back() },
                     onExport = { navigate(Screen.Export()) },
@@ -345,10 +407,10 @@ fun DebtTrackerNavGraph(
                     onOpenLanguage = { navigate(Screen.Language) },
                 )
             }
-            entry<Screen.Language> {
+            entry<Screen.Language>(metadata = detailPane()) {
                 LanguageScreen(onBack = { back() })
             }
-            entry<Screen.AccountInfo> {
+            entry<Screen.AccountInfo>(metadata = detailPane()) {
                 AccountInfoScreen(
                     onBack = { back() },
                     onEdit = { navigate(Screen.EditAccount) },

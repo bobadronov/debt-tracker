@@ -13,6 +13,8 @@ import org.bigblackowl.debttracker.domain.model.DebtTransaction
 import org.bigblackowl.debttracker.domain.model.Debtor
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.domain.model.SyncStatus
+import org.bigblackowl.debttracker.domain.model.encodeReminderLeadDays
+import org.bigblackowl.debttracker.domain.model.parseReminderLeadDays
 import org.bigblackowl.debttracker.domain.model.toCreditorTransactionType
 import org.bigblackowl.debttracker.domain.model.toDebtTransactionType
 
@@ -35,6 +37,8 @@ fun Debtor.toDto(userId: String) = DebtorDto(
     isDeleted = isDeleted,
     linkedUserId = linkedUserId,
     mirrorCreditorId = mirrorCreditorId,
+    dueDate = dueDate?.toString(),
+    reminderLeadDays = reminderLeadDays.encodeReminderLeadDays(),
     createdAt = createdAt.toString(),
     updatedAt = updatedAt.toString(),
 )
@@ -54,6 +58,8 @@ fun DebtorDto.toDomain() = Debtor(
     isDeleted = isDeleted,
     linkedUserId = linkedUserId,
     mirrorCreditorId = mirrorCreditorId,
+    dueDate = dueDate?.let { kotlin.time.Instant.parse(it) },
+    reminderLeadDays = parseReminderLeadDays(reminderLeadDays),
 )
 
 fun DebtTransaction.toDto(userId: String) = DebtTransactionDto(
@@ -101,6 +107,8 @@ fun Creditor.toDto(userId: String) = CreditorDto(
     isDeleted = isDeleted,
     linkedUserId = linkedUserId,
     mirrorDebtorId = mirrorDebtorId,
+    dueDate = dueDate?.toString(),
+    reminderLeadDays = reminderLeadDays.encodeReminderLeadDays(),
     createdAt = createdAt.toString(),
     updatedAt = updatedAt.toString(),
 )
@@ -120,6 +128,8 @@ fun CreditorDto.toDomain() = Creditor(
     isDeleted = isDeleted,
     linkedUserId = linkedUserId,
     mirrorDebtorId = mirrorDebtorId,
+    dueDate = dueDate?.let { kotlin.time.Instant.parse(it) },
+    reminderLeadDays = parseReminderLeadDays(reminderLeadDays),
 )
 
 fun CreditorTransaction.toDto(userId: String) = CreditorTransactionDto(

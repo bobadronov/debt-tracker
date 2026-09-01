@@ -6,15 +6,17 @@ androidx-biometric = "1.1.0" # https://developer.android.com/jetpack/androidx/re
 androidx-credentials = "1.6.0" # https://developer.android.com/jetpack/androidx/releases/credentials — Restore Credentials API
 androidx-core-splashscreen = "1.2.0" # https://developer.android.com/jetpack/androidx/releases/core-splashscreen
 androidx-fragment = "1.9.0" # https://developer.android.com/jetpack/androidx/releases/fragment
-androidx-glance = "1.1.1" # https://developer.android.com/jetpack/androidx/releases/glance
+androidx-glance = "1.2.0" # https://developer.android.com/jetpack/androidx/releases/glance
 androidx-lifecycle = "2.11.0" # https://developer.android.com/jetpack/androidx/releases/lifecycle
 androidx-nav3 = "1.2.0-alpha02" # https://developer.android.com/jetpack/androidx/releases/navigation3
 bignum = "0.3.10" # https://github.com/ionspin/kotlin-multiplatform-bignum
 buildConfig = "6.0.10" # https://github.com/gmazzo/gradle-buildconfig-plugin
 coil = "3.5.0" # https://github.com/coil-kt/coil
-compose-multiplatform = "1.12.0-rc01" # https://github.com/JetBrains/compose-multiplatform
+compose-multiplatform = "1.12.0" # https://github.com/JetBrains/compose-multiplatform
+composeNativeTray = "2.1.3" # https://github.com/NucleusFramework/ComposeNativeTray — HDPI-correct desktop tray with icon menus
+nucleus = "2.5.11" # https://github.com/NucleusFramework/Nucleus — native notifications + Tao windowing / MaterialDecoratedWindow (all dev.nucleusframework:nucleus.* modules)
 filekit = "0.15.0" # https://github.com/vinceglb/FileKit
-glanceAppwidgetPreview = "1.1.1"
+glanceAppwidgetPreview = "1.2.0"
 koin = "4.2.2" # https://github.com/InsertKoinIO/koin
 kotlin = "2.4.10" # https://github.com/JetBrains/kotlin
 kotlinx-coroutines = "1.11.0" # https://github.com/Kotlin/kotlinx.coroutines
@@ -47,6 +49,11 @@ compose-ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-pre
 compose-ui-tooling = { module = "org.jetbrains.compose.ui:ui-tooling", version.ref = "compose-multiplatform" }
 compose-ui-test = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "compose-multiplatform" }
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
+compose-native-tray = { module = "dev.nucleusframework:composenativetray", version.ref = "composeNativeTray" }
+nucleus-notification = { module = "dev.nucleusframework:nucleus.notification-common", version.ref = "nucleus" }
+nucleus-application = { module = "dev.nucleusframework:nucleus.nucleus-application", version.ref = "nucleus" }
+nucleus-window-tao = { module = "dev.nucleusframework:nucleus.decorated-window-tao", version.ref = "nucleus" }
+nucleus-window-material3 = { module = "dev.nucleusframework:nucleus.decorated-window-material3", version.ref = "nucleus" }
 androidx-activityCompose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
 material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 napier = { module = "io.github.aakira:napier", version.ref = "napier" }

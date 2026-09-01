@@ -1,7 +1,9 @@
 package org.bigblackowl.debttracker.core.di
 
 import org.bigblackowl.debttracker.core.notifications.IosLocalNotifier
+import org.bigblackowl.debttracker.core.notifications.IosReminderScheduler
 import org.bigblackowl.debttracker.core.notifications.LocalNotifier
+import org.bigblackowl.debttracker.core.notifications.ReminderScheduler
 import org.bigblackowl.debttracker.core.security.RestoreCredentialClient
 import org.bigblackowl.debttracker.core.security.UnsupportedRestoreCredentialClient
 import org.bigblackowl.debttracker.data.local.DebtTrackerDatabase
@@ -27,6 +29,7 @@ actual fun platformDataModule(): Module = module {
     single { SyncCoordinator(get(), get(), get(), get(), get(), get(), get()) }
     single<SyncStatusProvider> { get<SyncCoordinator>() }
     single<LocalNotifier> { IosLocalNotifier() }
+    single<ReminderScheduler> { IosReminderScheduler() }
     single<RestoreCredentialClient> { UnsupportedRestoreCredentialClient }
 }
 

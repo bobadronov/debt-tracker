@@ -14,9 +14,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
@@ -36,6 +40,7 @@ import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
+import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.domain.model.formatMoney
@@ -62,6 +67,8 @@ fun ContactDetailScaffold(
     exportLabel: String,
     onExport: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    /** Non-null adds a pencil action to the top bar → opens the contact in the edit form. */
+    onEdit: (() -> Unit)? = null,
     phone: String?,
     comment: String?,
     balanceText: String,
@@ -80,7 +87,14 @@ fun ContactDetailScaffold(
             BackTopAppBar(
                 title = title,
                 onBack = onBack,
-                actions = { TextButton(onClick = onExport) { Text(exportLabel) } },
+                actions = {
+                    onEdit?.let {
+                        IconButton(onClick = it) {
+                            Icon(Icons.Filled.Edit, contentDescription = LocalStrings.current.edit)
+                        }
+                    }
+                    TextButton(onClick = onExport) { Text(exportLabel) }
+                },
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },

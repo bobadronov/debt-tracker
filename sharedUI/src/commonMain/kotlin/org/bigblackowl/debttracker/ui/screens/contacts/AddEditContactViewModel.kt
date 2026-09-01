@@ -9,6 +9,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -34,6 +36,7 @@ import org.bigblackowl.debttracker.domain.model.TransactionType
 import org.bigblackowl.debttracker.domain.usecase.FindProfileByEmailUseCase
 import org.bigblackowl.debttracker.domain.usecase.ObserveContactSuggestionsUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddCreditorTransactionUseCase
+import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddOrUpdateCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.DeleteCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.LinkCreditorToRegisteredUserUseCase
@@ -41,6 +44,7 @@ import org.bigblackowl.debttracker.domain.usecase.debtor.AddDebtTransactionUseCa
 import org.bigblackowl.debttracker.domain.usecase.debtor.AddOrUpdateDebtorUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.DeleteDebtorUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.LinkDebtorToRegisteredUserUseCase
+import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorUseCase
 import org.bigblackowl.debttracker.domain.validation.isValidEmail
 import org.bigblackowl.debttracker.domain.validation.isValidFullName
 import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
@@ -63,6 +67,7 @@ private const val NAME_SUGGESTIONS_LIMIT = 5
 class AddEditContactViewModel(
     direction: DebtDirection,
     prefill: ContactPrefill?,
+    private val editId: String?,
     private val addOrUpdateDebtor: AddOrUpdateDebtorUseCase,
     private val addDebtTransaction: AddDebtTransactionUseCase,
     private val deleteDebtor: DeleteDebtorUseCase,
@@ -75,14 +80,21 @@ class AddEditContactViewModel(
     private val soundPlayer: SoundPlayer,
     private val findProfileByEmail: FindProfileByEmailUseCase,
     private val observeContactSuggestions: ObserveContactSuggestionsUseCase,
+    private val observeDebtor: ObserveDebtorUseCase,
+    private val observeCreditor: ObserveCreditorUseCase,
 ) : ViewModel() {
 
     private var emailLookupJob: Job? = null
     private var allContacts: List<ContactSuggestion> = emptyList()
 
+    /** The row being edited (kept out of UI state — the screen only needs the flattened fields). */
+    private var editingDebtor: Debtor? = null
+    private var editingCreditor: Creditor? = null
+
     private val _state = MutableStateFlow(
         AddEditContactState(
             direction = direction,
+            isEditMode = editId != null,
             fullName = prefill?.fullName.orEmpty(),
             phone = prefill?.phone?.let(::sanitizePhoneInput).orEmpty(),
             email = prefill?.email.orEmpty(),
@@ -101,6 +113,47 @@ class AddEditContactViewModel(
                 updateNameSuggestions()
             }
         }
+        if (editId != null) loadForEdit(editId, direction)
+    }
+
+    /** Prefills the form from the existing debtor/creditor. Server data wins on later sync (LWW). */
+    private fun loadForEdit(id: String, direction: DebtDirection) {
+        viewModelScope.launch {
+            when (direction) {
+                DebtDirection.DEBTOR -> {
+                    val debtor = observeDebtor(id).filterNotNull().first()
+                    editingDebtor = debtor
+                    _state.update {
+                        it.copy(
+                            fullName = debtor.fullName,
+                            phone = debtor.phone?.let(::sanitizePhoneInput).orEmpty(),
+                            email = debtor.email.orEmpty(),
+                            comment = debtor.comment.orEmpty(),
+                            currency = debtor.currency,
+                            suggestedAvatarUrl = debtor.avatarUrl,
+                            dueDate = debtor.dueDate,
+                            reminderLeadDays = debtor.reminderLeadDays,
+                        )
+                    }
+                }
+                DebtDirection.CREDITOR -> {
+                    val creditor = observeCreditor(id).filterNotNull().first()
+                    editingCreditor = creditor
+                    _state.update {
+                        it.copy(
+                            fullName = creditor.fullName,
+                            phone = creditor.phone?.let(::sanitizePhoneInput).orEmpty(),
+                            email = creditor.email.orEmpty(),
+                            comment = creditor.comment.orEmpty(),
+                            currency = creditor.currency,
+                            suggestedAvatarUrl = creditor.avatarUrl,
+                            dueDate = creditor.dueDate,
+                            reminderLeadDays = creditor.reminderLeadDays,
+                        )
+                    }
+                }
+            }
+        }
     }
 
     fun onIntent(intent: AddEditContactIntent) {
@@ -116,6 +169,18 @@ class AddEditContactViewModel(
             is AddEditContactIntent.InitialAmountChanged -> _state.update { it.copy(initialAmountText = intent.value, amountError = null) }
             is AddEditContactIntent.CurrencyChanged -> _state.update { it.copy(currency = intent.value) }
             is AddEditContactIntent.MethodChanged -> _state.update { it.copy(method = intent.value) }
+            is AddEditContactIntent.DueDateChanged -> _state.update {
+                it.copy(dueDate = intent.value, reminderLeadDays = if (intent.value == null) emptySet() else it.reminderLeadDays)
+            }
+            is AddEditContactIntent.ToggleReminderLead -> _state.update {
+                it.copy(
+                    reminderLeadDays = if (intent.days in it.reminderLeadDays) {
+                        it.reminderLeadDays - intent.days
+                    } else {
+                        it.reminderLeadDays + intent.days
+                    },
+                )
+            }
             AddEditContactIntent.ApplyProfileSuggestion -> applySuggestion()
             AddEditContactIntent.DismissProfileSuggestion -> _state.update { it.copy(profileSuggestion = null) }
             is AddEditContactIntent.NameSuggestionSelected -> applyNameSuggestion(intent.suggestion)
@@ -198,6 +263,14 @@ class AddEditContactViewModel(
             return
         }
 
+        if (current.isEditMode) {
+            when (current.direction) {
+                DebtDirection.DEBTOR -> updateDebtor(current, strings.saveError)
+                DebtDirection.CREDITOR -> updateCreditor(current, strings.saveError)
+            }
+            return
+        }
+
         val parsedAmount = runCatching { BigDecimal.parseString(current.initialAmountText.trim()) }.getOrNull()
         if (parsedAmount == null || parsedAmount <= BigDecimal.ZERO) {
             _state.update { it.copy(amountError = strings.amountError) }
@@ -226,6 +299,8 @@ class AddEditContactViewModel(
                 status = DebtStatus.ACTIVE,
                 syncStatus = SyncStatus.PENDING,
                 currency = current.currency,
+                dueDate = current.dueDate,
+                reminderLeadDays = current.reminderLeadDays,
             )
 
             runCatching { addOrUpdateDebtor(debtor) }.onFailure {
@@ -278,6 +353,8 @@ class AddEditContactViewModel(
                 status = DebtStatus.ACTIVE,
                 syncStatus = SyncStatus.PENDING,
                 currency = current.currency,
+                dueDate = current.dueDate,
+                reminderLeadDays = current.reminderLeadDays,
             )
 
             runCatching { addOrUpdateCreditor(creditor) }.onFailure {
@@ -311,6 +388,67 @@ class AddEditContactViewModel(
 
             finishSave()
             viewModelScope.launch { runCatching { linkCreditorToRegisteredUser(creditor.id) } }
+        }
+    }
+
+    private fun updateDebtor(current: AddEditContactState, saveError: String) {
+        val original = editingDebtor
+        if (original == null) {
+            viewModelScope.launch { effectsChannel.send(AddEditContactEffect.Error(saveError)) }
+            return
+        }
+        viewModelScope.launch {
+            _state.update { it.copy(isSaving = true) }
+            val updated = original.copy(
+                fullName = current.fullName.trim(),
+                phone = current.phone.trim().ifBlank { null },
+                email = current.email.trim().ifBlank { null },
+                comment = current.comment.trim().ifBlank { null },
+                currency = current.currency,
+                avatarUrl = current.suggestedAvatarUrl ?: original.avatarUrl,
+                dueDate = current.dueDate,
+                reminderLeadDays = current.reminderLeadDays,
+                updatedAt = Clock.System.now(),
+                syncStatus = SyncStatus.PENDING,
+            )
+            runCatching { addOrUpdateDebtor(updated) }.onFailure {
+                _state.update { it.copy(isSaving = false) }
+                effectsChannel.send(AddEditContactEffect.Error(saveError))
+                return@launch
+            }
+            finishSave()
+            // Re-link in case the email/phone changed to (or away from) a registered user's.
+            viewModelScope.launch { runCatching { linkDebtorToRegisteredUser(updated.id) } }
+        }
+    }
+
+    private fun updateCreditor(current: AddEditContactState, saveError: String) {
+        val original = editingCreditor
+        if (original == null) {
+            viewModelScope.launch { effectsChannel.send(AddEditContactEffect.Error(saveError)) }
+            return
+        }
+        viewModelScope.launch {
+            _state.update { it.copy(isSaving = true) }
+            val updated = original.copy(
+                fullName = current.fullName.trim(),
+                phone = current.phone.trim().ifBlank { null },
+                email = current.email.trim().ifBlank { null },
+                comment = current.comment.trim().ifBlank { null },
+                currency = current.currency,
+                avatarUrl = current.suggestedAvatarUrl ?: original.avatarUrl,
+                dueDate = current.dueDate,
+                reminderLeadDays = current.reminderLeadDays,
+                updatedAt = Clock.System.now(),
+                syncStatus = SyncStatus.PENDING,
+            )
+            runCatching { addOrUpdateCreditor(updated) }.onFailure {
+                _state.update { it.copy(isSaving = false) }
+                effectsChannel.send(AddEditContactEffect.Error(saveError))
+                return@launch
+            }
+            finishSave()
+            viewModelScope.launch { runCatching { linkCreditorToRegisteredUser(updated.id) } }
         }
     }
 

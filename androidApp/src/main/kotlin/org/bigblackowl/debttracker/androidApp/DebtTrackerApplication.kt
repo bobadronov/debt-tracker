@@ -7,6 +7,7 @@ import coil3.SingletonImageLoader
 import coil3.memory.MemoryCache
 import coil3.memoryCacheMaxSizePercentWhileInBackground
 import org.bigblackowl.debttracker.core.di.initKoin
+import org.bigblackowl.debttracker.core.notifications.DueReminderCoordinator
 import org.bigblackowl.debttracker.core.notifications.NotificationsPoller
 import org.bigblackowl.debttracker.data.sync.SyncCoordinator
 import org.koin.android.ext.koin.androidContext
@@ -29,6 +30,7 @@ class DebtTrackerApplication : Application(), SingletonImageLoader.Factory {
         }
         koinApp.koin.get<SyncCoordinator>().start()
         koinApp.koin.get<NotificationsPoller>().start()
+        koinApp.koin.get<DueReminderCoordinator>().start()
     }
 
     override fun newImageLoader(context: PlatformContext): ImageLoader =

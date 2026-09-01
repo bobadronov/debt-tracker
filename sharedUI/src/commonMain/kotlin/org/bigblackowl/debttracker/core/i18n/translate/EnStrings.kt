@@ -1,10 +1,12 @@
 package org.bigblackowl.debttracker.core.i18n.translate
 
+import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 
 val EnStrings = Strings(
     cancel = "Cancel",
     save = "Save",
+    edit = "Edit",
     delete = "Delete",
     deleteForever = "Delete forever",
     continueLabel = "Continue",
@@ -64,6 +66,9 @@ val EnStrings = Strings(
     authGateUnlock = "Unlock",
     authGateBiometricFailed = "Couldn't verify",
     authGateWrongPin = "Wrong PIN",
+    authGateUsePinCode = "Use PIN code",
+    authGateUseBiometric = "Use biometrics",
+    authGateBackspace = "Delete digit",
     biometricUnlockReason = "Unlock DebtTracker",
     biometricEnableReason = "Confirm to enable app lock",
     showPin = "Show PIN",
@@ -78,9 +83,11 @@ val EnStrings = Strings(
     onboardingAccountBody = "Sign in to back up your debtors, creditors, and transactions, and see them on any device — yes, even that one time your cousin borrowed cash and swears it's already paid off. You can skip this and stay local-only; sign in later from Settings.",
 
     addEditCreditorTitleNew = "New creditor",
+    addEditCreditorTitleEdit = "Edit creditor",
     addEditCreditorInitialAmount = "How much I borrowed",
 
     addEditDebtorTitleNew = "New debtor",
+    addEditDebtorTitleEdit = "Edit debtor",
     addEditDebtorInitialAmount = "How much I lent",
 
     contactPickerTitle = "Choose a contact",
@@ -163,7 +170,9 @@ val EnStrings = Strings(
     settingsNotificationsBlocked = "Turn them on for Debt Tracker in your device settings",
     settingsRunInBackground = "Run in background",
     settingsRunInBackgroundSubtitle = "Keep syncing in the tray instead of quitting when closed",
-    trayOpen = "Open Debt Tracker",
+    trayOpen = "Show window",
+    trayHide = "Hide to tray",
+    traySyncNow = "Sync now",
     trayQuit = "Quit",
     settingsTheme = "Theme",
     settingsThemeSystem = "System",
@@ -270,4 +279,17 @@ val EnStrings = Strings(
     notificationBodyCreditorLinked = { name, amount, currency -> "$name owes you $amount $currency" },
     notificationBodyDebtTransactionAdded = { name, amount, currency -> "$name added a transaction: $amount $currency" },
     notificationBodyCreditTransactionAdded = { name, amount, currency -> "$name added a transaction: $amount $currency" },
+    deleteContactConfirmTitle = "Delete contact?",
+    deleteContactConfirmText = { name -> "$name and their whole transaction history will be permanently removed." },
+    dueReminder = DueReminderStrings(
+        label = "Repayment reminder",
+        notSet = "Not set",
+        clear = "Clear",
+        leadOnDay = "On the day",
+        lead1Day = "1 day before",
+        lead2Days = "2 days before",
+        debtorBody = { name, whenText -> "$name is due to repay you $whenText" },
+        creditorBody = { name, whenText -> "You are due to pay $name $whenText" },
+        whenToday = { time -> "today at $time" },
+    ),
 )

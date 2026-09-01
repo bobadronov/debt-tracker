@@ -18,6 +18,10 @@ data class Debtor(
     val isDeleted: Boolean = false, // soft delete для синхронізації
     val linkedUserId: String? = null,      // auth.uid() зареєстрованого користувача, знайденого за phone/email
     val mirrorCreditorId: String? = null,  // id дзеркального рядка в акаунті linkedUserId
+    /** Очікувана дата+час повернення боргу; `null` — не задано. Джерело нагадувань (core/notifications/DueReminderCoordinator). */
+    val dueDate: kotlin.time.Instant? = null,
+    /** Які додаткові нагадування-«за N днів» увімкнено (значення 1/2). Нагадування «того дня» — завжди, поки задано [dueDate]. */
+    val reminderLeadDays: Set<Int> = emptySet(),
 )
 
 data class DebtTransaction(

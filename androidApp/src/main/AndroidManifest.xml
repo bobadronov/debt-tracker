@@ -7,6 +7,13 @@
     <uses-permission android:name="android.permission.FLASHLIGHT"/>
     <!-- Показ системних сповіщень про дзеркальні борги (core/notifications) — потрібен runtime-запит на API 33+ -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Точні нагадування про повернення боргу в задану дату/час (core/notifications/AndroidReminderScheduler).
+         SCHEDULE_EXACT_ALARM — auto-grant на API ≤ 32; USE_EXACT_ALARM — на 33+ (для reminder-застосунків).
+         Якщо дозвіл недоступний, планувальник відкочується на неточний setAndAllowWhileIdle. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32"/>
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+    <!-- Перепланувати нагадування після перезавантаження (алярми не переживають reboot). -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-feature android:name="android.hardware.camera.autofocus"
         android:required="false" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
@@ -49,6 +56,19 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/debt_summary_widget_info" />
+        </receiver>
+
+        <!-- Due-date debt reminders (sharedUI: core/notifications). -->
+        <receiver
+            android:name="org.bigblackowl.debttracker.core.notifications.ReminderAlarmReceiver"
+            android:exported="false" />
+        <receiver
+            android:name="org.bigblackowl.debttracker.core.notifications.ReminderBootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
         </receiver>
     </application>
 

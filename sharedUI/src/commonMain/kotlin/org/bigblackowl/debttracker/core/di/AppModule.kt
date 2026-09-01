@@ -3,6 +3,7 @@ package org.bigblackowl.debttracker.core.di
 import com.russhwolf.settings.Settings
 import io.github.jan.supabase.SupabaseClient
 import kotlinx.coroutines.CoroutineScope
+import org.bigblackowl.debttracker.core.notifications.DueReminderCoordinator
 import org.bigblackowl.debttracker.core.notifications.NotificationsPoller
 import org.bigblackowl.debttracker.core.remote.createAppSupabaseClient
 import org.bigblackowl.debttracker.core.settings.AppSettings
@@ -83,6 +84,7 @@ val appModule = module {
     single<SessionRepository> { SupabaseSessionRepository(get(), get()) }
     single<NotificationRepository> { SupabaseNotificationRepository(get(), get()) }
     single { NotificationsPoller(get(), get(), get(), get(), get()) }
+    single { DueReminderCoordinator(get(), get(), get(), get(), get(), get()) }
     factoryOf(::DeleteAllDataUseCase)
     factoryOf(::ClearLocalCacheUseCase)
     factoryOf(::FindProfileByEmailUseCase)
@@ -109,10 +111,10 @@ val appModule = module {
     viewModelOf(::DebtorListViewModel)
     viewModelOf(::CreditorListViewModel)
     viewModelOf(::ContactPickerViewModel)
-    viewModel { (direction: DebtDirection, prefill: ContactPrefill?) ->
+    viewModel { (direction: DebtDirection, prefill: ContactPrefill?, editId: String?) ->
         AddEditContactViewModel(
-            direction, prefill,
-            get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),
+            direction, prefill, editId,
+            get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),
         )
     }
     viewModel { (debtorId: String) -> DebtorDetailViewModel(debtorId, get(), get(), get(), get(), get()) }

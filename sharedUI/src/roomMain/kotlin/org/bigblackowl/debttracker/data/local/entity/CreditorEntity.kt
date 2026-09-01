@@ -23,4 +23,6 @@ data class CreditorEntity(
     val isDeleted: Boolean = false,
     val linkedUserId: String? = null,
     val mirrorDebtorId: String? = null,
+    val dueDate: kotlin.time.Instant? = null,
+    val reminderLeadDays: String = "",
 )

@@ -2,8 +2,11 @@ package org.bigblackowl.debttracker.preview
 
 import kotlinx.coroutines.CoroutineScope
 import org.bigblackowl.debttracker.core.di.ApplicationScope
+import org.bigblackowl.debttracker.core.notifications.DueReminderCoordinator
+import org.bigblackowl.debttracker.core.notifications.InProcessReminderScheduler
 import org.bigblackowl.debttracker.core.notifications.LocalNotifier
 import org.bigblackowl.debttracker.core.notifications.NotificationsPoller
+import org.bigblackowl.debttracker.core.notifications.ReminderScheduler
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
 import org.bigblackowl.debttracker.core.sound.SoundPlayer
@@ -84,6 +87,8 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     single<LocalNotifier> { NoOpLocalNotifier() }
     single<CoroutineScope> { ApplicationScope() }
     single { NotificationsPoller(get(), get(), get(), get(), get()) }
+    single<ReminderScheduler> { InProcessReminderScheduler(get(), get()) }
+    single { DueReminderCoordinator(get(), get(), get(), get(), get(), get()) }
     factoryOf(::DeleteAllDataUseCase)
     factoryOf(::ClearLocalCacheUseCase)
     factoryOf(::FindProfileByEmailUseCase)
@@ -110,10 +115,10 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     viewModelOf(::DebtorListViewModel)
     viewModelOf(::CreditorListViewModel)
     viewModelOf(::ContactPickerViewModel)
-    viewModel { (direction: DebtDirection, prefill: ContactPrefill?) ->
+    viewModel { (direction: DebtDirection, prefill: ContactPrefill?, editId: String?) ->
         AddEditContactViewModel(
-            direction, prefill,
-            get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),
+            direction, prefill, editId,
+            get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),
         )
     }
     viewModel { (debtorId: String) -> DebtorDetailViewModel(debtorId, get(), get(), get(), get(), get()) }

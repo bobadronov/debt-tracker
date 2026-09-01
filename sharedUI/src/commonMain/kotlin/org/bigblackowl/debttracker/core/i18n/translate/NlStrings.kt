@@ -1,11 +1,13 @@
 package org.bigblackowl.debttracker.core.i18n.translate
 
+import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 
 // Eerste automatische vertaling – nog na te kijken door een moedertaalspreker.
 val NlStrings = Strings(
     cancel = "Annuleren",
     save = "Opslaan",
+    edit = "Bewerken",
     delete = "Verwijderen",
     deleteForever = "Definitief verwijderen",
     continueLabel = "Doorgaan",
@@ -65,6 +67,9 @@ val NlStrings = Strings(
     authGateUnlock = "Ontgrendelen",
     authGateBiometricFailed = "Kon niet verifiëren",
     authGateWrongPin = "Onjuiste pincode",
+    authGateUsePinCode = "Pincode gebruiken",
+    authGateUseBiometric = "Biometrie gebruiken",
+    authGateBackspace = "Cijfer wissen",
     biometricUnlockReason = "DebtTracker ontgrendelen",
     biometricEnableReason = "Bevestig om de app-vergrendeling in te schakelen",
     showPin = "Pincode tonen",
@@ -79,9 +84,11 @@ val NlStrings = Strings(
     onboardingAccountBody = "Log in om je debiteuren, crediteuren en transacties te back-uppen en op elk apparaat te zien — ja, zelfs die ene keer dat je neef geld leende en zweert dat het al terugbetaald is. Je kunt dit overslaan en alleen lokaal blijven; log later in via Instellingen.",
 
     addEditCreditorTitleNew = "Nieuwe crediteur",
+    addEditCreditorTitleEdit = "Crediteur bewerken",
     addEditCreditorInitialAmount = "Hoeveel ik heb geleend",
 
     addEditDebtorTitleNew = "Nieuwe debiteur",
+    addEditDebtorTitleEdit = "Debiteur bewerken",
     addEditDebtorInitialAmount = "Hoeveel ik heb uitgeleend",
 
     contactPickerTitle = "Kies een contact",
@@ -164,7 +171,9 @@ val NlStrings = Strings(
     settingsNotificationsBlocked = "Schakel ze in voor Debt Tracker in de apparaatinstellingen",
     settingsRunInBackground = "Op de achtergrond uitvoeren",
     settingsRunInBackgroundSubtitle = "Blijf synchroniseren in het systeemvak in plaats van afsluiten bij sluiten",
-    trayOpen = "Debt Tracker openen",
+    trayOpen = "Venster tonen",
+    trayHide = "Verbergen in systeemvak",
+    traySyncNow = "Nu synchroniseren",
     trayQuit = "Afsluiten",
     settingsTheme = "Thema",
     settingsThemeSystem = "Systeem",
@@ -271,4 +280,17 @@ val NlStrings = Strings(
     notificationBodyCreditorLinked = { name, amount, currency -> "$name is je $amount $currency schuldig" },
     notificationBodyDebtTransactionAdded = { name, amount, currency -> "$name heeft een transactie toegevoegd: $amount $currency" },
     notificationBodyCreditTransactionAdded = { name, amount, currency -> "$name heeft een transactie toegevoegd: $amount $currency" },
+    deleteContactConfirmTitle = "Contact verwijderen?",
+    deleteContactConfirmText = { name -> "$name en de volledige transactiegeschiedenis worden definitief verwijderd." },
+    dueReminder = DueReminderStrings(
+        label = "Herinnering voor terugbetaling",
+        notSet = "Niet ingesteld",
+        clear = "Wissen",
+        leadOnDay = "Op de dag zelf",
+        lead1Day = "1 dag ervoor",
+        lead2Days = "2 dagen ervoor",
+        debtorBody = { name, whenText -> "$name moet je de schuld terugbetalen: $whenText" },
+        creditorBody = { name, whenText -> "Je moet de schuld aan $name betalen: $whenText" },
+        whenToday = { time -> "vandaag om $time" },
+    ),
 )

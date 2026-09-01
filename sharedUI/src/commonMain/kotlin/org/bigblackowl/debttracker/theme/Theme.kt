@@ -1,6 +1,7 @@
 package org.bigblackowl.debttracker.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.darkColorScheme
@@ -87,6 +88,32 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 /**
+ * Resolves the [AppSettings.theme] preference (`"dark"` / `"light"` / anything else = follow the OS)
+ * to a concrete dark/light choice. Pure so it can be unit-tested without a composition.
+ */
+internal fun resolveIsDark(themePreference: String, systemIsDark: Boolean): Boolean =
+    when (themePreference) {
+        "dark" -> true
+        "light" -> false
+        else -> systemIsDark
+    }
+
+/** The app's Material 3 [ColorScheme] for the current [AppSettings.theme] preference. */
+internal fun appColorScheme(isDark: Boolean): ColorScheme =
+    if (isDark) DarkColorScheme else LightColorScheme
+
+/**
+ * The app's Material 3 [ColorScheme], for chrome that lives *outside* [AppTheme]'s own
+ * `MaterialTheme` — the desktop window title bar and the notification toast windows, which are
+ * separate compositions from [org.bigblackowl.debttracker.App].
+ */
+@Composable
+fun rememberAppColorScheme(): ColorScheme {
+    val settings = koinInject<AppSettings>()
+    return appColorScheme(resolveIsDark(settings.theme, isSystemInDarkTheme()))
+}
+
+/**
  * Applies the Material 3 color scheme (light/dark, resolved from
  * [AppSettings.theme] with a `"system"` fallback to [isSystemInDarkTheme]),
  * provides [LocalDebtAccentColors] for the debt/repay accent colors, and provides
@@ -98,19 +125,14 @@ internal fun AppTheme(
     content: @Composable () -> Unit
 ) {
     val settings = koinInject<AppSettings>()
-    val systemIsDark = isSystemInDarkTheme()
-    val isDark = when (settings.theme) {
-        "dark" -> true
-        "light" -> false
-        else -> systemIsDark
-    }
+    val isDark = resolveIsDark(settings.theme, isSystemInDarkTheme())
     onThemeChanged(!isDark)
     ProvideAppStrings(settings.locale) {
         CompositionLocalProvider(
             LocalDebtAccentColors provides if (isDark) DarkDebtAccentColors else LightDebtAccentColors
         ) {
             MaterialTheme(
-                colorScheme = if (isDark) DarkColorScheme else LightColorScheme,
+                colorScheme = appColorScheme(isDark),
                 content = { Surface(content = content) }
             )
         }

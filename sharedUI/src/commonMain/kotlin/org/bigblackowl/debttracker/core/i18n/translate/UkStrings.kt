@@ -1,10 +1,12 @@
 package org.bigblackowl.debttracker.core.i18n.translate
 
+import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 
 val UkStrings = Strings(
     cancel = "Скасувати",
     save = "Зберегти",
+    edit = "Редагувати",
     delete = "Видалити",
     deleteForever = "Видалити назавжди",
     continueLabel = "Продовжити",
@@ -64,6 +66,9 @@ val UkStrings = Strings(
     authGateUnlock = "Розблокувати",
     authGateBiometricFailed = "Не вдалося підтвердити",
     authGateWrongPin = "Невірний PIN",
+    authGateUsePinCode = "Ввести PIN-код",
+    authGateUseBiometric = "Використати біометрію",
+    authGateBackspace = "Стерти цифру",
     biometricUnlockReason = "Розблокування DebtTracker",
     biometricEnableReason = "Підтвердіть, щоб увімкнути захист входу",
     showPin = "Показати PIN",
@@ -78,9 +83,11 @@ val UkStrings = Strings(
     onboardingAccountBody = "Увійдіть, щоб резервувати боржників, кредиторів і транзакції та бачити їх на будь-якому пристрої — навіть той випадок, коли брат «точно» повернув борг, а ви досі не пригадаєте коли. Можна пропустити й користуватись лише локально — увійти можна пізніше в Налаштуваннях.",
 
     addEditCreditorTitleNew = "Новий кредитор",
+    addEditCreditorTitleEdit = "Редагувати кредитора",
     addEditCreditorInitialAmount = "Сума позики",
 
     addEditDebtorTitleNew = "Новий боржник",
+    addEditDebtorTitleEdit = "Редагувати боржника",
     addEditDebtorInitialAmount = "Сума виданої позики",
 
     contactPickerTitle = "Оберіть контакт",
@@ -163,7 +170,9 @@ val UkStrings = Strings(
     settingsNotificationsBlocked = "Увімкніть їх для Debt Tracker у налаштуваннях пристрою",
     settingsRunInBackground = "Працювати у фоні",
     settingsRunInBackgroundSubtitle = "Продовжувати синхронізацію в треї замість виходу при закритті",
-    trayOpen = "Відкрити Debt Tracker",
+    trayOpen = "Показати вікно",
+    trayHide = "Згорнути в трей",
+    traySyncNow = "Синхронізувати зараз",
     trayQuit = "Вийти",
     settingsTheme = "Тема",
     settingsThemeSystem = "Системна",
@@ -270,4 +279,17 @@ val UkStrings = Strings(
     notificationBodyCreditorLinked = { name, amount, currency -> "$name винен(на) вам $amount $currency" },
     notificationBodyDebtTransactionAdded = { name, amount, currency -> "$name додав(ла) операцію на $amount $currency" },
     notificationBodyCreditTransactionAdded = { name, amount, currency -> "$name додав(ла) операцію на $amount $currency" },
+    deleteContactConfirmTitle = "Видалити контакт?",
+    deleteContactConfirmText = { name -> "$name та всю історію операцій буде видалено назавжди." },
+    dueReminder = DueReminderStrings(
+        label = "Нагадування про повернення",
+        notSet = "Не задано",
+        clear = "Прибрати",
+        leadOnDay = "Того дня",
+        lead1Day = "За день",
+        lead2Days = "За 2 дні",
+        debtorBody = { name, whenText -> "$name має повернути вам борг: $whenText" },
+        creditorBody = { name, whenText -> "Вам заплановано виплату боргу для $name: $whenText" },
+        whenToday = { time -> "сьогодні о $time" },
+    ),
 )

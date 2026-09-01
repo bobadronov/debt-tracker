@@ -14,6 +14,9 @@ import org.bigblackowl.debttracker.domain.model.ScannedContact
  */
 data class AddEditContactState(
     val direction: DebtDirection = DebtDirection.DEBTOR,
+    /** true → editing an existing debtor/creditor: the direction toggle, opening amount and payment
+     * method are hidden (they only seed the very first transaction, which already exists). */
+    val isEditMode: Boolean = false,
     val isSaving: Boolean = false,
     val fullName: String = "",
     val phone: String = "",
@@ -22,6 +25,10 @@ data class AddEditContactState(
     val initialAmountText: String = "",
     val currency: Currency = Currency.UAH,
     val method: PaymentMethod = PaymentMethod.CASH,
+    /** Expected repayment/payment date+time; `null` — not set, no reminder. */
+    val dueDate: kotlin.time.Instant? = null,
+    /** Extra "N days before" reminders the user turned on (1 / 2). The on-the-day reminder is always on when [dueDate] is set. */
+    val reminderLeadDays: Set<Int> = emptySet(),
     val fullNameError: String? = null,
     val amountError: String? = null,
     /** Ненульове поки не знайдено збіг за email, не застосовано або не відхилено (§ProfileLookup autofill). */
@@ -40,6 +47,8 @@ sealed interface AddEditContactIntent {
     data class InitialAmountChanged(val value: String) : AddEditContactIntent
     data class CurrencyChanged(val value: Currency) : AddEditContactIntent
     data class MethodChanged(val value: PaymentMethod) : AddEditContactIntent
+    data class DueDateChanged(val value: kotlin.time.Instant?) : AddEditContactIntent
+    data class ToggleReminderLead(val days: Int) : AddEditContactIntent
     data object ApplyProfileSuggestion : AddEditContactIntent
     data object DismissProfileSuggestion : AddEditContactIntent
     data class NameSuggestionSelected(val suggestion: ContactSuggestion) : AddEditContactIntent

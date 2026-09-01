@@ -1,7 +1,9 @@
 package org.bigblackowl.debttracker.core.di
 
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.bigblackowl.debttracker.core.notifications.InProcessReminderScheduler
 import org.bigblackowl.debttracker.core.notifications.LocalNotifier
+import org.bigblackowl.debttracker.core.notifications.ReminderScheduler
 import org.bigblackowl.debttracker.core.notifications.WebLocalNotifier
 import org.bigblackowl.debttracker.core.security.RestoreCredentialClient
 import org.bigblackowl.debttracker.core.security.UnsupportedRestoreCredentialClient
@@ -30,6 +32,7 @@ actual fun platformDataModule(): Module = module {
         }
     }
     single<LocalNotifier> { WebLocalNotifier() }
+    single<ReminderScheduler> { InProcessReminderScheduler(get(), get()) }
     single<RestoreCredentialClient> { UnsupportedRestoreCredentialClient }
 }
 

@@ -31,7 +31,7 @@ import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.PinSetupDialog
-import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
+import org.bigblackowl.debttracker.ui.components.UnlockScaffold
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -68,15 +68,16 @@ fun ProtectionOnboardingScreen(
         }
     }
 
-    PlaceholderScreen(title = strings.onboardingProtectionTitle) {
+    UnlockScaffold(
+        title = strings.onboardingProtectionTitle,
+        subtitle = strings.onboardingProtectionBody,
+    ) {
         Icon(
             if (state.biometricAvailable) Icons.Filled.Fingerprint else Icons.Filled.Password,
             contentDescription = null,
             modifier = Modifier.size(Dimens.space60),
             tint = MaterialTheme.colorScheme.primary,
         )
-        Spacer(Modifier.height(Dimens.space16))
-        Text(strings.onboardingProtectionBody, textAlign = TextAlign.Center)
         state.error?.let {
             Spacer(Modifier.height(Dimens.space8))
             Text(it, color = MaterialTheme.debtAccentColors.debt, textAlign = TextAlign.Center)

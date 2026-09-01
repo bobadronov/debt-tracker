@@ -4,6 +4,8 @@ import org.bigblackowl.debttracker.data.local.entity.CreditorEntity
 import org.bigblackowl.debttracker.data.local.entity.CreditorTransactionEntity
 import org.bigblackowl.debttracker.domain.model.Creditor
 import org.bigblackowl.debttracker.domain.model.CreditorTransaction
+import org.bigblackowl.debttracker.domain.model.encodeReminderLeadDays
+import org.bigblackowl.debttracker.domain.model.parseReminderLeadDays
 
 /** [CreditorEntity]/[CreditorTransactionEntity] ↔ domain-model mapping — mirrors [org.bigblackowl.debttracker.data.local.mapper.DebtorMapper]. */
 fun CreditorEntity.toDomain() = Creditor(
@@ -21,6 +23,8 @@ fun CreditorEntity.toDomain() = Creditor(
     isDeleted = isDeleted,
     linkedUserId = linkedUserId,
     mirrorDebtorId = mirrorDebtorId,
+    dueDate = dueDate,
+    reminderLeadDays = parseReminderLeadDays(reminderLeadDays),
 )
 
 fun Creditor.toEntity() = CreditorEntity(
@@ -38,6 +42,8 @@ fun Creditor.toEntity() = CreditorEntity(
     isDeleted = isDeleted,
     linkedUserId = linkedUserId,
     mirrorDebtorId = mirrorDebtorId,
+    dueDate = dueDate,
+    reminderLeadDays = reminderLeadDays.encodeReminderLeadDays(),
 )
 
 fun CreditorTransactionEntity.toDomain() = CreditorTransaction(

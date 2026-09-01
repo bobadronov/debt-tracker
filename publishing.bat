@@ -1,22 +1,23 @@
 @echo off
-REM release.bat — interactively bump the app version and push a release
-REM that uploads to a chosen Google Play track.
+REM publishing.bat — interactively bump the app version and push a release
+REM that uploads to the Google Play production track.
 REM
 REM Flow:
-REM   1) enter the new version number (blank = auto-bump the patch number)
-REM   2) select the Play Store track (internal / alpha / beta / production)
+REM   1) enter the new VERSION_NAME (blank = auto-bump the patch number)
+REM   2) enter the new VERSION_CODE (blank = auto-bump +1 from the current one;
+REM      ask in case you already bumped it by hand in version.properties)
 REM   3) confirm, then bump version.properties and commit + push ALL pending
 REM      changes to main in one "Bump to vX.Y.Z" commit
 REM   4) dispatch the "Release" GitHub Actions workflow (.github/workflows/release.yml)
-REM      and show the run so it can be watched in Actions
+REM      with play_track=production, and show the run so it can be watched in Actions
 REM
 REM NOTE: this intentionally does NOT push a git tag. Pushing a `v*` tag
 REM separately triggers the workflow's own `on: push: tags:` path, which
-REM always uses play_track=internal (workflow_dispatch inputs aren't visible
-REM to tag-push-triggered runs) — that would kick off a second, redundant
-REM full build. softprops/action-gh-release creates the `vX.Y.Z` tag itself
-REM once this dispatched run reaches the github-release job, so the tag still
-REM ends up in the repo; run `git fetch --tags` afterwards to see it locally.
+REM uses the play_track default baked into release.yml (production) — that
+REM would kick off a second, redundant full build. softprops/action-gh-release
+REM creates the `vX.Y.Z` tag itself once this dispatched run reaches the
+REM github-release job, so the tag still ends up in the repo; run
+REM `git fetch --tags` afterwards to see it locally.
 
 setlocal enabledelayedexpansion
 
@@ -57,27 +58,20 @@ if "%NEW_NAME%"=="" (
     )
     set NEW_NAME=!MAJOR!.!MINOR!.!PATCH!
 )
-set /a NEW_CODE=%CURRENT_CODE%+1
 
-REM --- Select Play Store track ---
-echo.
-set PLAY_TRACK=
-:ask_track
-echo Select Play Store track:
-echo   1) internal
-echo   2) alpha
-echo   3) beta
-echo   4) production
-set /p TRACK_CHOICE="Enter 1-4: "
-if "%TRACK_CHOICE%"=="1" set PLAY_TRACK=internal
-if "%TRACK_CHOICE%"=="2" set PLAY_TRACK=alpha
-if "%TRACK_CHOICE%"=="3" set PLAY_TRACK=beta
-if "%TRACK_CHOICE%"=="4" set PLAY_TRACK=production
-if "%PLAY_TRACK%"=="" (
-    echo Invalid choice, try again.
-    echo.
-    goto ask_track
+REM --- Ask for the version code (may already be bumped by hand) ---
+set /a AUTO_CODE=%CURRENT_CODE%+1
+set NEW_CODE=
+set /p NEW_CODE="Enter new VERSION_CODE (blank = auto-bump %CURRENT_CODE% to !AUTO_CODE!): "
+if "!NEW_CODE!"=="" set NEW_CODE=!AUTO_CODE!
+echo !NEW_CODE!| findstr /r "^[0-9][0-9]*$" >nul
+if errorlevel 1 (
+    echo ERROR: VERSION_CODE must be a positive integer.
+    exit /b 1
 )
+
+REM --- Play Store track: always production for a publishing run ---
+set PLAY_TRACK=production
 
 REM --- Show what will change, and confirm ---
 echo.

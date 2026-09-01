@@ -85,12 +85,13 @@ one shot on a fresh Supabase project) to recover both the app and its backend.
   browser's own `print()`, letting the user "Save as PDF" through the OS/
   browser dialog with correct Cyrillic via the browser's native text
   rendering.
-- **Android home-screen widget** (Glance) — a `LazyVerticalGrid` with
-  `GridCells.Adaptive`, reflowing from one to two columns as the widget is
-  resized, each row an icon-badge KPI (colored circular badge + trend icon,
-  matching the Stats screen's accent colors) showing one of the two running
-  totals. Ships a static XML widget-preview so Android's widget picker shows
-  a realistic thumbnail before placement.
+- **Android home-screen widget** (Glance) — a **fixed-size** 2×2 tile
+  (`android:resizeMode="none"`, `SizeMode.Single`), two stacked icon-badge KPIs
+  (colored circular badge + trend icon, matching the Stats screen's accent
+  colors) showing the two running totals ("Мені винні" / "Я винен"). Not
+  user-resizable — the layout is tuned for one size only. Ships a static XML
+  widget-preview so Android's widget picker shows a realistic thumbnail before
+  placement.
 - **In-app update check (Android)** — uses Google Play's in-app update API
   (`app-update-ktx`), not GitHub; Settings shows live status (`Checking`,
   `UpToDate`, `CheckFailed`, `Downloading`, `DownloadFailed`) next to the
@@ -421,12 +422,12 @@ notes — the `.aab` is Play-Store-only and isn't attached). `SUPABASE_URL`/
 `SUPABASE_ANON_KEY` and the four `ANDROID_*` signing secrets are wired in via
 repo/Actions secrets — see §8.
 
-A local convenience script, `release.bat` (gitignored, Windows-only),
-interactively prompts for the new version number and the Play Store track
-(internal/alpha/beta/production), then bumps `version.properties`, commits,
-pushes to main, and dispatches the Release workflow via `gh workflow run` —
-not required to rebuild the project, just a personal shortcut worth
-recreating if useful.
+A local convenience script, `publishing.bat` (Windows-only), interactively
+prompts for the new `VERSION_NAME` and `VERSION_CODE` (blank = auto-bump),
+then bumps `version.properties`, commits + pushes ALL pending changes to
+main, and dispatches the Release workflow via `gh workflow run` with
+`play_track=production` — not required to rebuild the project, just a
+personal shortcut.
 
 ## 11. Conventions
 

@@ -27,7 +27,8 @@ fun AddEditContactScreen(
     direction: DebtDirection,
     onDone: () -> Unit,
     prefill: ContactPrefill? = null,
-    viewModel: AddEditContactViewModel = koinViewModel { parametersOf(direction, prefill) },
+    editId: String? = null,
+    viewModel: AddEditContactViewModel = koinViewModel { parametersOf(direction, prefill, editId) },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -43,8 +44,10 @@ fun AddEditContactScreen(
     }
 
     val title = when (state.direction) {
-        DebtDirection.DEBTOR -> strings.addEditDebtorTitleNew
-        DebtDirection.CREDITOR -> strings.addEditCreditorTitleNew
+        DebtDirection.DEBTOR ->
+            if (state.isEditMode) strings.addEditDebtorTitleEdit else strings.addEditDebtorTitleNew
+        DebtDirection.CREDITOR ->
+            if (state.isEditMode) strings.addEditCreditorTitleEdit else strings.addEditCreditorTitleNew
     }
     val initialAmountLabel = when (state.direction) {
         DebtDirection.DEBTOR -> strings.addEditDebtorInitialAmount
@@ -55,7 +58,9 @@ fun AddEditContactScreen(
         title = title,
         onDone = onDone,
         snackbarHostState = snackbarHostState,
-        direction = state.direction,
+        isEditMode = state.isEditMode,
+        // In edit mode a debtor stays a debtor — the direction toggle is hidden (null).
+        direction = state.direction.takeUnless { state.isEditMode },
         onDirectionChange = { viewModel.onIntent(AddEditContactIntent.DirectionChanged(it)) },
         avatarUrl = state.suggestedAvatarUrl,
         fullName = state.fullName,
@@ -80,9 +85,15 @@ fun AddEditContactScreen(
         onCurrencyChange = { viewModel.onIntent(AddEditContactIntent.CurrencyChanged(it)) },
         method = state.method,
         onMethodChange = { viewModel.onIntent(AddEditContactIntent.MethodChanged(it)) },
+        dueDate = state.dueDate,
+        onDueDateChange = { viewModel.onIntent(AddEditContactIntent.DueDateChanged(it)) },
+        reminderLeadDays = state.reminderLeadDays,
+        onToggleReminderLead = { viewModel.onIntent(AddEditContactIntent.ToggleReminderLead(it)) },
         isSaving = state.isSaving,
         onSave = { viewModel.onIntent(AddEditContactIntent.Save) },
-        onScannedContact = { contact -> viewModel.onIntent(AddEditContactIntent.ApplyScannedContact(contact)) },
+        onScannedContact = if (state.isEditMode) null else {
+            { contact -> viewModel.onIntent(AddEditContactIntent.ApplyScannedContact(contact)) }
+        },
     )
 }
 

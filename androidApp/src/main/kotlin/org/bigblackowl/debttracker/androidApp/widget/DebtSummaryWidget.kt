@@ -61,8 +61,12 @@ import org.koin.core.context.GlobalContext
  */
 class DebtSummaryWidget : GlanceAppWidget() {
 
-    /** Реальний поточний розмір (а не лише minWidth/minHeight) — потрібен для [WidgetUi] масштабування. */
-    override val sizeMode: SizeMode = SizeMode.Exact
+    /**
+     * Віджет має фіксований розмір (resizeMode="none" у debt_summary_widget_info.xml), тож
+     * [SizeMode.Single] — [WidgetUi] отримує один розмір (minWidth/minHeight з провайдера) і не
+     * мусить перемальовуватись під час зміни розміру користувачем.
+     */
+    override val sizeMode: SizeMode = SizeMode.Single
 
     @RequiresApi(Build.VERSION_CODES.S)
     @SuppressLint("RestrictedApi")
@@ -140,7 +144,7 @@ fun WidgetUi(
     creditorsLabel: String = "Я винен",
     debtorsDescription: String = "$debtorsLabel: $debtorsAmount",
     creditorsDescription: String = "$creditorsLabel: $creditorsAmount",
-) {
+) = GlanceTheme {
     val size = LocalSize.current
     val w = size.width
     val h = size.height
@@ -148,49 +152,48 @@ fun WidgetUi(
     val gap = 6.dp
 
     // Стовпчик двох пігулок вимагає висоти; інакше (і на широкому короткому) — пігулки поряд.
-    val stacked = h >= 116.dp
+    val stacked = h >= 110.dp
 
-    GlanceTheme {
-        Box(
-            modifier = GlanceModifier
-                .fillMaxSize()
-                .background(GlanceTheme.colors.widgetBackground)
-                .cornerRadius(24.dp)
-                .clickable(actionStartActivity(AppActivity::class.java))
-                .padding(outer),
-            contentAlignment = Alignment.Center,
-        ) {
-            val debtors = Metric(
-                R.drawable.ic_widget_trend_down, debtorsLabel, debtorsAmount, debtorsDescription,
-                RepayColor, RepayPillColor, RepayBadgeColor,
-            )
-            val creditors = Metric(
-                R.drawable.ic_widget_trend_up, creditorsLabel, creditorsAmount, creditorsDescription,
-                DebtColor, DebtPillColor, DebtBadgeColor,
-            )
+    Box(
+        modifier = GlanceModifier
+            .fillMaxSize()
+            .background(GlanceTheme.colors.widgetBackground)
+            .cornerRadius(24.dp)
+            .clickable(actionStartActivity(AppActivity::class.java))
+            .padding(outer),
+        contentAlignment = Alignment.Center,
+    ) {
+        val debtors = Metric(
+            R.drawable.ic_widget_trend_down, debtorsLabel, debtorsAmount, debtorsDescription,
+            RepayColor, RepayPillColor, RepayBadgeColor,
+        )
 
-            if (stacked) {
-                val pillH = ((h - outer * 2 - gap) / 2).coerceIn(44.dp, 104.dp)
-                val pillW = w - outer * 2
-                val spec = pillSpec(pillH, pillW)
-                Column(modifier = GlanceModifier.fillMaxWidth()) {
-                    KpiPill(GlanceModifier.fillMaxWidth(), debtors, spec)
-                    Spacer(GlanceModifier.height(gap))
-                    KpiPill(GlanceModifier.fillMaxWidth(), creditors, spec)
-                }
-            } else {
-                val cellH = (h - outer * 2).coerceIn(28.dp, 84.dp)
-                val cellW = (w - outer * 2 - gap) / 2
-                val badge = minOf(cellH * 0.62f, cellW * 0.34f).coerceIn(20.dp, 44.dp)
-                val amountFont = (badge.value * 0.5f).coerceIn(12f, 19f).sp
-                Row(
-                    modifier = GlanceModifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Vertical.CenterVertically,
-                ) {
-                    MiniMetric(GlanceModifier.defaultWeight(), debtors, cellH, badge, amountFont)
-                    Spacer(GlanceModifier.width(gap))
-                    MiniMetric(GlanceModifier.defaultWeight(), creditors, cellH, badge, amountFont)
-                }
+        val creditors = Metric(
+            R.drawable.ic_widget_trend_up, creditorsLabel, creditorsAmount, creditorsDescription,
+            DebtColor, DebtPillColor, DebtBadgeColor,
+        )
+
+        if (stacked) {
+            val pillH = ((h - outer * 2 - gap) / 2).coerceIn(44.dp, 104.dp)
+            val pillW = w - outer * 2
+            val spec = pillSpec(pillH, pillW)
+            Column(modifier = GlanceModifier.fillMaxWidth()) {
+                KpiPill(GlanceModifier.fillMaxWidth(), debtors, spec)
+                Spacer(GlanceModifier.height(gap))
+                KpiPill(GlanceModifier.fillMaxWidth(), creditors, spec)
+            }
+        } else {
+            val cellH = (h - outer * 2).coerceIn(28.dp, 84.dp)
+            val cellW = (w - outer * 2 - gap) / 2
+            val badge = minOf(cellH * 0.62f, cellW * 0.34f).coerceIn(20.dp, 44.dp)
+            val amountFont = (badge.value * 0.5f).coerceIn(12f, 19f).sp
+            Row(
+                modifier = GlanceModifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Vertical.CenterVertically,
+            ) {
+                MiniMetric(GlanceModifier.defaultWeight(), debtors, cellH, badge, amountFont)
+                Spacer(GlanceModifier.width(gap))
+                MiniMetric(GlanceModifier.defaultWeight(), creditors, cellH, badge, amountFont)
             }
         }
     }

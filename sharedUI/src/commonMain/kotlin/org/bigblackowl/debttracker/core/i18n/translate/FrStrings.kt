@@ -1,11 +1,13 @@
 package org.bigblackowl.debttracker.core.i18n.translate
 
+import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 
 // Première traduction automatique – à relire par un locuteur natif.
 val FrStrings = Strings(
     cancel = "Annuler",
     save = "Enregistrer",
+    edit = "Modifier",
     delete = "Supprimer",
     deleteForever = "Supprimer définitivement",
     continueLabel = "Continuer",
@@ -65,6 +67,9 @@ val FrStrings = Strings(
     authGateUnlock = "Déverrouiller",
     authGateBiometricFailed = "Vérification impossible",
     authGateWrongPin = "Code PIN incorrect",
+    authGateUsePinCode = "Utiliser le code PIN",
+    authGateUseBiometric = "Utiliser la biométrie",
+    authGateBackspace = "Supprimer le chiffre",
     biometricUnlockReason = "Déverrouiller DebtTracker",
     biometricEnableReason = "Confirmez pour activer le verrouillage de l'app",
     showPin = "Afficher le PIN",
@@ -79,9 +84,11 @@ val FrStrings = Strings(
     onboardingAccountBody = "Connectez-vous pour sauvegarder vos débiteurs, créanciers et transactions, et les retrouver sur n'importe quel appareil — oui, même cette fois où votre cousin a emprunté de l'argent et jure que c'est déjà remboursé. Vous pouvez ignorer et rester en local uniquement ; connectez-vous plus tard depuis les Paramètres.",
 
     addEditCreditorTitleNew = "Nouveau créancier",
+    addEditCreditorTitleEdit = "Modifier le créancier",
     addEditCreditorInitialAmount = "Combien j'ai emprunté",
 
     addEditDebtorTitleNew = "Nouveau débiteur",
+    addEditDebtorTitleEdit = "Modifier le débiteur",
     addEditDebtorInitialAmount = "Combien j'ai prêté",
 
     contactPickerTitle = "Choisir un contact",
@@ -164,7 +171,9 @@ val FrStrings = Strings(
     settingsNotificationsBlocked = "Activez-les pour Debt Tracker dans les réglages de l'appareil",
     settingsRunInBackground = "Exécuter en arrière-plan",
     settingsRunInBackgroundSubtitle = "Continuer la synchro dans la barre d'état plutôt que de quitter à la fermeture",
-    trayOpen = "Ouvrir Debt Tracker",
+    trayOpen = "Afficher la fenêtre",
+    trayHide = "Réduire dans la barre",
+    traySyncNow = "Synchroniser maintenant",
     trayQuit = "Quitter",
     settingsTheme = "Thème",
     settingsThemeSystem = "Système",
@@ -271,4 +280,17 @@ val FrStrings = Strings(
     notificationBodyCreditorLinked = { name, amount, currency -> "$name vous doit $amount $currency" },
     notificationBodyDebtTransactionAdded = { name, amount, currency -> "$name a ajouté une transaction : $amount $currency" },
     notificationBodyCreditTransactionAdded = { name, amount, currency -> "$name a ajouté une transaction : $amount $currency" },
+    deleteContactConfirmTitle = "Supprimer le contact ?",
+    deleteContactConfirmText = { name -> "$name et tout son historique de transactions seront définitivement supprimés." },
+    dueReminder = DueReminderStrings(
+        label = "Rappel de remboursement",
+        notSet = "Non défini",
+        clear = "Effacer",
+        leadOnDay = "Le jour même",
+        lead1Day = "1 jour avant",
+        lead2Days = "2 jours avant",
+        debtorBody = { name, whenText -> "$name doit vous rembourser : $whenText" },
+        creditorBody = { name, whenText -> "Vous devez rembourser $name : $whenText" },
+        whenToday = { time -> "aujourd'hui à \$time" },
+    ),
 )

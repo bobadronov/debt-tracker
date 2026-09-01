@@ -37,6 +37,8 @@ fun DebtorEntity.toDto(userId: String) = DebtorDto(
     isDeleted = isDeleted,
     linkedUserId = linkedUserId,
     mirrorCreditorId = mirrorCreditorId,
+    dueDate = dueDate?.toString(),
+    reminderLeadDays = reminderLeadDays,
     createdAt = createdAt.toString(),
     updatedAt = updatedAt.toString(),
 )
@@ -56,6 +58,8 @@ fun DebtorDto.toEntity() = DebtorEntity(
     isDeleted = isDeleted,
     linkedUserId = linkedUserId,
     mirrorCreditorId = mirrorCreditorId,
+    dueDate = dueDate?.let { kotlin.time.Instant.parse(it) },
+    reminderLeadDays = reminderLeadDays,
 )
 
 fun DebtTransactionEntity.toDto(userId: String) = DebtTransactionDto(
@@ -103,6 +107,8 @@ fun CreditorEntity.toDto(userId: String) = CreditorDto(
     isDeleted = isDeleted,
     linkedUserId = linkedUserId,
     mirrorDebtorId = mirrorDebtorId,
+    dueDate = dueDate?.toString(),
+    reminderLeadDays = reminderLeadDays,
     createdAt = createdAt.toString(),
     updatedAt = updatedAt.toString(),
 )
@@ -122,6 +128,8 @@ fun CreditorDto.toEntity() = CreditorEntity(
     isDeleted = isDeleted,
     linkedUserId = linkedUserId,
     mirrorDebtorId = mirrorDebtorId,
+    dueDate = dueDate?.let { kotlin.time.Instant.parse(it) },
+    reminderLeadDays = reminderLeadDays,
 )
 
 fun CreditorTransactionEntity.toDto(userId: String) = CreditorTransactionDto(

@@ -31,6 +31,7 @@ fun CreditorDetailScreen(
     creditorId: String,
     onBack: () -> Unit,
     onExport: () -> Unit,
+    onEdit: () -> Unit = {},
     viewModel: CreditorDetailViewModel = koinViewModel { parametersOf(creditorId) },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -55,6 +56,7 @@ fun CreditorDetailScreen(
         onBack = onBack,
         exportLabel = strings.creditorDetailExport,
         onExport = onExport,
+        onEdit = onEdit.takeIf { state.creditor != null },
         snackbarHostState = snackbarHostState,
         phone = state.creditor?.phone,
         comment = state.creditor?.comment,

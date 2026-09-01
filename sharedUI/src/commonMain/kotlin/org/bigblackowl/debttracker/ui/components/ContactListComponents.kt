@@ -55,6 +55,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.koin.compose.koinInject
 
@@ -174,7 +175,9 @@ fun ContactRow(
 ) {
     val appSettings = koinInject<AppSettings>()
     val haptics = LocalHapticFeedback.current
+    val strings = LocalStrings.current
     var menuOpen by remember { mutableStateOf(false) }
+    var confirmDelete by remember { mutableStateOf(false) }
 
     OutlinedCard(
         onClick = onClick,
@@ -206,14 +209,28 @@ fun ContactRow(
                             leadingIcon = { Icon(Icons.Default.DeleteOutline, contentDescription = null) },
                             onClick = {
                                 menuOpen = false
-                                if (appSettings.hapticEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onDelete()
+                                confirmDelete = true
                             },
                         )
                     }
                 }
             }
         }
+    }
+
+    if (confirmDelete) {
+        ConfirmDialog(
+            title = strings.deleteContactConfirmTitle,
+            text = strings.deleteContactConfirmText(name),
+            confirmLabel = strings.delete,
+            confirmColor = MaterialTheme.colorScheme.error,
+            onConfirm = {
+                confirmDelete = false
+                if (appSettings.hapticEnabled) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                onDelete()
+            },
+            onDismiss = { confirmDelete = false },
+        )
     }
 }
 
