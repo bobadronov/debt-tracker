@@ -8,16 +8,15 @@ REM   2) enter the new VERSION_CODE (blank = auto-bump +1 from the current one;
 REM      ask in case you already bumped it by hand in version.properties)
 REM   3) confirm, then bump version.properties and commit + push ALL pending
 REM      changes to main in one "Bump to vX.Y.Z" commit
-REM   4) dispatch the "Release" GitHub Actions workflow (.github/workflows/release.yml)
-REM      with play_track=production, and show the run so it can be watched in Actions
+REM   4) create the vX.Y.Z git tag and push it — that is what triggers the
+REM      "Release" GitHub Actions workflow (.github/workflows/release.yml) via its
+REM      `on: push: tags: 'v*'` path. Then show the run so it can be watched.
 REM
-REM NOTE: this intentionally does NOT push a git tag. Pushing a `v*` tag
-REM separately triggers the workflow's own `on: push: tags:` path, which
-REM uses the play_track default baked into release.yml (production) — that
-REM would kick off a second, redundant full build. softprops/action-gh-release
-REM creates the `vX.Y.Z` tag itself once this dispatched run reaches the
-REM github-release job, so the tag still ends up in the repo; run
-REM `git fetch --tags` afterwards to see it locally.
+REM Why a tag push and not `gh workflow run` (workflow_dispatch): the tag path
+REM has the long track record here, needs no gh scopes, and the workflow's
+REM baked-in play_track default is already `production` — exactly what a
+REM publishing run wants. softprops/action-gh-release attaches the build to the
+REM vX.Y.Z tag/release this pushes.
 
 setlocal enabledelayedexpansion
 
@@ -25,12 +24,15 @@ cd /d "%~dp0"
 
 where gh >nul 2>nul
 if errorlevel 1 (
-    echo ERROR: gh CLI not found. Install it from https://cli.github.com and run "gh auth login".
-    exit /b 1
+    echo WARNING: gh CLI not found — the release will still be triggered by the
+    echo tag push, but this script can't show/watch the run. Install it from
+    echo https://cli.github.com to get run watching.
+    set NO_GH=1
 )
 
 if not exist version.properties (
     echo ERROR: version.properties not found. Run this from the repo root.
+    pause
     exit /b 1
 )
 
@@ -42,6 +44,7 @@ for /f "usebackq tokens=1,2 delims==" %%A in ("version.properties") do (
 
 if "%CURRENT_NAME%"=="" (
     echo ERROR: could not read VERSION_NAME from version.properties.
+    pause
     exit /b 1
 )
 
@@ -67,11 +70,28 @@ if "!NEW_CODE!"=="" set NEW_CODE=!AUTO_CODE!
 echo !NEW_CODE!| findstr /r "^[0-9][0-9]*$" >nul
 if errorlevel 1 (
     echo ERROR: VERSION_CODE must be a positive integer.
+    pause
     exit /b 1
 )
 
-REM --- Play Store track: always production for a publishing run ---
+REM --- Play Store track: the workflow's own default (production) is used on a
+REM     tag push; shown here just so the confirm screen is explicit. ---
 set PLAY_TRACK=production
+
+REM --- Bail early if the tag already exists (locally or on origin) ---
+git rev-parse -q --verify "refs/tags/v!NEW_NAME!" >nul 2>nul
+if not errorlevel 1 (
+    echo ERROR: tag v!NEW_NAME! already exists locally. Pick another version, or
+    echo delete it with: git tag -d v!NEW_NAME!
+    pause
+    exit /b 1
+)
+git ls-remote --exit-code --tags origin "v!NEW_NAME!" >nul 2>nul
+if not errorlevel 1 (
+    echo ERROR: tag v!NEW_NAME! already exists on origin. Pick another version.
+    pause
+    exit /b 1
+)
 
 REM --- Show what will change, and confirm ---
 echo.
@@ -79,13 +99,14 @@ echo ============================================
 echo   version.properties will change:
 echo     VERSION_NAME=%CURRENT_NAME%  -^>  !NEW_NAME!
 echo     VERSION_CODE=%CURRENT_CODE%  -^>  !NEW_CODE!
-echo   Play Store track: %PLAY_TRACK%
+echo   Play Store track: %PLAY_TRACK% (workflow default)
+echo   Git tag to push:  v!NEW_NAME!
 echo ============================================
 echo.
 echo   All of the following pending changes will be committed and pushed:
 git status --short
 echo.
-set /p CONFIRM="Bump the version, commit + push ALL of the above to main, and dispatch the Release workflow now? (y/N): "
+set /p CONFIRM="Bump the version, commit + push ALL of the above to main, then tag and push v!NEW_NAME! to trigger the Release workflow? (y/N): "
 if /i not "%CONFIRM%"=="y" (
     echo Aborted. No changes made.
     goto :end
@@ -96,6 +117,7 @@ powershell -NoProfile -Command ^
   "(Get-Content version.properties -Raw) -replace 'VERSION_NAME=.*', 'VERSION_NAME=!NEW_NAME!' -replace 'VERSION_CODE=.*', 'VERSION_CODE=!NEW_CODE!' | Set-Content version.properties -NoNewline"
 if errorlevel 1 (
     echo ERROR: failed to update version.properties.
+    pause
     exit /b 1
 )
 
@@ -104,51 +126,72 @@ REM     so the release is built from exactly what's on disk right now ---
 git add -A
 if errorlevel 1 (
     echo ERROR: git add failed.
+    pause
     exit /b 1
 )
 
 git commit -m "Bump to v!NEW_NAME!"
 if errorlevel 1 (
     echo ERROR: git commit failed.
+    pause
     exit /b 1
 )
 
 git push origin main
 if errorlevel 1 (
     echo ERROR: git push origin main failed. The commit is local only; fix the
-    echo push (e.g. pull/rebase) and re-run, or push manually then dispatch with:
-    echo   gh workflow run release.yml --ref main -f release_tag=v!NEW_NAME! -f play_track=%PLAY_TRACK%
+    echo push ^(e.g. pull/rebase^) and re-run, or push manually then tag with:
+    echo   git tag v!NEW_NAME! ^&^& git push origin v!NEW_NAME!
+    pause
+    exit /b 1
+)
+
+REM --- Tag the just-pushed commit and push the tag — this triggers release.yml ---
+git tag "v!NEW_NAME!"
+if errorlevel 1 (
+    echo ERROR: git tag v!NEW_NAME! failed. main is already pushed; create and
+    echo push the tag manually: git tag v!NEW_NAME! ^&^& git push origin v!NEW_NAME!
+    pause
+    exit /b 1
+)
+
+git push origin "v!NEW_NAME!"
+if errorlevel 1 (
+    echo ERROR: pushing tag v!NEW_NAME! failed. main is already pushed; retry:
+    echo   git push origin v!NEW_NAME!
+    pause
     exit /b 1
 )
 
 echo.
-echo Dispatching Release workflow ^(play_track=%PLAY_TRACK%^) for v!NEW_NAME!...
-gh workflow run release.yml --ref main -f release_tag=v!NEW_NAME! -f play_track=%PLAY_TRACK%
-if errorlevel 1 (
-    echo ERROR: gh workflow run failed. The version bump was already pushed to main;
-    echo you can retry the dispatch manually with:
-    echo   gh workflow run release.yml --ref main -f release_tag=v!NEW_NAME! -f play_track=%PLAY_TRACK%
-    exit /b 1
-)
+echo Tag v!NEW_NAME! pushed — the Release workflow should start shortly.
+
+if defined NO_GH goto :done_nogh
 
 echo Waiting for the run to register...
-timeout /t 8 /nobreak >nul
+timeout /t 10 /nobreak >nul
 
 set RUN_ID=
 for /f "usebackq tokens=* delims=" %%i in (`gh run list --workflow=release.yml --limit 1 --json databaseId --jq ".[0].databaseId"`) do set RUN_ID=%%i
 
 if "%RUN_ID%"=="" (
-    echo Could not resolve the run id; listing recent runs instead:
-    gh run list --workflow=release.yml --limit 3
-    echo Watch it with: gh run watch --exit-status
-) else (
-    echo Watching release run %RUN_ID% ^(Ctrl+C to stop watching -- the run keeps going^):
-    gh run watch %RUN_ID% --exit-status
+    echo Could not resolve the run id yet; list it with:
+    echo   gh run list --workflow=release.yml --limit 3
+    goto :done
 )
 
+echo Watching release run %RUN_ID% ^(Ctrl+C to stop watching -- the run keeps going^):
+gh run watch %RUN_ID% --exit-status
+goto :done
+
+:done_nogh
+echo Check progress at: https://github.com/bobadronov/debt-tracker/actions/workflows/release.yml
+
+:done
 echo.
-echo Once it completes, run "git fetch --tags" to pull down the v!NEW_NAME! tag
-echo that the release job creates on GitHub.
+echo When it completes, run "git fetch --tags" — the v!NEW_NAME! tag is already
+echo on origin; the workflow's github-release job attaches the build to it.
 
 :end
 endlocal
+pause
