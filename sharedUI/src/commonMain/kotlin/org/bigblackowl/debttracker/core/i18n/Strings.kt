@@ -13,6 +13,16 @@ data class ExchangeRatesStrings(
     /** ⋮ меню + заголовок екрана. */
     val menuTitle: String,
     val sourceLabel: String,
+    /** Лейбл селектора базової валюти (активний лише для джерел із довільною базою). */
+    val baseLabel: String,
+    /** Лейбл поля суми-конвертера (кожен курс множиться на неї). */
+    val amountLabel: String,
+    /** Placeholder поля пошуку валюти. */
+    val searchHint: String,
+    /** Заголовок секції закріплених валют + опис зірки. */
+    val pinned: String,
+    /** Порожній результат пошуку. */
+    val noResults: String,
     /** Підзаголовок під джерелом: у якій валюті котирування ([base] — напр. "UAH ₴"). */
     val quotedIn: (base: String) -> String,
     val updated: (date: String) -> String,

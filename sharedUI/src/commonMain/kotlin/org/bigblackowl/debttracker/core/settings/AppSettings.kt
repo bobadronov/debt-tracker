@@ -78,6 +78,27 @@ class AppSettings(private val settings: Settings) {
             else settings.putString(KEY_EXCHANGE_RATES_CACHE, value)
         }
 
+    /** Останнє обране джерело курсів ([org.bigblackowl.debttracker.domain.model.RateSource] name); `null` — дефолт. Не UI-стан. */
+    var exchangeRatesSource: String?
+        get() = settings.getStringOrNull(KEY_EXCHANGE_RATES_SOURCE)
+        set(value) {
+            if (value == null) settings.remove(KEY_EXCHANGE_RATES_SOURCE)
+            else settings.putString(KEY_EXCHANGE_RATES_SOURCE, value)
+        }
+
+    /** Остання обрана базова валюта курсів (ISO-код) для джерел із довільною базою; `null` — дефолт. Не UI-стан. */
+    var exchangeRatesBase: String?
+        get() = settings.getStringOrNull(KEY_EXCHANGE_RATES_BASE)
+        set(value) {
+            if (value == null) settings.remove(KEY_EXCHANGE_RATES_BASE)
+            else settings.putString(KEY_EXCHANGE_RATES_BASE, value)
+        }
+
+    /** Закріплені користувачем валюти на екрані курсів — CSV ISO-кодів. Порожній рядок — жодної. Не UI-стан. */
+    var exchangeRatesPinnedCsv: String
+        get() = settings.getString(KEY_EXCHANGE_RATES_PINNED, "")
+        set(value) = settings.putString(KEY_EXCHANGE_RATES_PINNED, value)
+
     /**
      * Whether an OS restore credential (zero-tap sign-in) has already been registered for the
      * account signed in on this install — a local guard so [org.bigblackowl.debttracker.data.remote.RestoreCredentialCoordinator]
@@ -130,6 +151,9 @@ class AppSettings(private val settings: Settings) {
         const val KEY_NOTIFICATIONS_PERMISSION_REQUESTED = "notifications_permission_requested"
         const val KEY_RESTORE_CREDENTIAL_REGISTERED = "restore_credential_registered"
         const val KEY_EXCHANGE_RATES_CACHE = "exchange_rates_cache"
+        const val KEY_EXCHANGE_RATES_SOURCE = "exchange_rates_source"
+        const val KEY_EXCHANGE_RATES_BASE = "exchange_rates_base"
+        const val KEY_EXCHANGE_RATES_PINNED = "exchange_rates_pinned"
     }
 }
 

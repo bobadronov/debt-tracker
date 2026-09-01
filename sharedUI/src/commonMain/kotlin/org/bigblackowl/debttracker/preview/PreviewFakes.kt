@@ -442,21 +442,34 @@ class NoOpSoundPlayer : SoundPlayer {
 
 /** Статичний зріз курсів для @Preview [org.bigblackowl.debttracker.ui.screens.exchange.ExchangeRatesScreen] — без мережі. */
 class FakeExchangeRatesRepository : org.bigblackowl.debttracker.domain.repository.ExchangeRatesRepository {
-    private fun snapshot(source: org.bigblackowl.debttracker.domain.model.RateSource) =
+    private fun snapshot(source: org.bigblackowl.debttracker.domain.model.RateSource, baseCode: String) =
         org.bigblackowl.debttracker.domain.model.ExchangeRatesSnapshot(
             source = source,
+            base = org.bigblackowl.debttracker.domain.model.FiatCurrencies.of(
+                if (source.arbitraryBase) baseCode else source.baseCode,
+            ),
             rates = listOf(
-                org.bigblackowl.debttracker.domain.model.ExchangeRate(Currency.USD, 41.15, 41.65),
-                org.bigblackowl.debttracker.domain.model.ExchangeRate(Currency.EUR, 44.30, 45.10),
-                org.bigblackowl.debttracker.domain.model.ExchangeRate(Currency.PLN, 10.35, 10.72),
-                org.bigblackowl.debttracker.domain.model.ExchangeRate(Currency.UAH, 0.024, 0.024),
-            ).filter { it.currency.code != source.baseCode },
+                "USD" to (41.15 to 41.65),
+                "EUR" to (44.30 to 45.10),
+                "GBP" to (52.10 to 52.90),
+                "PLN" to (10.35 to 10.72),
+                "CHF" to (46.20 to 46.80),
+                "CZK" to (1.78 to 1.82),
+            ).mapNotNull { (code, sides) ->
+                if (code == source.baseCode) null
+                else org.bigblackowl.debttracker.domain.model.ExchangeRate(
+                    org.bigblackowl.debttracker.domain.model.FiatCurrencies.of(code), sides.first, sides.second,
+                )
+            },
             date = kotlinx.datetime.LocalDate(2026, 9, 1),
             fetchedAt = Clock.System.now(),
         )
 
-    override fun cached(source: org.bigblackowl.debttracker.domain.model.RateSource) = snapshot(source)
-    override suspend fun refresh(source: org.bigblackowl.debttracker.domain.model.RateSource) = snapshot(source)
+    override fun cached(source: org.bigblackowl.debttracker.domain.model.RateSource, baseCode: String) =
+        snapshot(source, baseCode)
+
+    override suspend fun refresh(source: org.bigblackowl.debttracker.domain.model.RateSource, baseCode: String) =
+        snapshot(source, baseCode)
 }
 
 /** [Settings] в оперативній пам'яті — щоб @Preview не чіпав реальний платформний сховище налаштувань. */
