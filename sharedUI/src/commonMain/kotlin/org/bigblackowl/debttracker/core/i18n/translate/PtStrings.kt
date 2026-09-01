@@ -1,6 +1,7 @@
 package org.bigblackowl.debttracker.core.i18n.translate
 
 import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
+import org.bigblackowl.debttracker.core.i18n.ExchangeRatesStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 
 // Primeira tradução automática – a rever por um falante nativo.
@@ -292,5 +293,18 @@ val PtStrings = Strings(
         debtorBody = { name, whenText -> "$name deve devolver-lhe a dívida: $whenText" },
         creditorBody = { name, whenText -> "Tem de pagar a dívida a $name: $whenText" },
         whenToday = { time -> "hoje às $time" },
+    ),
+
+    exchangeRates = ExchangeRatesStrings(
+        menuTitle = "Taxas de câmbio",
+        sourceLabel = "Fonte",
+        quotedIn = { base -> "Taxas em $base" },
+        updated = { date -> "Atualizado: $date" },
+        buy = "Compra",
+        sell = "Venda",
+        official = "Taxa",
+        refresh = "Atualizar",
+        error = "Não foi possível carregar as taxas de câmbio",
+        stale = "A mostrar dados guardados",
     ),
 )

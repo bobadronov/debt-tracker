@@ -1,6 +1,7 @@
 package org.bigblackowl.debttracker.core.i18n.translate
 
 import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
+import org.bigblackowl.debttracker.core.i18n.ExchangeRatesStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 
 // První strojový překlad – ke kontrole rodilým mluvčím.
@@ -292,5 +293,18 @@ val CsStrings = Strings(
         debtorBody = { name, whenText -> "$name vám má splatit dluh: $whenText" },
         creditorBody = { name, whenText -> "Máte zaplatit dluh osobě $name: $whenText" },
         whenToday = { time -> "dnes v $time" },
+    ),
+
+    exchangeRates = ExchangeRatesStrings(
+        menuTitle = "Kurzy měn",
+        sourceLabel = "Zdroj",
+        quotedIn = { base -> "Kurzy v $base" },
+        updated = { date -> "Aktualizováno: $date" },
+        buy = "Nákup",
+        sell = "Prodej",
+        official = "Kurz",
+        refresh = "Obnovit",
+        error = "Kurzy měn se nepodařilo načíst",
+        stale = "Zobrazují se uložená data",
     ),
 )

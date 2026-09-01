@@ -2,7 +2,12 @@ package org.bigblackowl.debttracker.core.di
 
 import com.russhwolf.settings.Settings
 import io.github.jan.supabase.SupabaseClient
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.serialization.json.Json
 import org.bigblackowl.debttracker.core.notifications.DueReminderCoordinator
 import org.bigblackowl.debttracker.core.notifications.NotificationsPoller
 import org.bigblackowl.debttracker.core.remote.createAppSupabaseClient
@@ -13,11 +18,13 @@ import org.bigblackowl.debttracker.core.sound.NoopSoundPlayer
 import org.bigblackowl.debttracker.core.sound.SoundPlayer
 import org.bigblackowl.debttracker.core.sound.createSoundPlayer
 import org.bigblackowl.debttracker.data.remote.RestoreCredentialCoordinator
+import org.bigblackowl.debttracker.data.remote.HttpExchangeRatesRepository
 import org.bigblackowl.debttracker.data.remote.SupabaseAuthRepository
 import org.bigblackowl.debttracker.data.remote.SupabaseNotificationRepository
 import org.bigblackowl.debttracker.data.remote.SupabaseProfileLookupRepository
 import org.bigblackowl.debttracker.data.remote.SupabaseSessionRepository
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
+import org.bigblackowl.debttracker.domain.repository.ExchangeRatesRepository
 import org.bigblackowl.debttracker.domain.repository.NotificationRepository
 import org.bigblackowl.debttracker.domain.repository.ProfileLookupRepository
 import org.bigblackowl.debttracker.domain.repository.RestoreCredentialGateway
@@ -61,6 +68,7 @@ import org.bigblackowl.debttracker.ui.screens.export.ExportViewModel
 import org.bigblackowl.debttracker.ui.screens.settings.ActiveSessionsViewModel
 import org.bigblackowl.debttracker.ui.screens.settings.EditAccountViewModel
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsViewModel
+import org.bigblackowl.debttracker.ui.screens.exchange.ExchangeRatesViewModel
 import org.bigblackowl.debttracker.ui.screens.stats.StatsViewModel
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.viewModel
@@ -78,7 +86,16 @@ val appModule = module {
     single<CoroutineScope> { ApplicationScope() }
     single { SearchFocusRequests() }
     single<SupabaseClient> { createAppSupabaseClient() }
+    // Shared Ktor client for the app's own small REST calls (exchange rates) — the engine is
+    // whatever the platform source set pulls in (OkHttp / Darwin / JS).
+    single {
+        HttpClient {
+            install(ContentNegotiation) { json(Json { ignoreUnknownKeys = true; isLenient = true }) }
+            install(HttpTimeout) { requestTimeoutMillis = 15_000; connectTimeoutMillis = 10_000 }
+        }
+    }
     single<AuthRepository> { SupabaseAuthRepository(get(), get()) }
+    single<ExchangeRatesRepository> { HttpExchangeRatesRepository(get(), get()) }
     single<RestoreCredentialGateway> { RestoreCredentialCoordinator(get(), get(), get()) }
     single<ProfileLookupRepository> { SupabaseProfileLookupRepository(get(), get()) }
     single<SessionRepository> { SupabaseSessionRepository(get(), get()) }
@@ -123,6 +140,7 @@ val appModule = module {
     viewModelOf(::EditAccountViewModel)
     viewModelOf(::ActiveSessionsViewModel)
     viewModelOf(::StatsViewModel)
+    viewModelOf(::ExchangeRatesViewModel)
     viewModelOf(::SplashViewModel)
     viewModelOf(::AccountOnboardingViewModel)
     viewModelOf(::ProtectionOnboardingViewModel)

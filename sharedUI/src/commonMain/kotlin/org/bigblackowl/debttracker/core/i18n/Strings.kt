@@ -8,6 +8,24 @@ package org.bigblackowl.debttracker.core.i18n
  * The flat constructor is close to the JVM 255-parameter method limit, so newer feature clusters
  * are grouped into nested holders (e.g. [dueReminder]) rather than adding many top-level fields.
  */
+/** [org.bigblackowl.debttracker.ui.screens.exchange.ExchangeRatesScreen] — назви джерел (ПриватБанк/НБУ/Monobank) не тут: це власні назви, спільні для всіх локалей ([org.bigblackowl.debttracker.domain.model.RateSource]). */
+data class ExchangeRatesStrings(
+    /** ⋮ меню + заголовок екрана. */
+    val menuTitle: String,
+    val sourceLabel: String,
+    /** Підзаголовок під джерелом: у якій валюті котирування ([base] — напр. "UAH ₴"). */
+    val quotedIn: (base: String) -> String,
+    val updated: (date: String) -> String,
+    val buy: String,
+    val sell: String,
+    /** Підпис єдиного курсу (НБУ — без купівлі/продажу). */
+    val official: String,
+    val refresh: String,
+    val error: String,
+    /** Банер, коли оновлення впало, але лишився попередній зріз. */
+    val stale: String,
+)
+
 data class DueReminderStrings(
     /** Form field label + the notification title. */
     val label: String,
@@ -333,4 +351,7 @@ data class Strings(
 
     // per-contact repayment/payment reminder (add/edit form + core/notifications/DueReminderCoordinator)
     val dueReminder: DueReminderStrings,
+
+    // exchange rates (org.bigblackowl.debttracker.ui.screens.exchange)
+    val exchangeRates: ExchangeRatesStrings,
 )

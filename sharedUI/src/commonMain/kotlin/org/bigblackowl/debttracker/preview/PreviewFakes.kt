@@ -440,6 +440,25 @@ class NoOpSoundPlayer : SoundPlayer {
     override fun play(sound: SoundEffect) = Unit
 }
 
+/** Статичний зріз курсів для @Preview [org.bigblackowl.debttracker.ui.screens.exchange.ExchangeRatesScreen] — без мережі. */
+class FakeExchangeRatesRepository : org.bigblackowl.debttracker.domain.repository.ExchangeRatesRepository {
+    private fun snapshot(source: org.bigblackowl.debttracker.domain.model.RateSource) =
+        org.bigblackowl.debttracker.domain.model.ExchangeRatesSnapshot(
+            source = source,
+            rates = listOf(
+                org.bigblackowl.debttracker.domain.model.ExchangeRate(Currency.USD, 41.15, 41.65),
+                org.bigblackowl.debttracker.domain.model.ExchangeRate(Currency.EUR, 44.30, 45.10),
+                org.bigblackowl.debttracker.domain.model.ExchangeRate(Currency.PLN, 10.35, 10.72),
+                org.bigblackowl.debttracker.domain.model.ExchangeRate(Currency.UAH, 0.024, 0.024),
+            ).filter { it.currency.code != source.baseCode },
+            date = kotlinx.datetime.LocalDate(2026, 9, 1),
+            fetchedAt = Clock.System.now(),
+        )
+
+    override fun cached(source: org.bigblackowl.debttracker.domain.model.RateSource) = snapshot(source)
+    override suspend fun refresh(source: org.bigblackowl.debttracker.domain.model.RateSource) = snapshot(source)
+}
+
 /** [Settings] в оперативній пам'яті — щоб @Preview не чіпав реальний платформний сховище налаштувань. */
 class InMemorySettings : Settings {
     private val values = mutableMapOf<String, Any>()

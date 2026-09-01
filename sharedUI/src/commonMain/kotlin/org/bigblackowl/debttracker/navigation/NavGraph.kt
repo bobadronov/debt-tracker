@@ -42,6 +42,8 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.bigblackowl.debttracker.core.di.requiresRemoteAuthGate
 import org.bigblackowl.debttracker.core.notifications.NotificationDeepLinks
+import org.bigblackowl.debttracker.core.platform.AppPlatform
+import org.bigblackowl.debttracker.core.platform.currentPlatform
 import org.bigblackowl.debttracker.core.qr.ContactDeepLinks
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
@@ -67,6 +69,7 @@ import org.bigblackowl.debttracker.ui.screens.contacts.AddEditContactScreen
 import org.bigblackowl.debttracker.ui.screens.contacts.ContactPickerScreen
 import org.bigblackowl.debttracker.ui.screens.creditors.CreditorDetailScreen
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorDetailScreen
+import org.bigblackowl.debttracker.ui.screens.exchange.ExchangeRatesScreen
 import org.bigblackowl.debttracker.ui.screens.export.ExportScreen
 import org.bigblackowl.debttracker.ui.screens.settings.AccountInfoScreen
 import org.bigblackowl.debttracker.ui.screens.settings.ActiveSessionsScreen
@@ -175,6 +178,7 @@ fun DebtTrackerNavGraph(
         Screen.Notifications -> setOf(AppMenu.Target.Notifications)
         Screen.QrHub -> setOf(AppMenu.Target.Qr)
         Screen.Stats -> setOf(AppMenu.Target.Stats)
+        Screen.ExchangeRates -> setOf(AppMenu.Target.ExchangeRates)
         Screen.Settings -> setOf(AppMenu.Target.Settings)
         else -> emptySet()
     }
@@ -186,6 +190,7 @@ fun DebtTrackerNavGraph(
                 openNotifications = { if (backStack.lastOrNull() != Screen.Notifications) navigate(Screen.Notifications) },
                 openQr = { if (backStack.lastOrNull() != Screen.QrHub) navigate(Screen.QrHub) },
                 openStats = { if (backStack.lastOrNull() != Screen.Stats) navigate(Screen.Stats) },
+                openExchangeRates = { if (backStack.lastOrNull() != Screen.ExchangeRates) navigate(Screen.ExchangeRates) },
                 openSettings = { if (backStack.lastOrNull() != Screen.Settings) navigate(Screen.Settings) },
                 addDebtor = { navigate(Screen.ContactPicker(DebtDirection.DEBTOR)) },
                 addCreditor = { navigate(Screen.ContactPicker(DebtDirection.CREDITOR)) },
@@ -194,13 +199,16 @@ fun DebtTrackerNavGraph(
     }
     DisposableEffect(Unit) { onDispose { CurrentScreen.set(null); AppMenu.clear() } }
 
-    // Web has no local cache (спек §1) — repositories need a signed-in Supabase session to
-    // work at all, so it forces the sign-in screen before Home. Other platforms are fully
-    // offline-capable; Supabase auth there is opt-in sync — surfaced once via AccountOnboarding
-    // (skippable), then only reachable from Settings after that.
+    // First-launch onboarding runs account → app-lock, in that order (Screen.AccountOnboarding then
+    // Screen.Onboarding), each step falling through here once its "seen" flag is set. Web has no
+    // local cache (спек §1) — repositories need a signed-in Supabase session to work at all — so it
+    // forces the sign-in screen and skips both onboarding steps (no local-only mode, no app lock).
+    // Other platforms are fully offline-capable; Supabase auth there is opt-in sync — surfaced once
+    // via AccountOnboarding (skippable), then only reachable from Settings after that.
     fun screenAfterUnlock(): Screen = when {
         requiresRemoteAuthGate && !authRepository.isAuthenticated.value -> Screen.Auth(isGate = true)
         !settings.hasSeenAccountOnboarding && !authRepository.isAuthenticated.value -> Screen.AccountOnboarding
+        currentPlatform != AppPlatform.WEB && !settings.hasSeenProtectionOnboarding -> Screen.Onboarding
         else -> Screen.Home
     }
 
@@ -316,8 +324,9 @@ fun DebtTrackerNavGraph(
                 SplashScreen(onFinished = { destination ->
                     replaceStackWith(
                         when (destination) {
-                            SplashDestination.ONBOARDING -> Screen.Onboarding
                             SplashDestination.AUTH_GATE -> Screen.AuthGate
+                            // First launch included — screenAfterUnlock() routes to the account, then
+                            // the app-lock, onboarding step before Home.
                             SplashDestination.UNLOCKED -> screenAfterUnlock()
                         }
                     )
@@ -327,12 +336,13 @@ fun DebtTrackerNavGraph(
                 ProtectionOnboardingScreen(onDone = { replaceStackWith(screenAfterUnlock()) })
             }
             entry<Screen.AccountOnboarding> {
-                // isGate = true here too (not just Web's forced gate): the stack was just replaced,
-                // so a plain back() would have nothing to pop to — reuse the same "hide back, land
-                // on Home after success" handling as the Web gate instead of a second special case.
+                // First onboarding step (before app-lock onboarding). isGate = true on sign-in
+                // (not just Web's forced gate): the stack was just replaced, so a plain back() would
+                // have nothing to pop to — reuse the same "hide back" handling as the Web gate.
+                // Both paths fall through screenAfterUnlock(), which lands on Screen.Onboarding next.
                 AccountOnboardingScreen(
                     onSignIn = { replaceStackWith(Screen.Auth(isGate = true)) },
-                    onSkip = { replaceStackWith(Screen.Home) },
+                    onSkip = { replaceStackWith(screenAfterUnlock()) },
                 )
             }
             entry<Screen.AuthGate> {
@@ -396,6 +406,9 @@ fun DebtTrackerNavGraph(
                     onOpenCreditor = { id -> navigate(Screen.CreditorDetail(id)) },
                 )
             }
+            entry<Screen.ExchangeRates> {
+                ExchangeRatesScreen(onBack = { back() })
+            }
             // Settings + its direct pages get the list/detail split on wide windows. AccountInfo's
             // own sub-pages (EditAccount, ActiveSessions) stay full-width — deeper flows, not a list.
             entry<Screen.Settings>(metadata = listPane()) {
@@ -440,7 +453,10 @@ fun DebtTrackerNavGraph(
             entry<Screen.Auth> { screen ->
                 AuthScreen(
                     onBack = { back() },
-                    onAuthenticated = { if (screen.isGate) replaceStackWith(Screen.Home) else back() },
+                    // Gate sign-in (Web's forced gate, remote logout re-login, or the first-launch
+                    // AccountOnboarding → sign-in path): fall through screenAfterUnlock() so the
+                    // first-launch case still gets the app-lock onboarding step before Home.
+                    onAuthenticated = { if (screen.isGate) replaceStackWith(screenAfterUnlock()) else back() },
                     showBackButton = !screen.isGate,
                 )
             }

@@ -1,6 +1,7 @@
 package org.bigblackowl.debttracker.core.i18n.translate
 
 import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
+import org.bigblackowl.debttracker.core.i18n.ExchangeRatesStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 
 val PlStrings = Strings(
@@ -291,5 +292,18 @@ val PlStrings = Strings(
         debtorBody = { name, whenText -> "$name ma Ci zwrócić dług: $whenText" },
         creditorBody = { name, whenText -> "Masz spłacić dług osobie $name: $whenText" },
         whenToday = { time -> "dzisiaj o $time" },
+    ),
+
+    exchangeRates = ExchangeRatesStrings(
+        menuTitle = "Kursy walut",
+        sourceLabel = "Źródło",
+        quotedIn = { base -> "Kursy w $base" },
+        updated = { date -> "Zaktualizowano: $date" },
+        buy = "Kupno",
+        sell = "Sprzedaż",
+        official = "Kurs",
+        refresh = "Odśwież",
+        error = "Nie udało się załadować kursów walut",
+        stale = "Wyświetlanie zapisanych danych",
     ),
 )

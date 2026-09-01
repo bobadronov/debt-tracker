@@ -68,6 +68,17 @@ class AppSettings(private val settings: Settings) {
     var notificationsPermissionRequested: Boolean by SettingsBooleanState(settings, KEY_NOTIFICATIONS_PERMISSION_REQUESTED, false)
 
     /**
+     * Останній вдалий зріз курсів валют, серіалізований [org.bigblackowl.debttracker.data.remote.HttpExchangeRatesRepository]
+     * (одна JSON-мапа `джерело -> зріз`). `null` — ще жодного разу не вантажилось. Не UI-стан.
+     */
+    var exchangeRatesCache: String?
+        get() = settings.getStringOrNull(KEY_EXCHANGE_RATES_CACHE)
+        set(value) {
+            if (value == null) settings.remove(KEY_EXCHANGE_RATES_CACHE)
+            else settings.putString(KEY_EXCHANGE_RATES_CACHE, value)
+        }
+
+    /**
      * Whether an OS restore credential (zero-tap sign-in) has already been registered for the
      * account signed in on this install — a local guard so [org.bigblackowl.debttracker.data.remote.RestoreCredentialCoordinator]
      * doesn't re-run the register round trip on every sign-in. Cleared on sign-out. Not UI state.
@@ -118,6 +129,7 @@ class AppSettings(private val settings: Settings) {
         const val KEY_LAST_SEEN_NOTIFICATION_AT = "last_seen_notification_at"
         const val KEY_NOTIFICATIONS_PERMISSION_REQUESTED = "notifications_permission_requested"
         const val KEY_RESTORE_CREDENTIAL_REGISTERED = "restore_credential_registered"
+        const val KEY_EXCHANGE_RATES_CACHE = "exchange_rates_cache"
     }
 }
 

@@ -54,6 +54,9 @@ sealed interface Screen {
     data object Stats : Screen
 
     @Serializable
+    data object ExchangeRates : Screen
+
+    @Serializable
     data object Settings : Screen
 
     @Serializable

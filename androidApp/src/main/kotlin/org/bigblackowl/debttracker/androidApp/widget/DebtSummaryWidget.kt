@@ -6,8 +6,6 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.ColorFilter
@@ -17,7 +15,6 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
-import androidx.glance.LocalSize
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
@@ -43,6 +40,8 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import org.bigblackowl.debttracker.androidApp.AppActivity
 import org.bigblackowl.debttracker.androidApp.R
@@ -62,9 +61,9 @@ import org.koin.core.context.GlobalContext
 class DebtSummaryWidget : GlanceAppWidget() {
 
     /**
-     * Віджет має фіксований розмір (resizeMode="none" у debt_summary_widget_info.xml), тож
-     * [SizeMode.Single] — [WidgetUi] отримує один розмір (minWidth/minHeight з провайдера) і не
-     * мусить перемальовуватись під час зміни розміру користувачем.
+     * Віджет фіксованого розміру (resizeMode="none", один targetCell у
+     * debt_summary_widget_info.xml). [SizeMode.Single] → [WidgetUi] завжди рендериться під
+     * єдиний, наперед відомий розмір, тож жодної адаптивної розкладки не потрібно.
      */
     override val sizeMode: SizeMode = SizeMode.Single
 
@@ -72,23 +71,29 @@ class DebtSummaryWidget : GlanceAppWidget() {
     @SuppressLint("RestrictedApi")
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val koin = GlobalContext.get()
-        val debtorRepository = koin.get<DebtorRepository>()
-        val creditorRepository = koin.get<CreditorRepository>()
         val strings = resolveStrings(koin.get<AppSettings>().locale)
 
-        val debtorsTotal = debtorRepository.observeDebtors().first()
-            .sumByCurrency({ it.debtor.currency }, { it.balance })
-        val creditorsTotal = creditorRepository.observeCreditors().first()
-            .sumByCurrency({ it.creditor.currency }, { it.balance })
+        // Дві незалежні вибірки з БД — читаємо паралельно, форматуємо суму один раз.
+        val (debtorsAmount, creditorsAmount) = coroutineScope {
+            val debtors = async {
+                koin.get<DebtorRepository>().observeDebtors().first()
+                    .sumByCurrency({ it.debtor.currency }, { it.balance }).formatTotals()
+            }
+            val creditors = async {
+                koin.get<CreditorRepository>().observeCreditors().first()
+                    .sumByCurrency({ it.creditor.currency }, { it.balance }).formatTotals()
+            }
+            debtors.await() to creditors.await()
+        }
 
         provideContent {
             WidgetUi(
-                debtorsAmount = debtorsTotal.formatTotals(),
-                creditorsAmount = creditorsTotal.formatTotals(),
+                debtorsAmount = debtorsAmount,
+                creditorsAmount = creditorsAmount,
                 debtorsLabel = strings.homeTabDebtors,
                 creditorsLabel = strings.homeTabCreditors,
-                debtorsDescription = strings.widgetDebtorsTotal(debtorsTotal.formatTotals()),
-                creditorsDescription = strings.widgetCreditorsTotal(creditorsTotal.formatTotals()),
+                debtorsDescription = strings.widgetDebtorsTotal(debtorsAmount),
+                creditorsDescription = strings.widgetCreditorsTotal(creditorsAmount),
             )
         }
     }
@@ -111,30 +116,41 @@ private val RepayPillColor = ColorProvider(day = RepayLight.copy(alpha = 0.10f),
 private val DebtBadgeColor = ColorProvider(day = DebtLight.copy(alpha = 0.22f), night = DebtDark.copy(alpha = 0.26f))
 private val RepayBadgeColor = ColorProvider(day = RepayLight.copy(alpha = 0.22f), night = RepayDark.copy(alpha = 0.26f))
 
-private class Metric(
+// Фіксовані розміри розкладки — віджет має один відомий розмір (див. DebtSummaryWidget.sizeMode).
+private val OuterPadding = 10.dp
+private val PillGap = 20.dp
+private val PillCorner = 22.dp
+private val BadgeSize = 34.dp
+private val BadgeIconSize = 18.dp
+private val LabelFontSize = 13.sp
+private val AmountFontSize = 18.sp
+
+/**
+ * Статична палітра пігулки — синглтони enum, тож [WidgetUi] не алокує нічого на кожну
+ * рекомпозицію. [icon] — гліф тренду, решта — акцент і дві тоновані підкладки.
+ */
+private enum class Accent(
     val icon: Int,
-    val label: String,
-    val amount: String,
-    val description: String,
-    val accent: ColorProvider,
+    val color: ColorProvider,
     val pill: ColorProvider,
     val badge: ColorProvider,
-)
+) {
+    Positive(R.drawable.ic_widget_trend_down, RepayColor, RepayPillColor, RepayBadgeColor),
+    Negative(R.drawable.ic_widget_trend_up, DebtColor, DebtPillColor, DebtBadgeColor),
+}
 
 /**
  * Дані приходять готовими з [DebtSummaryWidget.provideGlance] (suspend-виклики Koin/Flow
  * не можна робити в @Composable). Значення за замовчуванням — для @Preview.
  *
- * Кожен показник — «пігулка» з тонованою підкладкою: коло з гліфом (той самий мотив, що й
- * `KpiCard` на [org.bigblackowl.debttracker.ui.screens.stats.StatsScreen]) і сума жирним
- * акцентним кольором. Дві розкладки, вибір — від [LocalSize.current], щоб контент ніколи не
- * обрізався: досить високий віджет → пігулки стовпчиком, з підписами "Мені винні"/"Я винен";
- * нижчий (у т.ч. широкий короткий) → дві компактні пігулки поряд, лише коло + сума.
+ * Розкладка одна: дві «пігулки» стовпчиком, кожна — коло з гліфом (той самий мотив, що й
+ * `KpiCard` на [org.bigblackowl.debttracker.ui.screens.stats.StatsScreen]), підпис
+ * "Мені винні"/"Я винен" і сума жирним акцентним кольором.
  */
 @RequiresApi(Build.VERSION_CODES.S)
 @OptIn(ExperimentalGlancePreviewApi::class)
 @SuppressLint("RestrictedApi")
-@Preview(250, 120)
+@Preview(250, 130)
 @Composable
 @GlanceComposable
 fun WidgetUi(
@@ -145,169 +161,70 @@ fun WidgetUi(
     debtorsDescription: String = "$debtorsLabel: $debtorsAmount",
     creditorsDescription: String = "$creditorsLabel: $creditorsAmount",
 ) = GlanceTheme {
-    val size = LocalSize.current
-    val w = size.width
-    val h = size.height
-    val outer = 10.dp
-    val gap = 6.dp
-
-    // Стовпчик двох пігулок вимагає висоти; інакше (і на широкому короткому) — пігулки поряд.
-    val stacked = h >= 110.dp
-
-    Box(
+    Column(
         modifier = GlanceModifier
             .fillMaxSize()
             .background(GlanceTheme.colors.widgetBackground)
             .cornerRadius(24.dp)
             .clickable(actionStartActivity(AppActivity::class.java))
-            .padding(outer),
-        contentAlignment = Alignment.Center,
+            .padding(OuterPadding),
+        verticalAlignment = Alignment.Vertical.CenterVertically,
     ) {
-        val debtors = Metric(
-            R.drawable.ic_widget_trend_down, debtorsLabel, debtorsAmount, debtorsDescription,
-            RepayColor, RepayPillColor, RepayBadgeColor,
-        )
-
-        val creditors = Metric(
-            R.drawable.ic_widget_trend_up, creditorsLabel, creditorsAmount, creditorsDescription,
-            DebtColor, DebtPillColor, DebtBadgeColor,
-        )
-
-        if (stacked) {
-            val pillH = ((h - outer * 2 - gap) / 2).coerceIn(44.dp, 104.dp)
-            val pillW = w - outer * 2
-            val spec = pillSpec(pillH, pillW)
-            Column(modifier = GlanceModifier.fillMaxWidth()) {
-                KpiPill(GlanceModifier.fillMaxWidth(), debtors, spec)
-                Spacer(GlanceModifier.height(gap))
-                KpiPill(GlanceModifier.fillMaxWidth(), creditors, spec)
-            }
-        } else {
-            val cellH = (h - outer * 2).coerceIn(28.dp, 84.dp)
-            val cellW = (w - outer * 2 - gap) / 2
-            val badge = minOf(cellH * 0.62f, cellW * 0.34f).coerceIn(20.dp, 44.dp)
-            val amountFont = (badge.value * 0.5f).coerceIn(12f, 19f).sp
-            Row(
-                modifier = GlanceModifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Vertical.CenterVertically,
-            ) {
-                MiniMetric(GlanceModifier.defaultWeight(), debtors, cellH, badge, amountFont)
-                Spacer(GlanceModifier.width(gap))
-                MiniMetric(GlanceModifier.defaultWeight(), creditors, cellH, badge, amountFont)
-            }
-        }
+        KpiPill(Accent.Positive, debtorsLabel, debtorsAmount, debtorsDescription)
+        Spacer(GlanceModifier.height(PillGap))
+        KpiPill(Accent.Negative, creditorsLabel, creditorsAmount, creditorsDescription)
     }
 }
 
-private class PillSpec(
-    val badgeSize: Dp,
-    val iconSize: Dp,
-    val innerPaddingH: Dp,
-    val innerPaddingV: Dp,
-    val corner: Dp,
-    val amountFontSize: TextUnit,
-    val labelFontSize: TextUnit,
-    val showLabel: Boolean,
-)
-
-private fun pillSpec(pillHeight: Dp, pillWidth: Dp): PillSpec {
-    val showLabel = pillHeight >= 54.dp && pillWidth >= 150.dp
-    val innerV = (pillHeight * 0.16f).coerceIn(6.dp, 14.dp)
-    val contentH = pillHeight - innerV * 2
-    val badge = minOf(contentH, pillWidth * 0.30f).coerceIn(18.dp, 44.dp)
-    val amountFactor = if (showLabel) 0.40f else 0.52f
-    return PillSpec(
-        badgeSize = badge,
-        iconSize = badge * 0.52f,
-        innerPaddingH = (pillHeight * 0.20f).coerceIn(8.dp, 16.dp),
-        innerPaddingV = innerV,
-        corner = (pillHeight * 0.34f).coerceIn(12.dp, 26.dp),
-        amountFontSize = (contentH.value * amountFactor).coerceIn(12f, 21f).sp,
-        labelFontSize = (contentH.value * 0.26f).coerceIn(9f, 12f).sp,
-        showLabel = showLabel,
-    )
-}
-
-/** Кольорове коло з іконкою (як у KpiCard) + сума (та опційно підпис) на м'якій акцентній підкладці. */
+/** Кольорове коло з іконкою (як у KpiCard) + підпис і сума на м'якій акцентній підкладці. */
 @SuppressLint("RestrictedApi")
 @Composable
-private fun KpiPill(modifier: GlanceModifier, metric: Metric, spec: PillSpec) {
+private fun KpiPill(accent: Accent, label: String, amount: String, description: String) {
     Row(
-        modifier = modifier
-            .background(metric.pill)
-            .cornerRadius(spec.corner)
-            .padding(horizontal = spec.innerPaddingH, vertical = spec.innerPaddingV),
-        verticalAlignment = Alignment.Vertical.CenterVertically,
+        modifier = GlanceModifier
+            .fillMaxWidth()
+            .background(accent.pill)
+            .cornerRadius(PillCorner)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.Vertical.CenterVertically
     ) {
-        Badge(metric, spec.badgeSize, spec.iconSize)
+        Badge(accent, description)
         Spacer(GlanceModifier.width(10.dp))
-        if (spec.showLabel) {
-            Column {
-                Text(
-                    text = metric.label,
-                    maxLines = 1,
-                    style = TextStyle(
-                        color = GlanceTheme.colors.onSurfaceVariant,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = spec.labelFontSize,
-                    ),
-                )
-                AmountText(metric.amount, metric.accent, spec.amountFontSize, maxLines = 2)
-            }
-        } else {
-            AmountText(metric.amount, metric.accent, spec.amountFontSize, maxLines = 1)
+        Column {
+            Text(
+                text = label,
+                maxLines = 1,
+                style = TextStyle(
+                    color = GlanceTheme.colors.onSurfaceVariant,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = LabelFontSize,
+                ),
+            )
+            Text(
+                text = amount,
+                maxLines = 1,
+                style = TextStyle(color = accent.color, fontWeight = FontWeight.Bold, fontSize = AmountFontSize),
+            )
         }
     }
 }
 
-/** Найкомпактніший варіант: коло + сума в один рядок по центру пігулки, без підпису. */
+/** Коло акцентного кольору з тонованим гліфом тренду. */
 @SuppressLint("RestrictedApi")
 @Composable
-private fun MiniMetric(
-    modifier: GlanceModifier,
-    metric: Metric,
-    cellHeight: Dp,
-    badgeSize: Dp,
-    amountFontSize: TextUnit,
-) {
-    Row(
-        modifier = modifier
-            .background(metric.pill)
-            .cornerRadius((cellHeight / 2).coerceAtMost(22.dp))
-            .padding(horizontal = 8.dp, vertical = 3.dp),
-        verticalAlignment = Alignment.Vertical.CenterVertically,
-        horizontalAlignment = Alignment.Horizontal.CenterHorizontally,
-    ) {
-        Badge(metric, badgeSize, badgeSize * 0.52f)
-        Spacer(GlanceModifier.width(7.dp))
-        AmountText(metric.amount, metric.accent, amountFontSize, maxLines = 1)
-    }
-}
-
-@SuppressLint("RestrictedApi")
-@Composable
-private fun Badge(metric: Metric, badgeSize: Dp, iconSize: Dp) {
+private fun Badge(accent: Accent, description: String) {
     Box(
         modifier = GlanceModifier
-            .size(badgeSize)
-            .cornerRadius(badgeSize / 2)
-            .background(metric.badge),
+            .size(BadgeSize)
+            .cornerRadius(BadgeSize / 2)
+            .background(accent.badge),
         contentAlignment = Alignment.Center,
     ) {
         Image(
-            provider = ImageProvider(metric.icon),
-            contentDescription = metric.description,
-            colorFilter = ColorFilter.tint(metric.accent),
-            modifier = GlanceModifier.size(iconSize),
+            provider = ImageProvider(accent.icon),
+            contentDescription = description,
+            colorFilter = ColorFilter.tint(accent.color),
+            modifier = GlanceModifier.size(BadgeIconSize),
         )
     }
-}
-
-@Composable
-private fun AmountText(amount: String, accent: ColorProvider, fontSize: TextUnit, maxLines: Int) {
-    Text(
-        text = amount,
-        maxLines = maxLines,
-        style = TextStyle(color = accent, fontWeight = FontWeight.Bold, fontSize = fontSize),
-    )
 }

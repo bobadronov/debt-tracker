@@ -12,6 +12,7 @@ import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
 import org.bigblackowl.debttracker.core.sound.SoundPlayer
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.CreditorRepository
+import org.bigblackowl.debttracker.domain.repository.ExchangeRatesRepository
 import org.bigblackowl.debttracker.domain.repository.DebtorRepository
 import org.bigblackowl.debttracker.domain.repository.NotificationRepository
 import org.bigblackowl.debttracker.domain.repository.ProfileLookupRepository
@@ -47,6 +48,7 @@ import org.bigblackowl.debttracker.ui.screens.creditors.CreditorDetailViewModel
 import org.bigblackowl.debttracker.ui.screens.creditors.CreditorListViewModel
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorDetailViewModel
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorListViewModel
+import org.bigblackowl.debttracker.ui.screens.exchange.ExchangeRatesViewModel
 import org.bigblackowl.debttracker.ui.screens.export.ExportViewModel
 import org.bigblackowl.debttracker.ui.screens.home.HomeViewModel
 import org.bigblackowl.debttracker.ui.screens.notifications.NotificationsViewModel
@@ -84,6 +86,7 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     single<ProfileLookupRepository> { FakeProfileLookupRepository() }
     single<SessionRepository> { FakeSessionRepository() }
     single<NotificationRepository> { FakeNotificationRepository() }
+    single<ExchangeRatesRepository> { FakeExchangeRatesRepository() }
     single<LocalNotifier> { NoOpLocalNotifier() }
     single<CoroutineScope> { ApplicationScope() }
     single { NotificationsPoller(get(), get(), get(), get(), get()) }
@@ -127,6 +130,7 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     viewModelOf(::EditAccountViewModel)
     viewModelOf(::ActiveSessionsViewModel)
     viewModelOf(::StatsViewModel)
+    viewModelOf(::ExchangeRatesViewModel)
     viewModelOf(::SplashViewModel)
     viewModelOf(::AccountOnboardingViewModel)
     viewModelOf(::ProtectionOnboardingViewModel)

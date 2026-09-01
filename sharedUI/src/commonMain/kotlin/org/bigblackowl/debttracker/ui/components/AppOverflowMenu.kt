@@ -2,6 +2,7 @@ package org.bigblackowl.debttracker.ui.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CurrencyExchange
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.QrCode
@@ -80,6 +81,13 @@ fun AppOverflowMenu(
                     text = { Text(strings.homeStats) },
                     leadingIcon = { Icon(Icons.Filled.QueryStats, contentDescription = null) },
                     onClick = { open = false; menu.openStats() },
+                )
+            }
+            if (AppMenu.Target.ExchangeRates !in menu.activeTargets) {
+                DropdownMenuItem(
+                    text = { Text(strings.exchangeRates.menuTitle) },
+                    leadingIcon = { Icon(Icons.Filled.CurrencyExchange, contentDescription = null) },
+                    onClick = { open = false; menu.openExchangeRates() },
                 )
             }
             if (AppMenu.Target.Settings !in menu.activeTargets) {

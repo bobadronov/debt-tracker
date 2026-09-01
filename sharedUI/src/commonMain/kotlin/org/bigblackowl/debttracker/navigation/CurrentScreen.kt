@@ -39,6 +39,7 @@ fun Screen.windowTitle(strings: Strings): String = when (this) {
     is Screen.DebtorDetail -> strings.debtorDetailTitleFallback
     is Screen.CreditorDetail -> strings.creditorDetailTitleFallback
     Screen.Stats -> strings.statsTitle
+    Screen.ExchangeRates -> strings.exchangeRates.menuTitle
     Screen.Settings -> strings.settingsTitle
     Screen.Language -> strings.settingsLanguage
     Screen.AccountInfo -> strings.settingsAccount

@@ -35,8 +35,9 @@ import org.bigblackowl.debttracker.ui.components.UnlockScaffold
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * First-launch-only screen explaining why to turn on app lock, shown once before [org.bigblackowl.debttracker.ui.screens.authgate.AuthGateScreen]/Home
- * become reachable (see [AppSettings.hasSeenProtectionOnboarding]). Not shown on Web — Web has no
+ * First-launch-only screen explaining why to turn on app lock — the second onboarding step, shown
+ * once after [org.bigblackowl.debttracker.ui.screens.accountonboarding.AccountOnboardingScreen] and
+ * before Home (see [AppSettings.hasSeenProtectionOnboarding]). Not shown on Web — Web has no
  * local app lock at all (email/password sign-in already guards it). Logic lives in [ProtectionOnboardingViewModel];
  * this screen only creates the composition-scoped [rememberBiometricAuthenticator] object (Android's
  * BiometricPrompt needs a live Activity, so it can't be constructor-injected into the ViewModel) and forwards it.

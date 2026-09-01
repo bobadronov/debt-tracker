@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 object AppMenu {
     /** A navigation destination reachable from the app menu. */
-    enum class Target { Notifications, Qr, Stats, Settings }
+    enum class Target { Notifications, Qr, Stats, ExchangeRates, Settings }
 
     class State internal constructor(
         val visible: Boolean = false,
@@ -21,6 +21,7 @@ object AppMenu {
         val openNotifications: () -> Unit = {},
         val openQr: () -> Unit = {},
         val openStats: () -> Unit = {},
+        val openExchangeRates: () -> Unit = {},
         val openSettings: () -> Unit = {},
         val addDebtor: () -> Unit = {},
         val addCreditor: () -> Unit = {},

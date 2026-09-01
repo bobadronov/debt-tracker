@@ -7,8 +7,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import org.bigblackowl.debttracker.core.platform.AppPlatform
-import org.bigblackowl.debttracker.core.platform.currentPlatform
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.RestoreCredentialGateway
@@ -33,8 +31,10 @@ class SplashViewModel(
             if (restoreCredentials.isActive && !authRepository.isAuthenticated.value) {
                 withTimeoutOrNull(RESTORE_TIMEOUT_MS) { restoreCredentials.tryRestoreSession() }
             }
+            // First-launch onboarding (account → app-lock, in that order) is routed by
+            // screenAfterUnlock() in the nav graph, reached via UNLOCKED — so the only thing decided
+            // here is whether an already-configured app lock must be cleared first.
             val destination = when {
-                currentPlatform != AppPlatform.WEB && !settings.hasSeenProtectionOnboarding -> SplashDestination.ONBOARDING
                 settings.protectionEnabled -> SplashDestination.AUTH_GATE
                 else -> SplashDestination.UNLOCKED
             }

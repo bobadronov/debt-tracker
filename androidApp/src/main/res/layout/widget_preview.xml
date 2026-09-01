@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Static mock of WidgetUi (DebtSummaryWidget.kt) for the system "add widget" picker.
      Glance widgets have no real layout resource, so android:previewLayout needs a plain-View
-     stand-in. At the default 3x2 size WidgetUi renders its stacked branch — a tonal,
-     colour-coded row per metric with an icon circle, label and bold amount — so this mirrors that. -->
+     stand-in. The widget is fixed-size: WidgetUi always renders a tonal, colour-coded row
+     per metric with an icon circle, label and bold amount — so this mirrors that. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"

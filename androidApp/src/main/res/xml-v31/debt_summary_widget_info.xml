@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Fixed-size widget: resizeMode="none" and a single declared size. WidgetUi reads this
+     size verbatim (SizeMode.Single) and renders one layout, so minWidth/minHeight are the
+     real design dimensions, not just a lower bound. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="110dp"
-    android:minHeight="110dp"
     android:targetCellWidth="2"
     android:targetCellHeight="2"
     android:updatePeriodMillis="1800000"

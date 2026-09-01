@@ -24,10 +24,11 @@ import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * First-launch-only screen explaining Account+Sync, shown once after [org.bigblackowl.debttracker.ui.screens.protectiononboarding.ProtectionOnboardingScreen]/
- * [org.bigblackowl.debttracker.ui.screens.authgate.AuthGateScreen] and before Home (see [AppSettings.hasSeenAccountOnboarding]) — surfaces the
- * sign-in option up front instead of leaving it undiscoverable inside Settings. Not shown on Web,
- * which already forces sign-in before Home has no local-only mode to explain.
+ * First-launch-only screen explaining Account+Sync — the first onboarding step, shown once before
+ * [org.bigblackowl.debttracker.ui.screens.protectiononboarding.ProtectionOnboardingScreen] and Home
+ * (see [AppSettings.hasSeenAccountOnboarding]) — surfaces the sign-in option up front instead of
+ * leaving it undiscoverable inside Settings. Not shown on Web, which already forces sign-in before
+ * Home and has no local-only mode to explain.
  */
 @Composable
 fun AccountOnboardingScreen(
