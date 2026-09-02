@@ -7,9 +7,14 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.minutes
+import org.bigblackowl.debttracker.core.auth.GoogleSignInLauncher
+import org.bigblackowl.debttracker.core.auth.GoogleSignInOutcome
 import org.bigblackowl.debttracker.core.i18n.resolveStrings
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
@@ -21,6 +26,7 @@ class AuthViewModel(
     private val authRepository: AuthRepository,
     private val appSettings: AppSettings,
     private val restoreCredentials: RestoreCredentialGateway,
+    private val googleSignIn: GoogleSignInLauncher,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AuthState())
@@ -45,6 +51,40 @@ class AuthViewModel(
                 it.copy(isSignUpMode = true, confirmPassword = it.password, error = null, offerRegistration = false)
             }
             AuthIntent.Submit -> submit()
+            AuthIntent.GoogleSignIn -> googleSignInFlow()
+        }
+    }
+
+    private fun googleSignInFlow() {
+        if (_state.value.isGoogleLoading || _state.value.isLoading) return
+        // Flip the in-flight flag synchronously so a double-tap can't launch a second flow.
+        _state.update { it.copy(isGoogleLoading = true, error = null, offerRegistration = false) }
+        viewModelScope.launch {
+            when (googleSignIn.signIn()) {
+                GoogleSignInOutcome.Success -> {
+                    // Android/Desktop have a session by now; iOS establishes it a moment later via
+                    // the debttracker://login-callback deep link; web is navigating away entirely.
+                    // Wait for the session to actually appear before leaving the screen.
+                    val authed = withTimeoutOrNull(2.minutes) {
+                        authRepository.isAuthenticated.first { it }
+                    } == true
+                    if (authed) {
+                        // Best-effort OS restore-credential registration, same as the email path.
+                        viewModelScope.launch { restoreCredentials.registerForCurrentSession() }
+                        _state.update { it.copy(isGoogleLoading = false) }
+                        effectsChannel.send(AuthEffect.Success)
+                    } else {
+                        // Browser dismissed without finishing, or web didn't navigate — drop the spinner.
+                        _state.update { it.copy(isGoogleLoading = false) }
+                    }
+                }
+                GoogleSignInOutcome.Cancelled ->
+                    _state.update { it.copy(isGoogleLoading = false) }
+                is GoogleSignInOutcome.Failure ->
+                    _state.update {
+                        it.copy(isGoogleLoading = false, error = resolveStrings(appSettings.locale).authError)
+                    }
+            }
         }
     }
 

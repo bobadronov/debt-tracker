@@ -75,6 +75,9 @@ env:
   # configuration because they are used by the BuildConfig block.
   SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
   SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+  # Web OAuth client ID for "Sign in with Google" (public value). Required at Gradle
+  # configuration time by sharedUI/build.gradle.kts's BuildConfig block, same as the two above.
+  GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
 
 jobs:
 

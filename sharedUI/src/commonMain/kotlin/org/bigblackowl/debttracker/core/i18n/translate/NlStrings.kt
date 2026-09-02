@@ -1,5 +1,6 @@
 package org.bigblackowl.debttracker.core.i18n.translate
 
+import org.bigblackowl.debttracker.core.i18n.AuthExtraStrings
 import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
 import org.bigblackowl.debttracker.core.i18n.ExchangeRatesStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
@@ -55,8 +56,12 @@ val NlStrings = Strings(
     authToggleToSignIn = "Al een van ons? Inloggen",
     authToggleToSignUp = "Nieuw hier? Registreren",
     authError = "Er ging iets mis bij het inloggen",
-    authOfferSignUpPrompt = "Nog geen account?",
-    authOfferSignUpAction = "Account aanmaken",
+    authExtra = AuthExtraStrings(
+        offerSignUpPrompt = "Nog geen account?",
+        offerSignUpAction = "Account aanmaken",
+        continueWithGoogle = "Doorgaan met Google",
+        divider = "of",
+    ),
     showPassword = "Wachtwoord tonen",
     hidePassword = "Wachtwoord verbergen",
 

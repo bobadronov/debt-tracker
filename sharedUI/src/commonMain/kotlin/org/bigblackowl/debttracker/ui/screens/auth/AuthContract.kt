@@ -12,6 +12,8 @@ data class AuthState(
     val avatarPicked: PickedImage? = null,
     val isSignUpMode: Boolean = false,
     val isLoading: Boolean = false,
+    /** The "Continue with Google" flow is running — keeps its own spinner + disables the form. */
+    val isGoogleLoading: Boolean = false,
     val error: String? = null,
     val fullNameError: String? = null,
     val confirmPasswordError: String? = null,
@@ -35,6 +37,9 @@ sealed interface AuthIntent {
     /** Jump from a failed sign-in straight into registration, carrying the email/password already typed. */
     data object SwitchToSignUp : AuthIntent
     data object Submit : AuthIntent
+
+    /** "Continue with Google" tapped. */
+    data object GoogleSignIn : AuthIntent
 }
 
 sealed interface AuthEffect {

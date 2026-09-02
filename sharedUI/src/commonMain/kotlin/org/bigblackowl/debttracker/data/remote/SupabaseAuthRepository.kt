@@ -3,7 +3,9 @@ package org.bigblackowl.debttracker.data.remote
 import io.github.aakira.napier.Napier
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.auth.providers.builtin.IDToken
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.storage.storage
@@ -102,6 +104,14 @@ class SupabaseAuthRepository(
         client.auth.signInWith(Email) {
             this.email = email
             this.password = password
+        }
+    }
+
+    override suspend fun signInWithGoogleIdToken(idToken: String, rawNonce: String?): Result<Unit> = runCatching {
+        client.auth.signInWith(IDToken) {
+            provider = Google
+            this.idToken = idToken
+            nonce = rawNonce
         }
     }
 

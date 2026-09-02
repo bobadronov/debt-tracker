@@ -17,8 +17,11 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.FragmentActivity
 import org.bigblackowl.debttracker.App
+import org.bigblackowl.debttracker.core.auth.handleAuthDeeplink
+import org.bigblackowl.debttracker.core.auth.isAuthCallbackIntent
 import org.bigblackowl.debttracker.core.notifications.EXTRA_NOTIFICATION_DEEP_LINK
 import org.bigblackowl.debttracker.core.notifications.NotificationDeepLinks
+import org.bigblackowl.debttracker.core.platform.AndroidActivityProvider
 import org.bigblackowl.debttracker.core.qr.ContactDeepLinks
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.koin.core.context.GlobalContext
@@ -34,6 +37,7 @@ class AppActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        AndroidActivityProvider.set(this) // Credential Manager's Google sign-in sheet needs an Activity
         enableEdgeToEdge()
         forwardDeepLink(intent)
         requestNotificationPermissionOnce()
@@ -61,9 +65,22 @@ class AppActivity : FragmentActivity() {
         forwardDeepLink(intent)
     }
 
+    override fun onDestroy() {
+        AndroidActivityProvider.clear(this)
+        super.onDestroy()
+    }
+
     private fun forwardDeepLink(intent: Intent?) {
         intent ?: return
-        intent.data?.let { ContactDeepLinks.onIncomingLink(it.toString()) }
+        val data = intent.data
+        when {
+            // OAuth "Continue with Google" callback (debttracker://login-callback?code=...) — hand it
+            // straight to supabase-kt (see core/auth/AndroidAuthDeeplink). Android itself uses the
+            // native Credential Manager flow, but the filter is registered so a stray callback still
+            // resolves here rather than bouncing to a browser.
+            isAuthCallbackIntent(intent) -> handleAuthDeeplink(intent)
+            data != null -> ContactDeepLinks.onIncomingLink(data.toString())
+        }
         intent.getStringExtra(EXTRA_NOTIFICATION_DEEP_LINK)?.let { link ->
             NotificationDeepLinks.onIncomingLink(link)
             intent.removeExtra(EXTRA_NOTIFICATION_DEEP_LINK) // don't re-fire on a later Activity recreate

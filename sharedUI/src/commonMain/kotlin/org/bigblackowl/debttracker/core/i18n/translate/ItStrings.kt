@@ -1,5 +1,6 @@
 package org.bigblackowl.debttracker.core.i18n.translate
 
+import org.bigblackowl.debttracker.core.i18n.AuthExtraStrings
 import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
 import org.bigblackowl.debttracker.core.i18n.ExchangeRatesStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
@@ -55,8 +56,12 @@ val ItStrings = Strings(
     authToggleToSignIn = "Sei già dei nostri? Accedi",
     authToggleToSignUp = "Nuovo qui? Registrati",
     authError = "Qualcosa è andato storto durante l'accesso",
-    authOfferSignUpPrompt = "Non hai ancora un account?",
-    authOfferSignUpAction = "Crea un account",
+    authExtra = AuthExtraStrings(
+        offerSignUpPrompt = "Non hai ancora un account?",
+        offerSignUpAction = "Crea un account",
+        continueWithGoogle = "Continua con Google",
+        divider = "oppure",
+    ),
     showPassword = "Mostra password",
     hidePassword = "Nascondi password",
 

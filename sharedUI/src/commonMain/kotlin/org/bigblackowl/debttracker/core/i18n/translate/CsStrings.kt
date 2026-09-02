@@ -1,5 +1,6 @@
 package org.bigblackowl.debttracker.core.i18n.translate
 
+import org.bigblackowl.debttracker.core.i18n.AuthExtraStrings
 import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
 import org.bigblackowl.debttracker.core.i18n.ExchangeRatesStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
@@ -55,8 +56,12 @@ val CsStrings = Strings(
     authToggleToSignIn = "Už jste jedním z nás? Přihlaste se",
     authToggleToSignUp = "Jste tu nový? Zaregistrujte se",
     authError = "Při přihlašování se něco pokazilo",
-    authOfferSignUpPrompt = "Ještě nemáte účet?",
-    authOfferSignUpAction = "Vytvořit účet",
+    authExtra = AuthExtraStrings(
+        offerSignUpPrompt = "Ještě nemáte účet?",
+        offerSignUpAction = "Vytvořit účet",
+        continueWithGoogle = "Pokračovat přes Google",
+        divider = "nebo",
+    ),
     showPassword = "Zobrazit heslo",
     hidePassword = "Skrýt heslo",
 

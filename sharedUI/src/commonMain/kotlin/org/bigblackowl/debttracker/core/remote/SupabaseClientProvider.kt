@@ -2,6 +2,7 @@ package org.bigblackowl.debttracker.core.remote
 
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.FlowType
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
@@ -17,7 +18,16 @@ fun createAppSupabaseClient(): SupabaseClient = createSupabaseClient(
     supabaseUrl = BuildConfig.SUPABASE_URL,
     supabaseKey = BuildConfig.SUPABASE_ANON_KEY,
 ) {
-    install(Auth)
+    install(Auth) {
+        // PKCE for the OAuth ("Continue with Google") flow on Desktop/Web/iOS — the desktop
+        // loopback handler and web page-reload both finish it with exchangeCodeForSession /
+        // the platform's automatic URL detection.
+        flowType = FlowType.PKCE
+        // Deep-link the OAuth callback lands on for the mobile targets: debttracker://login-callback
+        // (registered in AndroidManifest.xml and iOS Info.plist). Ignored on JVM/Web.
+        scheme = "debttracker"
+        host = "login-callback"
+    }
     install(Postgrest)
     install(Realtime)
     install(Storage)

@@ -371,6 +371,7 @@ class FakeAuthRepository : AuthRepository {
 
     override suspend fun signUp(email: String, password: String): Result<Unit> = Result.success(Unit)
     override suspend fun signIn(email: String, password: String): Result<Unit> = Result.success(Unit)
+    override suspend fun signInWithGoogleIdToken(idToken: String, rawNonce: String?): Result<Unit> = Result.success(Unit)
     override suspend fun signOut() = Unit
     override suspend fun updateAvatar(bytes: ByteArray, fileExtension: String): Result<String> = Result.success("")
     override suspend fun updateProfile(displayName: String, phone: String?): Result<Unit> = Result.success(Unit)

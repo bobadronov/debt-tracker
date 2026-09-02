@@ -45,6 +45,15 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="debttracker" android:host="contact" />
             </intent-filter>
+            <!-- OAuth "Continue with Google" redirect target (debttracker://login-callback). Android
+                 signs in natively via Credential Manager, but supabase-kt's Auth {} scheme/host is
+                 debttracker/login-callback for the shared OAuth fallback, so register the filter too. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="debttracker" android:host="login-callback" />
+            </intent-filter>
         </activity>
 
         <receiver

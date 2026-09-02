@@ -1,5 +1,7 @@
 package org.bigblackowl.debttracker.core.di
 
+import org.bigblackowl.debttracker.core.auth.AndroidGoogleSignInLauncher
+import org.bigblackowl.debttracker.core.auth.GoogleSignInLauncher
 import org.bigblackowl.debttracker.core.notifications.AndroidLocalNotifier
 import org.bigblackowl.debttracker.core.notifications.AndroidReminderScheduler
 import org.bigblackowl.debttracker.core.notifications.LocalNotifier
@@ -32,6 +34,7 @@ actual fun platformDataModule(): Module = module {
     single<LocalNotifier> { AndroidLocalNotifier(androidContext()) }
     single<ReminderScheduler> { AndroidReminderScheduler(androidContext()) }
     single<RestoreCredentialClient> { AndroidRestoreCredentialClient(androidContext()) }
+    single<GoogleSignInLauncher> { AndroidGoogleSignInLauncher(get()) }
 }
 
 actual val requiresRemoteAuthGate: Boolean = false

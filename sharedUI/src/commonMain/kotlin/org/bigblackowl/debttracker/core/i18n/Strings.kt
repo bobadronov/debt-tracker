@@ -36,6 +36,20 @@ data class ExchangeRatesStrings(
     val stale: String,
 )
 
+/**
+ * [org.bigblackowl.debttracker.ui.screens.auth.AuthScreen] strings that don't fit in the flat
+ * [Strings] constructor (which is at the JVM 255-argument method limit).
+ */
+data class AuthExtraStrings(
+    /** Shown after a failed sign-in, next to [offerSignUpAction], inviting the user to register instead. */
+    val offerSignUpPrompt: String,
+    val offerSignUpAction: String,
+    /** "Continue with Google" button (behind `BuildConfig.GOOGLE_SIGN_IN_ENABLED`). */
+    val continueWithGoogle: String,
+    /** Divider label between the email form and the Google button ("or"). */
+    val divider: String,
+)
+
 data class DueReminderStrings(
     /** Form field label + the notification title. */
     val label: String,
@@ -106,9 +120,6 @@ data class Strings(
     val authToggleToSignIn: String,
     val authToggleToSignUp: String,
     val authError: String,
-    /** Shown after a failed sign-in, next to [authOfferSignUpAction], inviting the user to register instead. */
-    val authOfferSignUpPrompt: String,
-    val authOfferSignUpAction: String,
     val showPassword: String,
     val hidePassword: String,
 
@@ -364,4 +375,7 @@ data class Strings(
 
     // exchange rates (org.bigblackowl.debttracker.ui.screens.exchange)
     val exchangeRates: ExchangeRatesStrings,
+
+    // auth screen extras (grouped in a holder — the flat Strings constructor is at the JVM limit)
+    val authExtra: AuthExtraStrings,
 )

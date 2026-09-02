@@ -1,6 +1,8 @@
 package org.bigblackowl.debttracker.core.di
 
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.bigblackowl.debttracker.core.auth.GoogleSignInLauncher
+import org.bigblackowl.debttracker.core.auth.WebGoogleSignInLauncher
 import org.bigblackowl.debttracker.core.notifications.InProcessReminderScheduler
 import org.bigblackowl.debttracker.core.notifications.LocalNotifier
 import org.bigblackowl.debttracker.core.notifications.ReminderScheduler
@@ -34,6 +36,7 @@ actual fun platformDataModule(): Module = module {
     single<LocalNotifier> { WebLocalNotifier() }
     single<ReminderScheduler> { InProcessReminderScheduler(get(), get()) }
     single<RestoreCredentialClient> { UnsupportedRestoreCredentialClient }
+    single<GoogleSignInLauncher> { WebGoogleSignInLauncher(get()) }
 }
 
 actual val requiresRemoteAuthGate: Boolean = true

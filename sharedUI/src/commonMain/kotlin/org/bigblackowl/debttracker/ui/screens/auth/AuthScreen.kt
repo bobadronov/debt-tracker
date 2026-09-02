@@ -1,6 +1,7 @@
 package org.bigblackowl.debttracker.ui.screens.auth
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -21,8 +23,11 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -49,6 +54,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import debt_tracker.sharedui.generated.resources.Res
+import debt_tracker.sharedui.generated.resources.ic_google_logo
+import org.bigblackowl.debttracker.BuildConfig
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.media.rememberImagePicker
 import org.bigblackowl.debttracker.domain.validation.isPhonePasteRelevant
@@ -63,6 +71,7 @@ import org.bigblackowl.debttracker.ui.components.LoadingButton
 import org.bigblackowl.debttracker.ui.components.PasteableOutlinedTextField
 import org.bigblackowl.debttracker.ui.components.UkrainianPhoneVisualTransformation
 import org.bigblackowl.debttracker.ui.components.rememberClipboardText
+import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 
 /** Account+Sync (спек §1.1) — email/пароль через supabase-kt Auth; sign up also collects name/optional avatar+phone. */
@@ -224,9 +233,9 @@ fun AuthScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(strings.authOfferSignUpPrompt)
+                        Text(strings.authExtra.offerSignUpPrompt)
                         TextButton(onClick = { viewModel.onIntent(AuthIntent.SwitchToSignUp) }) {
-                            Text(strings.authOfferSignUpAction)
+                            Text(strings.authExtra.offerSignUpAction)
                         }
                     }
                 }
@@ -298,9 +307,43 @@ fun AuthScreen(
                 LoadingButton(
                     onClick = { viewModel.onIntent(AuthIntent.Submit) },
                     isLoading = state.isLoading,
+                    enabled = !state.isGoogleLoading,
                     modifier = Modifier.fillMaxWidth(.8f),
                     label = { Text(if (state.isSignUpMode) strings.authSubmitSignUp else strings.authSubmitSignIn) },
                 )
+
+                if (BuildConfig.GOOGLE_SIGN_IN_ENABLED) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(.8f).padding(vertical = Dimens.space8),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.space12),
+                    ) {
+                        HorizontalDivider(modifier = Modifier.weight(1f))
+                        Text(strings.authExtra.divider)
+                        HorizontalDivider(modifier = Modifier.weight(1f))
+                    }
+                    OutlinedButton(
+                        onClick = { viewModel.onIntent(AuthIntent.GoogleSignIn) },
+                        enabled = !state.isLoading && !state.isGoogleLoading,
+                        modifier = Modifier.fillMaxWidth(.8f),
+                    ) {
+                        if (state.isGoogleLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(Dimens.space20),
+                                strokeWidth = Dimens.space2,
+                            )
+                        } else {
+                            Image(
+                                painter = painterResource(Res.drawable.ic_google_logo),
+                                contentDescription = null,
+                                modifier = Modifier.size(Dimens.space20),
+                            )
+                            Spacer(Modifier.width(Dimens.space12))
+                            Text(strings.authExtra.continueWithGoogle)
+                        }
+                    }
+                }
+
                 TextButton(onClick = { viewModel.onIntent(AuthIntent.ToggleMode) }) {
                     Text(if (state.isSignUpMode) strings.authToggleToSignIn else strings.authToggleToSignUp)
                 }

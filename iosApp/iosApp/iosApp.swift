@@ -12,7 +12,12 @@ struct ComposeApp: App {
                 // so DebtTrackerNavGraph can show the same "add as debtor or creditor?" dialog as
                 // an in-app camera scan.
                 .onOpenURL { url in
-                    ContactDeepLinks.shared.onIncomingLink(rawUri: url.absoluteString)
+                    if url.host == "login-callback" {
+                        // OAuth "Continue with Google" callback → supabase-kt finishes the PKCE exchange.
+                        MainKt.handleAuthDeeplink(url: url.absoluteString)
+                    } else {
+                        ContactDeepLinks.shared.onIncomingLink(rawUri: url.absoluteString)
+                    }
                 }
         }
     }

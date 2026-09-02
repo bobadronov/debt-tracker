@@ -137,6 +137,7 @@ kotlin {
             implementation(kotlin("test"))
             implementation(libs.compose.ui.test)
             implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.multiplatformSettings.test) // MapSettings for AppSettings in ViewModel tests
         }
 
         androidMain.dependencies {
@@ -149,6 +150,8 @@ kotlin {
             // Restore Credentials API (zero-tap sign-in on a new device) — see AndroidRestoreCredentialClient.
             implementation(libs.androidx.credentials)
             implementation(libs.androidx.credentials.play.services.auth)
+            // Native "Sign in with Google" — GetGoogleIdOption for Credential Manager (see GoogleSignInLauncher.android.kt).
+            implementation(libs.google.identity.googleid)
         }
 
         jvmMain.dependencies {
@@ -194,6 +197,11 @@ fun secret(key: String): String =
     (System.getenv(key) ?: secrets.getProperty(key))
         ?: error("Missing $key: define it in secrets.properties (see secrets.properties.example) or as an env var.")
 
+// Like [secret] but tolerates a missing value (returns "") — for optional/feature-flagged config
+// whose absence must not fail a build, e.g. GOOGLE_SERVER_CLIENT_ID before its CI secret is set.
+fun optionalSecret(key: String): String =
+    System.getenv(key) ?: secrets.getProperty(key) ?: ""
+
 // Version is defined once in /version.properties and shared by every target (single source of truth) —
 // androidApp/desktopApp read it for their own versionName/packageVersion, and it's exposed here as
 // BuildConfig.APP_VERSION so every Compose target (Android, Desktop, Web, iOS) shows the same value
@@ -223,6 +231,10 @@ buildConfig {
     // anon key is intentionally public (RLS protects the data, not the key itself) — standard Supabase practice.
     buildConfigField("SUPABASE_URL", secret("SUPABASE_URL"))
     buildConfigField("SUPABASE_ANON_KEY", secret("SUPABASE_ANON_KEY"))
+    // Web OAuth client ID from Google Cloud Console — used as `serverClientId` for the Android
+    // native Credential Manager flow (see GoogleSignInLauncher.android.kt). Public value, same
+    // rationale as the anon key: it identifies the app, it doesn't authorize anything on its own.
+    buildConfigField("GOOGLE_SERVER_CLIENT_ID", optionalSecret("GOOGLE_SERVER_CLIENT_ID"))
     buildConfigField("APP_VERSION", versionProps.getProperty("VERSION_NAME"))
     buildConfigField("APP_VERSION_CODE", versionProps.getProperty("VERSION_CODE").toInt())
     buildConfigField("APP_AUTHOR", "BigBlackOwl")
@@ -237,6 +249,11 @@ buildConfig {
     // Client scaffolding (RestoreCredentialCoordinator + AndroidRestoreCredentialClient) is wired
     // and compiled regardless — flip this to true once 1–2 are done.
     buildConfigField("RESTORE_CREDENTIALS_ENABLED", false)
+    // "Continue with Google" on the auth screen. OFF until the Google Cloud + Supabase console
+    // setup has fully propagated and been smoke-tested on each platform. The whole flow
+    // (GoogleSignInLauncher + its actuals, the button, the OAuth deep-link handling) compiles and
+    // links regardless — flip this to true in the same commit that verifies the console side.
+    buildConfigField("GOOGLE_SIGN_IN_ENABLED", false)
 }
 
 room {

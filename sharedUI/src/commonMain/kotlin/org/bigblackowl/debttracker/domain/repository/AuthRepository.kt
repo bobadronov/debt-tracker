@@ -21,6 +21,15 @@ interface AuthRepository {
 
     suspend fun signUp(email: String, password: String): Result<Unit>
     suspend fun signIn(email: String, password: String): Result<Unit>
+
+    /**
+     * Exchanges a Google ID token (from Android's Credential Manager) for a Supabase session.
+     * [rawNonce] is the un-hashed nonce whose SHA-256 was passed to Google; Supabase re-hashes and
+     * compares it. The OAuth ("Continue with Google") flow on Desktop/Web/iOS goes through
+     * [org.bigblackowl.debttracker.core.auth.GoogleSignInLauncher] instead and never calls this.
+     */
+    suspend fun signInWithGoogleIdToken(idToken: String, rawNonce: String?): Result<Unit>
+
     suspend fun signOut()
 
     /** Завантажує фото в Storage (`avatars/{userId}/avatar.{fileExtension}`) і зберігає URL у [avatarUrl]/`profiles.avatar_url`. */
