@@ -248,7 +248,7 @@ Je gegevens blijven op je apparaat tenzij je een account aanmaakt om te synchron
 
 **Short description:**
 ```
-Śledź, kto jest winien Tobie i komu winien Ty — offline, synchronizacja online.
+Śledź, kto jest winien Tobie i komu winien Ty — offline, sync w chmurze.
 ```
 
 **Full description:**
