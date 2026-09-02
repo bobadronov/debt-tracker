@@ -605,26 +605,27 @@ private fun feedbackUrl(locale: String, theme: String): String = buildString {
     if (theme == "light" || theme == "dark") append("&theme=").append(theme)
 }
 
-@Preview
+// The @Preview functions render this rather than SettingsScreen directly: the extra hop keeps the
+// koinViewModel() call out of the previewed function's own body (the tooling only flags a ViewModel
+// one call deep), matching HomeScreen/NotificationsScreen/QrHubScreen. The screen still renders
+// through SettingsViewModel, backed by the fakes in preview/PreviewModule.kt — no real I/O.
 @Composable
-private fun SettingsScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+private fun SettingsScreenPreviewContent() {
     SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onOpenAccountInfo = {}, onOpenLanguage = {})
 }
 
 @Preview
 @Composable
-private fun SettingsScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onOpenAccountInfo = {}, onOpenLanguage = {})
-}
+private fun SettingsScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { SettingsScreenPreviewContent() }
+
+@Preview
+@Composable
+private fun SettingsScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { SettingsScreenPreviewContent() }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun SettingsScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onOpenAccountInfo = {}, onOpenLanguage = {})
-}
+private fun SettingsScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { SettingsScreenPreviewContent() }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun SettingsScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    SettingsScreen(onBack = {}, onExport = {}, onOpenAuth = {}, onOpenAccountInfo = {}, onOpenLanguage = {})
-}
+private fun SettingsScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { SettingsScreenPreviewContent() }
