@@ -249,11 +249,9 @@ buildConfig {
     // Client scaffolding (RestoreCredentialCoordinator + AndroidRestoreCredentialClient) is wired
     // and compiled regardless — flip this to true once 1–2 are done.
     buildConfigField("RESTORE_CREDENTIALS_ENABLED", false)
-    // "Continue with Google" on the auth screen. OFF until the Google Cloud + Supabase console
-    // setup has fully propagated and been smoke-tested on each platform. The whole flow
-    // (GoogleSignInLauncher + its actuals, the button, the OAuth deep-link handling) compiles and
-    // links regardless — flip this to true in the same commit that verifies the console side.
-    buildConfigField("GOOGLE_SIGN_IN_ENABLED", false)
+    // "Continue with Google" on the auth screen. The whole flow (GoogleSignInLauncher + its
+    // actuals, the button, the OAuth deep-link handling) compiles and links regardless of this.
+    buildConfigField("GOOGLE_SIGN_IN_ENABLED", true)
 }
 
 room {
