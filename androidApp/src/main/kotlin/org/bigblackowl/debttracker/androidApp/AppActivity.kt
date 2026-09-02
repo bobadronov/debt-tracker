@@ -31,6 +31,7 @@ import org.koin.core.context.GlobalContext
  * `androidx.biometric.BiometricPrompt` requires a `FragmentActivity` host.
  */
 class AppActivity : FragmentActivity() {
+
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* результат лише інформативний — LocalNotifier сам перевіряє areNotificationsEnabled() перед кожним показом */ }
 

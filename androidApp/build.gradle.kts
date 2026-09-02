@@ -96,6 +96,11 @@ kotlin {
 dependencies {
     implementation(project(":sharedUI"))
     implementation(libs.androidx.activityCompose)
+    // AppActivity extends FragmentActivity directly — declare fragment explicitly instead of
+    // leaning on a transitive copy (:sharedUI's androidMain has it as `implementation`, which
+    // an Android library does NOT expose to consumers, so androidApp otherwise resolves an
+    // older transitive fragment and its androidx.core.app supertypes go unresolved in the IDE).
+    implementation(libs.androidx.fragment)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.koin.android)
     implementation(libs.androidx.glance.appwidget)

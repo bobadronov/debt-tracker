@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 
@@ -16,7 +17,10 @@ private const val REMINDER_CHANNEL_ID = "debt_reminders"
  * the notification with a tap intent that re-launches the app carrying the [NotificationDeepLinks]
  * URI (same mechanism as [AndroidLocalNotifier]).
  */
+
 class ReminderAlarmReceiver : BroadcastReceiver() {
+
+    @RequiresPermission(android.Manifest.permission.POST_NOTIFICATIONS)
     override fun onReceive(context: Context, intent: Intent) {
         val title = intent.getStringExtra(EXTRA_REMINDER_TITLE) ?: return
         val body = intent.getStringExtra(EXTRA_REMINDER_BODY) ?: return
@@ -37,7 +41,10 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
         deepLink?.let { link -> contentIntent(context, link)?.let(builder::setContentIntent) }
-        runCatching { manager.notify(notifId, builder.build()) }
+
+        runCatching {
+            manager.notify(notifId, builder.build())
+        }
     }
 
     private fun contentIntent(context: Context, deepLink: String): PendingIntent? {

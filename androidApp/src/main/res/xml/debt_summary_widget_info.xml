@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Fixed-size widget: resizeMode="none" and a single declared size. WidgetUi reads this
      size verbatim (SizeMode.Single) and renders one layout, so minWidth/minHeight are the
-     real design dimensions, not just a lower bound. -->
+     real design dimensions, not just a lower bound.
+     targetCellWidth/Height and previewLayout are API 31+ only and harmlessly ignored below that
+     (the launcher then uses its own default sizing and a live-rendered preview) — hence
+     tools:ignore="UnusedAttribute". -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:targetCellWidth="2"
     android:targetCellHeight="2"
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/widget_loading"
     android:previewLayout="@layout/widget_preview"
     android:resizeMode="none"
-    android:widgetCategory="home_screen" />
+    android:widgetCategory="home_screen"
+    tools:ignore="UnusedAttribute" />

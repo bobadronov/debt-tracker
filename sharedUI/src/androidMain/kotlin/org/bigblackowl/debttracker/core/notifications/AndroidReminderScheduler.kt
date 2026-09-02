@@ -5,8 +5,8 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import androidx.core.content.edit
 import io.github.aakira.napier.Napier
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 internal const val REMINDER_PREFS = "debt_reminder_schedule"
@@ -85,6 +85,6 @@ internal class AndroidReminderScheduler(private val context: Context) : Reminder
     }
 
     private fun writePersisted(reminders: List<ScheduledReminder>) {
-        prefs.edit().putString(REMINDER_PREFS_KEY, reminderJson.encodeToString(reminders)).apply()
+        prefs.edit { putString(REMINDER_PREFS_KEY, reminderJson.encodeToString(reminders)) }
     }
 }

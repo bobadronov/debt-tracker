@@ -11,7 +11,8 @@
          SCHEDULE_EXACT_ALARM — auto-grant на API ≤ 32; USE_EXACT_ALARM — на 33+ (для reminder-застосунків).
          Якщо дозвіл недоступний, планувальник відкочується на неточний setAndAllowWhileIdle. -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32"/>
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM"
+        tools:ignore="ExactAlarmPolicy" />
     <!-- Перепланувати нагадування після перезавантаження (алярми не переживають reboot). -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-feature android:name="android.hardware.camera.autofocus"
@@ -24,7 +25,8 @@
         android:label="Debt Tracker"
         android:allowBackup="false"
         android:theme="@android:style/Theme.Material.NoActionBar"
-        tools:replace="android:name,android:allowBackup">
+        tools:replace="android:name,android:allowBackup"
+        tools:ignore="DataExtractionRules">
         <activity
             android:name=".AppActivity"
             android:theme="@style/Theme.DebtTracker.Splash"

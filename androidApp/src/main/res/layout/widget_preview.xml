@@ -4,11 +4,13 @@
      stand-in. The widget is fixed-size: WidgetUi always renders a tonal, colour-coded row
      per metric with an icon circle, label and bold amount — so this mirrors that. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@drawable/widget_preview_card"
-    android:padding="10dp">
+    android:padding="10dp"
+    tools:ignore="HardcodedText">
 
     <LinearLayout
         android:layout_width="228dp"
@@ -27,6 +29,7 @@
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:layout_gravity="center"
+                android:contentDescription="@null"
                 android:src="@drawable/widget_preview_icon_down" />
         </FrameLayout>
 
@@ -71,6 +74,7 @@
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:layout_gravity="center"
+                android:contentDescription="@null"
                 android:src="@drawable/widget_preview_icon_up" />
         </FrameLayout>
 
