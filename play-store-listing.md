@@ -447,24 +447,58 @@ the workflow manually, or use `publishing.bat`, which always dispatches with
 `play_track=production`). Play Console still applies its staged-rollout /
 review rules before the release actually goes live.
 
-### Countries / regions
+### Countries / regions — releasing everywhere
 
 Country availability is **Play Console only** — the Play Developer API and
 the `r0adkll/upload-google-play` action used in `release.yml` don't manage
-it, so there's nothing to configure in this repo.
+it, so there's nothing to change in this repo. The app's 10 UI languages
+don't restrict availability: a listing shows in every selected country
+regardless of which languages the app translates. "All countries" just means
+ticking all ~170.
+[Google's guide.](https://support.google.com/googleplay/android-developer/answer/6223646)
 
-1. **Release → Production** (or the testing track you're using) → **Countries
-   / regions** tab. Each track has its own list.
-2. **Add countries / regions** → tick the ones you want (or **Select all**
-   for ~170) → **Add** → **Save**.
-3. If the app is already live, the change ships with the next release
-   rollout; before the first publish, it applies at launch.
+**Step 1 — clear the global declarations first** (production won't publish
+worldwide until every row here is green): **Policy and programs → App
+content**.
 
-Before expanding to new countries, Play also wants these done (they're
-global, not per-country): **App content** → Target audience, Data safety
-(§4), Content rating (§3), Ads declaration (None), Government-app and
-Financial-features declarations. The app is free with no in-app purchases,
-so no per-country tax/pricing setup is needed.
+| Section | Answer for DebtTracker |
+|---|---|
+| Privacy policy | `https://bobadronov.github.io/debt-tracker/privacy-policy.html` |
+| Ads | **No**, this app does not contain ads |
+| App access | All functionality available without special access *(the Android build needs no login; the Web AuthGate doesn't apply to the APK/AAB Play reviews)* |
+| Content ratings | Complete the IARC questionnaire — see §3 |
+| Target audience and content | Not designed for children (13+ / 18+) |
+| Data safety | Complete the form — see §4 |
+| Financial features | **"My app doesn't provide any financial features"** — it *records* debts, it doesn't lend, transfer, or process money. A wrong answer here gets the release rejected. |
+| Government apps | **No** |
+| Health / other prompts | Answer as they appear; none apply |
+
+**Step 2 — store listing must be complete** (nothing publishes at all
+without it): app icon (ready), **feature graphic 1024×500**, and **at least
+2 phone screenshots** — see §2.
+
+**Step 3 — select the countries:**
+`Test and release → Production → open the latest release → Countries /
+regions tab → Add countries / regions → tick "Select all" at the top of the
+list → Add → Save`. Each track (Internal / Closed / Open / Production) keeps
+its own country list, so set it on the track you're publishing.
+
+**Step 4 — apply it:** an availability change only goes out **with a
+release**. Create or update a Production release, roll it out, and Google
+review follows (a few hours to a few days). Before the first publish, the
+selection just takes effect at launch.
+
+**Countries that may need extra compliance** — for a *free* app with no
+payments most don't apply, but Play may still gate a few and show a warning
+if so:
+
+- **Brazil** — developer business/merchant details verification.
+- **South Korea, Vietnam, India, Israel, Japan** — region-specific
+  compliance docs (usually games/fintech; unlikely here).
+
+If a country demands something you can't provide, untick just that country
+and ship the rest. No per-country tax/pricing setup is needed (free app, no
+in-app purchases).
 
 ## 6. Recap: what's already done vs. what's left
 
@@ -474,7 +508,7 @@ so no per-country tax/pricing setup is needed.
   the `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secret being configured
 - Privacy policy page, deployed to GitHub Pages alongside the web app
 - This packet: listing text in all 10 languages, content rating guidance,
-  data safety mapping, country-setup steps
+  data safety mapping, full country-rollout steps (§5)
 - App icon (512×512)
 
 **Left for you:**
@@ -482,9 +516,9 @@ so no per-country tax/pricing setup is needed.
 - Service account + `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secret, to turn on
   automated uploads for every release after the first (§5)
 - Feature graphic + at least 2 phone screenshots (§2)
-- Walking through the content rating and data safety questionnaires in the
-  live Play Console UI (answers drafted above, but only you can click
-  through the actual forms)
-- Picking the countries/regions (§5)
+- Clearing the App content declarations, then walking the content rating and
+  data safety questionnaires in the live Play Console UI (answers drafted
+  above, but only you can click through the actual forms)
+- Selecting all countries/regions and rolling out a release to apply it (§5)
 - Reviewing/replacing the placeholder contact email
 - Hitting Submit
