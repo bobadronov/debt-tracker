@@ -2,6 +2,7 @@ package org.bigblackowl.debttracker.androidApp.widget
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.Configuration
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
@@ -12,7 +13,6 @@ import androidx.glance.ColorFilter
 import androidx.glance.GlanceComposable
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
-import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.action.actionStartActivity
@@ -22,7 +22,6 @@ import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
-import androidx.glance.color.ColorProvider
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
@@ -71,7 +70,11 @@ class DebtSummaryWidget : GlanceAppWidget() {
     @SuppressLint("RestrictedApi")
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val koin = GlobalContext.get()
-        val strings = resolveStrings(koin.get<AppSettings>().locale)
+        val appSettings = koin.get<AppSettings>()
+        val strings = resolveStrings(appSettings.locale)
+        // Render in whatever light/dark the user picked for the app, not just the system setting —
+        // AppActivity nudges the widget via updateAll() whenever that preference changes.
+        val isDark = resolveWidgetIsDark(appSettings.theme, context)
 
         // Дві незалежні вибірки з БД — читаємо паралельно, форматуємо суму один раз.
         val (debtorsAmount, creditorsAmount) = coroutineScope {
@@ -88,6 +91,7 @@ class DebtSummaryWidget : GlanceAppWidget() {
 
         provideContent {
             WidgetUi(
+                isDark = isDark,
                 debtorsAmount = debtorsAmount,
                 creditorsAmount = creditorsAmount,
                 debtorsLabel = strings.homeTabDebtors,
@@ -99,22 +103,33 @@ class DebtSummaryWidget : GlanceAppWidget() {
     }
 }
 
-// Дублює sharedUI theme/DebtAccentColors.kt (internal, недоступний з androidApp через
-// межу модуля) — той самий "тривожний"/"позитивний" акцент, що й у KpiCard (StatsScreen.kt).
+/**
+ * Mirrors sharedUI `theme/Theme.kt`'s `resolveIsDark` (internal, out of reach across the module
+ * boundary — the same reason the accent colours below are duplicated): the app's `"dark"` /
+ * `"light"` preference wins over the OS setting, anything else follows the OS. Keeps the widget on
+ * the same palette the user chose in Settings instead of always tracking the system.
+ */
+private fun resolveWidgetIsDark(themePreference: String, context: Context): Boolean =
+    when (themePreference) {
+        "dark" -> true
+        "light" -> false
+        else -> (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+            Configuration.UI_MODE_NIGHT_YES
+    }
+
+// Дублює sharedUI theme/DebtAccentColors.kt + потрібні surface-токени з theme/Color.kt (обидва
+// internal, недоступні з androidApp через межу модуля) — той самий "тривожний"/"позитивний"
+// акцент, що й у KpiCard (StatsScreen.kt), і ті самі фон/підпис, що в res/values*/colors.xml
+// (набір widget_preview_*), тож рендер збігається з превʼю та layout-заглушкою.
 private val DebtLight = Color(0xFFBB152C)
 private val DebtDark = Color(0xFFFFB3B1)
 private val RepayLight = Color(0xFF2E7D32)
 private val RepayDark = Color(0xFF81C995)
 
-private val DebtColor = ColorProvider(day = DebtLight, night = DebtDark)
-private val RepayColor = ColorProvider(day = RepayLight, night = RepayDark)
-
-// Дві м'які підкладки на кожен акцент: світліша — для «пігулки» рядка, трохи
-// насиченіша — для кола з іконкою, щоб коло читалося на тлі пігулки.
-private val DebtPillColor = ColorProvider(day = DebtLight.copy(alpha = 0.10f), night = DebtDark.copy(alpha = 0.13f))
-private val RepayPillColor = ColorProvider(day = RepayLight.copy(alpha = 0.10f), night = RepayDark.copy(alpha = 0.13f))
-private val DebtBadgeColor = ColorProvider(day = DebtLight.copy(alpha = 0.22f), night = DebtDark.copy(alpha = 0.26f))
-private val RepayBadgeColor = ColorProvider(day = RepayLight.copy(alpha = 0.22f), night = RepayDark.copy(alpha = 0.26f))
+private val WidgetBackgroundLight = Color(0xFFF3F3F4)
+private val WidgetBackgroundDark = Color(0xFF1A1C1C)
+private val LabelLight = Color(0xFF404941) // OnSurfaceVariantLight
+private val LabelDark = Color(0xFFC0C9BE)  // OnSurfaceVariantDark
 
 // Фіксовані розміри розкладки — віджет має один відомий розмір (див. DebtSummaryWidget.sizeMode).
 private val OuterPadding = 10.dp
@@ -126,17 +141,22 @@ private val LabelFontSize = 13.sp
 private val AmountFontSize = 18.sp
 
 /**
- * Статична палітра пігулки — синглтони enum, тож [WidgetUi] не алокує нічого на кожну
- * рекомпозицію. [icon] — гліф тренду, решта — акцент і дві тоновані підкладки.
+ * Статична палітра пігулки — синглтони enum, тож [WidgetUi] не алокує нічого зайвого. [icon] —
+ * гліф тренду; [accent]/[pill]/[badge] дають акцент і дві тоновані підкладки для обраної теми
+ * (дві м'які підкладки на кожен акцент: світліша — для «пігулки» рядка, трохи насиченіша — для
+ * кола з іконкою, щоб коло читалося на тлі пігулки).
  */
 private enum class Accent(
     val icon: Int,
-    val color: ColorProvider,
-    val pill: ColorProvider,
-    val badge: ColorProvider,
+    private val light: Color,
+    private val dark: Color,
 ) {
-    Positive(R.drawable.ic_widget_trend_down, RepayColor, RepayPillColor, RepayBadgeColor),
-    Negative(R.drawable.ic_widget_trend_up, DebtColor, DebtPillColor, DebtBadgeColor),
+    Positive(R.drawable.ic_widget_trend_down, RepayLight, RepayDark),
+    Negative(R.drawable.ic_widget_trend_up, DebtLight, DebtDark);
+
+    fun accent(isDark: Boolean): Color = if (isDark) dark else light
+    fun pill(isDark: Boolean): Color = accent(isDark).copy(alpha = if (isDark) 0.13f else 0.10f)
+    fun badge(isDark: Boolean): Color = accent(isDark).copy(alpha = if (isDark) 0.26f else 0.22f)
 }
 
 /**
@@ -154,48 +174,57 @@ private enum class Accent(
 @Composable
 @GlanceComposable
 fun WidgetUi(
+    isDark: Boolean = false,
     debtorsAmount: String = "1 250,00 ₴",
     creditorsAmount: String = "430,00 ₴",
     debtorsLabel: String = "Мені винні",
     creditorsLabel: String = "Я винен",
     debtorsDescription: String = "$debtorsLabel: $debtorsAmount",
     creditorsDescription: String = "$creditorsLabel: $creditorsAmount",
-) = GlanceTheme {
+) {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(GlanceTheme.colors.widgetBackground)
+            .background(if (isDark) WidgetBackgroundDark else WidgetBackgroundLight)
             .cornerRadius(24.dp)
             .clickable(actionStartActivity(AppActivity::class.java))
             .padding(OuterPadding),
         verticalAlignment = Alignment.Vertical.CenterVertically,
     ) {
-        KpiPill(Accent.Positive, debtorsLabel, debtorsAmount, debtorsDescription)
+        KpiPill(Accent.Positive, isDark, debtorsLabel, debtorsAmount, debtorsDescription)
         Spacer(GlanceModifier.height(PillGap))
-        KpiPill(Accent.Negative, creditorsLabel, creditorsAmount, creditorsDescription)
+        KpiPill(Accent.Negative, isDark, creditorsLabel, creditorsAmount, creditorsDescription)
     }
 }
+
+@RequiresApi(Build.VERSION_CODES.S)
+@OptIn(ExperimentalGlancePreviewApi::class)
+@SuppressLint("RestrictedApi")
+@Preview(250, 130)
+@Composable
+@GlanceComposable
+private fun WidgetUiDarkPreview() = WidgetUi(isDark = true)
 
 /** Кольорове коло з іконкою (як у KpiCard) + підпис і сума на м'якій акцентній підкладці. */
 @SuppressLint("RestrictedApi")
 @Composable
-private fun KpiPill(accent: Accent, label: String, amount: String, description: String) {
+private fun KpiPill(accent: Accent, isDark: Boolean, label: String, amount: String, description: String) {
     Row(
         modifier = GlanceModifier
             .fillMaxWidth()
-            .background(accent.pill)
+            .background(accent.pill(isDark))
             .cornerRadius(PillCorner)
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.Vertical.CenterVertically
     ) {
-        Badge(accent, description)
+        Badge(accent, isDark, description)
         Spacer(GlanceModifier.width(10.dp))
         Column {
             Text(
                 text = label,
                 maxLines = 1,
                 style = TextStyle(
-                    color = GlanceTheme.colors.onSurfaceVariant,
+                    color = ColorProvider(if (isDark) LabelDark else LabelLight),
                     fontWeight = FontWeight.Medium,
                     fontSize = LabelFontSize,
                 ),
@@ -203,7 +232,7 @@ private fun KpiPill(accent: Accent, label: String, amount: String, description: 
             Text(
                 text = amount,
                 maxLines = 1,
-                style = TextStyle(color = accent.color, fontWeight = FontWeight.Bold, fontSize = AmountFontSize),
+                style = TextStyle(color = ColorProvider(accent.accent(isDark)), fontWeight = FontWeight.Bold, fontSize = AmountFontSize),
             )
         }
     }
@@ -212,18 +241,18 @@ private fun KpiPill(accent: Accent, label: String, amount: String, description: 
 /** Коло акцентного кольору з тонованим гліфом тренду. */
 @SuppressLint("RestrictedApi")
 @Composable
-private fun Badge(accent: Accent, description: String) {
+private fun Badge(accent: Accent, isDark: Boolean, description: String) {
     Box(
         modifier = GlanceModifier
             .size(BadgeSize)
             .cornerRadius(BadgeSize / 2)
-            .background(accent.badge),
+            .background(accent.badge(isDark)),
         contentAlignment = Alignment.Center,
     ) {
         Image(
             provider = ImageProvider(accent.icon),
             contentDescription = description,
-            colorFilter = ColorFilter.tint(accent.color),
+            colorFilter = ColorFilter.tint(ColorProvider(accent.accent(isDark))),
             modifier = GlanceModifier.size(BadgeIconSize),
         )
     }

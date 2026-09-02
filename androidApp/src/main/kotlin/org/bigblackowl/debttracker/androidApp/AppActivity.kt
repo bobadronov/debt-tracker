@@ -11,12 +11,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.FragmentActivity
+import androidx.glance.appwidget.updateAll
 import org.bigblackowl.debttracker.App
+import org.bigblackowl.debttracker.androidApp.widget.DebtSummaryWidget
 import org.bigblackowl.debttracker.core.auth.handleAuthDeeplink
 import org.bigblackowl.debttracker.core.auth.isAuthCallbackIntent
 import org.bigblackowl.debttracker.core.notifications.EXTRA_NOTIFICATION_DEEP_LINK
@@ -90,13 +93,18 @@ class AppActivity : FragmentActivity() {
 }
 
 @Composable
-private fun ThemeChanged(isDark: Boolean) {
+private fun ThemeChanged(isLight: Boolean) {
     val view = LocalView.current
-    LaunchedEffect(isDark) {
+    val context = LocalContext.current
+    LaunchedEffect(isLight) {
         val window = (view.context as Activity).window
         WindowInsetsControllerCompat(window, window.decorView).apply {
-            isAppearanceLightStatusBars = isDark
-            isAppearanceLightNavigationBars = isDark
+            isAppearanceLightStatusBars = isLight
+            isAppearanceLightNavigationBars = isLight
         }
+        // Keep the home-screen widget on the same light/dark palette: it reads AppSettings.theme
+        // when it renders but otherwise only re-renders on its ~30-min tick, so push an update
+        // now that the preference changed (also runs once on launch — cheap, and keeps it fresh).
+        DebtSummaryWidget().updateAll(context)
     }
 }
