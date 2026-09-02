@@ -1,194 +1,125 @@
-# DebtTracker
+<p align="center">
+  <img src="https://bobadronov.github.io/debt-tracker/android-chrome-512x512.png" width="120" alt="DebtTracker logo">
+</p>
 
-A Kotlin Multiplatform app for tracking personal debts in both directions:
-who owes **you** money, and who **you** owe money to. Local-first by default,
-with optional cloud sync via Supabase.
+<h1 align="center">DebtTracker</h1>
 
-Built with **Compose Multiplatform** — one shared UI codebase targets
-Android, iOS, Desktop (JVM), and Web (JS/Wasm).
+<p align="center">
+  <b>The app that remembers who owes whom — so your friendships don't have to.</b><br>
+  <sub>«Поверну на наступному тижні» — сказано у 2019. Ми досі пам'ятаємо.</sub>
+</p>
 
-**Live web app:** https://bobadronov.github.io/debt-tracker/.
+<p align="center">
+  <a href="https://bobadronov.github.io/debt-tracker/"><b>▶ Try it now in your browser</b></a> · nothing to install
+</p>
 
-## Features
+<p align="center">
+  <img alt="Platforms" src="https://img.shields.io/badge/Android%20·%20iOS%20·%20Desktop%20·%20Web-6C4DF6?style=for-the-badge">
+  <img alt="Offline first" src="https://img.shields.io/badge/Offline--first-2ecc71?style=for-the-badge">
+  <img alt="No ads" src="https://img.shields.io/badge/No%20ads%20·%20No%20trackers%20·%20No%20analytics-e74c3c?style=for-the-badge">
+  <img alt="Languages" src="https://img.shields.io/badge/10%20languages-f39c12?style=for-the-badge">
+</p>
 
-- **Two mirrored directions** — "Мені винні" (people who owe me) and "Я
-  винен" (people I owe), each with its own list, detail screen, and running
-  total. The same person can appear in both lists independently; balances
-  are never netted against each other.
-- **One "Add record" screen** — a single form with an "owes me / I owe"
-  toggle, reached through a contact picker that lets you reuse someone
-  entered before (name/phone/email/photo prefilled) or start fresh. The
-  picker list is derived from past debtors/creditors, so for signed-in users
-  it stays the same across devices. If an entered email belongs to a
-  registered user, their name/photo are offered as autofill.
-- **Offline-first, optional sync** — every write lands in a local Room
-  database first (`syncStatus = PENDING`) and is pushed to Supabase in the
-  background. Works fully offline in **Local-only** mode; sign in to switch
-  to **Account+Sync** and get realtime updates across devices, with
-  last-write-wins conflict resolution on `updatedAt`.
-- **App lock** — biometric prompt (BiometricPrompt / LocalAuthentication)
-  with PIN fallback, toggled per device in Settings; devices without
-  biometric hardware/enrollment fall back to PIN-only protection instead of
-  just offering to skip it.
-- **Transaction history per contact** — record lending/borrowing and
-  partial/full repayments, each transaction signed (`+`/`-`) to derive its
-  type and color from the amount alone.
-- **Stats screen** — total owed in each direction, top debtors/creditors,
-  and a 6-month trend chart.
-- **Export** — CSV/PDF export of transaction history, filtered by direction
-  and date range, generated natively on each platform via FileKit; Web
-  renders the PDF as an HTML report printed through the browser's own
-  "Save as PDF".
-- **QR contact exchange** — share your contact card (name/phone/email) as a
-  QR code, generated the same way on every platform (including Web) via
-  `qrose`. Android/iOS scan it live with the camera; Desktop/Web have no
-  camera scanner, so the same button instead opens an image picker and
-  decodes a picked screenshot (ZXing on Desktop, the browser's native
-  `BarcodeDetector` on Web). A scanned/opened `debttracker://contact?...`
-  link (also openable directly from other apps, e.g. Google Lens) prefills
-  the Add record form, skipping the contact picker.
-- **Android home-screen widget** (Glance) with size-adaptive icon-badge KPI
-  rows for the two running totals, reflowing from one to two columns as the
-  widget is resized.
-- **Runtime language switcher** — System / Українська / English / Deutsch /
-  Español / Français / Italiano / Nederlands / Polski / Português / Čeština,
-  each with a flag icon, switchable without restarting the app.
-- **Search, sort, filter, swipe-to-delete**, sound feedback on key actions,
-  and Desktop keyboard shortcuts (`Ctrl+N` add record — owes me,
-  `Ctrl+Shift+N` add record — I owe, `Ctrl+F` search, `Esc` back).
+<p align="center">
+  <b>English</b> ·
+  <a href="README.uk.md">Українська</a> ·
+  <a href="README.de.md">Deutsch</a> ·
+  <a href="README.es.md">Español</a> ·
+  <a href="README.fr.md">Français</a> ·
+  <a href="README.it.md">Italiano</a> ·
+  <a href="README.nl.md">Nederlands</a> ·
+  <a href="README.pl.md">Polski</a> ·
+  <a href="README.pt.md">Português</a> ·
+  <a href="README.cs.md">Čeština</a>
+</p>
 
-## Tech stack
+---
 
-| | |
+## 💸 The problem
+
+You lent your friend money for lunch. They lent you money for a taxi. Your
+brother owes you from last month, and you owe your neighbour for the drill.
+Somewhere in that mess is the truth, and it is not in your head.
+
+**DebtTracker keeps the score so nobody has to pretend they forgot.**
+
+---
+
+## ✨ Why you'll like it
+
+### 🔀 Two lists, never mixed up
+**"They owe me"** and **"I owe them"** live side by side, each with its own
+running total. The same person can be in both — we never quietly net one
+against the other. Your accountant might cry. Your friendships won't.
+
+### 📴 Offline-first, cloud optional
+Every entry saves to your phone **instantly**, plane mode or not. Want it on
+your tablet and laptop too? Sign in and it syncs in real time. Don't want an
+account? Then don't have one. The app doesn't care.
+
+### 🧾 Every loan and payback, tracked
+Log the €50 you lent, then the €20 they paid back, then the other €30. The
+balance updates itself. Colour-coded, so you know at a glance who's winning.
+
+### 📸 Add people with a QR code
+Point the camera at a friend's DebtTracker QR and their name, phone and photo
+fill themselves in. Typing contact details is *so* 2010.
+
+### 🔒 Locked down
+Fingerprint, face unlock or PIN — every time the app opens. What you lend is
+nobody else's business.
+
+### 📊 Stats that sting (a little)
+Totals in both directions, your top debtors and creditors, and a 6-month
+trend chart. Great for New Year's resolutions.
+
+### 📤 Export to CSV or PDF
+Filter by direction and date range, hit export, done. For taxes, for
+receipts, or for that one friend who insists "that never happened."
+
+### 🏠 Home-screen widget
+Both running totals, right on your Android home screen. The number is either
+motivating or terrifying. Your call.
+
+### 🌍 Speaks your language
+System · Українська · English · Deutsch · Español · Français · Italiano ·
+Nederlands · Polski · Português · Čeština — switch instantly, no restart.
+
+Plus search, sort, filters, swipe-to-delete, satisfying little sounds, and
+keyboard shortcuts on Desktop for the power users.
+
+---
+
+## 🚀 How it works
+
+```mermaid
+flowchart LR
+    A[Someone owes<br/>you money] --> B[Add a record<br/>in 5 seconds]
+    B --> C[Log paybacks<br/>as they happen]
+    C --> D[Balance is always<br/>right — automatically]
+```
+
+---
+
+## 📥 Get it
+
+| Where | Link |
 |---|---|
-| Language | Kotlin 2.4 (Kotlin Multiplatform) |
-| UI | Compose Multiplatform 1.12 (Material 3) |
-| DI | Koin 4 (`koin-compose`, `koin-compose-viewmodel`) |
-| Local storage | Room (KMP) 2.8 |
-| Backend | Supabase (`supabase-kt` 3.7) — Auth, Postgrest, Realtime |
-| Networking | Ktor client 3.5 |
-| Navigation | Navigation 3 (`androidx.navigation3`) |
-| Async | Kotlin Coroutines & Flow |
-| Precision math | `bignum` (`BigDecimal`, for money) |
-| Settings | `multiplatform-settings` |
-| File export/picking | FileKit (`filekit-dialogs-compose`) |
-| QR codes | `qrose` (generate, all platforms), QRKit (camera scan, Android/iOS), ZXing (Desktop image decode) |
+| 🌐 **Web** — nothing to install (free account) | **[bobadronov.github.io/debt-tracker](https://bobadronov.github.io/debt-tracker/)** |
+| 🤖 **Android** (APK) | [Latest release](https://github.com/bobadronov/debt-tracker/releases/latest) |
+| 🖥️ **Windows** (MSI) | [Latest release](https://github.com/bobadronov/debt-tracker/releases/latest) |
+| 🐧 **Linux** (DEB) | [Latest release](https://github.com/bobadronov/debt-tracker/releases/latest) |
+| 🍏 **iOS** | Build from source |
 
-## Architecture
+---
 
-The whole app — UI, domain logic, and data layer — lives in a single shared
-module, **`sharedUI`**. Platform modules (`androidApp`, `iosApp`,
-`desktopApp`, `webApp`) are thin entry points only (`Application`/`main()`/
-`MainViewController`) with no business logic of their own.
+## 🔐 Your data, your rules
 
-```
-sharedUI/src
-├── commonMain/kotlin/org/bigblackowl/debttracker
-│   ├── domain/            # pure Kotlin: models, repository interfaces, use cases
-│   │   ├── model/         # Debtor/Creditor + their transactions, enums
-│   │   ├── repository/    # DebtorRepository / CreditorRepository / AuthRepository
-│   │   └── usecase/       # one class per operation (ObserveDebtorsUseCase, ...)
-│   ├── core/
-│   │   ├── di/            # Koin modules (appModule + expect platformDataModule)
-│   │   ├── settings/      # AppSettings (Compose-reactive user prefs)
-│   │   ├── security/      # expect BiometricAuthenticator
-│   │   ├── export/        # expect FileExporter (CSV/PDF), FileKit-backed on Android/iOS/Desktop
-│   │   ├── sound/         # expect SoundPlayer
-│   │   ├── qr/            # QR contact-exchange: generate (qrose), scan (QRKit)/decode (ZXing/BarcodeDetector), deep links
-│   │   ├── media/         # FileKit-backed cross-platform image picker
-│   │   ├── i18n/          # Strings.kt catalog, translate/ (one file per language), AppLocale.kt
-│   │   └── shortcuts/     # Desktop hotkey → search-focus bridge
-│   ├── ui/
-│   │   ├── screens/{contacts,debtors,creditors,auth,settings,export,stats}/
-│   │   │   # each screen is MVI: <Name>Contract.kt (State/Intent/Effect),
-│   │   │   # <Name>ViewModel.kt, <Name>Screen.kt (Composable)
-│   │   │   # contacts/ = the merged Add record screen + the contact picker
-│   │   └── components/    # shared composables (AmountBottomSheet, PlaceholderScreen, ...)
-│   ├── navigation/        # sealed Screen routes + NavDisplay graph
-│   ├── theme/             # Material 3 color schemes, debt/repay accent colors
-│   └── preview/           # @Preview support: fake in-memory repos + isolated Koin context
-├── roomMain/               # Entity/DAO/Database + repository impls + sync (Android/iOS/JVM only)
-├── pdfMain/                # PdfKmp vector-DSL PDF report builder (Android/iOS/JVM — not Web)
-├── androidMain/ iosMain/ jvmMain/ webMain/
-│                           # actual implementations of the expect declarations above
-└── webMain                 # shared JS + Wasm source set (no Room — online-only on Web)
-```
+No ads. No trackers. No analytics SDKs. Nothing leaves your device unless
+**you** create an account for sync — and even then it's just your data, only
+yours, encrypted in transit. Delete everything from Settings whenever you
+like.
 
-**Screen pattern (MVI):** each screen's `Contract` file defines an immutable
-`State`, a sealed `Intent` for user actions, and a sealed `Effect` for
-one-shot events (navigation, snackbars). The `ViewModel` reduces intents into
-state and exposes it as a `StateFlow`; the `Screen` composable is a thin
-render of that state plus `onIntent` dispatch. The `Debtor`/`Creditor` list
-and detail screens are structurally identical, mirrored one-to-one; creating
-a record is a single screen shared by both directions.
+---
 
-**Platform code:** `commonMain` never contains platform-specific code — where
-a real per-platform implementation is unavoidable (biometrics, file export,
-sound, the local database), `commonMain` declares an `expect`, and each
-platform source set provides the `actual`.
-
-## Previewing screens
-
-Every screen composable in `ui/screens` has a matching `@Preview` function.
-Because screens resolve their `ViewModel`/repositories via Koin
-(`koinViewModel()`, `koinInject()`), previews render inside
-`DebtTrackerPreview { ... }` (`core/preview/PreviewHost.kt`), which spins up
-an isolated `KoinApplicationPreview` wired to in-memory fake repositories
-(`preview/PreviewFakes.kt`) instead of Room/Supabase — no network or database
-access happens when rendering a preview.
-
-## Getting started
-
-1. Create a Supabase project and run `supabase/full_backup.sql` once (SQL
-   Editor or `psql -f`) — a single, ready-to-run snapshot of the full schema
-   (`profiles`, `debtors`, `debt_transactions`, `creditors`,
-   `creditor_transactions`, triggers, RLS policies). `supabase/migrations/`
-   holds the same schema as incremental, versioned steps instead, if you'd
-   rather apply it via `supabase db push`.
-2. Copy `secrets.properties.example` to `secrets.properties` and fill in your
-   project's URL and anon key — read by `sharedUI/build.gradle.kts`'s
-   `buildConfig { ... }` block. The anon key is safe to keep client-side
-   since RLS enforces per-user data isolation.
-3. Build/run one of the targets below.
-
-## Build & run
-
-### Android
-Open the project in Android Studio and run the `androidApp` configuration, or:
-```
-./gradlew :androidApp:assembleDebug
-```
-APK output: `androidApp/build/outputs/apk/debug/androidApp-debug.apk`
-
-### Desktop
-```
-./gradlew :desktopApp:run
-```
-Hot reload:
-```
-./gradlew :desktopApp:hotRun --auto
-```
-
-### iOS
-Open `iosApp/iosApp.xcodeproj` in Xcode and run, or use the
-[Kotlin Multiplatform Mobile plugin](https://plugins.jetbrains.com/plugin/14936-kotlin-multiplatform-mobile)
-for Android Studio. `iosApp` is a minimal Swift shell — all UI is the shared
-Compose Multiplatform code.
-
-### Web
-JS dev server:
-```
-./gradlew :webApp:jsBrowserDevelopmentRun
-```
-Wasm dev server:
-```
-./gradlew :webApp:wasmJsBrowserDevelopmentRun
-```
-Production distribution:
-```
-./gradlew :webApp:composeCompatibilityBrowserDistribution
-```
-Deploy `webApp/build/dist/composeWebCompatibility/productionExecutable` to
-any static web server. The `release.yml` workflow deploys it automatically to
-GitHub Pages at https://bobadronov.github.io/debt-tracker/ on every tagged
-release.
+<p align="center"><sub>Made for people who like their friendships <i>and</i> their money.</sub></p>
