@@ -64,6 +64,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.bigblackowl.debttracker.BuildConfig
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
+import org.bigblackowl.debttracker.core.i18n.resolveFeedbackStrings
 import org.bigblackowl.debttracker.core.notifications.NotificationPermissionRequester
 import org.bigblackowl.debttracker.core.notifications.rememberNotificationPermissionRequester
 import org.bigblackowl.debttracker.core.platform.AppPlatform
@@ -577,10 +578,12 @@ private fun AboutSection(
         SettingsRowDivider()
         // Opens the web feedback form (legal/feedback.html on GitHub Pages) in a browser;
         // it POSTs to the submit-feedback Edge Function, which emails the maintainer.
+        // Its label lives outside Strings — that constructor is at the JVM 255-param limit.
+        val feedbackStrings = remember(settings.locale) { resolveFeedbackStrings(settings.locale) }
         SettingsRow(
             icon = Icons.Filled.Feedback,
-            title = strings.settingsFeedback,
-            subtitle = strings.settingsFeedbackSubtitle,
+            title = feedbackStrings.title,
+            subtitle = feedbackStrings.subtitle,
             onClick = { uriHandler.openUri(feedbackUrl(settings.locale, settings.theme)) },
         )
     }

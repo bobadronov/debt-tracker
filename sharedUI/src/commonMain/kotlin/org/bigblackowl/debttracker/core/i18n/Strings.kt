@@ -282,9 +282,6 @@ data class Strings(
     val settingsAbout: String,
     val settingsAboutVersion: String,
     val settingsAboutAuthor: String,
-    /** About-section row that opens the web feedback form (feedback.html) in a browser. */
-    val settingsFeedback: String,
-    val settingsFeedbackSubtitle: String,
     val settingsCheckForUpdates: String,
     val settingsCheckingForUpdates: String,
     val settingsUpToDate: String,
