@@ -10,12 +10,14 @@ name: Release
 #   - Linux .deb
 #   - Web build
 #
-# Then:
+# Then, ONLY if every platform build above succeeded (all-or-nothing — a single
+# failed build publishes nothing anywhere):
+#   - uploads the .aab to Google Play (play-store job — also needs the
+#     GOOGLE_PLAY_SERVICE_ACCOUNT_JSON secret, see below), and only if THAT
+#     succeeds:
 #   - publishes APK/.msi/.deb as a GitHub Release (the .aab is Play-Store-only —
 #     it's not directly installable, so it isn't attached to the release page)
 #   - deploys the web build to GitHub Pages
-#   - uploads the .aab to Google Play (play-store job — only runs once the
-#     GOOGLE_PLAY_SERVICE_ACCOUNT_JSON secret is configured, see below)
 #
 # Google Play publishing prerequisites (one-time, done by a human — the Play
 # Developer API cannot create an app or do its very first release):
@@ -223,9 +225,20 @@ jobs:
   # it's referenced there. The documented workaround is to copy the secret
   # into an `env:` var first and gate on `env.*` instead, since `env` (unlike
   # `secrets`) is a valid context inside `if:`.
+  #
+  # All-or-nothing release: this waits for EVERY platform build to pass before
+  # touching Google Play, and `github-release` + `deploy-pages` in turn wait for
+  # this. So a failure in any single build (or in the Play upload itself) leaves
+  # nothing published anywhere — no GitHub Release, no Pages deploy, no Play
+  # upload — rather than a half-shipped release across platforms.
   # ============================================================
   play-store:
-    needs: android-aab
+    needs:
+      - android-apk
+      - android-aab
+      - windows-msi
+      - linux-deb
+      - web
 
     runs-on: ubuntu-latest
 
@@ -421,7 +434,15 @@ jobs:
   # Deploy GitHub Pages
   # ============================================================
   deploy-pages:
-    needs: web
+    # Publish the web build only once every platform built AND the Play upload
+    # went through — see the all-or-nothing note on the play-store job.
+    needs:
+      - android-apk
+      - android-aab
+      - windows-msi
+      - linux-deb
+      - web
+      - play-store
 
     runs-on: ubuntu-latest
 
@@ -439,11 +460,15 @@ jobs:
   # GitHub Release
   # ============================================================
   github-release:
+    # Cut the GitHub Release only once every platform built AND the Play upload
+    # went through — see the all-or-nothing note on the play-store job.
     needs:
       - android-apk
       - android-aab
       - windows-msi
       - linux-deb
+      - web
+      - play-store
 
     runs-on: ubuntu-latest
 
