@@ -34,6 +34,8 @@ import org.bigblackowl.debttracker.domain.repository.CreditorRepository
 import org.bigblackowl.debttracker.domain.repository.DebtorRepository
 import org.bigblackowl.debttracker.domain.repository.NotificationRepository
 import org.bigblackowl.debttracker.domain.repository.ProfileLookupRepository
+import org.bigblackowl.debttracker.domain.repository.RestoreCredentialGateway
+import org.bigblackowl.debttracker.domain.repository.RestoreSessionResult
 import org.bigblackowl.debttracker.domain.repository.SessionRepository
 import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
 import org.bigblackowl.debttracker.core.platform.AppPlatform
@@ -439,6 +441,18 @@ class NoOpLocalNotifier : LocalNotifier {
  */
 class NoOpSoundPlayer : SoundPlayer {
     override fun play(sound: SoundEffect) = Unit
+}
+
+/**
+ * Inert [RestoreCredentialGateway] for @Preview — the real coordinator reaches Credential Manager /
+ * Supabase Auth. Needed by [org.bigblackowl.debttracker.domain.usecase.ForceSignOutUseCase], which
+ * SettingsViewModel/AuthViewModel/SplashViewModel depend on.
+ */
+class NoOpRestoreCredentialGateway : RestoreCredentialGateway {
+    override val isActive = false
+    override suspend fun registerForCurrentSession() = Unit
+    override suspend fun tryRestoreSession() = RestoreSessionResult.UNSUPPORTED
+    override suspend fun clear() = Unit
 }
 
 /** Статичний зріз курсів для @Preview [org.bigblackowl.debttracker.ui.screens.exchange.ExchangeRatesScreen] — без мережі. */

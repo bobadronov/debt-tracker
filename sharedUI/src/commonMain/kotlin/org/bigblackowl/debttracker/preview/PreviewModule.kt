@@ -16,6 +16,7 @@ import org.bigblackowl.debttracker.domain.repository.ExchangeRatesRepository
 import org.bigblackowl.debttracker.domain.repository.DebtorRepository
 import org.bigblackowl.debttracker.domain.repository.NotificationRepository
 import org.bigblackowl.debttracker.domain.repository.ProfileLookupRepository
+import org.bigblackowl.debttracker.domain.repository.RestoreCredentialGateway
 import org.bigblackowl.debttracker.domain.repository.SessionRepository
 import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
 import org.bigblackowl.debttracker.domain.usecase.ClearLocalCacheUseCase
@@ -87,6 +88,7 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     single<SessionRepository> { FakeSessionRepository() }
     single<NotificationRepository> { FakeNotificationRepository() }
     single<ExchangeRatesRepository> { FakeExchangeRatesRepository() }
+    single<RestoreCredentialGateway> { NoOpRestoreCredentialGateway() }
     single<LocalNotifier> { NoOpLocalNotifier() }
     single<CoroutineScope> { ApplicationScope() }
     single { NotificationsPoller(get(), get(), get(), get(), get()) }
