@@ -36,3 +36,6 @@ supabase/.temp/
 /release.bat
 /androidApp/release/
 screenshots/
+/CLAUDE.md
+/docs/
+/url.txt
