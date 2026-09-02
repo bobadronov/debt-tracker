@@ -10,21 +10,43 @@ clicking "Submit") are marked accordingly — I can't do those.
    account — one-time $25 fee, government ID verification, accept the
    Developer Distribution Agreement. Takes Google anywhere from a few hours
    to a couple of days to approve.
-2. In Play Console: **Create app** → name it, pick default language, pick
-   "App" (not game), pick "Free". This locks in the package name
-   (`org.bigblackowl.debttracker.androidApp`, from the `.aab` you upload) —
-   it can never change after your first upload, so double-check it here.
+2. In Play Console: **Create app** → name it, pick default language
+   (`en-US`), pick "App" (not game), pick "Free". This locks in the package
+   name (`org.bigblackowl.debttracker.androidApp`, from the `.aab` you
+   upload) — it can never change after your first upload, so double-check it
+   here.
 
 ## 1. Store listing text
 
 **App name** (30 char max): `Debt Tracker`
 
-**Short description** (80 char max, 72 used):
+**App category:** Finance
+
+**Contact email:** bobadronov@gmail.com *(using the account email as a
+placeholder — swap it for whatever public support address you want; once
+published this is visible to every user)*
+
+**Website:** https://bobadronov.github.io/debt-tracker/
+
+**Privacy policy URL:** https://bobadronov.github.io/debt-tracker/privacy-policy.html
+*(deployed by `release.yml`'s web job from [`legal/privacy-policy.html`](legal/privacy-policy.html) on every tagged release)*
+
+---
+
+The app ships 10 UI languages (`sharedUI/.../core/i18n/translate/`). Below is
+the store listing in each, keyed by its Play Console locale. Add each locale
+under **Store presence → Main store listing → Manage translations**; `en-US`
+is the default. Every short description is ≤ 80 chars and every full
+description ≤ 4000 chars — paste as-is.
+
+### en-US (default)
+
+**Short description:**
 ```
 Track who owes you and who you owe — offline-first, optional cloud sync.
 ```
 
-**Full description** (4000 char max):
+**Full description:**
 ```
 Debt Tracker keeps track of money owed in both directions — who owes you,
 and who you owe — without netting the two against each other.
@@ -40,7 +62,7 @@ KEY FEATURES
 • Stats screen: totals, top debtors/creditors, 6-month trend
 • Export transaction history to CSV or PDF
 • Home-screen widget showing your two running totals
-• Available in Ukrainian, English, and Polish
+• Available in 10 languages
 • Search, sort, filter, swipe-to-delete
 • No ads. No trackers. No analytics SDKs.
 
@@ -48,14 +70,16 @@ Your data stays on your device unless you choose to create an account for
 sync — see the privacy policy for exactly what that involves.
 ```
 
-**Короткий опис** (uk-UA, 80 символів макс, 74 використано):
+### uk-UA
+
+**Short description:**
 ```
 Стежте, хто винен вам і кому винні ви — офлайн, синхронізація за бажанням.
 ```
 
-**Повний опис** (uk-UA, 4000 символів макс, 1056 використано):
+**Full description:**
 ```
-DebtTracker веде облік грошей в обидва боки — хто винен вам, і кому винні ви, — не згортаючи одне в інше.
+DebtTracker веде облік грошей в обидва боки — хто винен вам, і кому винні ви — не згортаючи одне в інше.
 
 ОСНОВНІ МОЖЛИВОСТІ
 • Два незалежні списки: люди, які винні вам, і люди, яким винні ви
@@ -68,19 +92,166 @@ DebtTracker веде облік грошей в обидва боки — хто
 • Екран статистики: загальні суми, топ боржників/кредиторів, тренд за 6 місяців
 • Експорт історії транзакцій у CSV або PDF
 • Віджет на головному екрані з двома поточними сумами
-• Доступно українською, англійською та польською мовами
+• Доступно 10 мовами
 • Пошук, сортування, фільтри, свайп для видалення
 • Без реклами. Без трекерів. Без аналітичних SDK.
 
 Ваші дані залишаються на пристрої, якщо ви не створите акаунт для синхронізації — детальніше в політиці конфіденційності.
 ```
 
-**Krótki opis** (pl-PL, 80 znaków maks., 79 użyto):
+### de-DE
+
+**Short description:**
+```
+Wer schuldet dir Geld, wem schuldest du — offline, Cloud-Sync optional.
+```
+
+**Full description:**
+```
+Debt Tracker verfolgt geliehenes Geld in beide Richtungen — wer dir etwas schuldet und wem du etwas schuldest — ohne beides gegeneinander aufzurechnen.
+
+FUNKTIONEN
+• Zwei unabhängige Listen: Leute, die dir schulden, und Leute, denen du schuldest
+• Jede Leihgabe und Rückzahlung als eigene Transaktion mit laufendem Saldo
+• Mehrere Währungen: UAH, USD, PLN, EUR — pro Kontakt
+• Funktioniert komplett offline — kein Konto nötig
+• Optionales kostenloses Konto für Echtzeit-Sync über alle deine Geräte
+• Kontakte per QR-Code hinzufügen — kein Abtippen von Namen oder Nummern
+• App-Sperre per Fingerabdruck, Gesichtsentsperrung oder PIN
+• Statistik: Summen, größte Schuldner/Gläubiger, 6-Monats-Trend
+• Transaktionsverlauf als CSV oder PDF exportieren
+• Homescreen-Widget mit deinen beiden laufenden Summen
+• In 10 Sprachen verfügbar
+• Suchen, sortieren, filtern, zum Löschen wischen
+• Keine Werbung. Kein Tracking. Keine Analytics-SDKs.
+
+Deine Daten bleiben auf deinem Gerät, es sei denn, du legst ein Konto für die Synchronisierung an — Details in der Datenschutzerklärung.
+```
+
+### es-ES
+
+**Short description:**
+```
+Controla quién te debe y a quién debes — sin conexión, sync opcional.
+```
+
+**Full description:**
+```
+Debt Tracker lleva la cuenta del dinero prestado en ambos sentidos — quién te debe y a quién debes — sin compensar lo uno con lo otro.
+
+FUNCIONES
+• Dos listas independientes: quienes te deben y a quienes debes
+• Cada préstamo y devolución como transacción propia, con saldo actualizado
+• Varias monedas: UAH, USD, PLN, EUR, por contacto
+• Funciona totalmente sin conexión — no hace falta cuenta
+• Cuenta gratuita opcional para sincronizar entre tus dispositivos en tiempo real
+• Añade contactos escaneando un código QR — sin teclear nombres ni números
+• Bloqueo de la app con huella, cara o PIN
+• Pantalla de estadísticas: totales, mayores deudores/acreedores, tendencia de 6 meses
+• Exporta el historial de transacciones a CSV o PDF
+• Widget en la pantalla de inicio con tus dos totales
+• Disponible en 10 idiomas
+• Buscar, ordenar, filtrar, deslizar para borrar
+• Sin anuncios. Sin rastreadores. Sin SDK de analíticas.
+
+Tus datos se quedan en tu dispositivo salvo que crees una cuenta para sincronizar — consulta la política de privacidad para los detalles.
+```
+
+### fr-FR
+
+**Short description:**
+```
+Qui vous doit, à qui vous devez — hors ligne, synchro cloud en option.
+```
+
+**Full description:**
+```
+Debt Tracker suit l'argent prêté dans les deux sens — qui vous doit et à qui vous devez — sans compenser l'un par l'autre.
+
+FONCTIONNALITÉS
+• Deux listes indépendantes : ceux qui vous doivent et ceux à qui vous devez
+• Chaque prêt et remboursement comme transaction distincte, avec solde courant
+• Plusieurs devises : UAH, USD, PLN, EUR, par contact
+• Fonctionne entièrement hors ligne — aucun compte requis
+• Compte gratuit facultatif pour synchroniser vos appareils en temps réel
+• Ajoutez des contacts en scannant un QR code — sans saisir noms ni numéros
+• Verrouillage par empreinte, reconnaissance faciale ou code PIN
+• Écran de statistiques : totaux, principaux débiteurs/créanciers, tendance sur 6 mois
+• Exportez l'historique des transactions en CSV ou PDF
+• Widget d'écran d'accueil affichant vos deux totaux
+• Disponible en 10 langues
+• Recherche, tri, filtres, balayer pour supprimer
+• Pas de publicité. Pas de traceurs. Pas de SDK d'analytics.
+
+Vos données restent sur votre appareil sauf si vous créez un compte pour la synchronisation — voir la politique de confidentialité pour le détail.
+```
+
+### it-IT
+
+**Short description:**
+```
+Chi ti deve e a chi devi — offline, sincronizzazione cloud opzionale.
+```
+
+**Full description:**
+```
+Debt Tracker tiene traccia del denaro prestato in entrambe le direzioni — chi deve a te e a chi devi tu — senza compensare l'uno con l'altro.
+
+FUNZIONI
+• Due elenchi indipendenti: chi deve a te e a chi devi tu
+• Ogni prestito e restituzione come transazione a sé, con saldo aggiornato
+• Più valute: UAH, USD, PLN, EUR, per contatto
+• Funziona completamente offline — nessun account richiesto
+• Account gratuito opzionale per sincronizzare i tuoi dispositivi in tempo reale
+• Aggiungi contatti scansionando un codice QR — senza digitare nomi o numeri
+• Blocco dell'app con impronta, volto o PIN
+• Schermata statistiche: totali, principali debitori/creditori, andamento a 6 mesi
+• Esporta lo storico delle transazioni in CSV o PDF
+• Widget nella schermata Home con i tuoi due totali
+• Disponibile in 10 lingue
+• Cerca, ordina, filtra, scorri per eliminare
+• Niente pubblicità. Niente tracker. Niente SDK di analytics.
+
+I tuoi dati restano sul dispositivo a meno che tu non crei un account per la sincronizzazione — vedi l'informativa sulla privacy per i dettagli.
+```
+
+### nl-NL
+
+**Short description:**
+```
+Wie is jou geld schuldig en wie ben jij — offline, sync optioneel.
+```
+
+**Full description:**
+```
+Debt Tracker houdt geleend geld in beide richtingen bij — wie is jou iets schuldig en wie ben jij iets schuldig — zonder het tegen elkaar weg te strepen.
+
+FUNCTIES
+• Twee onafhankelijke lijsten: wie is jou schuldig en wie ben jij schuldig
+• Elke lening en terugbetaling als eigen transactie, met lopend saldo
+• Meerdere valuta's: UAH, USD, PLN, EUR, per contact
+• Werkt volledig offline — geen account nodig
+• Optioneel gratis account om je apparaten in realtime te synchroniseren
+• Voeg contacten toe door een QR-code te scannen — geen namen of nummers typen
+• App-vergrendeling met vingerafdruk, gezicht of pincode
+• Statistiekenscherm: totalen, grootste debiteuren/crediteuren, trend over 6 maanden
+• Exporteer transactiegeschiedenis naar CSV of PDF
+• Widget op het startscherm met je twee lopende totalen
+• Beschikbaar in 10 talen
+• Zoeken, sorteren, filteren, vegen om te verwijderen
+• Geen advertenties. Geen trackers. Geen analytics-SDK's.
+
+Je gegevens blijven op je apparaat tenzij je een account aanmaakt om te synchroniseren — zie het privacybeleid voor de details.
+```
+
+### pl-PL
+
+**Short description:**
 ```
 Śledź, kto jest winien Tobie i komu winien Ty — offline, synchronizacja online.
 ```
 
-**Pełny opis** (pl-PL, 4000 znaków maks., 1097 użyto):
+**Full description:**
 ```
 Debt Tracker śledzi pieniądze pożyczone w obie strony — kto jest winien Tobie i komu Ty jesteś winien — bez wzajemnego rozliczania.
 
@@ -95,61 +266,92 @@ GŁÓWNE FUNKCJE
 • Ekran statystyk: sumy, najwięksi dłużnicy/wierzyciele, trend z 6 miesięcy
 • Eksport historii transakcji do CSV lub PDF
 • Widżet na ekranie głównym z dwiema bieżącymi sumami
-• Dostępne w językach: ukraińskim, angielskim i polskim
+• Dostępne w 10 językach
 • Wyszukiwanie, sortowanie, filtry, przesunięcie do usunięcia
 • Bez reklam. Bez trackerów. Bez SDK analitycznych.
 
 Twoje dane pozostają na urządzeniu, chyba że założysz konto do synchronizacji — szczegóły w polityce prywatności.
 ```
 
-**App category:** Finance
+### pt-PT
 
-**Contact email:** bobadronov@gmail.com *(using the account email as a
-placeholder — swap it for whatever public support address you want; once
-published this is visible to every user)*
+**Short description:**
+```
+Controla quem te deve e a quem deves — offline, sincronização opcional.
+```
 
-**Website:** https://bobadronov.github.io/debt-tracker/
+**Full description:**
+```
+O Debt Tracker acompanha o dinheiro emprestado nos dois sentidos — quem te deve e a quem deves — sem compensar um com o outro.
 
-**Privacy policy URL:** https://bobadronov.github.io/debt-tracker/privacy-policy.html
-*(now wired into `release.yml`'s web job — goes live on the next tagged
-release; until then this URL 404s)*
+FUNCIONALIDADES
+• Duas listas independentes: quem te deve e a quem deves
+• Cada empréstimo e devolução como transação própria, com saldo atualizado
+• Várias moedas: UAH, USD, PLN, EUR, por contacto
+• Funciona totalmente offline — não é preciso conta
+• Conta gratuita opcional para sincronizar os teus dispositivos em tempo real
+• Adiciona contactos ao ler um código QR — sem escrever nomes nem números
+• Bloqueio da app por impressão digital, rosto ou PIN
+• Ecrã de estatísticas: totais, maiores devedores/credores, tendência de 6 meses
+• Exporta o histórico de transações para CSV ou PDF
+• Widget no ecrã principal com os teus dois totais
+• Disponível em 10 idiomas
+• Pesquisar, ordenar, filtrar, deslizar para eliminar
+• Sem anúncios. Sem rastreadores. Sem SDK de analítica.
+
+Os teus dados ficam no dispositivo a não ser que cries uma conta para sincronizar — consulta a política de privacidade para os detalhes.
+```
+
+### cs-CZ
+
+**Short description:**
+```
+Kdo dluží tobě a komu dlužíš ty — offline, volitelná synchronizace.
+```
+
+**Full description:**
+```
+Debt Tracker sleduje půjčené peníze v obou směrech — kdo dluží tobě a komu dlužíš ty — aniž by je vzájemně započítával.
+
+FUNKCE
+• Dva nezávislé seznamy: kdo dluží tobě a komu dlužíš ty
+• Každá půjčka a splátka jako vlastní transakce s průběžným zůstatkem
+• Více měn: UAH, USD, PLN, EUR, pro každý kontakt
+• Funguje zcela offline — účet není potřeba
+• Volitelný účet zdarma pro synchronizaci zařízení v reálném čase
+• Přidávej kontakty naskenováním QR kódu — bez psaní jmen a čísel
+• Zámek aplikace otiskem prstu, obličejem nebo PINem
+• Obrazovka statistik: součty, největší dlužníci/věřitelé, trend za 6 měsíců
+• Export historie transakcí do CSV nebo PDF
+• Widget na domovské obrazovce se dvěma průběžnými součty
+• K dispozici v 10 jazycích
+• Hledání, řazení, filtry, přejetí pro smazání
+• Žádné reklamy. Žádné trackery. Žádné analytické SDK.
+
+Tvá data zůstávají v zařízení, dokud si nevytvoříš účet pro synchronizaci — podrobnosti v zásadách ochrany soukromí.
+```
 
 ## 2. Graphic assets
 
 | Asset | Spec | Status |
 |---|---|---|
-| App icon | 512×512 PNG, 32-bit with alpha, <1MB | Done — [`webApp/src/commonMain/resources/android-chrome-512x512.png`](webApp/src/commonMain/resources/android-chrome-512x512.png) |
-| Feature graphic | 1024×500 PNG/JPG (no alpha) | Done — [`store-assets/feature-graphic.png`](store-assets/feature-graphic.png), 371 KB |
-| Phone screenshots | 2–8 images, PNG/JPEG, 16:9 or 9:16, side 320–3840px | Done — [`store-assets/phone/`](store-assets/phone), 1080×1920, 5 images |
-| 7" tablet screenshots | up to 8 images, same format, side 320–3840px | Done — [`store-assets/tablet-7in/`](store-assets/tablet-7in), 1440×2560, 5 images |
-| 10" tablet screenshots | up to 9 images, same format, side 1080–7680px | Done — [`store-assets/tablet-10in/`](store-assets/tablet-10in), 2160×3840, 5 images |
+| App icon | 512×512 PNG, 32-bit with alpha, <1 MB | Ready — [`webApp/src/commonMain/resources/android-chrome-512x512.png`](webApp/src/commonMain/resources/android-chrome-512x512.png) |
+| Feature graphic | 1024×500 PNG/JPG (no alpha) | **Needed** — not in the repo |
+| Phone screenshots | 2–8 images, PNG/JPEG, 16:9 or 9:16, side 320–3840 px | **Needed** — 2 min. |
+| 7" tablet screenshots | up to 8 images, same format, side 320–3840 px | Optional |
+| 10" tablet screenshots | up to 8 images, same format, side 1080–7680 px | Optional |
 
-Both the feature graphic and the screenshots are generated, not hand-drawn or
-device-captured — this machine has no Android SDK/emulator to capture real
-screens from. `store-assets/screens.html` recreates 5 screens (debtor list,
-creditor list, stats, a debtor's transaction history, settings) using the
-app's actual strings (`core/i18n/Strings.kt`), colors
-(`sharedUI/.../theme/Color.kt` dark scheme), and layout structure read
-straight from each screen's Compose source, with placeholder demo data. The
-same HTML is rendered at all three device sizes — `render-screens.mjs` swaps
-the outer canvas size and toggles which `<section>` is visible, so the
-"device" column stays a fixed pixel width and centers itself on wider
-canvases, mirroring the real app's actual responsive behavior
-(`Modifier.width(Dimens.contentMaxWidth)`, centered).
+Only the app icon is present. The feature graphic and screenshots need to be
+produced — this machine has no Android SDK/emulator to capture real screens
+from. Two ways to get them:
 
-To tweak wording/data and re-render everything (feature graphic + all 15
-screenshots):
-```
-cd store-assets
-npm install playwright --no-save   # one-time, downloads a local Chromium
-npx playwright install chromium    # one-time, ~115 MB browser binary
-node render.mjs                    # feature-graphic.png
-node render-screens.mjs            # phone/, tablet-7in/, tablet-10in/
-```
-
-If you'd rather have real device captures instead of recreations, that's
-still an option — run the debug APK (`./gradlew :androidApp:installDebug`)
-on a physical device or emulator and capture there instead.
+- **Real captures:** run the app on a device/emulator
+  (`./gradlew :androidApp:installDebug`) and screenshot the debtor list,
+  creditor list, stats, a contact's transaction history, and settings.
+- **Mockups:** render frames from the shared design tokens
+  (`core/i18n/Strings.kt` for copy, `sharedUI/.../theme/Color.kt` for the
+  palette) — Play accepts non-photographic promo screenshots as long as they
+  represent the app.
 
 ## 3. Content rating questionnaire (IARC, inside Play Console)
 
@@ -215,9 +417,9 @@ create an app or do its first release):**
 2. Upload the `.aab` from the `debt-tracker-aab` artifact on your latest
    GitHub Release (built by `release.yml`'s `android-aab` job).
 3. Play Console will offer **Play App Signing** — accept it (Google then
-   re-signs your app for distribution using your uploaded `.aab` as the
-   *upload* key; your existing keystore stays the *upload* key, not the
-   final signing key, which is the standard/recommended setup).
+   re-signs your app for distribution; your uploaded keystore stays the
+   *upload* key, not the final signing key, which is the
+   standard/recommended setup).
 4. Fill in the release notes, save, and **Submit for review**. First review
    typically takes anywhere from a few hours to a few days.
 
@@ -245,6 +447,25 @@ the workflow manually, or use `publishing.bat`, which always dispatches with
 `play_track=production`). Play Console still applies its staged-rollout /
 review rules before the release actually goes live.
 
+### Countries / regions
+
+Country availability is **Play Console only** — the Play Developer API and
+the `r0adkll/upload-google-play` action used in `release.yml` don't manage
+it, so there's nothing to configure in this repo.
+
+1. **Release → Production** (or the testing track you're using) → **Countries
+   / regions** tab. Each track has its own list.
+2. **Add countries / regions** → tick the ones you want (or **Select all**
+   for ~170) → **Add** → **Save**.
+3. If the app is already live, the change ships with the next release
+   rollout; before the first publish, it applies at launch.
+
+Before expanding to new countries, Play also wants these done (they're
+global, not per-country): **App content** → Target audience, Data safety
+(§4), Content rating (§3), Ads declaration (None), Government-app and
+Financial-features declarations. The app is free with no in-app purchases,
+so no per-country tax/pricing setup is needed.
+
 ## 6. Recap: what's already done vs. what's left
 
 **Done (this repo):**
@@ -252,17 +473,18 @@ review rules before the release actually goes live.
 - Automated Play Store upload (`play-store` job in `release.yml`), gated on
   the `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secret being configured
 - Privacy policy page, deployed to GitHub Pages alongside the web app
-- This packet: listing text, content rating guidance, data safety mapping
+- This packet: listing text in all 10 languages, content rating guidance,
+  data safety mapping, country-setup steps
+- App icon (512×512)
 
 **Left for you:**
 - Play Console account + app creation, and the manual first upload (§5)
 - Service account + `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secret, to turn on
   automated uploads for every release after the first (§5)
-- All graphic assets (icon, feature graphic, phone/7"/10" screenshots) are
-  done, generated from the app's real design tokens — see §2. Swap in real
-  device captures instead if you'd prefer that over the recreations.
+- Feature graphic + at least 2 phone screenshots (§2)
 - Walking through the content rating and data safety questionnaires in the
-  live Play Console UI (I've drafted the answers, but only you can click
+  live Play Console UI (answers drafted above, but only you can click
   through the actual forms)
+- Picking the countries/regions (§5)
 - Reviewing/replacing the placeholder contact email
 - Hitting Submit
