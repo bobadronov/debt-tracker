@@ -125,4 +125,12 @@ desde Ajustes cuando quieras.
 
 ---
 
+## 💬 Ideas y errores
+
+¿Falta algo? ¿Algo no funciona? **Ajustes → Enviar comentarios** abre un
+formulario breve que llega directo a la bandeja del desarrollador — se
+agradecen capturas de pantalla.
+
+---
+
 <p align="center"><sub>Hecho para gente que aprecia sus amistades <i>y</i> su dinero.</sub></p>

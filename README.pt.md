@@ -125,4 +125,12 @@ nas Definições quando quiseres.
 
 ---
 
+## 💬 Ideias e erros
+
+Falta algo? Algo está com problema? **Definições → Enviar feedback** abre um
+formulário curto que chega direto à caixa de entrada do programador — capturas
+de ecrã são bem-vindas.
+
+---
+
 <p align="center"><sub>Feito para quem gosta das suas amizades <i>e</i> do seu dinheiro.</sub></p>

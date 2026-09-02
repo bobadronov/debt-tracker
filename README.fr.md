@@ -130,4 +130,12 @@ Supprimez tout depuis les Réglages quand vous voulez.
 
 ---
 
+## 💬 Idées et bugs
+
+Il manque quelque chose ? Quelque chose est cassé ? **Paramètres → Envoyer un
+commentaire** ouvre un court formulaire qui arrive directement dans la boîte du
+développeur — captures d'écran bienvenues.
+
+---
+
 <p align="center"><sub>Fait pour les gens qui tiennent à leurs amitiés <i>et</i> à leur argent.</sub></p>

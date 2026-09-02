@@ -127,4 +127,12 @@ Ustawieniach, kiedy tylko chcesz.
 
 ---
 
+## 💬 Pomysły i błędy
+
+Czegoś brakuje? Coś nie działa? **Ustawienia → Wyślij opinię** otwiera krótki
+formularz, który trafia prosto do skrzynki dewelopera — zrzuty ekranu mile
+widziane.
+
+---
+
 <p align="center"><sub>Zrobione dla ludzi, którzy cenią i swoje przyjaźnie, <i>i</i> swoje pieniądze.</sub></p>

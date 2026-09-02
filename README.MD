@@ -122,4 +122,11 @@ like.
 
 ---
 
+## 💬 Ideas & bugs
+
+Something missing? Something broken? **Settings → Send feedback** opens a short
+form that lands straight in the developer's inbox — screenshots welcome.
+
+---
+
 <p align="center"><sub>Made for people who like their friendships <i>and</i> their money.</sub></p>

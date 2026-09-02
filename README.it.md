@@ -126,4 +126,12 @@ in transito. Cancella tutto dalle Impostazioni quando vuoi.
 
 ---
 
+## 💬 Idee e bug
+
+Manca qualcosa? Qualcosa non funziona? **Impostazioni → Invia un feedback**
+apre un breve modulo che arriva dritto nella casella dello sviluppatore —
+screenshot benvenuti.
+
+---
+
 <p align="center"><sub>Fatta per chi tiene alle proprie amicizie <i>e</i> ai propri soldi.</sub></p>

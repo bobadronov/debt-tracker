@@ -126,4 +126,11 @@ Lösch alles jederzeit in den Einstellungen.
 
 ---
 
+## 💬 Ideen & Fehler
+
+Fehlt etwas? Hakt etwas? **Einstellungen → Feedback senden** öffnet ein kurzes
+Formular, das direkt im Postfach des Entwicklers landet — Screenshots willkommen.
+
+---
+
 <p align="center"><sub>Gemacht für Menschen, die ihre Freundschaften <i>und</i> ihr Geld mögen.</sub></p>

@@ -127,4 +127,12 @@ verzending. Wis alles wanneer je maar wilt via Instellingen.
 
 ---
 
+## 💬 Ideeën & bugs
+
+Mist er iets? Werkt er iets niet? **Instellingen → Feedback sturen** opent een
+kort formulier dat rechtstreeks in de inbox van de ontwikkelaar belandt —
+screenshots welkom.
+
+---
+
 <p align="center"><sub>Gemaakt voor mensen die zowel om hun vriendschappen <i>als</i> om hun geld geven.</sub></p>

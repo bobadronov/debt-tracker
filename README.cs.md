@@ -124,4 +124,11 @@ kdykoli budeš chtít.
 
 ---
 
+## 💬 Nápady a chyby
+
+Něco chybí? Něco nefunguje? **Nastavení → Odeslat zpětnou vazbu** otevře krátký
+formulář, který zamíří rovnou do schránky vývojáře — snímky obrazovky vítány.
+
+---
+
 <p align="center"><sub>Vytvořeno pro lidi, kteří mají rádi svá přátelství <i>i</i> své peníze.</sub></p>
