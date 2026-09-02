@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DebtTracker — Feedback</title>
+<script>
+  // Match the app's theme before first paint: ?theme=light|dark forces it,
+  // otherwise the CSS falls back to the OS preference.
+  (function () {
+    var m = location.search.match(/[?&]theme=(light|dark)\b/i);
+    if (m) document.documentElement.setAttribute("data-theme", m[1].toLowerCase());
+  })();
+</script>
+<style>
+  /* Palette mirrors the app's Material 3 color scheme (sharedUI/theme/Color.kt). */
+  :root {
+    color-scheme: light;
+    --bg: #F9F9F9;
+    --surface-container-lowest: #FFFFFF;
+    --surface-container-low: #F3F3F4;
+    --surface-container: #EEEEEE;
+    --surface-container-high: #E8E8E8;
+    --on-surface: #1A1C1C;
+    --on-surface-variant: #404941;
+    --outline: #717970;
+    --outline-variant: #C0C9BE;
+    --primary: #485F84;
+    --on-primary: #FFFFFF;
+    --primary-container: #D5E3FF;
+    --on-primary-container: #30476A;
+    --error: #BB152C;
+    --error-container: #FFDAD8;
+    --on-error-container: #410007;
+    --success: #356668;
+    --success-container: #B9ECEE;
+    --on-success-container: #1A4E50;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #121414;
+    --surface-container-lowest: #0C0F0F;
+    --surface-container-low: #1A1C1C;
+    --surface-container: #1E2020;
+    --surface-container-high: #282A2B;
+    --on-surface: #E2E2E2;
+    --on-surface-variant: #C0C9BE;
+    --outline: #8A9389;
+    --outline-variant: #404941;
+    --primary: #B0C7F1;
+    --on-primary: #183153;
+    --primary-container: #30476A;
+    --on-primary-container: #D5E3FF;
+    --error: #FFB3B1;
+    --error-container: #92001C;
+    --on-error-container: #FFDAD8;
+    --success: #9ECFD1;
+    --success-container: #1A4E50;
+    --on-success-container: #B9ECEE;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #121414;
+      --surface-container-lowest: #0C0F0F;
+      --surface-container-low: #1A1C1C;
+      --surface-container: #1E2020;
+      --surface-container-high: #282A2B;
+      --on-surface: #E2E2E2;
+      --on-surface-variant: #C0C9BE;
+      --outline: #8A9389;
+      --outline-variant: #404941;
+      --primary: #B0C7F1;
+      --on-primary: #183153;
+      --primary-container: #30476A;
+      --on-primary-container: #D5E3FF;
+      --error: #FFB3B1;
+      --error-container: #92001C;
+      --on-error-container: #FFDAD8;
+      --success: #9ECFD1;
+      --success-container: #1A4E50;
+      --on-success-container: #B9ECEE;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 4rem;
+    line-height: 1.6;
+    background: var(--bg);
+    color: var(--on-surface);
+  }
+  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.55rem; }
+  h1 .ic { width: 1.6rem; height: 1.6rem; color: var(--primary); }
+  .lead { color: var(--on-surface-variant); margin-top: 0; }
+  form { margin-top: 2rem; display: flex; flex-direction: column; gap: 1.4rem; }
+  .field > label,
+  .field > legend {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 0.35rem 0.45rem;
+    font-weight: 600; margin-bottom: 0.45rem; font-size: 0.95rem; padding: 0;
+  }
+  .field > label .ic,
+  .field > legend .ic { width: 1.15rem; height: 1.15rem; color: var(--on-surface-variant); }
+  .hint { font-weight: 400; color: var(--on-surface-variant); font-size: 0.85rem; }
+
+  /* Shared icon sizing — inherits color via fill:currentColor. */
+  .ic { fill: currentColor; flex: 0 0 auto; }
+
+  input[type="text"], input[type="email"], textarea {
+    width: 100%;
+    font: inherit;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--outline-variant);
+    border-radius: 10px;
+    background: var(--surface-container-lowest);
+    color: var(--on-surface);
+  }
+  textarea { min-height: 9rem; resize: vertical; }
+  input[type="text"]:focus, input[type="email"]:focus, textarea:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+    border-color: var(--primary);
+  }
+  input[type="file"] { font: inherit; max-width: 100%; color: var(--on-surface-variant); }
+
+  /* Category picker — a vertical list of selectable options, like the app's
+     own option screens, instead of a native <select>. */
+  fieldset.segmented { border: 0; margin: 0; padding: 0; }
+  .segmented .options { display: flex; flex-direction: column; gap: 0.5rem; }
+  .seg { position: relative; display: block; }
+  .seg input {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    margin: 0; opacity: 0; cursor: pointer;
+  }
+  .seg > span {
+    display: flex; align-items: center; gap: 0.7rem;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--outline-variant);
+    border-radius: 12px;
+    background: var(--surface-container-lowest);
+    transition: background .12s ease, border-color .12s ease, color .12s ease;
+  }
+  .seg .cat-ic { width: 1.35rem; height: 1.35rem; color: var(--on-surface-variant); }
+  .seg .cat-label { flex: 1 1 auto; }
+  .seg .check { width: 1.3rem; height: 1.3rem; display: none; }
+  .seg:hover > span { border-color: var(--outline); }
+  .seg input:checked + span {
+    border-color: var(--primary);
+    background: var(--primary-container);
+    color: var(--on-primary-container);
+  }
+  .seg input:checked + span .cat-ic { color: inherit; }
+  .seg input:checked + span .check { display: block; }
+  .seg input:focus-visible + span { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+  button {
+    font: inherit;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 10px;
+    background: var(--primary);
+    color: var(--on-primary);
+    cursor: pointer;
+    align-self: flex-start;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+  }
+  button .ic { width: 1.15rem; height: 1.15rem; }
+  button:disabled { opacity: 0.55; cursor: default; }
+  button.secondary {
+    background: transparent;
+    color: var(--on-surface);
+    border: 1px solid var(--outline);
+    padding: 0.45rem 0.95rem;
+    font-weight: 400;
+  }
+
+  .photo-preview { margin-top: 0.6rem; display: flex; align-items: flex-start; gap: 0.75rem; }
+  .photo-preview img {
+    max-width: 140px; max-height: 140px;
+    border-radius: 10px; border: 1px solid var(--outline-variant);
+    object-fit: cover;
+  }
+  [hidden] { display: none !important; }
+
+  /* Honeypot — hidden from real users, catnip for bots. */
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+  .status { margin-top: 1rem; padding: 0.8rem 1rem; border-radius: 10px; display: none; align-items: center; gap: 0.55rem; }
+  .status.ok { display: flex; background: var(--success-container); color: var(--on-success-container); }
+  .status.err { display: flex; background: var(--error-container); color: var(--on-error-container); }
+  .status .ic { width: 1.2rem; height: 1.2rem; }
+
+  .meta { margin-top: 2.5rem; font-size: 0.85rem; color: var(--on-surface-variant); }
+  a { color: var(--primary); }
+</style>
+</head>
+<body>
+
+<!-- Icon set (Material Symbols paths), referenced via <use>. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="ic-feedback" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 12h-2v-2h2v2zm0-4h-2V6h2v4z"/></symbol>
+  <symbol id="ic-bulb" viewBox="0 0 24 24"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></symbol>
+  <symbol id="ic-bug" viewBox="0 0 24 24"><path d="M20 8h-2.81c-.45-.78-1.07-1.45-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5c-.49 0-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20V8zm-6 8h-4v-2h4v2zm0-4h-4v-2h4v2z"/></symbol>
+  <symbol id="ic-chat" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></symbol>
+  <symbol id="ic-check" viewBox="0 0 24 24"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></symbol>
+  <symbol id="ic-edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></symbol>
+  <symbol id="ic-image" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></symbol>
+  <symbol id="ic-mail" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></symbol>
+  <symbol id="ic-person" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></symbol>
+  <symbol id="ic-send" viewBox="0 0 24 24"><path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"/></symbol>
+  <symbol id="ic-error" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></symbol>
+</svg>
+
+<h1>
+  <svg class="ic" aria-hidden="true"><use href="#ic-feedback"/></svg>
+  <span data-i18n="title">Send feedback</span>
+</h1>
+<p class="lead" data-i18n="lead">
+  Have an idea, a complaint, or found a bug in DebtTracker? Tell us here — it
+  goes straight to the developer's inbox.
+</p>
+
+<form id="feedback-form" novalidate>
+  <fieldset class="field segmented">
+    <legend data-i18n="categoryLabel">What is this about?</legend>
+    <div class="options">
+      <label class="seg">
+        <input type="radio" name="category" value="suggestion" checked>
+        <span>
+          <svg class="ic cat-ic" aria-hidden="true"><use href="#ic-bulb"/></svg>
+          <span class="cat-label" data-i18n="catSuggestion">Suggestion / feature request</span>
+          <svg class="ic check" aria-hidden="true"><use href="#ic-check"/></svg>
+        </span>
+      </label>
+      <label class="seg">
+        <input type="radio" name="category" value="bug">
+        <span>
+          <svg class="ic cat-ic" aria-hidden="true"><use href="#ic-bug"/></svg>
+          <span class="cat-label" data-i18n="catBug">Bug report</span>
+          <svg class="ic check" aria-hidden="true"><use href="#ic-check"/></svg>
+        </span>
+      </label>
+      <label class="seg">
+        <input type="radio" name="category" value="other">
+        <span>
+          <svg class="ic cat-ic" aria-hidden="true"><use href="#ic-chat"/></svg>
+          <span class="cat-label" data-i18n="catOther">Something else</span>
+          <svg class="ic check" aria-hidden="true"><use href="#ic-check"/></svg>
+        </span>
+      </label>
+    </div>
+  </fieldset>
+
+  <div class="field">
+    <label for="message">
+      <svg class="ic" aria-hidden="true"><use href="#ic-edit"/></svg>
+      <span data-i18n="messageLabel">Your message</span>
+    </label>
+    <textarea id="message" name="message" maxlength="5000" required></textarea>
+  </div>
+
+  <div class="field">
+    <label for="photo">
+      <svg class="ic" aria-hidden="true"><use href="#ic-image"/></svg>
+      <span data-i18n="photoLabel">Attach a photo</span>
+      <span class="hint" data-i18n="photoHint">optional — a screenshot helps a lot</span>
+    </label>
+    <input type="file" id="photo" name="photo" accept="image/jpeg,image/png,image/webp">
+    <div class="photo-preview" id="photo-preview" hidden>
+      <img id="photo-thumb" alt="">
+      <button type="button" class="secondary" id="photo-remove" data-i18n="photoRemove">Remove</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="email">
+      <svg class="ic" aria-hidden="true"><use href="#ic-mail"/></svg>
+      <span data-i18n="emailLabel">Your email</span>
+      <span class="hint" data-i18n="emailHint">optional — only if you want a reply</span>
+    </label>
+    <input type="email" id="email" name="email" maxlength="320" autocomplete="email">
+  </div>
+
+  <div class="field">
+    <label for="name">
+      <svg class="ic" aria-hidden="true"><use href="#ic-person"/></svg>
+      <span data-i18n="nameLabel">Your name</span>
+      <span class="hint" data-i18n="optional">optional</span>
+    </label>
+    <input type="text" id="name" name="name" maxlength="200" autocomplete="name">
+  </div>
+
+  <div class="hp" aria-hidden="true">
+    <label for="company">Company</label>
+    <input type="text" id="company" name="company" tabindex="-1" autocomplete="off">
+  </div>
+
+  <button type="submit" id="submit-btn">
+    <svg class="ic" aria-hidden="true"><use href="#ic-send"/></svg>
+    <span class="btn-label" data-i18n="submit">Send</span>
+  </button>
+</form>
+
+<div class="status" id="status" role="status" aria-live="polite">
+  <svg class="ic" aria-hidden="true"><use href="#ic-check"/></svg>
+  <span class="status-text"></span>
+</div>
+
+<p class="meta">
+  <a href="./privacy-policy.html" data-i18n="privacyLink">Privacy policy</a> ·
+  <a href="mailto:bobadronov@gmail.com">bobadronov@gmail.com</a>
+</p>
+
+<script>
+(function () {
+  "use strict";
+
+  var ENDPOINT = "https://nywvasgnbgnixfjzadbu.supabase.co/functions/v1/submit-feedback";
+  // Supabase anon key — a public value, already shipped inside the app.
+  var ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55d3Zhc2duYmduaXhmanphZGJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4NzQ4NTAsImV4cCI6MjEwMTQ1MDg1MH0.dHEiun2-fAz76vR_wZ2lAG38l0Kej3RbPQgiYUeXyvE";
+
+  var I18N = {
+    en: {
+      title: "Send feedback",
+      lead: "Have an idea, a complaint, or found a bug in DebtTracker? Tell us here — it goes straight to the developer's inbox.",
+      categoryLabel: "What is this about?",
+      catSuggestion: "Suggestion / feature request",
+      catBug: "Bug report",
+      catOther: "Something else",
+      messageLabel: "Your message",
+      emailLabel: "Your email",
+      emailHint: "optional — only if you want a reply",
+      nameLabel: "Your name",
+      optional: "optional",
+      photoLabel: "Attach a photo",
+      photoHint: "optional — a screenshot helps a lot",
+      photoRemove: "Remove",
+      submit: "Send",
+      privacyLink: "Privacy policy",
+      sending: "Sending…",
+      ok: "Thank you! Your feedback has been sent.",
+      errValidation: "Please write a message first.",
+      errPhotoType: "Please choose an image (JPEG, PNG or WebP).",
+      errPhotoLarge: "That image is too large even after compression — try a smaller one.",
+      errNetwork: "Could not send — check your connection and try again.",
+      errServer: "Something went wrong on our side. Please try again later."
+    },
+    uk: {
+      title: "Надіслати відгук",
+      lead: "Маєте ідею, скаргу чи знайшли помилку в DebtTracker? Напишіть тут — повідомлення потрапить одразу до розробника.",
+      categoryLabel: "Про що йдеться?",
+      catSuggestion: "Пропозиція / побажання",
+      catBug: "Повідомлення про помилку",
+      catOther: "Інше",
+      messageLabel: "Ваше повідомлення",
+      emailLabel: "Ваш email",
+      emailHint: "необов'язково — лише якщо хочете відповідь",
+      nameLabel: "Ваше ім'я",
+      optional: "необов'язково",
+      photoLabel: "Прикріпити фото",
+      photoHint: "необов'язково — знімок екрана дуже допомагає",
+      photoRemove: "Прибрати",
+      submit: "Надіслати",
+      privacyLink: "Політика конфіденційності",
+      sending: "Надсилання…",
+      ok: "Дякуємо! Ваш відгук надіслано.",
+      errValidation: "Спершу напишіть повідомлення.",
+      errPhotoType: "Оберіть зображення (JPEG, PNG або WebP).",
+      errPhotoLarge: "Це зображення завелике навіть після стиснення — спробуйте менше.",
+      errNetwork: "Не вдалося надіслати — перевірте з'єднання та спробуйте ще раз.",
+      errServer: "Щось пішло не так на нашому боці. Спробуйте пізніше."
+    }
+  };
+
+  var params = new URLSearchParams(location.search);
+  var lang = (params.get("lang") || navigator.language || "en").slice(0, 2).toLowerCase();
+  var t = I18N[lang] || I18N.en;
+  document.documentElement.lang = I18N[lang] ? lang : "en";
+
+  document.querySelectorAll("[data-i18n]").forEach(function (el) {
+    var key = el.getAttribute("data-i18n");
+    if (t[key]) el.textContent = t[key];
+  });
+  document.title = "DebtTracker — " + t.title;
+
+  var context = {
+    version: params.get("v") || null,
+    build: params.get("build") || null,
+    platform: params.get("platform") || null,
+    lang: params.get("lang") || null,
+    theme: params.get("theme") || null,
+    referrer: document.referrer || null
+  };
+
+  var form = document.getElementById("feedback-form");
+  var btn = document.getElementById("submit-btn");
+  var btnLabel = btn.querySelector(".btn-label");
+  var statusEl = document.getElementById("status");
+  var statusText = statusEl.querySelector(".status-text");
+  var statusIcon = statusEl.querySelector("use");
+
+  function showStatus(kind, text) {
+    statusEl.className = "status " + kind;
+    statusText.textContent = text;
+    statusIcon.setAttribute("href", kind === "ok" ? "#ic-check" : "#ic-error");
+  }
+
+  // --- optional photo ---------------------------------------------------------
+  // Downscale + re-encode to JPEG in the browser so the upload stays small: the
+  // image goes to Supabase Storage (not the database), and every layer caps its
+  // size — here ~1.2 MB target / 2 MB hard, the Edge Function 2.5 MB, the
+  // Storage bucket 3 MB.
+  var MAX_DIM = 1600;
+  var TARGET_BYTES = 1200000;
+  var HARD_BYTES = 2000000;
+
+  var photoInput = document.getElementById("photo");
+  var photoPreview = document.getElementById("photo-preview");
+  var photoThumb = document.getElementById("photo-thumb");
+  var photoRemove = document.getElementById("photo-remove");
+  var attachment = null; // { filename, dataUrl }
+
+  function clearPhoto() {
+    attachment = null;
+    photoInput.value = "";
+    photoThumb.removeAttribute("src");
+    photoPreview.hidden = true;
+  }
+
+  photoRemove.addEventListener("click", clearPhoto);
+
+  photoInput.addEventListener("change", function () {
+    var file = photoInput.files && photoInput.files[0];
+    attachment = null;
+    photoPreview.hidden = true;
+    if (!file) return;
+
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
+      showStatus("err", t.errPhotoType);
+      photoInput.value = "";
+      return;
+    }
+
+    var img = new Image();
+    var objectUrl = URL.createObjectURL(file);
+    img.onload = function () {
+      URL.revokeObjectURL(objectUrl);
+      var scale = Math.min(1, MAX_DIM / Math.max(img.width, img.height));
+      var w = Math.max(1, Math.round(img.width * scale));
+      var h = Math.max(1, Math.round(img.height * scale));
+      var canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+
+      var q = 0.82;
+      var dataUrl = canvas.toDataURL("image/jpeg", q);
+      while (dataUrl.length * 0.75 > TARGET_BYTES && q > 0.4) {
+        q -= 0.12;
+        dataUrl = canvas.toDataURL("image/jpeg", q);
+      }
+      if (dataUrl.length * 0.75 > HARD_BYTES) {
+        showStatus("err", t.errPhotoLarge);
+        photoInput.value = "";
+        return;
+      }
+
+      var base = (file.name || "photo").replace(/\.[^.]+$/, "").slice(0, 60);
+      attachment = { filename: base + ".jpg", dataUrl: dataUrl };
+      photoThumb.src = dataUrl;
+      photoPreview.hidden = false;
+      statusEl.className = "status";
+    };
+    img.onerror = function () {
+      URL.revokeObjectURL(objectUrl);
+      showStatus("err", t.errPhotoType);
+      photoInput.value = "";
+    };
+    img.src = objectUrl;
+  });
+  // --------------------------------------------------------------------------
+
+  function selectedCategory() {
+    var checked = form.querySelector('input[name="category"]:checked');
+    return checked ? checked.value : "other";
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    var message = form.message.value.trim();
+    if (message.length < 3) {
+      showStatus("err", t.errValidation);
+      form.message.focus();
+      return;
+    }
+
+    var body = {
+      category: selectedCategory(),
+      message: message,
+      email: form.email.value.trim(),
+      name: form.name.value.trim(),
+      company: form.company.value,
+      attachment: attachment,
+      context: context
+    };
+
+    btn.disabled = true;
+    var originalLabel = btnLabel.textContent;
+    btnLabel.textContent = t.sending;
+    statusEl.className = "status";
+
+    fetch(ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": ANON_KEY,
+        "Authorization": "Bearer " + ANON_KEY
+      },
+      body: JSON.stringify(body)
+    })
+      .then(function (res) {
+        if (res.ok) {
+          form.reset();
+          clearPhoto();
+          showStatus("ok", t.ok);
+          return;
+        }
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          if (data && data.error === "invalid_attachment") {
+            showStatus("err", t.errPhotoLarge);
+          } else if (res.status >= 400 && res.status < 500) {
+            showStatus("err", t.errValidation);
+          } else {
+            showStatus("err", t.errServer);
+          }
+        });
+      })
+      .catch(function () {
+        showStatus("err", t.errNetwork);
+      })
+      .finally(function () {
+        btn.disabled = false;
+        btnLabel.textContent = originalLabel;
+      });
+  });
+})();
+</script>
+
+</body>
+</html>

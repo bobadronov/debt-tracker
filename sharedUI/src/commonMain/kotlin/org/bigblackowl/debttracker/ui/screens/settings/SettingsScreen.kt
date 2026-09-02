@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
@@ -57,6 +58,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -496,6 +498,8 @@ private fun AboutSection(
     onIntent: (SettingsIntent) -> Unit,
 ) {
     val strings = LocalStrings.current
+    val settings = koinInject<AppSettings>()
+    val uriHandler = LocalUriHandler.current
     val updateChecker = rememberAppUpdateChecker()
     val inAppUpdateLauncher = rememberInAppUpdateLauncher()
     val inAppUpdateReady by inAppUpdateLauncher.updateReadyToInstall.collectAsStateWithLifecycle()
@@ -570,7 +574,32 @@ private fun AboutSection(
             title = strings.settingsAboutAuthor,
             subtitle = BuildConfig.APP_AUTHOR,
         )
+        SettingsRowDivider()
+        // Opens the web feedback form (legal/feedback.html on GitHub Pages) in a browser;
+        // it POSTs to the submit-feedback Edge Function, which emails the maintainer.
+        SettingsRow(
+            icon = Icons.Filled.Feedback,
+            title = strings.settingsFeedback,
+            subtitle = strings.settingsFeedbackSubtitle,
+            onClick = { uriHandler.openUri(feedbackUrl(settings.locale, settings.theme)) },
+        )
     }
+}
+
+private const val FEEDBACK_BASE_URL = "https://bobadronov.github.io/debt-tracker/feedback.html"
+
+/**
+ * Feedback-form URL carrying the app version/build/platform as query params, plus — each only when
+ * it isn't left to the OS — the UI language (`lang`) and the light/dark theme (`theme`), so the web
+ * page opens matching the app.
+ */
+private fun feedbackUrl(locale: String, theme: String): String = buildString {
+    append(FEEDBACK_BASE_URL)
+    append("?v=").append(BuildConfig.APP_VERSION)
+    append("&build=").append(BuildConfig.APP_VERSION_CODE)
+    append("&platform=").append(currentPlatform.name.lowercase())
+    if (locale != "system") append("&lang=").append(locale)
+    if (theme == "light" || theme == "dark") append("&theme=").append(theme)
 }
 
 @Preview
