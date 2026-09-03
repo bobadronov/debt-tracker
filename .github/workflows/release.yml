@@ -4,7 +4,6 @@ name: Release
 # Tag-triggered packaging: pushing a `v*` tag, or running this manually.
 #
 # Builds:
-#   - Android APK
 #   - Android App Bundle (.aab, for Google Play)
 #   - Windows .msi
 #   - Linux .deb
@@ -84,16 +83,15 @@ env:
 jobs:
 
   # ============================================================
-  # Android APK
+  # Android App Bundle (.aab) — for Google Play Console upload
   # ============================================================
-  android-apk:
+  android-aab:
     runs-on: ubuntu-latest
 
     env:
-      # Optional Android signing configuration.
-      #
-      # If ANDROID_KEYSTORE_BASE64 is not configured, the build
-      # continues and produces an unsigned APK.
+      # Optional Android signing config — if unset, the build continues and
+      # produces an unsigned bundle (Play Console will reject an unsigned
+      # upload, but this still lets the workflow succeed).
       ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
       ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
@@ -120,63 +118,8 @@ jobs:
           echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
 
       # Retry on transient Maven Central failures (HTTP 429 Too Many Requests,
-      # 5xx, connection resets). Gradle's own dependency-download retry does not
-      # cover 429, so wrap the whole invocation.
-      - name: Build release APK
-        shell: bash
-        run: |
-          n=0
-          until ./gradlew :androidApp:assembleRelease --stacktrace; do
-            n=$((n + 1))
-            if [ "$n" -ge 3 ]; then echo "All 3 attempts failed" >&2; exit 1; fi
-            echo "Attempt $n failed; retrying in $((n * 30))s..." >&2
-            sleep $((n * 30))
-          done
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: debt-tracker-apk
-          path: androidApp/build/outputs/apk/release/*.apk
-          if-no-files-found: error
-
-
-  # ============================================================
-  # Android App Bundle (.aab) — for Google Play Console upload
-  # ============================================================
-  android-aab:
-    runs-on: ubuntu-latest
-
-    env:
-      # Same optional signing config as android-apk — if unset, the build
-      # continues and produces an unsigned bundle (Play Console will reject
-      # an unsigned upload, but this still lets the workflow succeed).
-      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Decode signing keystore
-        if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}
-        shell: bash
-        run: |
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.keystore"
-          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
-
-      # Retry on transient Maven Central failures — see the APK job above.
+      # 5xx, connection resets) — Gradle's own dependency-download retry does
+      # not cover 429, so wrap the whole invocation.
       - name: Build release App Bundle
         shell: bash
         run: |
@@ -234,7 +177,6 @@ jobs:
   # ============================================================
   play-store:
     needs:
-      - android-apk
       - android-aab
       - windows-msi
       - linux-deb
@@ -570,7 +512,6 @@ jobs:
     # Publish the web build only once every platform built AND the Play upload
     # went through — see the all-or-nothing note on the play-store job.
     needs:
-      - android-apk
       - android-aab
       - windows-msi
       - linux-deb
@@ -602,7 +543,6 @@ jobs:
     # Cut the GitHub Release only once every platform built AND the Play upload
     # went through — see the all-or-nothing note on the play-store job.
     needs:
-      - android-apk
       - android-aab
       - windows-msi
       - linux-deb
