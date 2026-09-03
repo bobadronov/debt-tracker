@@ -1,10 +1,23 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
 plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.kotlin.jvm)
+}
+
+kotlin {
+    compilerOptions { jvmTarget = JvmTarget.JVM_21 }
+}
+
+// kotlin("jvm") also applies the Java plugin; keep its compileJava target in step
+// with Kotlin's (the Gradle daemon runs JDK 25, so compileJava would otherwise
+// default to 25 and trip JVM-target validation). jlink still bundles the daemon JDK.
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 // Version is defined once in /version.properties and shared by every target (спек: single source of truth).

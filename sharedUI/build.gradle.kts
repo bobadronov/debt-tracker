@@ -22,11 +22,11 @@ kotlin {
         compileSdk = 37
         minSdk = 26 // Biometric API stability (spec §2)
         androidResources.enable = true
-        compilerOptions { jvmTarget = JvmTarget.JVM_17 }
+        compilerOptions { jvmTarget = JvmTarget.JVM_21 }
     }
 
     jvm {
-        compilerOptions { jvmTarget = JvmTarget.JVM_17 }
+        compilerOptions { jvmTarget = JvmTarget.JVM_21 }
     }
 
     js { browser() }
