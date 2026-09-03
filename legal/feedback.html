@@ -320,8 +320,10 @@
   "use strict";
 
   var ENDPOINT = "https://nywvasgnbgnixfjzadbu.supabase.co/functions/v1/submit-feedback";
-  // Supabase anon key — a public value, already shipped inside the app.
-  var ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55d3Zhc2duYmduaXhmanphZGJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4NzQ4NTAsImV4cCI6MjEwMTQ1MDg1MH0.dHEiun2-fAz76vR_wZ2lAG38l0Kej3RbPQgiYUeXyvE";
+  // The submit-feedback Edge Function is deployed with verify_jwt = false, so it
+  // takes an anonymous POST with no apikey/Authorization header — nothing secret
+  // to embed here. Abuse is bounded server-side (honeypot, length caps, CORS
+  // allowlist, per-IP rate limiting).
 
   var I18N = {
     en: {
@@ -516,11 +518,7 @@
 
     fetch(ENDPOINT, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": ANON_KEY,
-        "Authorization": "Bearer " + ANON_KEY
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     })
       .then(function (res) {

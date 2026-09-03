@@ -1,0 +1,14 @@
+# Supabase CLI config. Only the settings this project actually relies on are
+# pinned here; everything else uses CLI defaults.
+
+project_id = "nywvasgnbgnixfjzadbu"
+
+# The in-app "Send feedback" form (legal/feedback.html, served from GitHub Pages)
+# is filled by anonymous visitors — there is no user session to verify. The
+# function must therefore accept a POST with no apikey/Authorization header;
+# abuse is bounded in the function itself (honeypot field, length caps, CORS
+# origin allowlist) plus Supabase's per-IP Edge Function rate limiting.
+#
+# Keep this false — feedback.html sends no auth header and will break otherwise.
+[functions.submit-feedback]
+verify_jwt = false
