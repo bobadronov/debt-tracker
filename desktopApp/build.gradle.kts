@@ -29,6 +29,14 @@ compose.desktop {
     application {
         mainClass = "MainKt"
 
+        // Room's BundledSQLiteDriver loads its native lib via System.loadLibrary
+        // (DatabaseBuilder.jvm.kt). Under the JDK 25 toolchain this project's
+        // Gradle daemon uses (gradle/gradle-daemon-jvm.properties) that triggers a
+        // "restricted method ... has been called" warning, and a future JDK will
+        // block it outright. Grant native access up front — applies to both
+        // `:desktopApp:run` and the packaged app's bundled (jlink'd) runtime.
+        jvmArgs += listOf("--enable-native-access=ALL-UNNAMED")
+
         buildTypes {
             release {
                 // ProGuard 7.8.0 can't resolve java.lang.Object under the JDK 25 toolchain this
