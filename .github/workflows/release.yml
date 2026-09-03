@@ -7,6 +7,7 @@ name: Release
 #   - Android App Bundle (.aab, for Google Play)
 #   - Windows .msi
 #   - Linux .deb
+#   - macOS .dmg (Intel x64 + Apple Silicon arm64)
 #   - Web build
 #
 # Then, ONLY if every platform build above succeeded (all-or-nothing — a single
@@ -14,10 +15,13 @@ name: Release
 #   - uploads the .aab to Google Play (play-store job — also needs the
 #     GOOGLE_PLAY_SERVICE_ACCOUNT_JSON secret, see below), and only if THAT
 #     succeeds:
-#   - publishes the .msi/.deb installers as a GitHub Release (Android goes to
-#     Google Play via the .aab — no APK on the release page; the .aab isn't
+#   - publishes the .msi/.deb/.dmg installers as a GitHub Release (Android goes
+#     to Google Play via the .aab — no APK on the release page; the .aab isn't
 #     directly installable, so it isn't attached either)
 #   - deploys the web build to GitHub Pages
+#
+# The macOS .dmg builds are NOT Apple-signed or notarized — Gatekeeper will
+# require the user to allow the app manually.
 #
 # Google Play publishing prerequisites (one-time, done by a human — the Play
 # Developer API cannot create an app or do its very first release):
@@ -77,12 +81,20 @@ env:
   # configuration time by sharedUI/build.gradle.kts's BuildConfig block, same as the two above.
   GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
 
+  # Consistent Gradle behaviour across every runner in this workflow.
+  GRADLE_OPTS: >-
+    -Dorg.gradle.daemon=false
+    -Dorg.gradle.parallel=true
+    -Dorg.gradle.caching=true
+    -Dorg.gradle.configuration-cache=true
+
 jobs:
 
   # ============================================================
   # Android App Bundle (.aab) — for Google Play Console upload
   # ============================================================
   android-aab:
+    name: Android AAB
     runs-on: ubuntu-latest
 
     env:
@@ -173,10 +185,12 @@ jobs:
   # upload — rather than a half-shipped release across platforms.
   # ============================================================
   play-store:
+    name: Google Play
     needs:
       - android-aab
       - windows-msi
       - linux-deb
+      - macos-dmg
       - web
 
     runs-on: ubuntu-latest
@@ -212,6 +226,7 @@ jobs:
   # Windows MSI
   # ============================================================
   windows-msi:
+    name: Windows MSI
     # Produces an UNSIGNED installer (SmartScreen shows "unknown publisher";
     # Smart App Control blocks it outright). Code signing is not wired up.
     runs-on: windows-latest
@@ -266,6 +281,7 @@ jobs:
   # Linux DEB
   # ============================================================
   linux-deb:
+    name: Linux DEB
     runs-on: ubuntu-latest
 
     steps:
@@ -309,9 +325,77 @@ jobs:
 
 
   # ============================================================
+  # macOS DMG — Intel x64 (macos-13) + Apple Silicon arm64 (macos-14).
+  #
+  # Not Apple-signed or notarized: Gatekeeper flags the app as from an
+  # unidentified developer and the user must allow it by hand.
+  # ============================================================
+  macos-dmg:
+    name: macOS DMG (${{ matrix.arch }})
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-13
+            arch: x64
+            artifact: debt-tracker-dmg-macos-x64
+          - os: macos-14
+            arch: arm64
+            artifact: debt-tracker-dmg-macos-arm64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # Retry on transient Maven Central failures (HTTP 429 Too Many Requests,
+      # 5xx, connection resets) — Gradle's own dependency-download retry does not
+      # cover 429.
+      - name: Package macOS DMG
+        shell: bash
+        run: |
+          n=0
+          until ./gradlew :desktopApp:packageDmg --stacktrace; do
+            n=$((n + 1))
+            if [ "$n" -ge 3 ]; then echo "All 3 attempts failed" >&2; exit 1; fi
+            echo "Attempt $n failed; retrying in $((n * 30))s..." >&2
+            sleep $((n * 30))
+          done
+
+      # Both arches produce an identically named .dmg, so tag it with the arch
+      # before upload or the two release assets would collide.
+      - name: Tag DMG with arch
+        shell: bash
+        run: |
+          dir=desktopApp/build/compose/binaries/main/dmg
+          dmg=$(find "$dir" -maxdepth 1 -name '*.dmg' -print -quit)
+          if [ -z "$dmg" ]; then echo "No .dmg produced" >&2; exit 1; fi
+          mv "$dmg" "$dir/$(basename "$dmg" .dmg)-${{ matrix.arch }}.dmg"
+
+      - name: Upload macOS installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: desktopApp/build/compose/binaries/main/dmg/*.dmg
+          if-no-files-found: error
+
+
+  # ============================================================
   # Web
   # ============================================================
   web:
+    name: Web
     # wasm-opt/Binaryen currently crashes on the Ubuntu runner
     # for this project's wasmJs production optimization.
     #
@@ -356,12 +440,14 @@ jobs:
   # Deploy GitHub Pages
   # ============================================================
   deploy-pages:
+    name: Deploy GitHub Pages
     # Publish the web build only once every platform built AND the Play upload
     # went through — see the all-or-nothing note on the play-store job.
     needs:
       - android-aab
       - windows-msi
       - linux-deb
+      - macos-dmg
       - web
       - play-store
 
@@ -387,18 +473,25 @@ jobs:
   # GitHub Release
   # ============================================================
   github-release:
+    name: GitHub Release
     # Cut the GitHub Release only once every platform built AND the Play upload
     # went through — see the all-or-nothing note on the play-store job.
     needs:
       - android-aab
       - windows-msi
       - linux-deb
+      - macos-dmg
       - web
       - play-store
 
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -409,10 +502,32 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "tag=${{ inputs.release_tag }}" >> "$GITHUB_OUTPUT"
+            tag="${{ inputs.release_tag }}"
           else
-            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            tag="${GITHUB_REF_NAME}"
           fi
+          if [[ ! "$tag" =~ ^v ]]; then
+            echo "::error::Release tag must start with 'v' (got '$tag')."
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      # workflow_dispatch has no tag ref — create and push it so the Release
+      # attaches to a real tag. A tag push (the normal path) already has one.
+      - name: Create tag if needed
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        env:
+          TAG: ${{ steps.release-tag.outputs.tag }}
+        shell: bash
+        run: |
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists — nothing to do."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
 
       # Android is distributed through Google Play (the android-aab job uploads the
       # .aab there), so no APK is attached here — the release page points to the
@@ -436,9 +551,17 @@ jobs:
             | 🤖 **Android** | [**Google Play**](https://play.google.com/store/apps/details?id=org.bigblackowl.debttracker.androidApp) |
             | 🖥️ **Windows** | `.msi` below |
             | 🐧 **Linux** | `.deb` below |
+            | 🍎 **macOS (Intel)** | `x64.dmg` below |
+            | 🍎 **macOS (Apple Silicon)** | `arm64.dmg` below |
             | 🌐 **Web** | [bobadronov.github.io/debt-tracker](https://bobadronov.github.io/debt-tracker/) |
 
+            The macOS builds are not Apple-signed or notarized — Gatekeeper
+            will ask you to allow the app manually.
+
             ---
+          fail_on_unmatched_files: true
           files: |
             artifacts/debt-tracker-msi/*.msi
             artifacts/debt-tracker-deb/*.deb
+            artifacts/debt-tracker-dmg-macos-x64/*.dmg
+            artifacts/debt-tracker-dmg-macos-arm64/*.dmg
