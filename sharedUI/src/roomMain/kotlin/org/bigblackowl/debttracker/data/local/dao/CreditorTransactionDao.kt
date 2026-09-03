@@ -19,6 +19,9 @@ interface CreditorTransactionDao {
     @Query("SELECT * FROM creditor_transactions WHERE creditorId = :creditorId AND isDeleted = 0")
     suspend fun getAllForCreditor(creditorId: String): List<CreditorTransactionEntity>
 
+    @Query("SELECT * FROM creditor_transactions WHERE id = :id")
+    suspend fun getById(id: String): CreditorTransactionEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(transaction: CreditorTransactionEntity)
 

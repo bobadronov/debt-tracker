@@ -18,6 +18,10 @@ interface DebtorRepository {
     suspend fun upsertDebtor(debtor: Debtor)
     suspend fun softDeleteDebtor(id: String)
     suspend fun addTransaction(transaction: DebtTransaction)
+    /** Rewrites an existing transaction (amount/method/comment/date) by id and re-derives the debtor's status. */
+    suspend fun updateTransaction(transaction: DebtTransaction)
+    /** Soft-deletes one transaction (isDeleted = true, syncs) and re-derives the debtor's status. */
+    suspend fun softDeleteTransaction(id: String)
     suspend fun deleteAllData()
     /** Wipes this device's local cache only, leaving Supabase data untouched — Room: clears Room; Web: no-op (no local cache). */
     suspend fun clearLocalCache()

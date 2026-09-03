@@ -13,6 +13,7 @@ import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.domain.model.ContactQrPayload
 import org.bigblackowl.debttracker.domain.model.ScannedContact
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
+import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 
 /**
  * Share: "my card" (name/phone/email) defaults to [AppSettings.myCard]* if already saved, else
@@ -40,7 +41,7 @@ class QrHubViewModel(
     init {
         val isAuthenticated = authRepository.isAuthenticated.value
         val name = appSettings.myCardName.ifBlank { authRepository.displayName.value.orEmpty() }
-        val phone = appSettings.myCardPhone.ifBlank { authRepository.phone.value.orEmpty() }
+        val phone = sanitizePhoneInput(appSettings.myCardPhone.ifBlank { authRepository.phone.value.orEmpty() })
         val email = appSettings.myCardEmail.ifBlank { authRepository.email.value.orEmpty() }
         _state.update {
             it.copy(

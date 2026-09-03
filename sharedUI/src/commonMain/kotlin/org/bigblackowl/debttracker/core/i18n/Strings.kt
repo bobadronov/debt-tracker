@@ -66,6 +66,20 @@ data class DueReminderStrings(
     val whenToday: (time: String) -> String,
 )
 
+/**
+ * Edit/delete a single transaction from a debtor's or creditor's history — the ⋮ row menu, the
+ * edit bottom sheet, and the delete confirmation. Grouped in a holder because the flat [Strings]
+ * constructor is at the JVM 255-argument limit.
+ */
+data class TransactionEditStrings(
+    /** ⋮ menu item + edit sheet title. */
+    val editTitle: String,
+    /** Field label above the date+time row in the edit sheet. */
+    val dateLabel: String,
+    val deleteConfirmTitle: String,
+    val deleteConfirmText: String,
+)
+
 data class Strings(
     // common
     val cancel: String,
@@ -378,4 +392,7 @@ data class Strings(
 
     // auth screen extras (grouped in a holder — the flat Strings constructor is at the JVM limit)
     val authExtra: AuthExtraStrings,
+
+    // edit/delete one transaction from a debtor/creditor history row (grouped — flat constructor is at the JVM limit)
+    val transactionEdit: TransactionEditStrings,
 )

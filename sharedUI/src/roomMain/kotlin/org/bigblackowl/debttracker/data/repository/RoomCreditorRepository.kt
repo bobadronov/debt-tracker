@@ -68,13 +68,26 @@ class RoomCreditorRepository(
         )
     }
 
-    override suspend fun addTransaction(transaction: CreditorTransaction) {
+    override suspend fun addTransaction(transaction: CreditorTransaction) = upsertTransactionAndRecalc(transaction)
+
+    // Same write path as add (see RoomDebtorRepository.updateTransaction).
+    override suspend fun updateTransaction(transaction: CreditorTransaction) = upsertTransactionAndRecalc(transaction)
+
+    private suspend fun upsertTransactionAndRecalc(transaction: CreditorTransaction) {
         val normalized = transaction.copy(
             type = transaction.amount.toCreditorTransactionType(),
             syncStatus = SyncStatus.PENDING,
         )
         transactionDao.upsert(normalized.toEntity())
         recalcCreditorStatus(normalized.creditorId)
+    }
+
+    override suspend fun softDeleteTransaction(id: String) {
+        val entity = transactionDao.getById(id) ?: return
+        transactionDao.upsert(
+            entity.copy(isDeleted = true, syncStatus = SyncStatus.PENDING, updatedAt = kotlin.time.Clock.System.now())
+        )
+        recalcCreditorStatus(entity.creditorId)
     }
 
     override suspend fun deleteAllData() {

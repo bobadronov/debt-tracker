@@ -53,6 +53,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.settings.AppSettings
+import org.bigblackowl.debttracker.domain.validation.formatUkrainianPhone
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
@@ -194,7 +195,7 @@ fun ContactRow(
                 Spacer(Modifier.width(Dimens.space12))
                 Column {
                     Text(name, style = MaterialTheme.typography.bodyLarge)
-                    phone?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                    formatUkrainianPhone(phone)?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {

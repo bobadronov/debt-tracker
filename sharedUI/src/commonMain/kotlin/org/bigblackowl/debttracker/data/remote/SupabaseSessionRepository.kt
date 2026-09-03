@@ -5,25 +5,21 @@ import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.query.filter.FilterOperation
-import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.selectAsFlow
 import io.github.jan.supabase.realtime.selectSingleValueAsFlow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.retry
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.time.Clock
-import kotlin.time.Instant
 import org.bigblackowl.debttracker.BuildConfig
 import org.bigblackowl.debttracker.core.platform.AppPlatform
 import org.bigblackowl.debttracker.core.platform.currentPlatform
@@ -31,6 +27,9 @@ import org.bigblackowl.debttracker.core.platform.deviceDisplayName
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.domain.model.DeviceSession
 import org.bigblackowl.debttracker.domain.repository.SessionRepository
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Instant
 
 private const val TABLE = "user_sessions"
 
@@ -101,13 +100,13 @@ class SupabaseSessionRepository(
                 } else {
                     client.from(TABLE).selectAsFlow(
                         SessionDto::id,
-                        filter = FilterOperation("user_id", FilterOperator.EQ, userId),
+                        filter = { eq("user_id", userId) },
                     ).map { sessions ->
                         sessions
                             .filter { it.revokedAt == null }
                             .map { it.toDomain(currentSessionId) }
                             .sortedByDescending { it.lastSeenAt }
-                    }.retry { delay(SESSION_RETRY_DELAY_MS); true }
+                    }.retry { delay(SESSION_RETRY_DELAY_MS.milliseconds); true }
                 }
             }
 
@@ -146,7 +145,7 @@ class SupabaseSessionRepository(
                                 eq("id", currentSessionId)
                             }
                         )
-                    }.retry { delay(SESSION_RETRY_DELAY_MS); true }
+                    }.retry { delay(SESSION_RETRY_DELAY_MS.milliseconds); true }
                 }
             }.filter { it.revokedAt != null }.map { }
 

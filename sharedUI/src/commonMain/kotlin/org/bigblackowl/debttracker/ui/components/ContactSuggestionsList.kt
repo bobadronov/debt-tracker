@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.domain.model.ContactSuggestion
+import org.bigblackowl.debttracker.domain.validation.formatUkrainianPhone
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 
@@ -54,7 +55,7 @@ fun ContactSuggestionsList(
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
                         )
-                        suggestion.phone?.takeIf(String::isNotBlank)?.let {
+                        formatUkrainianPhone(suggestion.phone)?.let {
                             Text(
                                 it,
                                 style = MaterialTheme.typography.bodySmall,

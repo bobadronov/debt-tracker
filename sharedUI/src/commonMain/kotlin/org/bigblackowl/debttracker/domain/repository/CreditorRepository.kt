@@ -14,6 +14,10 @@ interface CreditorRepository {
     suspend fun upsertCreditor(creditor: Creditor)
     suspend fun softDeleteCreditor(id: String)
     suspend fun addTransaction(transaction: CreditorTransaction)
+    /** Rewrites an existing transaction (amount/method/comment/date) by id and re-derives the creditor's status. */
+    suspend fun updateTransaction(transaction: CreditorTransaction)
+    /** Soft-deletes one transaction (isDeleted = true, syncs) and re-derives the creditor's status. */
+    suspend fun softDeleteTransaction(id: String)
     suspend fun deleteAllData()
     /** Wipes this device's local cache only, leaving Supabase data untouched — Room: clears Room; Web: no-op (no local cache). */
     suspend fun clearLocalCache()

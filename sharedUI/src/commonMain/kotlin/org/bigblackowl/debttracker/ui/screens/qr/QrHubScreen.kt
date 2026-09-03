@@ -27,6 +27,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -45,10 +46,12 @@ import org.bigblackowl.debttracker.domain.model.ScannedContact
 import org.bigblackowl.debttracker.domain.validation.isPhonePasteRelevant
 import org.bigblackowl.debttracker.domain.validation.isValidEmail
 import org.bigblackowl.debttracker.domain.validation.isValidFullName
+import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.BackTopAppBar
 import org.bigblackowl.debttracker.ui.components.PasteableOutlinedTextField
+import org.bigblackowl.debttracker.ui.components.UkrainianPhoneVisualTransformation
 import org.bigblackowl.debttracker.ui.components.ScannedContactDialog
 import org.bigblackowl.debttracker.ui.components.rememberClipboardText
 import org.koin.compose.viewmodel.koinViewModel
@@ -183,9 +186,10 @@ private fun ShareContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
                         )
                         PasteableOutlinedTextField(
                             value = state.myPhone,
-                            onValueChange = { onIntent(QrHubIntent.MyPhoneChanged(it)) },
+                            onValueChange = { onIntent(QrHubIntent.MyPhoneChanged(sanitizePhoneInput(it))) },
                             label = strings.phone,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                            visualTransformation = remember { UkrainianPhoneVisualTransformation() },
                             clipboardText = clipboardText,
                             isPasteRelevant = ::isPhonePasteRelevant,
                         )

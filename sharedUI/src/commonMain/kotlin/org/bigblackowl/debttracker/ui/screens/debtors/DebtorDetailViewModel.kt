@@ -23,8 +23,10 @@ import org.bigblackowl.debttracker.domain.model.SyncStatus
 import org.bigblackowl.debttracker.domain.model.toDebtTransactionType
 import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
 import org.bigblackowl.debttracker.domain.usecase.debtor.AddDebtTransactionUseCase
+import org.bigblackowl.debttracker.domain.usecase.debtor.DeleteDebtTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorTransactionsUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorUseCase
+import org.bigblackowl.debttracker.domain.usecase.debtor.UpdateDebtTransactionUseCase
 
 /** Combines the debtor's profile and transaction stream into [DebtorDetailState]; records new transactions on intent. */
 @OptIn(ExperimentalUuidApi::class)
@@ -33,6 +35,8 @@ class DebtorDetailViewModel(
     observeDebtor: ObserveDebtorUseCase,
     observeTransactions: ObserveDebtorTransactionsUseCase,
     private val addTransaction: AddDebtTransactionUseCase,
+    private val updateTransaction: UpdateDebtTransactionUseCase,
+    private val deleteTransaction: DeleteDebtTransactionUseCase,
     private val syncStatusProvider: SyncStatusProvider,
     private val appSettings: AppSettings,
 ) : ViewModel() {
@@ -56,7 +60,40 @@ class DebtorDetailViewModel(
         when (intent) {
             is DebtorDetailIntent.Repay -> record(intent.amount, intent.method)
             is DebtorDetailIntent.LendMore -> record(intent.amount.negate(), intent.method)
+            is DebtorDetailIntent.EditTransaction -> editTransaction(intent)
+            is DebtorDetailIntent.DeleteTransaction -> removeTransaction(intent.transactionId)
             DebtorDetailIntent.Refresh -> refresh()
+        }
+    }
+
+    private fun editTransaction(intent: DebtorDetailIntent.EditTransaction) {
+        val original = state.value.transactions.find { it.id == intent.transactionId } ?: return
+        // Keep the lend/repay direction of the original; only its magnitude is edited.
+        val signed = if (original.amount.signum() > 0) intent.amount else intent.amount.negate()
+        viewModelScope.launch {
+            runCatching {
+                updateTransaction(
+                    original.copy(
+                        amount = signed,
+                        type = signed.toDebtTransactionType(),
+                        method = intent.method,
+                        comment = intent.comment?.trim()?.ifBlank { null },
+                        date = intent.date,
+                        updatedAt = Clock.System.now(),
+                        syncStatus = SyncStatus.PENDING,
+                    )
+                )
+            }.onFailure {
+                effectsChannel.send(DebtorDetailEffect.Error(resolveStrings(appSettings.locale).saveError))
+            }
+        }
+    }
+
+    private fun removeTransaction(id: String) {
+        viewModelScope.launch {
+            runCatching { deleteTransaction(id) }.onFailure {
+                effectsChannel.send(DebtorDetailEffect.Error(resolveStrings(appSettings.locale).deleteError))
+            }
         }
     }
 

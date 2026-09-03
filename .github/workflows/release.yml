@@ -15,8 +15,9 @@ name: Release
 #   - uploads the .aab to Google Play (play-store job — also needs the
 #     GOOGLE_PLAY_SERVICE_ACCOUNT_JSON secret, see below), and only if THAT
 #     succeeds:
-#   - publishes APK/.msi/.deb as a GitHub Release (the .aab is Play-Store-only —
-#     it's not directly installable, so it isn't attached to the release page)
+#   - publishes the .msi/.deb installers as a GitHub Release (Android goes to
+#     Google Play via the .aab — no APK on the release page; the .aab isn't
+#     directly installable, so it isn't attached either)
 #   - deploys the web build to GitHub Pages
 #
 # Google Play publishing prerequisites (one-time, done by a human — the Play
@@ -626,6 +627,10 @@ jobs:
             echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
           fi
 
+      # Android is distributed through Google Play (the android-aab job uploads the
+      # .aab there), so no APK is attached here — the release page points to the
+      # Play listing instead. The .msi/.deb are the only installers on the page.
+      #
       # The R8/ProGuard mapping + shrink report are intentionally NOT attached to the
       # GitHub Release. They still reach Play Console via the play-store job, and stay
       # downloadable from this run's `debt-tracker-mapping` workflow artifact for
@@ -635,7 +640,18 @@ jobs:
         with:
           tag_name: ${{ steps.release-tag.outputs.tag }}
           generate_release_notes: true
+          # Prepended above the auto-generated changelog.
+          body: |
+            ## Install
+
+            | Platform | Get it |
+            |---|---|
+            | 🤖 **Android** | [**Google Play**](https://play.google.com/store/apps/details?id=org.bigblackowl.debttracker.androidApp) |
+            | 🖥️ **Windows** | `.msi` below |
+            | 🐧 **Linux** | `.deb` below |
+            | 🌐 **Web** | [bobadronov.github.io/debt-tracker](https://bobadronov.github.io/debt-tracker/) |
+
+            ---
           files: |
-            artifacts/debt-tracker-apk/*.apk
             artifacts/debt-tracker-msi/*.msi
             artifacts/debt-tracker-deb/*.deb

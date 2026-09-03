@@ -13,6 +13,7 @@ import org.bigblackowl.debttracker.core.i18n.resolveStrings
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.validation.isValidFullName
+import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 
 /** Seeds the form from [AuthRepository]'s current profile snapshot and saves edits back via [AuthRepository.updateProfile]. */
 class EditAccountViewModel(
@@ -24,7 +25,7 @@ class EditAccountViewModel(
         EditAccountState(
             email = authRepository.email.value.orEmpty(),
             fullName = authRepository.displayName.value.orEmpty(),
-            phone = authRepository.phone.value.orEmpty(),
+            phone = sanitizePhoneInput(authRepository.phone.value.orEmpty()),
             avatarUrl = authRepository.avatarUrl.value,
         )
     )

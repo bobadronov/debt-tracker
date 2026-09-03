@@ -2,6 +2,7 @@ package org.bigblackowl.debttracker.ui.screens.creditors
 
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,11 +16,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.Currency
+import org.bigblackowl.debttracker.domain.model.CreditorTransaction
 import org.bigblackowl.debttracker.domain.model.formatMoney
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.preview.PreviewIds
 import org.bigblackowl.debttracker.ui.components.AmountBottomSheet
+import org.bigblackowl.debttracker.ui.components.ConfirmDialog
 import org.bigblackowl.debttracker.ui.components.ContactDetailScaffold
+import org.bigblackowl.debttracker.ui.components.TransactionEditSheet
 import org.bigblackowl.debttracker.ui.components.TransactionRow
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -38,6 +42,8 @@ fun CreditorDetailScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var showReturnSheet by remember { mutableStateOf(false) }
     var showBorrowSheet by remember { mutableStateOf(false) }
+    var editingTransaction by remember { mutableStateOf<CreditorTransaction?>(null) }
+    var deletingTransaction by remember { mutableStateOf<CreditorTransaction?>(null) }
     val strings = LocalStrings.current
     val currency = state.creditor?.currency ?: Currency.UAH
 
@@ -56,7 +62,7 @@ fun CreditorDetailScreen(
         onBack = onBack,
         exportLabel = strings.creditorDetailExport,
         onExport = onExport,
-        onEdit = onEdit.takeIf { state.creditor != null },
+        onEdit = onEdit,
         snackbarHostState = snackbarHostState,
         phone = state.creditor?.phone,
         comment = state.creditor?.comment,
@@ -73,10 +79,41 @@ fun CreditorDetailScreen(
                 amount = transaction.amount,
                 method = transaction.method,
                 comment = transaction.comment,
-                createdAt = transaction.createdAt,
+                date = transaction.date,
                 currency = currency,
+                onEdit = { editingTransaction = transaction },
+                onDelete = { deletingTransaction = transaction },
             )
         }
+    }
+
+    editingTransaction?.let { tx ->
+        TransactionEditSheet(
+            initialAmount = tx.amount,
+            initialMethod = tx.method,
+            initialComment = tx.comment,
+            initialDate = tx.date,
+            currency = currency,
+            onDismiss = { editingTransaction = null },
+            onConfirm = { amount, method, comment, date ->
+                viewModel.onIntent(CreditorDetailIntent.EditTransaction(tx.id, amount, method, comment, date))
+                editingTransaction = null
+            },
+        )
+    }
+
+    deletingTransaction?.let { tx ->
+        ConfirmDialog(
+            title = strings.transactionEdit.deleteConfirmTitle,
+            text = strings.transactionEdit.deleteConfirmText,
+            confirmLabel = strings.delete,
+            confirmColor = MaterialTheme.colorScheme.error,
+            onConfirm = {
+                viewModel.onIntent(CreditorDetailIntent.DeleteTransaction(tx.id))
+                deletingTransaction = null
+            },
+            onDismiss = { deletingTransaction = null },
+        )
     }
 
     if (showReturnSheet) {

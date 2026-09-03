@@ -25,6 +25,8 @@ import org.bigblackowl.debttracker.domain.usecase.FindProfileByEmailUseCase
 import org.bigblackowl.debttracker.domain.usecase.ForceSignOutUseCase
 import org.bigblackowl.debttracker.domain.usecase.ObserveContactSuggestionsUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddCreditorTransactionUseCase
+import org.bigblackowl.debttracker.domain.usecase.creditor.UpdateCreditorTransactionUseCase
+import org.bigblackowl.debttracker.domain.usecase.creditor.DeleteCreditorTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddOrUpdateCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.DeleteCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.LinkCreditorToRegisteredUserUseCase
@@ -32,6 +34,8 @@ import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorTransa
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorsUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.AddDebtTransactionUseCase
+import org.bigblackowl.debttracker.domain.usecase.debtor.UpdateDebtTransactionUseCase
+import org.bigblackowl.debttracker.domain.usecase.debtor.DeleteDebtTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.AddOrUpdateDebtorUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.DeleteDebtorUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.LinkDebtorToRegisteredUserUseCase
@@ -105,6 +109,8 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     factoryOf(::AddOrUpdateDebtorUseCase)
     factoryOf(::DeleteDebtorUseCase)
     factoryOf(::AddDebtTransactionUseCase)
+    factoryOf(::UpdateDebtTransactionUseCase)
+    factoryOf(::DeleteDebtTransactionUseCase)
     factoryOf(::LinkDebtorToRegisteredUserUseCase)
 
     factoryOf(::ObserveCreditorsUseCase)
@@ -113,6 +119,8 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     factoryOf(::AddOrUpdateCreditorUseCase)
     factoryOf(::DeleteCreditorUseCase)
     factoryOf(::AddCreditorTransactionUseCase)
+    factoryOf(::UpdateCreditorTransactionUseCase)
+    factoryOf(::DeleteCreditorTransactionUseCase)
     factoryOf(::LinkCreditorToRegisteredUserUseCase)
 
     factoryOf(::ObserveContactSuggestionsUseCase)
@@ -126,8 +134,8 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
             get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),
         )
     }
-    viewModel { (debtorId: String) -> DebtorDetailViewModel(debtorId, get(), get(), get(), get(), get()) }
-    viewModel { (creditorId: String) -> CreditorDetailViewModel(creditorId, get(), get(), get(), get(), get()) }
+    viewModel { (debtorId: String) -> DebtorDetailViewModel(debtorId, get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { (creditorId: String) -> CreditorDetailViewModel(creditorId, get(), get(), get(), get(), get(), get(), get()) }
     viewModelOf(::AuthViewModel)
     viewModelOf(::EditAccountViewModel)
     viewModelOf(::ActiveSessionsViewModel)

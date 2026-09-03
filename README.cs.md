@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://bobadronov.github.io/debt-tracker/"><b>▶ Vyzkoušejte to hned v prohlížeči</b></a> · nic k instalaci
+  <a href="https://bobadronov.github.io/debt-tracker/" target="_blank" rel="noopener noreferrer"><b>▶ Vyzkoušejte to hned v prohlížeči</b></a> · nic k instalaci
 </p>
 
 <p align="center">
@@ -108,7 +108,7 @@ flowchart LR
 | Kde | Odkaz |
 |---|---|
 | 🌐 **Web** — není co instalovat (účet zdarma) | **[bobadronov.github.io/debt-tracker](https://bobadronov.github.io/debt-tracker/)** |
-| 🤖 **Android** (APK) | [Nejnovější verze](https://github.com/bobadronov/debt-tracker/releases/latest) |
+| 🤖 **Android** | [Google Play](https://play.google.com/store/apps/details?id=org.bigblackowl.debttracker.androidApp) |
 | 🖥️ **Windows** (MSI) | [Nejnovější verze](https://github.com/bobadronov/debt-tracker/releases/latest) |
 | 🐧 **Linux** (DEB) | [Nejnovější verze](https://github.com/bobadronov/debt-tracker/releases/latest) |
 | 🍏 **iOS** | Sestavit ze zdrojového kódu |

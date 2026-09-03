@@ -3,6 +3,7 @@ package org.bigblackowl.debttracker.core.i18n.translate
 import org.bigblackowl.debttracker.core.i18n.AuthExtraStrings
 import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
 import org.bigblackowl.debttracker.core.i18n.ExchangeRatesStrings
+import org.bigblackowl.debttracker.core.i18n.TransactionEditStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 
 val PlStrings = Strings(
@@ -315,5 +316,11 @@ val PlStrings = Strings(
         refresh = "Odśwież",
         error = "Nie udało się załadować kursów walut",
         stale = "Wyświetlanie zapisanych danych",
+    ),
+    transactionEdit = TransactionEditStrings(
+        editTitle = "Edytuj transakcję",
+        dateLabel = "Data i godzina",
+        deleteConfirmTitle = "Usunąć transakcję?",
+        deleteConfirmText = "Ta transakcja zostanie trwale usunięta z historii.",
     ),
 )
