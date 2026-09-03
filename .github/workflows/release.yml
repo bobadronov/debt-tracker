@@ -446,6 +446,12 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    # Shared with deploy-pages.yml so the two workflows can't deploy Pages
+    # concurrently and clobber each other.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

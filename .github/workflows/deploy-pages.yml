@@ -1,0 +1,90 @@
+
+name: Deploy Pages
+
+# Standalone GitHub Pages deploy for the web app + the static legal pages
+# (legal/*.html — privacy policy, the in-app "Send feedback" form, ...).
+#
+# release.yml also deploys Pages, but only as the last step of the
+# all-or-nothing release pipeline (every platform build + the Play upload must
+# pass first). That means an edit to a legal page can't reach the live site
+# until the next fully-green tagged release. This workflow decouples the two:
+# it runs on its own whenever a legal page changes, or on demand.
+#
+# Both workflows target the same Pages deployment; the shared `concurrency:
+# pages` group serialises them so they can't clobber each other.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'legal/**'
+      - '.github/workflows/deploy-pages.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  # Public values, required at Gradle configuration time by
+  # sharedUI/build.gradle.kts's BuildConfig block. See release.yml.
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+  GOOGLE_SERVER_CLIENT_ID: ${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+
+jobs:
+  build:
+    # wasm-opt/Binaryen currently crashes on the Ubuntu runner for this
+    # project's wasmJs production optimization; Windows avoids it. (Same as
+    # release.yml's web job.)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build web distribution
+        # Kotlin/JS's first webpack invocation in a fresh checkout can fail with
+        # "Cannot find node module ... webpack/bin/webpack.js" — a known Kotlin/JS
+        # Gradle plugin race where npm modules are still being materialized. A
+        # second invocation in the same environment (modules now on disk) succeeds.
+        shell: bash
+        run: |
+          ./gradlew :webApp:composeCompatibilityBrowserDistribution --stacktrace ||
+          ./gradlew :webApp:composeCompatibilityBrowserDistribution --stacktrace
+
+      - name: Add legal pages (privacy policy, feedback form, ...)
+        shell: bash
+        run: cp legal/*.html webApp/build/dist/composeWebCompatibility/productionExecutable/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: webApp/build/dist/composeWebCompatibility/productionExecutable
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
