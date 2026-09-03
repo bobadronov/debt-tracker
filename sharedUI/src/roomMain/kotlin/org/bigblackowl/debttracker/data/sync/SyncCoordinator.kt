@@ -3,8 +3,6 @@ package org.bigblackowl.debttracker.data.sync
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.query.filter.FilterOperation
-import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.selectAsFlow
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -164,7 +162,7 @@ class SyncCoordinator(
         client.from("debtors")
             .selectAsFlow(
                 DebtorDto::id,
-                filter = FilterOperation("user_id", FilterOperator.EQ, userId)
+                filter = { eq("user_id", userId) }
             )
             .collectLatest { remoteRows ->
                 remoteRows.forEach { dto ->
@@ -185,7 +183,7 @@ class SyncCoordinator(
         client.from("debt_transactions")
             .selectAsFlow(
                 DebtTransactionDto::id,
-                filter = FilterOperation("user_id", FilterOperator.EQ, userId)
+                filter = { eq("user_id", userId) }
             )
             .collectLatest { remoteRows ->
                 // Транзакції не мерджаться (спек §5) — прямий upsert по id.
@@ -197,7 +195,7 @@ class SyncCoordinator(
         client.from("creditors")
             .selectAsFlow(
                 CreditorDto::id,
-                filter = FilterOperation("user_id", FilterOperator.EQ, userId)
+                filter = { eq("user_id", userId) }
             )
             .collectLatest { remoteRows ->
                 remoteRows.forEach { dto ->
@@ -216,7 +214,7 @@ class SyncCoordinator(
         client.from("creditor_transactions")
             .selectAsFlow(
                 CreditorTransactionDto::id,
-                filter = FilterOperation("user_id", FilterOperator.EQ, userId)
+                filter = { eq("user_id", userId) }
             )
             .collectLatest { remoteRows ->
                 remoteRows.forEach { dto -> creditorTransactionDao.upsert(dto.toEntity()) }

@@ -3,6 +3,7 @@ package org.bigblackowl.debttracker.core.i18n.translate
 import org.bigblackowl.debttracker.core.i18n.AuthExtraStrings
 import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
 import org.bigblackowl.debttracker.core.i18n.ExchangeRatesStrings
+import org.bigblackowl.debttracker.core.i18n.TransactionEditStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 
 // Eerste automatische vertaling – nog na te kijken door een moedertaalspreker.
@@ -316,5 +317,11 @@ val NlStrings = Strings(
         refresh = "Vernieuwen",
         error = "Kan wisselkoersen niet laden",
         stale = "Opgeslagen gegevens worden weergegeven",
+    ),
+    transactionEdit = TransactionEditStrings(
+        editTitle = "Transactie bewerken",
+        dateLabel = "Datum en tijd",
+        deleteConfirmTitle = "Transactie verwijderen?",
+        deleteConfirmText = "Deze transactie wordt definitief uit de geschiedenis verwijderd.",
     ),
 )

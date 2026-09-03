@@ -1,3 +1,4 @@
+<!--suppress ALL -->
 <p align="center">
   <img src="https://bobadronov.github.io/debt-tracker/android-chrome-512x512.png" width="120" alt="DebtTracker logo">
 </p>
@@ -10,7 +11,7 @@
 </p>
 
 <p align="center">
-  <a href="https://bobadronov.github.io/debt-tracker/"><b>▶ Try it now in your browser</b></a> · nothing to install
+  <a href="https://bobadronov.github.io/debt-tracker/" target="_blank" rel="noopener noreferrer"><b>▶ Try it now in your browser</b></a> · nothing to install
 </p>
 
 <p align="center">
@@ -103,13 +104,13 @@ flowchart LR
 
 ## 📥 Get it
 
-| Where | Link |
-|---|---|
-| 🌐 **Web** — nothing to install (free account) | **[bobadronov.github.io/debt-tracker](https://bobadronov.github.io/debt-tracker/)** |
-| 🤖 **Android** (APK) | [Latest release](https://github.com/bobadronov/debt-tracker/releases/latest) |
-| 🖥️ **Windows** (MSI) | [Latest release](https://github.com/bobadronov/debt-tracker/releases/latest) |
-| 🐧 **Linux** (DEB) | [Latest release](https://github.com/bobadronov/debt-tracker/releases/latest) |
-| 🍏 **iOS** | Build from source |
+| Where                                            | Link                                                                                |
+|--------------------------------------------------|-------------------------------------------------------------------------------------|
+| 🌐 **Web** — nothing to install (free account)   | **[bobadronov.github.io/debt-tracker](https://bobadronov.github.io/debt-tracker/)** |
+| 🤖 **Android** | [Google Play](https://play.google.com/store/apps/details?id=org.bigblackowl.debttracker.androidApp)        |
+| 🖥️ **Windows** (MSI)                            | [Latest release](https://github.com/bobadronov/debt-tracker/releases/latest)        |
+| 🐧 **Linux** (DEB)                               | [Latest release](https://github.com/bobadronov/debt-tracker/releases/latest)        |
+| 🍏 **iOS**                                       | Build from source                                                                   |
 
 ---
 

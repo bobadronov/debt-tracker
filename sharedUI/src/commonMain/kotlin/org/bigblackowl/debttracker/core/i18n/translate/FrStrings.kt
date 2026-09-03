@@ -3,6 +3,7 @@ package org.bigblackowl.debttracker.core.i18n.translate
 import org.bigblackowl.debttracker.core.i18n.AuthExtraStrings
 import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
 import org.bigblackowl.debttracker.core.i18n.ExchangeRatesStrings
+import org.bigblackowl.debttracker.core.i18n.TransactionEditStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 
 // Première traduction automatique – à relire par un locuteur natif.
@@ -316,5 +317,11 @@ val FrStrings = Strings(
         refresh = "Actualiser",
         error = "Impossible de charger les taux de change",
         stale = "Affichage des données enregistrées",
+    ),
+    transactionEdit = TransactionEditStrings(
+        editTitle = "Modifier la transaction",
+        dateLabel = "Date et heure",
+        deleteConfirmTitle = "Supprimer la transaction ?",
+        deleteConfirmText = "Cette transaction sera définitivement supprimée de l'historique.",
     ),
 )

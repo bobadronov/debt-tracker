@@ -19,6 +19,9 @@ interface DebtTransactionDao {
     @Query("SELECT * FROM debt_transactions WHERE debtorId = :debtorId AND isDeleted = 0")
     suspend fun getAllForDebtor(debtorId: String): List<DebtTransactionEntity>
 
+    @Query("SELECT * FROM debt_transactions WHERE id = :id")
+    suspend fun getById(id: String): DebtTransactionEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(transaction: DebtTransactionEntity)
 

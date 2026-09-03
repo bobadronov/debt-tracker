@@ -4,8 +4,6 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.query.filter.FilterOperation
-import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.postgrest.rpc
 import io.github.jan.supabase.realtime.selectAsFlow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -54,9 +52,9 @@ class SupabaseDebtorRepository(
             } else {
                 combine(
                     client.from("debtors")
-                        .selectAsFlow(DebtorDto::id, filter = FilterOperation("user_id", FilterOperator.EQ, userId)),
+                        .selectAsFlow(DebtorDto::id, filter = { eq("user_id", userId) }),
                     client.from("debt_transactions")
-                        .selectAsFlow(DebtTransactionDto::id, filter = FilterOperation("user_id", FilterOperator.EQ, userId)),
+                        .selectAsFlow(DebtTransactionDto::id, filter = { eq("user_id", userId) }),
                 ) { debtorDtos, transactionDtos ->
                     val transactionsByDebtor = transactionDtos
                         .filterNot { it.isDeleted }
@@ -79,7 +77,7 @@ class SupabaseDebtorRepository(
                 flowOf(null)
             } else {
                 client.from("debtors")
-                    .selectAsFlow(DebtorDto::id, filter = FilterOperation("user_id", FilterOperator.EQ, userId))
+                    .selectAsFlow(DebtorDto::id, filter = { eq("user_id", userId) })
                     .map { rows -> rows.firstOrNull { it.id == id && !it.isDeleted }?.toDomain() }
             }
         }
@@ -91,7 +89,7 @@ class SupabaseDebtorRepository(
                 flowOf(emptyList())
             } else {
                 client.from("debt_transactions")
-                    .selectAsFlow(DebtTransactionDto::id, filter = FilterOperation("user_id", FilterOperator.EQ, userId))
+                    .selectAsFlow(DebtTransactionDto::id, filter = { eq("user_id", userId) })
                     .map { rows ->
                         rows.filter { it.debtorId == debtorId && !it.isDeleted }.map { it.toDomain() }
                     }
@@ -123,6 +121,21 @@ class SupabaseDebtorRepository(
         val normalized = transaction.copy(type = transaction.amount.toDebtTransactionType())
         client.from("debt_transactions").upsert(normalized.toDto(userId))
         recalcDebtorStatus(normalized.debtorId, userId)
+    }
+
+    // upsert is keyed by id — editing an existing transaction is the same round trip as adding one.
+    override suspend fun updateTransaction(transaction: DebtTransaction) = addTransaction(transaction)
+
+    override suspend fun softDeleteTransaction(id: String) {
+        val userId = requireUserId()
+        val existing = client.from("debt_transactions")
+            .select { filter { eq("id", id); eq("user_id", userId) } }
+            .decodeSingleOrNull<DebtTransactionDto>()
+            ?.toDomain() ?: return
+        client.from("debt_transactions").upsert(
+            existing.copy(isDeleted = true, updatedAt = kotlin.time.Clock.System.now()).toDto(userId)
+        )
+        recalcDebtorStatus(existing.debtorId, userId)
     }
 
     override suspend fun deleteAllData() {

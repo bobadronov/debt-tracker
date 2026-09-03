@@ -4,8 +4,6 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.query.filter.FilterOperation
-import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.postgrest.rpc
 import io.github.jan.supabase.realtime.selectAsFlow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -50,9 +48,9 @@ class SupabaseCreditorRepository(
             } else {
                 combine(
                     client.from("creditors")
-                        .selectAsFlow(CreditorDto::id, filter = FilterOperation("user_id", FilterOperator.EQ, userId)),
+                        .selectAsFlow(CreditorDto::id, filter = { eq("user_id", userId) }),
                     client.from("creditor_transactions")
-                        .selectAsFlow(CreditorTransactionDto::id, filter = FilterOperation("user_id", FilterOperator.EQ, userId)),
+                        .selectAsFlow(CreditorTransactionDto::id, filter = { eq("user_id", userId) }),
                 ) { creditorDtos, transactionDtos ->
                     val transactionsByCreditor = transactionDtos
                         .filterNot { it.isDeleted }
@@ -75,7 +73,7 @@ class SupabaseCreditorRepository(
                 flowOf(null)
             } else {
                 client.from("creditors")
-                    .selectAsFlow(CreditorDto::id, filter = FilterOperation("user_id", FilterOperator.EQ, userId))
+                    .selectAsFlow(CreditorDto::id, filter = { eq("user_id", userId) })
                     .map { rows -> rows.firstOrNull { it.id == id && !it.isDeleted }?.toDomain() }
             }
         }
@@ -87,7 +85,7 @@ class SupabaseCreditorRepository(
                 flowOf(emptyList())
             } else {
                 client.from("creditor_transactions")
-                    .selectAsFlow(CreditorTransactionDto::id, filter = FilterOperation("user_id", FilterOperator.EQ, userId))
+                    .selectAsFlow(CreditorTransactionDto::id, filter = { eq("user_id", userId) })
                     .map { rows ->
                         rows.filter { it.creditorId == creditorId && !it.isDeleted }.map { it.toDomain() }
                     }
@@ -119,6 +117,21 @@ class SupabaseCreditorRepository(
         val normalized = transaction.copy(type = transaction.amount.toCreditorTransactionType())
         client.from("creditor_transactions").upsert(normalized.toDto(userId))
         recalcCreditorStatus(normalized.creditorId, userId)
+    }
+
+    // upsert is keyed by id — editing an existing transaction is the same round trip as adding one.
+    override suspend fun updateTransaction(transaction: CreditorTransaction) = addTransaction(transaction)
+
+    override suspend fun softDeleteTransaction(id: String) {
+        val userId = requireUserId()
+        val existing = client.from("creditor_transactions")
+            .select { filter { eq("id", id); eq("user_id", userId) } }
+            .decodeSingleOrNull<CreditorTransactionDto>()
+            ?.toDomain() ?: return
+        client.from("creditor_transactions").upsert(
+            existing.copy(isDeleted = true, updatedAt = kotlin.time.Clock.System.now()).toDto(userId)
+        )
+        recalcCreditorStatus(existing.creditorId, userId)
     }
 
     override suspend fun deleteAllData() {

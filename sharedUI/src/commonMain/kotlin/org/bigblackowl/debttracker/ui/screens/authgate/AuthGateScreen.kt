@@ -33,8 +33,6 @@ import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
-import org.bigblackowl.debttracker.ui.components.NumericKeypad
-import org.bigblackowl.debttracker.ui.components.PIN_LENGTH
 import org.bigblackowl.debttracker.ui.components.PinCodeField
 import org.bigblackowl.debttracker.ui.components.UnlockScaffold
 import org.koin.compose.koinInject
@@ -54,7 +52,6 @@ fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinVi
     val strings = LocalStrings.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     val pinFocusRequester = remember { FocusRequester() }
-    val isDesktop = currentPlatform == AppPlatform.DESKTOP
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -71,10 +68,11 @@ fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinVi
 
     if (currentPlatform == AppPlatform.WEB) return
 
-    // Desktop typing: keep trying to grab focus for the hidden text field until it takes (the field
-    // isn't always attached on the first frame — this was part of the "PIN entry is unreliable" report).
-    LaunchedEffect(state.mode, isDesktop) {
-        if (isDesktop && state.mode == UnlockMode.PIN) {
+    // Grab focus for the hidden PIN text field so its keyboard is ready immediately — the system
+    // numeric keyboard on mobile, the physical keyboard on desktop. Keep retrying: the field isn't
+    // always attached on the first frame (part of the old "PIN entry is unreliable" report).
+    LaunchedEffect(state.mode) {
+        if (state.mode == UnlockMode.PIN) {
             repeat(10) {
                 runCatching { pinFocusRequester.requestFocus() }.onSuccess { return@LaunchedEffect }
                 delay(50)
@@ -116,7 +114,6 @@ fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinVi
                 value = state.pinInput,
                 onValueChange = { viewModel.onIntent(AuthGateIntent.PinChanged(it)) },
                 focusRequester = pinFocusRequester,
-                acceptTextInput = isDesktop,
             )
             AnimatedVisibility(
                 state.error != null,
@@ -129,16 +126,6 @@ fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinVi
                     textAlign = TextAlign.Center,
                 )
             }
-            Spacer(Modifier.height(Dimens.space24))
-            NumericKeypad(
-                onDigit = { digit ->
-                    val next = state.pinInput + digit
-                    if (next.length <= PIN_LENGTH) viewModel.onIntent(AuthGateIntent.PinChanged(next))
-                },
-                onBackspace = {
-                    viewModel.onIntent(AuthGateIntent.PinChanged(state.pinInput.dropLast(1)))
-                },
-            )
             if (settings.biometricEnabled) {
                 Spacer(Modifier.height(Dimens.space8))
                 TextButton(onClick = { viewModel.onIntent(AuthGateIntent.RetryBiometric(biometricAuthenticator)) }) {

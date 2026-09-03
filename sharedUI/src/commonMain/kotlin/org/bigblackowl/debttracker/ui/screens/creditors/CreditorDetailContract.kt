@@ -20,6 +20,15 @@ data class CreditorDetailState(
 sealed interface CreditorDetailIntent {
     data class Return(val amount: BigDecimal, val method: PaymentMethod) : CreditorDetailIntent
     data class BorrowMore(val amount: BigDecimal, val method: PaymentMethod) : CreditorDetailIntent
+    /** Rewrites one history row. [amount] is the unsigned magnitude — the borrow/return direction is kept from the original. */
+    data class EditTransaction(
+        val transactionId: String,
+        val amount: BigDecimal,
+        val method: PaymentMethod,
+        val comment: String?,
+        val date: kotlin.time.Instant,
+    ) : CreditorDetailIntent
+    data class DeleteTransaction(val transactionId: String) : CreditorDetailIntent
     data object Refresh : CreditorDetailIntent
 }
 

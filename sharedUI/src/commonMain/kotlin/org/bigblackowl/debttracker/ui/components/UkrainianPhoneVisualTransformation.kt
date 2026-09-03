@@ -4,93 +4,57 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import org.bigblackowl.debttracker.domain.validation.UA_PHONE_NATIONAL_LEN
 
-/** Показує ввід номера телефону у вигляді "+38 (XXX) XXX XX XX"; поле зберігає лише цифри. */
+private const val PREFIX = "+380 "
+
+/**
+ * Renders phone entry as `+380 XX XXX XX XX`. The field itself stores only the bare 9-digit
+ * national number (screens run every keystroke through
+ * [org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput] first), so this only has to
+ * prepend `+380` and group the digits 2-3-2-2.
+ */
 internal class UkrainianPhoneVisualTransformation : VisualTransformation {
 
     override fun filter(text: AnnotatedString): TransformedText {
-        val trimmed = text.text.filter { it.isDigit() }.take(10)
+        val digits = text.text.filter { it.isDigit() }.take(UA_PHONE_NATIONAL_LEN)
 
-        if (trimmed.isEmpty()) {
+        if (digits.isEmpty()) {
             return TransformedText(
-                AnnotatedString("+38 "),
+                AnnotatedString(PREFIX),
                 object : OffsetMapping {
-                    override fun originalToTransformed(offset: Int): Int = 4
+                    override fun originalToTransformed(offset: Int): Int = PREFIX.length
                     override fun transformedToOriginal(offset: Int): Int = 0
-                }
+                },
             )
         }
 
-        val builder = StringBuilder("+38 ")
-        val mapping = mutableListOf<Int>()
+        val out = StringBuilder(PREFIX)
+        // map[t] = original digit index at transformed position t; -1 for the fixed prefix.
+        val map = MutableList(PREFIX.length) { -1 }
 
-        // Мапимо "+38 " на позицію 0
-        repeat(4) { mapping.add(0) }
-
-        var digitIndex = 0
-
-        // Обробка (XXX) для короткого вводу
-        if (trimmed.length <= 3) {
-            builder.append("(")
-            mapping.add(0) // Що відкриває дужка
-            for (i in trimmed.indices) {
-                builder.append(trimmed[i])
-                mapping.add(i) // Мапимо цифру на її позицію
+        var idx = 0
+        for (size in intArrayOf(2, 3, 2, 2)) {
+            if (idx >= digits.length) break
+            val end = minOf(idx + size, digits.length)
+            for (i in idx until end) {
+                out.append(digits[i]); map.add(i)
             }
-            builder.append(") ")
-            mapping.add(trimmed.length) // Закриваюча дужка
-            mapping.add(trimmed.length) // Пробіл після
-            return TransformedText(
-                AnnotatedString(builder.toString()),
-                object : OffsetMapping {
-                    override fun originalToTransformed(offset: Int): Int =
-                        mapping.indexOfFirst { it >= offset }.takeIf { it >= 0 } ?: builder.length
-
-                    override fun transformedToOriginal(offset: Int): Int =
-                        if (offset < mapping.size) mapping[offset] else trimmed.length
-                }
-            )
-        }
-
-        // Повний формат: +38 (XXX) XXX XX XX
-        builder.append("(${trimmed.take(3)}) ")
-        mapping.add(0) // Що відкриває дужка
-        repeat(3) { mapping.add(digitIndex + it) } // Цифри 0-2
-        mapping.add(digitIndex + 3) // Закриваюча дужка
-        mapping.add(digitIndex + 3) // Пробіл після
-        digitIndex += 3
-
-        // Додаємо блоки: XXX, XX, XX
-        fun appendBlock(count: Int, spaceAfter: Boolean = true) {
-            val block = trimmed.drop(digitIndex).take(count)
-            builder.append(block)
-            repeat(block.length) { mapping.add(digitIndex + it) } // Мапимо цифри на їх позиції
-            digitIndex += block.length
-            if (block.length == count && spaceAfter && digitIndex < trimmed.length) {
-                builder.append(" ")
-                mapping.add(digitIndex)
+            idx = end
+            if (idx < digits.length) {
+                out.append(' '); map.add(idx)
             }
         }
-
-        appendBlock(3) // XXX
-        appendBlock(2) // XX
-        appendBlock(2, spaceAfter = false) // XX
-
-        while (mapping.size < builder.length) {
-            mapping.add(trimmed.length)
-        }
+        while (map.size < out.length) map.add(digits.length)
 
         val offsetMapping = object : OffsetMapping {
             override fun originalToTransformed(offset: Int): Int =
-                mapping.indexOfFirst { it >= offset }.takeIf { it >= 0 } ?: builder.length
+                map.indexOfFirst { it >= offset }.takeIf { it >= 0 } ?: out.length
 
             override fun transformedToOriginal(offset: Int): Int =
-                if (offset < mapping.size) mapping[offset] else trimmed.length
+                (if (offset < map.size) map[offset] else digits.length).coerceAtLeast(0)
         }
 
-        return TransformedText(
-            AnnotatedString(builder.toString()),
-            offsetMapping
-        )
+        return TransformedText(AnnotatedString(out.toString()), offsetMapping)
     }
 }

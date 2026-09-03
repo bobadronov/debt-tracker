@@ -456,7 +456,8 @@ fun DebtTrackerNavGraph(
                     // Gate sign-in (Web's forced gate, remote logout re-login, or the first-launch
                     // AccountOnboarding → sign-in path): fall through screenAfterUnlock() so the
                     // first-launch case still gets the app-lock onboarding step before Home.
-                    onAuthenticated = { if (screen.isGate) replaceStackWith(screenAfterUnlock()) else back() },
+                    // Opt-in sign-in from Settings (non-Web): land on Home rather than back on Settings.
+                    onAuthenticated = { if (screen.isGate) replaceStackWith(screenAfterUnlock()) else replaceStackWith(Screen.Home) },
                     showBackButton = !screen.isGate,
                 )
             }

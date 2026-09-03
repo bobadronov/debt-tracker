@@ -3,6 +3,7 @@ package org.bigblackowl.debttracker.core.i18n.translate
 import org.bigblackowl.debttracker.core.i18n.AuthExtraStrings
 import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
 import org.bigblackowl.debttracker.core.i18n.ExchangeRatesStrings
+import org.bigblackowl.debttracker.core.i18n.TransactionEditStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 
 // První strojový překlad – ke kontrole rodilým mluvčím.
@@ -316,5 +317,11 @@ val CsStrings = Strings(
         refresh = "Obnovit",
         error = "Kurzy měn se nepodařilo načíst",
         stale = "Zobrazují se uložená data",
+    ),
+    transactionEdit = TransactionEditStrings(
+        editTitle = "Upravit transakci",
+        dateLabel = "Datum a čas",
+        deleteConfirmTitle = "Odstranit transakci?",
+        deleteConfirmText = "Tato transakce bude trvale odstraněna z historie.",
     ),
 )

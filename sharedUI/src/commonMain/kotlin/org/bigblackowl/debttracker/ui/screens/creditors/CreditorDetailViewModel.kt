@@ -23,8 +23,10 @@ import org.bigblackowl.debttracker.domain.model.SyncStatus
 import org.bigblackowl.debttracker.domain.model.toCreditorTransactionType
 import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddCreditorTransactionUseCase
+import org.bigblackowl.debttracker.domain.usecase.creditor.DeleteCreditorTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorTransactionsUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorUseCase
+import org.bigblackowl.debttracker.domain.usecase.creditor.UpdateCreditorTransactionUseCase
 
 /** Combines the creditor's profile and transaction stream into [CreditorDetailState]; records new transactions on intent. */
 @OptIn(ExperimentalUuidApi::class)
@@ -33,6 +35,8 @@ class CreditorDetailViewModel(
     observeCreditor: ObserveCreditorUseCase,
     observeTransactions: ObserveCreditorTransactionsUseCase,
     private val addTransaction: AddCreditorTransactionUseCase,
+    private val updateTransaction: UpdateCreditorTransactionUseCase,
+    private val deleteTransaction: DeleteCreditorTransactionUseCase,
     private val syncStatusProvider: SyncStatusProvider,
     private val appSettings: AppSettings,
 ) : ViewModel() {
@@ -56,7 +60,40 @@ class CreditorDetailViewModel(
         when (intent) {
             is CreditorDetailIntent.Return -> record(intent.amount, intent.method)
             is CreditorDetailIntent.BorrowMore -> record(intent.amount.negate(), intent.method)
+            is CreditorDetailIntent.EditTransaction -> editTransaction(intent)
+            is CreditorDetailIntent.DeleteTransaction -> removeTransaction(intent.transactionId)
             CreditorDetailIntent.Refresh -> refresh()
+        }
+    }
+
+    private fun editTransaction(intent: CreditorDetailIntent.EditTransaction) {
+        val original = state.value.transactions.find { it.id == intent.transactionId } ?: return
+        // Keep the borrow/return direction of the original; only its magnitude is edited.
+        val signed = if (original.amount.signum() > 0) intent.amount else intent.amount.negate()
+        viewModelScope.launch {
+            runCatching {
+                updateTransaction(
+                    original.copy(
+                        amount = signed,
+                        type = signed.toCreditorTransactionType(),
+                        method = intent.method,
+                        comment = intent.comment?.trim()?.ifBlank { null },
+                        date = intent.date,
+                        updatedAt = Clock.System.now(),
+                        syncStatus = SyncStatus.PENDING,
+                    )
+                )
+            }.onFailure {
+                effectsChannel.send(CreditorDetailEffect.Error(resolveStrings(appSettings.locale).saveError))
+            }
+        }
+    }
+
+    private fun removeTransaction(id: String) {
+        viewModelScope.launch {
+            runCatching { deleteTransaction(id) }.onFailure {
+                effectsChannel.send(CreditorDetailEffect.Error(resolveStrings(appSettings.locale).deleteError))
+            }
         }
     }
 

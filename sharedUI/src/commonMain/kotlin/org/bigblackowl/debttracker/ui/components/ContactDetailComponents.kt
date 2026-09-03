@@ -2,6 +2,7 @@ package org.bigblackowl.debttracker.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,8 +17,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,19 +36,21 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.number
-import kotlinx.datetime.toLocalDateTime
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
+import org.bigblackowl.debttracker.domain.model.formatDueDate
 import org.bigblackowl.debttracker.domain.model.formatMoney
+import org.bigblackowl.debttracker.domain.validation.formatUkrainianPhone
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
@@ -113,7 +120,7 @@ fun ContactDetailScaffold(
                         EntityAvatar(id = id, name = title, avatarUrl = avatarUrl, size = Dimens.space56)
                         Spacer(Modifier.width(Dimens.space12))
                         Column {
-                            phone?.let { Text(it) }
+                            formatUkrainianPhone(phone)?.let { Text(it) }
                             comment?.let { Text(it) }
                             Spacer(Modifier.height(Dimens.space8))
                             Text(
@@ -151,37 +158,70 @@ fun ContactDetailScaffold(
     }
 }
 
-/** One transaction row: signed amount, optional comment, method + date — shared by debtor/creditor histories. */
+/**
+ * One transaction row: signed amount, optional comment, method + date — shared by debtor/creditor
+ * histories. Passing [onEdit]/[onDelete] adds a ⋮ overflow menu for editing or removing the row.
+ */
 @Composable
 fun TransactionRow(
     amount: BigDecimal,
     method: PaymentMethod,
     comment: String?,
-    createdAt: Instant,
+    date: Instant,
     currency: Currency,
+    onEdit: (() -> Unit)? = null,
+    onDelete: (() -> Unit)? = null,
 ) {
     val color = if (amount.signum() > 0) {
         MaterialTheme.debtAccentColors.repay
     } else {
         MaterialTheme.debtAccentColors.debt
     }
+    val strings = LocalStrings.current
+    var menuOpen by remember { mutableStateOf(false) }
 
     OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(Dimens.space16),
         border = BorderStroke(Dimens.space2, color.copy(alpha = .4f)),
     ) {
-        Column(modifier = Modifier.padding(Dimens.space20).fillMaxSize()) {
-            Text(amount.formatMoney(currency), color = color)
-            comment?.let { Text(it) }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text(method.name)
-                Text(createdAt.toLocalDateTime(TimeZone.currentSystemDefault()).date.let {
-                    "${it.day.toString().padStart(2, '0')}.${it.month.number.toString().padStart(2, '0')}.${it.year}"
-                })
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top,
+        ) {
+            Column(modifier = Modifier.weight(1f).padding(Dimens.space20)) {
+                Text(amount.formatMoney(currency), color = color)
+                comment?.let { Text(it) }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(method.name)
+                    Text(date.formatDueDate())
+                }
+            }
+            if (onEdit != null || onDelete != null) {
+                Box {
+                    IconButton(onClick = { menuOpen = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = null)
+                    }
+                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        onEdit?.let { edit ->
+                            DropdownMenuItem(
+                                text = { Text(strings.transactionEdit.editTitle) },
+                                leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                                onClick = { menuOpen = false; edit() },
+                            )
+                        }
+                        onDelete?.let { del ->
+                            DropdownMenuItem(
+                                text = { Text(strings.delete) },
+                                leadingIcon = { Icon(Icons.Default.DeleteOutline, contentDescription = null) },
+                                onClick = { menuOpen = false; del() },
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -226,8 +266,10 @@ private fun ContactDetailComponentsSample() {
                 amount = tx.amount,
                 method = tx.method,
                 comment = tx.comment,
-                createdAt = tx.createdAt,
+                date = tx.createdAt,
                 currency = Currency.UAH,
+                onEdit = {},
+                onDelete = {},
             )
         }
     }

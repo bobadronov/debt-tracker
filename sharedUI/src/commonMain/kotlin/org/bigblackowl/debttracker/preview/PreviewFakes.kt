@@ -298,6 +298,14 @@ class FakeDebtorRepository(
         transactions.update { it + transaction }
     }
 
+    override suspend fun updateTransaction(transaction: DebtTransaction) {
+        transactions.update { list -> list.map { if (it.id == transaction.id) transaction else it } }
+    }
+
+    override suspend fun softDeleteTransaction(id: String) {
+        transactions.update { list -> list.map { if (it.id == id) it.copy(isDeleted = true) else it } }
+    }
+
     override suspend fun deleteAllData() {
         debtors.update { emptyList() }
         transactions.update { emptyList() }
@@ -347,6 +355,14 @@ class FakeCreditorRepository(
 
     override suspend fun addTransaction(transaction: CreditorTransaction) {
         transactions.update { it + transaction }
+    }
+
+    override suspend fun updateTransaction(transaction: CreditorTransaction) {
+        transactions.update { list -> list.map { if (it.id == transaction.id) transaction else it } }
+    }
+
+    override suspend fun softDeleteTransaction(id: String) {
+        transactions.update { list -> list.map { if (it.id == id) it.copy(isDeleted = true) else it } }
     }
 
     override suspend fun deleteAllData() {

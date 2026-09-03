@@ -46,6 +46,9 @@ const val PIN_LENGTH = 4
  * Shared by [PinSetupDialog] and [org.bigblackowl.debttracker.ui.screens.authgate.AuthGateScreen] so every
  * PIN entry point in the app looks and behaves the same. [imeAction]/[keyboardActions] let each
  * caller wire up its own Enter/Done key behavior (e.g. advance to the next field, or submit).
+ *
+ * Input goes through a transparent, full-bleed [BasicTextField] behind the dots — the system
+ * numeric keyboard on mobile, the physical keyboard on desktop.
  */
 @Composable
 fun PinCodeField(
@@ -56,12 +59,6 @@ fun PinCodeField(
     length: Int = PIN_LENGTH,
     imeAction: ImeAction = ImeAction.Done,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
-    /**
-     * When false the hidden text field is omitted entirely — the dots are display-only and input
-     * comes from elsewhere (e.g. [NumericKeypad]). Used on mobile so the system keyboard never
-     * appears; desktop keeps it true for physical-keyboard typing.
-     */
-    acceptTextInput: Boolean = true,
     fillColor: Color = MaterialTheme.colorScheme.inverseOnSurface,
     borderColor: Color = MaterialTheme.colorScheme.outline,
     selectedColor: Color = MaterialTheme.colorScheme.primary,
@@ -88,20 +85,18 @@ fun PinCodeField(
                     )
                 }
             }
-            if (acceptTextInput) {
-                BasicTextField(
-                    value = value,
-                    onValueChange = { new ->
-                        if (new.length <= length && new.all(Char::isDigit)) onValueChange(new)
-                    },
-                    modifier = Modifier.matchParentSize().alpha(0f)
-                        .focusRequester(focusRequester)
-                        .onFocusChanged { isFocused = it.isFocused },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = imeAction),
-                    keyboardActions = keyboardActions,
-                )
-            }
+            BasicTextField(
+                value = value,
+                onValueChange = { new ->
+                    if (new.length <= length && new.all(Char::isDigit)) onValueChange(new)
+                },
+                modifier = Modifier.matchParentSize().alpha(0f)
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { isFocused = it.isFocused },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = imeAction),
+                keyboardActions = keyboardActions,
+            )
         }
         TextButton(onClick = { pinVisible = !pinVisible }) {
             Text(if (pinVisible) strings.hidePin else strings.showPin)

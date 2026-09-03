@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://bobadronov.github.io/debt-tracker/"><b>▶ Provala subito nel browser</b></a> · niente da installare
+  <a href="https://bobadronov.github.io/debt-tracker/" target="_blank" rel="noopener noreferrer"><b>▶ Provala subito nel browser</b></a> · niente da installare
 </p>
 
 <p align="center">
@@ -110,7 +110,7 @@ flowchart LR
 | Dove | Link |
 |---|---|
 | 🌐 **Web** — niente da installare (account gratuito) | **[bobadronov.github.io/debt-tracker](https://bobadronov.github.io/debt-tracker/)** |
-| 🤖 **Android** (APK) | [Ultima versione](https://github.com/bobadronov/debt-tracker/releases/latest) |
+| 🤖 **Android** | [Google Play](https://play.google.com/store/apps/details?id=org.bigblackowl.debttracker.androidApp) |
 | 🖥️ **Windows** (MSI) | [Ultima versione](https://github.com/bobadronov/debt-tracker/releases/latest) |
 | 🐧 **Linux** (DEB) | [Ultima versione](https://github.com/bobadronov/debt-tracker/releases/latest) |
 | 🍏 **iOS** | Compila dai sorgenti |

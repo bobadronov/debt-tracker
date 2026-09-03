@@ -20,6 +20,15 @@ data class DebtorDetailState(
 sealed interface DebtorDetailIntent {
     data class Repay(val amount: BigDecimal, val method: PaymentMethod) : DebtorDetailIntent
     data class LendMore(val amount: BigDecimal, val method: PaymentMethod) : DebtorDetailIntent
+    /** Rewrites one history row. [amount] is the unsigned magnitude — the lend/repay direction is kept from the original. */
+    data class EditTransaction(
+        val transactionId: String,
+        val amount: BigDecimal,
+        val method: PaymentMethod,
+        val comment: String?,
+        val date: kotlin.time.Instant,
+    ) : DebtorDetailIntent
+    data class DeleteTransaction(val transactionId: String) : DebtorDetailIntent
     data object Refresh : DebtorDetailIntent
 }
 

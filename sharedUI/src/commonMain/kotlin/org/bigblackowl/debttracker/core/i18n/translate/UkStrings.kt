@@ -3,6 +3,7 @@ package org.bigblackowl.debttracker.core.i18n.translate
 import org.bigblackowl.debttracker.core.i18n.AuthExtraStrings
 import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
 import org.bigblackowl.debttracker.core.i18n.ExchangeRatesStrings
+import org.bigblackowl.debttracker.core.i18n.TransactionEditStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 
 val UkStrings = Strings(
@@ -315,5 +316,11 @@ val UkStrings = Strings(
         refresh = "Оновити",
         error = "Не вдалося завантажити курси",
         stale = "Показано збережені дані",
+    ),
+    transactionEdit = TransactionEditStrings(
+        editTitle = "Редагувати операцію",
+        dateLabel = "Дата й час",
+        deleteConfirmTitle = "Видалити операцію?",
+        deleteConfirmText = "Операцію буде остаточно вилучено з історії.",
     ),
 )

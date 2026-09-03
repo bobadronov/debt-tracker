@@ -71,13 +71,27 @@ class RoomDebtorRepository(
         )
     }
 
-    override suspend fun addTransaction(transaction: DebtTransaction) {
+    override suspend fun addTransaction(transaction: DebtTransaction) = upsertTransactionAndRecalc(transaction)
+
+    // Same write path as add: transactionDao.upsert() is INSERT OR REPLACE, so an existing id is
+    // rewritten in place (transactions have no children — no cascade concern like debtors do).
+    override suspend fun updateTransaction(transaction: DebtTransaction) = upsertTransactionAndRecalc(transaction)
+
+    private suspend fun upsertTransactionAndRecalc(transaction: DebtTransaction) {
         val normalized = transaction.copy(
             type = transaction.amount.toDebtTransactionType(),
             syncStatus = SyncStatus.PENDING,
         )
         transactionDao.upsert(normalized.toEntity())
         recalcDebtorStatus(normalized.debtorId)
+    }
+
+    override suspend fun softDeleteTransaction(id: String) {
+        val entity = transactionDao.getById(id) ?: return
+        transactionDao.upsert(
+            entity.copy(isDeleted = true, syncStatus = SyncStatus.PENDING, updatedAt = kotlin.time.Clock.System.now())
+        )
+        recalcDebtorStatus(entity.debtorId)
     }
 
     override suspend fun deleteAllData() {
