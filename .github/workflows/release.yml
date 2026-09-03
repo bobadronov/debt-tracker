@@ -309,10 +309,9 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Compose Desktop downloads WiX Toolset automatically when packageMsi
-      # requires it. Retry on transient Maven Central failures (HTTP 429 Too
-      # Many Requests, 5xx, connection resets) — Gradle's own dependency-download
-      # retry does not cover 429.
+      # Retry on transient Maven Central failures (HTTP 429 Too Many Requests,
+      # 5xx, connection resets) — Gradle's own dependency-download retry does not
+      # cover 429.
       - name: Build app image
         shell: bash
         run: |
@@ -324,8 +323,77 @@ jobs:
             sleep $((n * 30))
           done
 
+      # Several bundled libraries (Nucleus's Tao windowing + decorations, JNA,
+      # ComposeNativeTray, Room's SQLite) ship their Windows .dll INSIDE their
+      # jar and extract it, unsigned, to %LOCALAPPDATA% at first run — where
+      # Smart App Control then blocks it. So pull every .dll out of the jars in
+      # the app image, sign them, and put them back before the loose-file pass.
+      - name: Extract bundled native DLLs for signing
+        if: ${{ env.AZURE_TS_ACCOUNT != '' }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Add-Type -AssemblyName System.IO.Compression
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $appDir = Join-Path $env:GITHUB_WORKSPACE 'desktopApp\build\compose\binaries\main\app\Debt Tracker\app'
+          $stage  = Join-Path $env:RUNNER_TEMP 'jar-dlls'
+          Remove-Item -Recurse -Force $stage -ErrorAction SilentlyContinue
+          $total = 0
+          Get-ChildItem -Path $appDir -Filter *.jar | ForEach-Object {
+            $jarName = $_.Name
+            $zip = [System.IO.Compression.ZipFile]::OpenRead($_.FullName)
+            try {
+              foreach ($entry in $zip.Entries) {
+                if ($entry.FullName -like '*.dll') {
+                  $dest = Join-Path $stage (Join-Path $jarName ($entry.FullName -replace '/', '\'))
+                  New-Item -ItemType Directory -Force -Path (Split-Path $dest) | Out-Null
+                  [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $dest, $true)
+                  $total++
+                }
+              }
+            } finally { $zip.Dispose() }
+          }
+          Write-Host "Staged $total native DLL(s) from bundled jars"
+          if ($total -eq 0) { throw 'No DLLs found in bundled jars - app image layout changed?' }
+
+      - name: Sign bundled native DLLs (Azure Trusted Signing)
+        if: ${{ env.AZURE_TS_ACCOUNT != '' }}
+        uses: azure/trusted-signing-action@v2
+        with:
+          azure-tenant-id: ${{ env.AZURE_TENANT_ID }}
+          azure-client-id: ${{ env.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ env.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ env.AZURE_TS_ENDPOINT }}
+          trusted-signing-account-name: ${{ env.AZURE_TS_ACCOUNT }}
+          certificate-profile-name: ${{ env.AZURE_TS_PROFILE }}
+          files-folder: ${{ runner.temp }}\jar-dlls
+          files-folder-filter: dll
+          files-folder-recurse: true
+          description: Debt Tracker
+          description-url: https://bobadronov.github.io/debt-tracker/
+
+      # Use the JDK `jar` tool (on PATH via setup-java), not .NET ZipArchive —
+      # the latter's Update mode rewrites directory entries in a way Info-ZIP
+      # and some scanners flag as corrupt.
+      - name: Repack signed DLLs into bundled jars
+        if: ${{ env.AZURE_TS_ACCOUNT != '' }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $appDir = Join-Path $env:GITHUB_WORKSPACE 'desktopApp\build\compose\binaries\main\app\Debt Tracker\app'
+          $stage  = Join-Path $env:RUNNER_TEMP 'jar-dlls'
+          $count = 0
+          Get-ChildItem -Path $stage -Directory | ForEach-Object {
+            $jarPath = Join-Path $appDir $_.Name
+            if (-not (Test-Path $jarPath)) { throw "jar not found: $jarPath" }
+            & jar --update --file $jarPath -C $_.FullName .
+            if ($LASTEXITCODE -ne 0) { throw "jar --update failed for $($_.Name): exit $LASTEXITCODE" }
+            $count += (Get-ChildItem $_.FullName -Recurse -File | Measure-Object).Count
+          }
+          Write-Host "Repacked $count signed DLL(s) into bundled jars"
+
       # Smart App Control checks the launched .exe, not the installer, so every
-      # binary inside the app image (Debt Tracker.exe + the bundled JRE's .dll
+      # loose binary in the app image (Debt Tracker.exe + the bundled JRE's .dll
       # files) must be signed BEFORE it's wrapped in the MSI.
       - name: Sign app binaries (Azure Trusted Signing)
         if: ${{ env.AZURE_TS_ACCOUNT != '' }}
@@ -343,9 +411,34 @@ jobs:
           description: Debt Tracker
           description-url: https://bobadronov.github.io/debt-tracker/
 
-      # -x createDistributable so Gradle can't rebuild (and wipe the signatures
-      # on) the app image — packageMsi only needs to wrap the existing one.
-      - name: Package Windows installer
+      # Gradle's packageMsi rebuilds the app image straight from the dependency
+      # cache (it doesn't consume createDistributable's output), so it would
+      # bypass every signature applied above. When signing is on, wrap the
+      # already-signed app image with jpackage directly instead; the runner
+      # ships WiX 3.14, which JDK 17's jpackage supports.
+      - name: Package Windows installer (signed app image)
+        if: ${{ env.AZURE_TS_ACCOUNT != '' }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $wixBin = Get-ChildItem 'C:\Program Files (x86)\WiX Toolset*\bin\light.exe' -ErrorAction SilentlyContinue |
+            Select-Object -First 1 -ExpandProperty DirectoryName
+          if (-not $wixBin) { throw 'WiX toolset not found on runner' }
+          $env:PATH = "$wixBin;$env:PATH"
+          $ver = (Select-String -Path version.properties -Pattern '^VERSION_NAME=(.+)$').Matches[0].Groups[1].Value
+          $img  = Join-Path $env:GITHUB_WORKSPACE 'desktopApp\build\compose\binaries\main\app\Debt Tracker'
+          $dest = Join-Path $env:GITHUB_WORKSPACE 'desktopApp\build\compose\binaries\main\msi'
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          & "$env:JAVA_HOME\bin\jpackage.exe" `
+            --type msi --app-image $img --dest $dest `
+            --name 'Debt Tracker' --app-version $ver `
+            --win-shortcut `
+            --win-upgrade-uuid '7b9d5c61-9805-50a2-a4da-3033c222b695' `
+            --icon (Join-Path $env:GITHUB_WORKSPACE 'desktopApp\src\main\resources\appIcons\WindowsIcon.ico')
+          if ($LASTEXITCODE -ne 0) { throw "jpackage failed: exit $LASTEXITCODE" }
+
+      - name: Package Windows installer (unsigned)
+        if: ${{ env.AZURE_TS_ACCOUNT == '' }}
         shell: bash
         run: |
           n=0

@@ -63,6 +63,10 @@ compose.desktop {
                 iconFile.set(project.file("src/main/resources/appIcons/WindowsIcon.ico"))
                 shortcut = true
                 dirChooser= false
+                // Pinned so MSI upgrades replace the previous install instead of
+                // stacking side by side. Keep in sync with the same UUID in
+                // .github/workflows/release.yml's jpackage --win-upgrade-uuid.
+                upgradeUuid = "7b9d5c61-9805-50a2-a4da-3033c222b695"
             }
 
             macOS {
