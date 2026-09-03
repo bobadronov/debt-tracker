@@ -31,12 +31,11 @@ name: Release
 #      repo secret. Once set, this workflow uploads the .aab automatically
 #      on every tagged release.
 #
-# Windows code signing (optional — avoids SmartScreen/App Control flagging
-# the .msi as from an unknown publisher; without it the build still succeeds
-# and produces an unsigned installer):
-#   1. Obtain a code-signing certificate (.pfx/.p12) from a CA.
-#   2. Base64-encode it and add it as the WINDOWS_CODE_SIGN_CERT_BASE64 repo
-#      secret; add its password as WINDOWS_CODE_SIGN_CERT_PASSWORD.
+# Windows code signing (optional — without it the build still succeeds and
+# produces an unsigned installer that SmartScreen flags as "unknown publisher"
+# and Smart App Control blocks outright). Uses Azure Trusted Signing — see the
+# windows-msi job's env block for the one-time Azure setup and the six
+# AZURE_* repo secrets that switch it on.
 
 on:
   push:
@@ -276,12 +275,26 @@ jobs:
     runs-on: windows-latest
 
     env:
-      # Optional code-signing certificate — if unset, the build continues
-      # and produces an unsigned installer (Windows SmartScreen/App Control
-      # will flag it as from an unknown publisher until it's signed or builds
-      # up enough download reputation on its own).
-      WINDOWS_CODE_SIGN_CERT_BASE64: ${{ secrets.WINDOWS_CODE_SIGN_CERT_BASE64 }}
-      WINDOWS_CODE_SIGN_CERT_PASSWORD: ${{ secrets.WINDOWS_CODE_SIGN_CERT_PASSWORD }}
+      # Azure Trusted Signing — Microsoft's signing service. This is the path
+      # that satisfies Windows Smart App Control; a fresh standalone OV cert
+      # does not (no reputation). If AZURE_TS_ACCOUNT is unset the build still
+      # succeeds and produces an UNSIGNED installer (SmartScreen "unknown
+      # publisher"; Smart App Control blocks it outright).
+      #
+      # To enable, add these repo secrets (one-time Azure setup: create a
+      # Trusted Signing account + a public-trust certificate profile — identity
+      # validation takes ~1-5 business days — then an App Registration granted
+      # the "Trusted Signing Certificate Profile Signer" role on the account):
+      #   AZURE_TENANT_ID / AZURE_CLIENT_ID / AZURE_CLIENT_SECRET  — that App Registration
+      #   AZURE_TS_ENDPOINT  — account endpoint, e.g. https://weu.codesigning.azure.net/ (your region)
+      #   AZURE_TS_ACCOUNT   — Trusted Signing account name
+      #   AZURE_TS_PROFILE   — certificate profile name
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      AZURE_TS_ENDPOINT: ${{ secrets.AZURE_TS_ENDPOINT }}
+      AZURE_TS_ACCOUNT: ${{ secrets.AZURE_TS_ACCOUNT }}
+      AZURE_TS_PROFILE: ${{ secrets.AZURE_TS_PROFILE }}
 
     steps:
       - name: Checkout
@@ -296,41 +309,67 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Compose Desktop downloads WiX Toolset automatically when
-      # packageMsi requires it.
-      #
-      # Retry on transient Maven Central failures (HTTP 429 Too Many Requests,
-      # 5xx, connection resets) — Gradle's own dependency-download retry does not
-      # cover 429.
-      - name: Package Windows installer
+      # Compose Desktop downloads WiX Toolset automatically when packageMsi
+      # requires it. Retry on transient Maven Central failures (HTTP 429 Too
+      # Many Requests, 5xx, connection resets) — Gradle's own dependency-download
+      # retry does not cover 429.
+      - name: Build app image
         shell: bash
         run: |
           n=0
-          until ./gradlew :desktopApp:packageMsi --stacktrace; do
+          until ./gradlew :desktopApp:createDistributable --stacktrace; do
             n=$((n + 1))
             if [ "$n" -ge 3 ]; then echo "All 3 attempts failed" >&2; exit 1; fi
             echo "Attempt $n failed; retrying in $((n * 30))s..." >&2
             sleep $((n * 30))
           done
 
-      - name: Decode code-signing certificate
-        if: ${{ env.WINDOWS_CODE_SIGN_CERT_BASE64 != '' }}
-        shell: pwsh
-        run: |
-          $bytes = [Convert]::FromBase64String($env:WINDOWS_CODE_SIGN_CERT_BASE64)
-          [IO.File]::WriteAllBytes("$env:RUNNER_TEMP\codesign.pfx", $bytes)
+      # Smart App Control checks the launched .exe, not the installer, so every
+      # binary inside the app image (Debt Tracker.exe + the bundled JRE's .dll
+      # files) must be signed BEFORE it's wrapped in the MSI.
+      - name: Sign app binaries (Azure Trusted Signing)
+        if: ${{ env.AZURE_TS_ACCOUNT != '' }}
+        uses: azure/trusted-signing-action@v2
+        with:
+          azure-tenant-id: ${{ env.AZURE_TENANT_ID }}
+          azure-client-id: ${{ env.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ env.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ env.AZURE_TS_ENDPOINT }}
+          trusted-signing-account-name: ${{ env.AZURE_TS_ACCOUNT }}
+          certificate-profile-name: ${{ env.AZURE_TS_PROFILE }}
+          files-folder: ${{ github.workspace }}\desktopApp\build\compose\binaries\main\app\Debt Tracker
+          files-folder-filter: exe,dll
+          files-folder-recurse: true
+          description: Debt Tracker
+          description-url: https://bobadronov.github.io/debt-tracker/
 
-      - name: Sign Windows installer
-        if: ${{ env.WINDOWS_CODE_SIGN_CERT_BASE64 != '' }}
-        shell: pwsh
+      # -x createDistributable so Gradle can't rebuild (and wipe the signatures
+      # on) the app image — packageMsi only needs to wrap the existing one.
+      - name: Package Windows installer
+        shell: bash
         run: |
-          $signtool = Get-ChildItem -Path "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" |
-            Sort-Object FullName -Descending | Select-Object -First 1 -ExpandProperty FullName
-          $msi = Get-ChildItem -Path "desktopApp/build/compose/binaries/main/msi" -Filter *.msi |
-            Select-Object -First 1 -ExpandProperty FullName
-          & $signtool sign /f "$env:RUNNER_TEMP\codesign.pfx" /p "$env:WINDOWS_CODE_SIGN_CERT_PASSWORD" `
-            /fd sha256 /tr http://timestamp.digicert.com /td sha256 "$msi"
-          & $signtool verify /pa "$msi"
+          n=0
+          until ./gradlew :desktopApp:packageMsi -x createDistributable --stacktrace; do
+            n=$((n + 1))
+            if [ "$n" -ge 3 ]; then echo "All 3 attempts failed" >&2; exit 1; fi
+            echo "Attempt $n failed; retrying in $((n * 30))s..." >&2
+            sleep $((n * 30))
+          done
+
+      - name: Sign installer (Azure Trusted Signing)
+        if: ${{ env.AZURE_TS_ACCOUNT != '' }}
+        uses: azure/trusted-signing-action@v2
+        with:
+          azure-tenant-id: ${{ env.AZURE_TENANT_ID }}
+          azure-client-id: ${{ env.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ env.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ env.AZURE_TS_ENDPOINT }}
+          trusted-signing-account-name: ${{ env.AZURE_TS_ACCOUNT }}
+          certificate-profile-name: ${{ env.AZURE_TS_PROFILE }}
+          files-folder: ${{ github.workspace }}\desktopApp\build\compose\binaries\main\msi
+          files-folder-filter: msi
+          description: Debt Tracker
+          description-url: https://bobadronov.github.io/debt-tracker/
 
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
