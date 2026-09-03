@@ -31,11 +31,8 @@ name: Release
 #      repo secret. Once set, this workflow uploads the .aab automatically
 #      on every tagged release.
 #
-# Windows code signing (optional — without it the build still succeeds and
-# produces an unsigned installer that SmartScreen flags as "unknown publisher"
-# and Smart App Control blocks outright). Uses Azure Trusted Signing — see the
-# windows-msi job's env block for the one-time Azure setup and the six
-# AZURE_* repo secrets that switch it on.
+# The Windows installer is NOT code-signed — SmartScreen shows "unknown
+# publisher" and Smart App Control blocks it outright.
 
 on:
   push:
@@ -215,29 +212,9 @@ jobs:
   # Windows MSI
   # ============================================================
   windows-msi:
+    # Produces an UNSIGNED installer (SmartScreen shows "unknown publisher";
+    # Smart App Control blocks it outright). Code signing is not wired up.
     runs-on: windows-latest
-
-    env:
-      # Azure Trusted Signing — Microsoft's signing service. This is the path
-      # that satisfies Windows Smart App Control; a fresh standalone OV cert
-      # does not (no reputation). If AZURE_TS_ACCOUNT is unset the build still
-      # succeeds and produces an UNSIGNED installer (SmartScreen "unknown
-      # publisher"; Smart App Control blocks it outright).
-      #
-      # To enable, add these repo secrets (one-time Azure setup: create a
-      # Trusted Signing account + a public-trust certificate profile — identity
-      # validation takes ~1-5 business days — then an App Registration granted
-      # the "Trusted Signing Certificate Profile Signer" role on the account):
-      #   AZURE_TENANT_ID / AZURE_CLIENT_ID / AZURE_CLIENT_SECRET  — that App Registration
-      #   AZURE_TS_ENDPOINT  — account endpoint, e.g. https://weu.codesigning.azure.net/ (your region)
-      #   AZURE_TS_ACCOUNT   — Trusted Signing account name
-      #   AZURE_TS_PROFILE   — certificate profile name
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-      AZURE_TS_ENDPOINT: ${{ secrets.AZURE_TS_ENDPOINT }}
-      AZURE_TS_ACCOUNT: ${{ secrets.AZURE_TS_ACCOUNT }}
-      AZURE_TS_PROFILE: ${{ secrets.AZURE_TS_PROFILE }}
 
     steps:
       - name: Checkout
@@ -266,122 +243,7 @@ jobs:
             sleep $((n * 30))
           done
 
-      # Several bundled libraries (Nucleus's Tao windowing + decorations, JNA,
-      # ComposeNativeTray, Room's SQLite) ship their Windows .dll INSIDE their
-      # jar and extract it, unsigned, to %LOCALAPPDATA% at first run — where
-      # Smart App Control then blocks it. So pull every .dll out of the jars in
-      # the app image, sign them, and put them back before the loose-file pass.
-      - name: Extract bundled native DLLs for signing
-        if: ${{ env.AZURE_TS_ACCOUNT != '' }}
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          Add-Type -AssemblyName System.IO.Compression
-          Add-Type -AssemblyName System.IO.Compression.FileSystem
-          $appDir = Join-Path $env:GITHUB_WORKSPACE 'desktopApp\build\compose\binaries\main\app\Debt Tracker\app'
-          $stage  = Join-Path $env:RUNNER_TEMP 'jar-dlls'
-          Remove-Item -Recurse -Force $stage -ErrorAction SilentlyContinue
-          $total = 0
-          Get-ChildItem -Path $appDir -Filter *.jar | ForEach-Object {
-            $jarName = $_.Name
-            $zip = [System.IO.Compression.ZipFile]::OpenRead($_.FullName)
-            try {
-              foreach ($entry in $zip.Entries) {
-                if ($entry.FullName -like '*.dll') {
-                  $dest = Join-Path $stage (Join-Path $jarName ($entry.FullName -replace '/', '\'))
-                  New-Item -ItemType Directory -Force -Path (Split-Path $dest) | Out-Null
-                  [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $dest, $true)
-                  $total++
-                }
-              }
-            } finally { $zip.Dispose() }
-          }
-          Write-Host "Staged $total native DLL(s) from bundled jars"
-          if ($total -eq 0) { throw 'No DLLs found in bundled jars - app image layout changed?' }
-
-      - name: Sign bundled native DLLs (Azure Trusted Signing)
-        if: ${{ env.AZURE_TS_ACCOUNT != '' }}
-        uses: azure/trusted-signing-action@v2
-        with:
-          azure-tenant-id: ${{ env.AZURE_TENANT_ID }}
-          azure-client-id: ${{ env.AZURE_CLIENT_ID }}
-          azure-client-secret: ${{ env.AZURE_CLIENT_SECRET }}
-          endpoint: ${{ env.AZURE_TS_ENDPOINT }}
-          trusted-signing-account-name: ${{ env.AZURE_TS_ACCOUNT }}
-          certificate-profile-name: ${{ env.AZURE_TS_PROFILE }}
-          files-folder: ${{ runner.temp }}\jar-dlls
-          files-folder-filter: dll
-          files-folder-recurse: true
-          description: Debt Tracker
-          description-url: https://bobadronov.github.io/debt-tracker/
-
-      # Use the JDK `jar` tool (on PATH via setup-java), not .NET ZipArchive —
-      # the latter's Update mode rewrites directory entries in a way Info-ZIP
-      # and some scanners flag as corrupt.
-      - name: Repack signed DLLs into bundled jars
-        if: ${{ env.AZURE_TS_ACCOUNT != '' }}
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $appDir = Join-Path $env:GITHUB_WORKSPACE 'desktopApp\build\compose\binaries\main\app\Debt Tracker\app'
-          $stage  = Join-Path $env:RUNNER_TEMP 'jar-dlls'
-          $count = 0
-          Get-ChildItem -Path $stage -Directory | ForEach-Object {
-            $jarPath = Join-Path $appDir $_.Name
-            if (-not (Test-Path $jarPath)) { throw "jar not found: $jarPath" }
-            & jar --update --file $jarPath -C $_.FullName .
-            if ($LASTEXITCODE -ne 0) { throw "jar --update failed for $($_.Name): exit $LASTEXITCODE" }
-            $count += (Get-ChildItem $_.FullName -Recurse -File | Measure-Object).Count
-          }
-          Write-Host "Repacked $count signed DLL(s) into bundled jars"
-
-      # Smart App Control checks the launched .exe, not the installer, so every
-      # loose binary in the app image (Debt Tracker.exe + the bundled JRE's .dll
-      # files) must be signed BEFORE it's wrapped in the MSI.
-      - name: Sign app binaries (Azure Trusted Signing)
-        if: ${{ env.AZURE_TS_ACCOUNT != '' }}
-        uses: azure/trusted-signing-action@v2
-        with:
-          azure-tenant-id: ${{ env.AZURE_TENANT_ID }}
-          azure-client-id: ${{ env.AZURE_CLIENT_ID }}
-          azure-client-secret: ${{ env.AZURE_CLIENT_SECRET }}
-          endpoint: ${{ env.AZURE_TS_ENDPOINT }}
-          trusted-signing-account-name: ${{ env.AZURE_TS_ACCOUNT }}
-          certificate-profile-name: ${{ env.AZURE_TS_PROFILE }}
-          files-folder: ${{ github.workspace }}\desktopApp\build\compose\binaries\main\app\Debt Tracker
-          files-folder-filter: exe,dll
-          files-folder-recurse: true
-          description: Debt Tracker
-          description-url: https://bobadronov.github.io/debt-tracker/
-
-      # Gradle's packageMsi rebuilds the app image straight from the dependency
-      # cache (it doesn't consume createDistributable's output), so it would
-      # bypass every signature applied above. When signing is on, wrap the
-      # already-signed app image with jpackage directly instead; the runner
-      # ships WiX 3.14, which JDK 17's jpackage supports.
-      - name: Package Windows installer (signed app image)
-        if: ${{ env.AZURE_TS_ACCOUNT != '' }}
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $wixBin = Get-ChildItem 'C:\Program Files (x86)\WiX Toolset*\bin\light.exe' -ErrorAction SilentlyContinue |
-            Select-Object -First 1 -ExpandProperty DirectoryName
-          if (-not $wixBin) { throw 'WiX toolset not found on runner' }
-          $env:PATH = "$wixBin;$env:PATH"
-          $ver = (Select-String -Path version.properties -Pattern '^VERSION_NAME=(.+)$').Matches[0].Groups[1].Value
-          $img  = Join-Path $env:GITHUB_WORKSPACE 'desktopApp\build\compose\binaries\main\app\Debt Tracker'
-          $dest = Join-Path $env:GITHUB_WORKSPACE 'desktopApp\build\compose\binaries\main\msi'
-          New-Item -ItemType Directory -Force -Path $dest | Out-Null
-          & "$env:JAVA_HOME\bin\jpackage.exe" `
-            --type msi --app-image $img --dest $dest `
-            --name 'Debt Tracker' --app-version $ver `
-            --win-shortcut `
-            --win-upgrade-uuid '7b9d5c61-9805-50a2-a4da-3033c222b695' `
-            --icon (Join-Path $env:GITHUB_WORKSPACE 'desktopApp\src\main\resources\appIcons\WindowsIcon.ico')
-          if ($LASTEXITCODE -ne 0) { throw "jpackage failed: exit $LASTEXITCODE" }
-
-      - name: Package Windows installer (unsigned)
-        if: ${{ env.AZURE_TS_ACCOUNT == '' }}
+      - name: Package Windows installer
         shell: bash
         run: |
           n=0
@@ -391,21 +253,6 @@ jobs:
             echo "Attempt $n failed; retrying in $((n * 30))s..." >&2
             sleep $((n * 30))
           done
-
-      - name: Sign installer (Azure Trusted Signing)
-        if: ${{ env.AZURE_TS_ACCOUNT != '' }}
-        uses: azure/trusted-signing-action@v2
-        with:
-          azure-tenant-id: ${{ env.AZURE_TENANT_ID }}
-          azure-client-id: ${{ env.AZURE_CLIENT_ID }}
-          azure-client-secret: ${{ env.AZURE_CLIENT_SECRET }}
-          endpoint: ${{ env.AZURE_TS_ENDPOINT }}
-          trusted-signing-account-name: ${{ env.AZURE_TS_ACCOUNT }}
-          certificate-profile-name: ${{ env.AZURE_TS_PROFILE }}
-          files-folder: ${{ github.workspace }}\desktopApp\build\compose\binaries\main\msi
-          files-folder-filter: msi
-          description: Debt Tracker
-          description-url: https://bobadronov.github.io/debt-tracker/
 
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
