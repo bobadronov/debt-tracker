@@ -27,6 +27,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -341,6 +342,16 @@ fun AuthScreen(
                             Spacer(Modifier.width(Dimens.space12))
                             Text(strings.authExtra.continueWithGoogle)
                         }
+                    }
+
+                    val googleError = state.googleError
+                    AnimatedVisibility(visible = googleError != null) {
+                        Text(
+                            text = googleError.orEmpty(),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.fillMaxWidth(.8f).padding(top = Dimens.space8),
+                        )
                     }
                 }
 

@@ -44,11 +44,11 @@ class AuthViewModel(
             is AuthIntent.PhoneChanged -> _state.update { it.copy(phone = intent.value) }
             is AuthIntent.AvatarPicked -> _state.update { it.copy(avatarPicked = intent.picked) }
             AuthIntent.ToggleMode -> _state.update {
-                it.copy(isSignUpMode = !it.isSignUpMode, error = null, fullNameError = null, confirmPasswordError = null, offerRegistration = false)
+                it.copy(isSignUpMode = !it.isSignUpMode, error = null, googleError = null, fullNameError = null, confirmPasswordError = null, offerRegistration = false)
             }
             AuthIntent.SwitchToSignUp -> _state.update {
                 // Keep the email/password already typed — the user just needs to add a name to register.
-                it.copy(isSignUpMode = true, confirmPassword = it.password, error = null, offerRegistration = false)
+                it.copy(isSignUpMode = true, confirmPassword = it.password, error = null, googleError = null, offerRegistration = false)
             }
             AuthIntent.Submit -> submit()
             AuthIntent.GoogleSignIn -> googleSignInFlow()
@@ -58,7 +58,7 @@ class AuthViewModel(
     private fun googleSignInFlow() {
         if (_state.value.isGoogleLoading || _state.value.isLoading) return
         // Flip the in-flight flag synchronously so a double-tap can't launch a second flow.
-        _state.update { it.copy(isGoogleLoading = true, error = null, offerRegistration = false) }
+        _state.update { it.copy(isGoogleLoading = true, error = null, googleError = null, offerRegistration = false) }
         viewModelScope.launch {
             when (googleSignIn.signIn()) {
                 GoogleSignInOutcome.Success -> {
@@ -82,7 +82,7 @@ class AuthViewModel(
                     _state.update { it.copy(isGoogleLoading = false) }
                 is GoogleSignInOutcome.Failure ->
                     _state.update {
-                        it.copy(isGoogleLoading = false, error = resolveStrings(appSettings.locale).authError)
+                        it.copy(isGoogleLoading = false, googleError = resolveStrings(appSettings.locale).authError)
                     }
             }
         }
@@ -102,7 +102,7 @@ class AuthViewModel(
         }
 
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
+            _state.update { it.copy(isLoading = true, error = null, googleError = null) }
             val result = if (current.isSignUpMode) {
                 authRepository.signUp(current.email.trim(), current.password)
             } else {

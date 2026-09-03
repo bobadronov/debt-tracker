@@ -15,6 +15,8 @@ data class AuthState(
     /** The "Continue with Google" flow is running — keeps its own spinner + disables the form. */
     val isGoogleLoading: Boolean = false,
     val error: String? = null,
+    /** "Continue with Google" failure — shown under the Google button, never on the password field. */
+    val googleError: String? = null,
     val fullNameError: String? = null,
     val confirmPasswordError: String? = null,
     /**
