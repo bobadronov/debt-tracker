@@ -67,6 +67,14 @@ compose.desktop {
             packageName = "Debt Tracker"
             packageVersion = appVersionName
 
+            // jdeps' auto-detected jlink module list misses this one: DesktopGoogleSignInLauncher
+            // (jvmMain, shared by every desktop OS) uses `com.sun.net.httpserver.HttpServer` for its
+            // OAuth loopback callback listener. Without it the packaged/jlink'd runtime throws
+            // NoClassDefFoundError: com/sun/net/httpserver/HttpServer at signIn() time — "Continue
+            // with Google" hangs forever (isGoogleLoading never resets) with no browser ever opening.
+            // `:desktopApp:run` never hits this: it runs on the full daemon JDK, not the trimmed image.
+            modules("jdk.httpserver")
+
             linux {
                 iconFile.set(project.file("src/main/resources/appIcons/LinuxIcon.png"))
                 modules("jdk.security.auth") // FileKit's Linux (XDG portal/D-Bus) file dialogs need this jlink module

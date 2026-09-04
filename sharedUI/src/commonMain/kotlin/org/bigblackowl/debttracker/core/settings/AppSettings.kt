@@ -121,6 +121,19 @@ class AppSettings(private val settings: Settings) {
         return PinHasher.matches(pin, saltHex.hexToByteArray(), hashHex.hexToByteArray())
     }
 
+    /**
+     * Wipes the app-lock PIN itself, not just the [protectionEnabled]/[biometricEnabled] flags —
+     * called on sign-out ([org.bigblackowl.debttracker.domain.usecase.ClearLocalCacheUseCase]) so
+     * the PIN this account's user chose can't outlive the account on this device: without this,
+     * [hasPinCode] would still be true after sign-out, and the *next* person to sign in here would
+     * either inherit the previous user's PIN gate or (if they also disable/re-enable protection)
+     * have their new PIN silently coexist with the stale hash. Local-only — never touches Supabase.
+     */
+    fun clearPinCode() {
+        settings.remove(KEY_PIN_SALT)
+        settings.remove(KEY_PIN_HASH)
+    }
+
     init {
         // One-time migration off the pre-hashing plaintext `pin_code` key.
         settings.getStringOrNull(KEY_PIN_CODE_LEGACY)?.let { legacyPin ->

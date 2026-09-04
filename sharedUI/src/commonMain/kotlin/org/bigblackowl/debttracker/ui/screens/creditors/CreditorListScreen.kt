@@ -22,6 +22,7 @@ import org.bigblackowl.debttracker.domain.model.formatTotals
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.ui.components.ContactListScaffold
 import org.bigblackowl.debttracker.ui.components.ContactRow
+import org.bigblackowl.debttracker.ui.components.FullScreenLoadingIndicator
 import org.bigblackowl.debttracker.ui.components.ListSearchBar
 import org.bigblackowl.debttracker.ui.components.ListTotalBar
 import org.bigblackowl.debttracker.ui.components.MenuOption
@@ -42,6 +43,11 @@ fun CreditorListScreen(
 
     LaunchedEffect(Unit) {
         searchFocusRequests.events.collect { searchFocusRequester.requestFocus() }
+    }
+
+    if (state.isLoading) {
+        FullScreenLoadingIndicator()
+        return
     }
 
     ContactListScaffold(

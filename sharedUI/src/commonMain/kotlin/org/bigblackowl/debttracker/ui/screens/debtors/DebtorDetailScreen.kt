@@ -23,6 +23,7 @@ import org.bigblackowl.debttracker.preview.PreviewIds
 import org.bigblackowl.debttracker.ui.components.AmountBottomSheet
 import org.bigblackowl.debttracker.ui.components.ConfirmDialog
 import org.bigblackowl.debttracker.ui.components.ContactDetailScaffold
+import org.bigblackowl.debttracker.ui.components.FullScreenLoadingIndicator
 import org.bigblackowl.debttracker.ui.components.TransactionEditSheet
 import org.bigblackowl.debttracker.ui.components.TransactionRow
 import org.koin.compose.viewmodel.koinViewModel
@@ -53,6 +54,11 @@ fun DebtorDetailScreen(
                 is DebtorDetailEffect.Error -> snackbarHostState.showSnackbar(effect.message)
             }
         }
+    }
+
+    if (state.isLoading) {
+        FullScreenLoadingIndicator()
+        return
     }
 
     ContactDetailScaffold(

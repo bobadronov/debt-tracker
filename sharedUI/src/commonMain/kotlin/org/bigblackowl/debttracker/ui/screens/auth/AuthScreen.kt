@@ -23,7 +23,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -329,9 +329,8 @@ fun AuthScreen(
                         modifier = Modifier.fillMaxWidth(.8f),
                     ) {
                         if (state.isGoogleLoading) {
-                            CircularProgressIndicator(
+                            CircularWavyProgressIndicator(
                                 modifier = Modifier.size(Dimens.space20),
-                                strokeWidth = Dimens.space2,
                             )
                         } else {
                             Image(

@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -61,6 +62,10 @@ fun StatsScreen(
     val strings = LocalStrings.current
 
     PlaceholderScreen(title = strings.statsTitle, onBack = onBack) {
+        if (state.isLoading) {
+            CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space60))
+            return@PlaceholderScreen
+        }
         Column(
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
