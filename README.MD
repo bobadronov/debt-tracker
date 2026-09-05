@@ -110,6 +110,7 @@ flowchart LR
 | 🤖 **Android** | [Google Play](https://play.google.com/store/apps/details?id=org.bigblackowl.debttracker.androidApp)        |
 | 🖥️ **Windows** (MSI)                            | [Latest release](https://github.com/bobadronov/debt-tracker/releases/latest)        |
 | 🐧 **Linux** (DEB)                               | [Latest release](https://github.com/bobadronov/debt-tracker/releases/latest)        |
+| 🍎 **macOS** (DMG, Intel + Apple Silicon)         | [Latest release](https://github.com/bobadronov/debt-tracker/releases/latest)        |
 | 🍏 **iOS**                                       | Build from source                                                                   |
 
 ---
