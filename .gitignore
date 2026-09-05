@@ -33,6 +33,7 @@ replay_pid*.log
 node_modules/
 supabase/.branches/
 supabase/.temp/
+supabase/test-credentials*.md
 /release.bat
 /androidApp/release/
 screenshots/
