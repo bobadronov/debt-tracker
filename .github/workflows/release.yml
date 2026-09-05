@@ -269,6 +269,16 @@ jobs:
             sleep $((n * 30))
           done
 
+      # Tag with the platform so the file name alone tells you what it's for
+      # on the GitHub Release page (the raw Compose output name doesn't).
+      - name: Tag installer with platform
+        shell: bash
+        run: |
+          dir=desktopApp/build/compose/binaries/main/msi
+          msi=$(find "$dir" -maxdepth 1 -name '*.msi' -print -quit)
+          if [ -z "$msi" ]; then echo "No .msi produced" >&2; exit 1; fi
+          mv "$msi" "$dir/$(basename "$msi" .msi)-windows.msi"
+
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
@@ -315,6 +325,16 @@ jobs:
             echo "Attempt $n failed; retrying in $((n * 30))s..." >&2
             sleep $((n * 30))
           done
+
+      # Tag with the platform so the file name alone tells you what it's for
+      # on the GitHub Release page (the raw Compose output name doesn't).
+      - name: Tag installer with platform
+        shell: bash
+        run: |
+          dir=desktopApp/build/compose/binaries/main/deb
+          deb=$(find "$dir" -maxdepth 1 -name '*.deb' -print -quit)
+          if [ -z "$deb" ]; then echo "No .deb produced" >&2; exit 1; fi
+          mv "$deb" "$dir/$(basename "$deb" .deb)-linux.deb"
 
       - name: Upload Debian package
         uses: actions/upload-artifact@v4
@@ -379,15 +399,16 @@ jobs:
             sleep $((n * 30))
           done
 
-      # Both arches produce an identically named .dmg, so tag it with the arch
-      # before upload or the two release assets would collide.
-      - name: Tag DMG with arch
+      # Both arches produce an identically named .dmg, so tag it with the
+      # platform + arch before upload — otherwise the two release assets would
+      # collide, and neither name alone says "macOS".
+      - name: Tag DMG with platform + arch
         shell: bash
         run: |
           dir=desktopApp/build/compose/binaries/main/dmg
           dmg=$(find "$dir" -maxdepth 1 -name '*.dmg' -print -quit)
           if [ -z "$dmg" ]; then echo "No .dmg produced" >&2; exit 1; fi
-          mv "$dmg" "$dir/$(basename "$dmg" .dmg)-${{ matrix.arch }}.dmg"
+          mv "$dmg" "$dir/$(basename "$dmg" .dmg)-macos-${{ matrix.arch }}.dmg"
 
       - name: Upload macOS installer
         uses: actions/upload-artifact@v4
@@ -555,10 +576,10 @@ jobs:
             | Platform | Get it |
             |---|---|
             | 🤖 **Android** | [**Google Play**](https://play.google.com/store/apps/details?id=org.bigblackowl.debttracker.androidApp) |
-            | 🖥️ **Windows** | `.msi` below |
-            | 🐧 **Linux** | `.deb` below |
-            | 🍎 **macOS (Intel)** | `x64.dmg` below |
-            | 🍎 **macOS (Apple Silicon)** | `arm64.dmg` below |
+            | 🖥️ **Windows** | asset ending in `-windows.msi` below |
+            | 🐧 **Linux** | asset ending in `-linux.deb` below |
+            | 🍎 **macOS (Intel)** | asset ending in `-macos-x64.dmg` below |
+            | 🍎 **macOS (Apple Silicon)** | asset ending in `-macos-arm64.dmg` below |
             | 🌐 **Web** | [bobadronov.github.io/debt-tracker](https://bobadronov.github.io/debt-tracker/) |
 
             The macOS builds are not Apple-signed or notarized — Gatekeeper
