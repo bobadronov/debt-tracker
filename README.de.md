@@ -21,7 +21,7 @@
 </p>
 
 <p align="center">
-  <a href="README.MD" target="_blank" rel="noopener noreferrer">English</a> ·
+  <a href="README.md" target="_blank" rel="noopener noreferrer">English</a> ·
   <a href="README.uk.md" target="_blank" rel="noopener noreferrer">Українська</a> ·
   <b>Deutsch</b> ·
   <a href="README.es.md" target="_blank" rel="noopener noreferrer">Español</a> ·
