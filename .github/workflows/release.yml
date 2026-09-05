@@ -325,7 +325,13 @@ jobs:
 
 
   # ============================================================
-  # macOS DMG — Intel x64 (macos-13) + Apple Silicon arm64 (macos-14).
+  # macOS DMG — Intel x64 (macos-15-intel) + Apple Silicon arm64 (macos-14).
+  #
+  # macos-13 (the previous x64 image) was retired by GitHub in December 2025 — a job
+  # targeting it queues forever since no runner ever claims it. macos-15-intel is GitHub's
+  # replacement for Intel-architecture builds (docs.github.com/en/actions/reference/runners/
+  # github-hosted-runners); GitHub has said Intel-arch macOS runners go away entirely after
+  # the macOS 15 image itself retires (~Fall 2027), so this'll need revisiting again by then.
   #
   # Not Apple-signed or notarized: Gatekeeper flags the app as from an
   # unidentified developer and the user must allow it by hand.
@@ -337,7 +343,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-13
+          - os: macos-15-intel
             arch: x64
             artifact: debt-tracker-dmg-macos-x64
           - os: macos-14
