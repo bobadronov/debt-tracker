@@ -3,7 +3,9 @@
      size verbatim (SizeMode.Single) and renders one layout, so minWidth/minHeight are the
      real design dimensions, not just a lower bound. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:targetCellWidth="2"
+    android:minWidth="250dp"
+    android:minHeight="130dp"
+    android:targetCellWidth="4"
     android:targetCellHeight="2"
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/widget_loading"

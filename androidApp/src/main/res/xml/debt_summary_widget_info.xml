@@ -11,7 +11,8 @@
      fixed by adding the two attributes back.
      targetCellWidth/Height and previewLayout are API 31+ only and harmlessly ignored below that
      (the launcher then uses its own default sizing and a live-rendered preview) — hence
-     tools:ignore="UnusedAttribute". -->
+     tools:targetApi="31". The xml-v31/ variant of this file is what API 31+ devices actually
+     read instead; keep both in sync. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:minWidth="250dp"
@@ -23,4 +24,4 @@
     android:previewLayout="@layout/widget_preview"
     android:resizeMode="none"
     android:widgetCategory="home_screen"
-    tools:ignore="UnusedAttribute" />
+    tools:targetApi="31" />
