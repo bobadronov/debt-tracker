@@ -19,6 +19,7 @@ import org.bigblackowl.debttracker.domain.repository.ProfileLookupRepository
 import org.bigblackowl.debttracker.domain.repository.RestoreCredentialGateway
 import org.bigblackowl.debttracker.domain.repository.SessionRepository
 import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
+import org.bigblackowl.debttracker.domain.usecase.ClearAppCacheUseCase
 import org.bigblackowl.debttracker.domain.usecase.ClearLocalCacheUseCase
 import org.bigblackowl.debttracker.domain.usecase.DeleteAllDataUseCase
 import org.bigblackowl.debttracker.domain.usecase.FindProfileByEmailUseCase
@@ -99,6 +100,7 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     single<ReminderScheduler> { InProcessReminderScheduler(get(), get()) }
     single { DueReminderCoordinator(get(), get(), get(), get(), get(), get()) }
     factoryOf(::DeleteAllDataUseCase)
+    factoryOf(::ClearAppCacheUseCase)
     factoryOf(::ClearLocalCacheUseCase)
     factoryOf(::FindProfileByEmailUseCase)
     factoryOf(::ForceSignOutUseCase)

@@ -44,6 +44,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -60,6 +61,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
+import org.bigblackowl.debttracker.core.notifications.rememberNotificationPermissionRequester
+import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.domain.model.SyncUiStatus
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
@@ -70,6 +73,7 @@ import org.bigblackowl.debttracker.ui.components.AppOverflowMenu
 import org.bigblackowl.debttracker.ui.components.DesktopTitleBar
 import org.bigblackowl.debttracker.ui.screens.creditors.CreditorListScreen
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorListScreen
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -90,6 +94,21 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val strings = LocalStrings.current
+
+    // Asked here, once — the first moment the user actually reaches the app (past onboarding/
+    // auth-gate/sign-in) — rather than at raw process start (Android's OS "allow notifications?"
+    // prompt used to fire in AppActivity.onCreate before the user had made any choice at all, which
+    // read as unrelated to anything since Settings → Notifications isn't even visible without an
+    // account yet). Needed regardless of sign-in status: local due-date reminders (spec-only, no
+    // account) use the same OS permission as account-linked notifications.
+    val appSettings = koinInject<AppSettings>()
+    val notificationPermissionRequester = rememberNotificationPermissionRequester()
+    LaunchedEffect(Unit) {
+        if (!appSettings.notificationsPermissionRequested) {
+            appSettings.notificationsPermissionRequested = true
+            notificationPermissionRequester.request()
+        }
+    }
 
     // Desktop: the title (app name) + sync badge go into the native OS title bar (main.kt), which
     // also renders the shared AppOverflowMenu — so Home draws no TopAppBar, only the tabs below.
