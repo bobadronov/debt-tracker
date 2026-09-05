@@ -78,7 +78,6 @@ import org.bigblackowl.debttracker.ui.screens.settings.LanguageScreen
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsAboutScreen
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsDataScreen
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsNotificationsScreen
-import org.bigblackowl.debttracker.ui.screens.settings.SettingsPreferencesScreen
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsProtectionScreen
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsScreen
 import org.bigblackowl.debttracker.ui.screens.stats.StatsScreen
@@ -423,7 +422,7 @@ fun DebtTrackerNavGraph(
                     onOpenAccountInfo = { navigate(Screen.AccountInfo) },
                     onOpenProtection = { navigate(Screen.SettingsProtection) },
                     onOpenNotifications = { navigate(Screen.SettingsNotifications) },
-                    onOpenPreferences = { navigate(Screen.SettingsPreferences) },
+                    onOpenLanguage = { navigate(Screen.Language) },
                     onOpenData = { navigate(Screen.SettingsData) },
                     onOpenAbout = { navigate(Screen.SettingsAbout) },
                 )
@@ -433,12 +432,6 @@ fun DebtTrackerNavGraph(
             }
             entry<Screen.SettingsNotifications>(metadata = detailPane()) {
                 SettingsNotificationsScreen(onBack = { back() })
-            }
-            entry<Screen.SettingsPreferences>(metadata = detailPane()) {
-                SettingsPreferencesScreen(
-                    onBack = { back() },
-                    onOpenLanguage = { navigate(Screen.Language) },
-                )
             }
             entry<Screen.SettingsData>(metadata = detailPane()) {
                 SettingsDataScreen(

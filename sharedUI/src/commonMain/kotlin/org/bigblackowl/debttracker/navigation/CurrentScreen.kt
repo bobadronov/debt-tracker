@@ -43,7 +43,6 @@ fun Screen.windowTitle(strings: Strings): String = when (this) {
     Screen.Settings -> strings.settings.title
     Screen.SettingsProtection -> strings.settings.protection
     Screen.SettingsNotifications -> strings.settings.notifications
-    Screen.SettingsPreferences -> strings.settings.preferences
     Screen.SettingsData -> strings.settings.data
     Screen.SettingsAbout -> strings.settings.about
     Screen.Language -> strings.settings.language
