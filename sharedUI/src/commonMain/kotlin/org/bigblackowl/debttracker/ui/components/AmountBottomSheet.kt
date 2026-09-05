@@ -75,9 +75,6 @@ fun AmountBottomSheet(
                 value = amountText,
                 onValueChange = { amountText = sanitizeAmountInput(it); error = null },
                 label = "${strings.amount} (${currency.symbol})",
-                isError = error != null,
-                supportingText = error,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 clipboardText = clipboardText,
                 isPasteRelevant = { text ->
                     val sanitized = sanitizeAmountInput(text)
@@ -85,8 +82,10 @@ fun AmountBottomSheet(
                         runCatching { BigDecimal.parseString(sanitized) }.getOrNull()
                             ?.let { it > BigDecimal.ZERO } == true
                 },
-                onPaste = { amountText = sanitizeAmountInput(it); error = null },
-            )
+                isError = error != null,
+                supportingText = error,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            ) { amountText = sanitizeAmountInput(it); error = null }
             PaymentMethodChipRow(selected = method, onSelect = { method = it })
             Button(
                 onClick = {

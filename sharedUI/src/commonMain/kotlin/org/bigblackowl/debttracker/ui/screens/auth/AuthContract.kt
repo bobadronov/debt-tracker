@@ -18,6 +18,7 @@ data class AuthState(
     /** "Continue with Google" failure — shown under the Google button, never on the password field. */
     val googleError: String? = null,
     val fullNameError: String? = null,
+    val passwordError: String? = null,
     val confirmPasswordError: String? = null,
     /**
      * Set after a failed sign-in so the screen can offer to switch to registration. Supabase Auth

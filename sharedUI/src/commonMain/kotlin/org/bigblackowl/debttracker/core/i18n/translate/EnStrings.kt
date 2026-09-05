@@ -1,6 +1,7 @@
 package org.bigblackowl.debttracker.core.i18n.translate
 
 import org.bigblackowl.debttracker.core.i18n.AuthExtraStrings
+import org.bigblackowl.debttracker.core.i18n.NotificationBodyStrings
 import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
 import org.bigblackowl.debttracker.core.i18n.ExchangeRatesStrings
 import org.bigblackowl.debttracker.core.i18n.TransactionEditStrings
@@ -61,6 +62,7 @@ val EnStrings = Strings(
         offerSignUpAction = "Create an account",
         continueWithGoogle = "Continue with Google",
         divider = "or",
+        passwordTooShort = "Password needs to be at least 8 characters",
     ),
     showPassword = "Show password",
     hidePassword = "Hide password",
@@ -282,10 +284,14 @@ val EnStrings = Strings(
     notificationsEmpty = "No notifications yet",
     notificationsMarkAllRead = "Mark all as read",
     notificationsBell = "Notifications",
-    notificationBodyDebtorLinked = { name, amount, currency -> "$name: you owe $amount $currency" },
-    notificationBodyCreditorLinked = { name, amount, currency -> "$name owes you $amount $currency" },
-    notificationBodyDebtTransactionAdded = { name, amount, currency -> "$name added a transaction: $amount $currency" },
-    notificationBodyCreditTransactionAdded = { name, amount, currency -> "$name added a transaction: $amount $currency" },
+    notificationBody = NotificationBodyStrings(
+        debtorLinked = { name, amount, currency -> "$name: you owe $amount $currency" },
+        creditorLinked = { name, amount, currency -> "$name owes you $amount $currency" },
+        debtTransactionAdded = { name, amount, currency -> "$name added a transaction: $amount $currency" },
+        creditTransactionAdded = { name, amount, currency -> "$name added a transaction: $amount $currency" },
+        hideAmountsToggle = "Hide amounts in notifications",
+        genericBody = "You have new activity on your account",
+    ),
     deleteContactConfirmTitle = "Delete contact?",
     deleteContactConfirmText = { name -> "$name and their whole transaction history will be permanently removed." },
     dueReminder = DueReminderStrings(

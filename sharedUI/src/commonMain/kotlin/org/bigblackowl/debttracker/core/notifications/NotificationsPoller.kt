@@ -65,7 +65,7 @@ class NotificationsPoller(
         if (fresh.isNotEmpty() && appSettings.notificationsEnabled) {
             val strings = resolveStrings(appSettings.locale)
             fresh.forEach { notification ->
-                localNotifier.notify(strings.appName, notification.formatBody(strings), NotificationDeepLinks.linkFor(notification))
+                localNotifier.notify(strings.appName, notification.formatBody(strings, redactAmount = appSettings.hideAmountsInNotifications), NotificationDeepLinks.linkFor(notification))
             }
         }
         // fetchSince повертає найновіші спочатку (SupabaseNotificationRepository), тож перший

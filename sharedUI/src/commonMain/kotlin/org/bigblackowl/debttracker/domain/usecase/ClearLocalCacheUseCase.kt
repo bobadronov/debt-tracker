@@ -14,6 +14,9 @@ import org.bigblackowl.debttracker.domain.repository.DebtorRepository
  * in here", so once nobody is, it must not survive to gate the next person's sign-in (or lock the
  * next person out — [AppSettings.verifyPinCode] would never match). Local settings only, so this
  * never reaches Supabase.
+ *
+ * Also wipes the "my contact card" fields (name/phone/email) — otherwise the next account signing
+ * in on a shared device would see the previous person's info prefilled on the QR share screen.
  */
 class ClearLocalCacheUseCase(
     private val debtorRepository: DebtorRepository,
@@ -26,5 +29,9 @@ class ClearLocalCacheUseCase(
         appSettings.protectionEnabled = false
         appSettings.biometricEnabled = false
         appSettings.clearPinCode()
+        appSettings.myCardName = ""
+        appSettings.myCardPhone = ""
+        appSettings.myCardEmail = ""
+        appSettings.lastSyncedUserId = null
     }
 }

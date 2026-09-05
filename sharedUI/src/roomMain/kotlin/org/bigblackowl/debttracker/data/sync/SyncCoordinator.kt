@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.data.local.dao.CreditorDao
 import org.bigblackowl.debttracker.data.local.dao.CreditorTransactionDao
 import org.bigblackowl.debttracker.data.local.dao.DebtTransactionDao
@@ -51,6 +52,7 @@ class SyncCoordinator(
     private val creditorDao: CreditorDao,
     private val creditorTransactionDao: CreditorTransactionDao,
     private val scope: CoroutineScope,
+    private val appSettings: AppSettings,
 ) : SyncStatusProvider {
     private val _status = MutableStateFlow<SyncUiStatus>(SyncUiStatus.Synced)
     override val status: StateFlow<SyncUiStatus> = _status.asStateFlow()
@@ -73,6 +75,21 @@ class SyncCoordinator(
 
     private suspend fun runSyncSession() {
         val userId = authRepository.currentUserId ?: return
+        // A prior DIFFERENT account's rows are still cached locally (e.g. the app was force-quit
+        // or a session force-expired without going through the explicit "Sign out" flow, which is
+        // the only other place that clears the cache) — wipe them before pulling this account's
+        // data, so they don't render mixed into this list or get pushed under this account's
+        // user_id by pushPending(). `null` (never synced before — pure local-only) is deliberately
+        // left alone: that's the "sign in for the first time" path, and onboarding promises this
+        // local-only data gets backed up into the account being signed into, not discarded.
+        val lastSyncedUserId = appSettings.lastSyncedUserId
+        if (lastSyncedUserId != null && lastSyncedUserId != userId) {
+            debtTransactionDao.deleteAll()
+            debtorDao.deleteAll()
+            creditorTransactionDao.deleteAll()
+            creditorDao.deleteAll()
+        }
+        appSettings.lastSyncedUserId = userId
         coroutineScope {
             launch { pushLoop() }
             launch { resilient { pullDebtors(userId) } }

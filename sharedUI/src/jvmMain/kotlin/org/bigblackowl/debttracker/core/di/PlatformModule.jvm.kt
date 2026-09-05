@@ -1,11 +1,16 @@
 package org.bigblackowl.debttracker.core.di
 
+import com.russhwolf.settings.Settings
+import io.github.jan.supabase.auth.SessionManager
+import io.github.jan.supabase.auth.SettingsSessionManager
 import org.bigblackowl.debttracker.core.auth.DesktopGoogleSignInLauncher
 import org.bigblackowl.debttracker.core.auth.GoogleSignInLauncher
 import org.bigblackowl.debttracker.core.notifications.DesktopLocalNotifier
 import org.bigblackowl.debttracker.core.notifications.InProcessReminderScheduler
 import org.bigblackowl.debttracker.core.notifications.LocalNotifier
 import org.bigblackowl.debttracker.core.notifications.ReminderScheduler
+import org.bigblackowl.debttracker.core.security.DesktopSessionKeyCipher
+import org.bigblackowl.debttracker.core.security.EncryptingSettings
 import org.bigblackowl.debttracker.core.security.RestoreCredentialClient
 import org.bigblackowl.debttracker.core.security.UnsupportedRestoreCredentialClient
 import org.bigblackowl.debttracker.data.local.DebtTrackerDatabase
@@ -28,12 +33,14 @@ actual fun platformDataModule(): Module = module {
     single { get<DebtTrackerDatabase>().creditorTransactionDao() }
     single<DebtorRepository> { RoomDebtorRepository(get(), get(), get(), get()) }
     single<CreditorRepository> { RoomCreditorRepository(get(), get(), get(), get()) }
-    single { SyncCoordinator(get(), get(), get(), get(), get(), get(), get()) }
+    single { SyncCoordinator(get(), get(), get(), get(), get(), get(), get(), get()) }
     single<SyncStatusProvider> { get<SyncCoordinator>() }
     single<LocalNotifier> { DesktopLocalNotifier() }
     single<ReminderScheduler> { InProcessReminderScheduler(get(), get()) }
     single<RestoreCredentialClient> { UnsupportedRestoreCredentialClient }
     single<GoogleSignInLauncher> { DesktopGoogleSignInLauncher(get()) }
+    // OS-credential-store-encrypted Supabase session (JWT + refresh token) — see EncryptingSettings.
+    single<SessionManager> { SettingsSessionManager(settings = EncryptingSettings(Settings(), DesktopSessionKeyCipher)) }
 }
 
 actual val requiresRemoteAuthGate: Boolean = false

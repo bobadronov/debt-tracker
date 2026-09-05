@@ -141,14 +141,14 @@ fun AuthScreen(
                         value = state.fullName,
                         onValueChange = { viewModel.onIntent(AuthIntent.FullNameChanged(it)) },
                         label = strings.fullName,
-                        leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
-                        isError = state.fullNameError != null,
-                        supportingText = state.fullNameError,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                        keyboardActions = KeyboardActions(onNext = { emailFocusRequester.requestFocus() }),
-                        modifier = Modifier.focusRequester(fullNameFocusRequester),
                         clipboardText = clipboardText,
                         isPasteRelevant = ::isValidFullName,
+                        modifier = Modifier.focusRequester(fullNameFocusRequester),
+                        isError = state.fullNameError != null,
+                        supportingText = state.fullNameError,
+                        leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(onNext = { emailFocusRequester.requestFocus() }),
                     )
                 }
 
@@ -158,6 +158,11 @@ fun AuthScreen(
                         viewModel.onIntent(AuthIntent.EmailChanged(it))
                     },
                     label = strings.authEmail,
+                    clipboardText = clipboardText,
+                    isPasteRelevant = ::isValidEmail,
+                    modifier = Modifier
+                        .focusRequester(emailFocusRequester)
+                        .semantics { contentType = ContentType.Username },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email,
                         imeAction = ImeAction.Next,
@@ -165,11 +170,6 @@ fun AuthScreen(
                     keyboardActions = KeyboardActions(
                         onNext = { passwordFocusRequester.requestFocus() },
                     ),
-                    modifier = Modifier
-                        .focusRequester(emailFocusRequester)
-                        .semantics { contentType = ContentType.Username },
-                    clipboardText = clipboardText,
-                    isPasteRelevant = ::isValidEmail,
                 )
 
                 OutlinedTextField(
@@ -196,9 +196,9 @@ fun AuthScreen(
                             }
                         },
                     ),
-                    isError = state.error != null,
+                    isError = state.error != null || state.passwordError != null,
                     supportingText = {
-                        state.error?.let { Text(it) }
+                        (state.passwordError ?: state.error)?.let { Text(it) }
                     },
                     trailingIcon = {
                         IconButton(
@@ -285,6 +285,9 @@ fun AuthScreen(
                         value = state.phone,
                         onValueChange = { viewModel.onIntent(AuthIntent.PhoneChanged(sanitizePhoneInput(it))) },
                         label = strings.phone,
+                        clipboardText = clipboardText,
+                        isPasteRelevant = ::isPhonePasteRelevant,
+                        modifier = Modifier.focusRequester(phoneFocusRequester).semantics { contentType = ContentType.PhoneNumber },
                         leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null) },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Phone,
@@ -298,9 +301,6 @@ fun AuthScreen(
                             },
                         ),
                         visualTransformation = remember { UkrainianPhoneVisualTransformation() },
-                        modifier = Modifier.focusRequester(phoneFocusRequester).semantics { contentType = ContentType.PhoneNumber },
-                        clipboardText = clipboardText,
-                        isPasteRelevant = ::isPhonePasteRelevant,
                     )
                 }
 

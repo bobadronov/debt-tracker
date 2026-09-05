@@ -48,6 +48,23 @@ data class AuthExtraStrings(
     val continueWithGoogle: String,
     /** Divider label between the email form and the Google button ("or"). */
     val divider: String,
+    /** Client-side sign-up nudge only — the actual minimum is enforced server-side by Supabase Auth. */
+    val passwordTooShort: String,
+)
+
+/**
+ * [org.bigblackowl.debttracker.core.notifications.NotificationText] / Settings → notifications —
+ * grouped in a holder because the flat [Strings] constructor is at the JVM 255-argument limit.
+ */
+data class NotificationBodyStrings(
+    val debtorLinked: (name: String, amount: String, currency: String) -> String,
+    val creditorLinked: (name: String, amount: String, currency: String) -> String,
+    val debtTransactionAdded: (name: String, amount: String, currency: String) -> String,
+    val creditTransactionAdded: (name: String, amount: String, currency: String) -> String,
+    /** "Hide amounts in notifications" toggle label (Settings → Preferences). */
+    val hideAmountsToggle: String,
+    /** Shown instead of the name/amount detail in the OS notification body when that toggle is on. */
+    val genericBody: String,
 )
 
 data class DueReminderStrings(
@@ -375,10 +392,7 @@ data class Strings(
     val notificationsEmpty: String,
     val notificationsMarkAllRead: String,
     val notificationsBell: String,
-    val notificationBodyDebtorLinked: (name: String, amount: String, currency: String) -> String,
-    val notificationBodyCreditorLinked: (name: String, amount: String, currency: String) -> String,
-    val notificationBodyDebtTransactionAdded: (name: String, amount: String, currency: String) -> String,
-    val notificationBodyCreditTransactionAdded: (name: String, amount: String, currency: String) -> String,
+    val notificationBody: NotificationBodyStrings,
 
     // delete confirmation for a debtor/creditor list row (ContactRow)
     val deleteContactConfirmTitle: String,

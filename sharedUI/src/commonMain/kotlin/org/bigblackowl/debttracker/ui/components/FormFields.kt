@@ -1,18 +1,25 @@
 package org.bigblackowl.debttracker.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Money
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -20,6 +27,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -62,14 +70,16 @@ fun PasteableOutlinedTextField(
     readOnly: Boolean = false,
     enabled: Boolean = true,
     leadingIcon: (@Composable () -> Unit)? = null,
-    trailingIcon: (@Composable () -> Unit)? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     onPaste: (String) -> Unit = onValueChange,
 ) {
     var focused by remember { mutableStateOf(false) }
-    Column(modifier = modifier) {
+
+    Box(
+        modifier = modifier,
+    ) {
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
@@ -82,18 +92,44 @@ fun PasteableOutlinedTextField(
             readOnly = readOnly,
             enabled = enabled,
             leadingIcon = leadingIcon,
-            trailingIcon = trailingIcon,
+            trailingIcon = {
+                AnimatedVisibility(
+                    focused,
+                    enter = fadeIn() + scaleIn(
+                        // Customize your initial scale (0.0f to 1.0f). Default is 0f
+                        initialScale = 0.5f,
+                        animationSpec = tween(durationMillis = 300)
+                    ),
+                    exit = scaleOut(
+                        // Customize your target scale when disappearing. Default is 0f
+                        targetScale = 0.5f,
+                        animationSpec = tween(durationMillis = 300)
+                    ) + fadeOut(),
+                ) {
+                    IconButton({ onValueChange("") }) {
+                        Icon(Icons.Default.Clear, null)
+                    }
+                }
+            },
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             visualTransformation = visualTransformation,
-            modifier = Modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused },
+            modifier = Modifier
+                .fillMaxWidth()
+                .onFocusChanged {
+                    focused = it.isFocused
+                },
         )
+
         ClipboardPasteHint(
             clipboardText = clipboardText,
             fieldValue = value,
             isFieldFocused = focused,
             isRelevant = isPasteRelevant,
             onPaste = onPaste,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .offset(y = Dimens.space12),
         )
     }
 }
@@ -119,7 +155,7 @@ fun CurrencyDropdownField(
             readOnly = true,
             label = { Text(label) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+            modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             Currency.entries.forEach { currency ->
@@ -165,30 +201,6 @@ fun PaymentMethodChipRow(
             modifier = chipModifier,
             trailingIcon = { Icon(Icons.Default.CreditCard, null) },
         )
-    }
-}
-
-/** [Button] that swaps its content for a spinner while [isLoading], used by every form's submit action. */
-@Composable
-fun LoadingButton(
-    onClick: () -> Unit,
-    isLoading: Boolean,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    leadingIcon: (@Composable () -> Unit)? = null,
-    label: @Composable () -> Unit,
-) {
-    Button(
-        onClick = onClick,
-        enabled = enabled && !isLoading,
-        modifier = modifier,
-    ) {
-        if (isLoading) {
-            CircularWavyProgressIndicator(modifier = Modifier.padding(end = Dimens.space8))
-        } else {
-            leadingIcon?.invoke()
-            label()
-        }
     }
 }
 

@@ -28,6 +28,8 @@ class AppSettings(private val settings: Settings) {
     var hapticEnabled: Boolean by SettingsBooleanState(settings, KEY_HAPTIC_ENABLED, true)
     /** User's own on/off switch for system notifications from [org.bigblackowl.debttracker.core.notifications.NotificationsPoller] (Settings → Preferences) — independent of, and gated behind, the OS-level permission. On by default. */
     var notificationsEnabled: Boolean by SettingsBooleanState(settings, KEY_NOTIFICATIONS_ENABLED, true)
+    /** Redacts amounts/names in the OS notification body ([org.bigblackowl.debttracker.core.notifications.NotificationText.formatBody]) — the in-app notification history always shows full detail regardless. Off by default. */
+    var hideAmountsInNotifications: Boolean by SettingsBooleanState(settings, KEY_HIDE_AMOUNTS_IN_NOTIFICATIONS, false)
     var theme: String by SettingsStringState(settings, KEY_THEME, "system")
     /** "system" | "uk" | "en" — resolved to a [org.bigblackowl.debttracker.core.i18n.Strings] set via [org.bigblackowl.debttracker.core.i18n.resolveStrings]. */
     var locale: String by SettingsStringState(settings, KEY_LOCALE, "system")
@@ -66,6 +68,23 @@ class AppSettings(private val settings: Settings) {
 
     /** Whether the app has already asked the OS for notification permission (Android 13+/iOS/Web) — asked once, not on every launch. */
     var notificationsPermissionRequested: Boolean by SettingsBooleanState(settings, KEY_NOTIFICATIONS_PERMISSION_REQUESTED, false)
+
+    /**
+     * Supabase `user_id` of whoever's data currently occupies the local Room cache — `null` means
+     * the cache has never been synced to any account (pure local-only, or freshly cleared).
+     * [org.bigblackowl.debttracker.data.sync.SyncCoordinator] uses this to tell "first sign-in from
+     * local-only" (migrate the existing local rows into the new account, as onboarding promises)
+     * apart from "signing into a DIFFERENT account on a device that still has a prior account's
+     * cached data because it was never explicitly signed out of" (wipe the stale rows first, so
+     * they don't render mixed into the new account's list or get pushed under the wrong user_id).
+     * Not UI state.
+     */
+    var lastSyncedUserId: String?
+        get() = settings.getStringOrNull(KEY_LAST_SYNCED_USER_ID)
+        set(value) {
+            if (value == null) settings.remove(KEY_LAST_SYNCED_USER_ID)
+            else settings.putString(KEY_LAST_SYNCED_USER_ID, value)
+        }
 
     /**
      * Останній вдалий зріз курсів валют, серіалізований [org.bigblackowl.debttracker.data.remote.HttpExchangeRatesRepository]
@@ -153,6 +172,7 @@ class AppSettings(private val settings: Settings) {
         const val KEY_SOUND_ENABLED = "sound_enabled"
         const val KEY_HAPTIC_ENABLED = "haptic_enabled"
         const val KEY_NOTIFICATIONS_ENABLED = "notifications_enabled"
+        const val KEY_HIDE_AMOUNTS_IN_NOTIFICATIONS = "hide_amounts_in_notifications"
         const val KEY_THEME = "theme"
         const val KEY_LOCALE = "locale"
         const val KEY_DEVICE_SESSION_ID = "device_session_id"
@@ -162,6 +182,7 @@ class AppSettings(private val settings: Settings) {
         const val KEY_MY_CARD_EMAIL = "my_card_email"
         const val KEY_LAST_SEEN_NOTIFICATION_AT = "last_seen_notification_at"
         const val KEY_NOTIFICATIONS_PERMISSION_REQUESTED = "notifications_permission_requested"
+        const val KEY_LAST_SYNCED_USER_ID = "last_synced_user_id"
         const val KEY_RESTORE_CREDENTIAL_REGISTERED = "restore_credential_registered"
         const val KEY_EXCHANGE_RATES_CACHE = "exchange_rates_cache"
         const val KEY_EXCHANGE_RATES_SOURCE = "exchange_rates_source"

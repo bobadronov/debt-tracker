@@ -61,9 +61,7 @@ on:
           - production
 
 permissions:
-  contents: write
-  pages: write
-  id-token: write
+  contents: read
 
 concurrency:
   group: release-${{ github.ref }}
@@ -213,7 +211,7 @@ jobs:
 
       - name: Upload to Google Play
         if: ${{ env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != '' }}
-        uses: r0adkll/upload-google-play@v1
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1
         with:
           serviceAccountJsonPlainText: ${{ env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: org.bigblackowl.debttracker.androidApp
@@ -480,6 +478,10 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    permissions:
+      pages: write
+      id-token: write
+
     # Shared with deploy-pages.yml so the two workflows can't deploy Pages
     # concurrently and clobber each other.
     concurrency:
@@ -513,6 +515,9 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -526,10 +531,13 @@ jobs:
 
       - name: Determine release tag
         id: release-tag
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG_INPUT: ${{ inputs.release_tag }}
         shell: bash
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            tag="${{ inputs.release_tag }}"
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            tag="$RELEASE_TAG_INPUT"
           else
             tag="${GITHUB_REF_NAME}"
           fi
@@ -565,7 +573,7 @@ jobs:
       # downloadable from this run's `debt-tracker-mapping` workflow artifact for
       # de-obfuscating a crash stack trace later (retrace -m mapping.txt).
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           tag_name: ${{ steps.release-tag.outputs.tag }}
           generate_release_notes: true
@@ -575,12 +583,12 @@ jobs:
 
             | Platform | Get it |
             |---|---|
+            | 🌐 **Web** | [bobadronov.github.io/debt-tracker](https://bobadronov.github.io/debt-tracker/) |
             | 🤖 **Android** | [**Google Play**](https://play.google.com/store/apps/details?id=org.bigblackowl.debttracker.androidApp) |
             | 🖥️ **Windows** | asset ending in `-windows.msi` below |
             | 🐧 **Linux** | asset ending in `-linux.deb` below |
             | 🍎 **macOS (Intel)** | asset ending in `-macos-x64.dmg` below |
             | 🍎 **macOS (Apple Silicon)** | asset ending in `-macos-arm64.dmg` below |
-            | 🌐 **Web** | [bobadronov.github.io/debt-tracker](https://bobadronov.github.io/debt-tracker/) |
 
             The macOS builds are not Apple-signed or notarized — Gatekeeper
             will ask you to allow the app manually.

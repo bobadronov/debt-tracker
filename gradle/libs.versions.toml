@@ -18,6 +18,7 @@ nucleus = "2.5.12" # https://github.com/NucleusFramework/Nucleus — native noti
 filekit = "0.15.0" # https://github.com/vinceglb/FileKit
 glanceAppwidgetPreview = "1.2.0"
 googleid = "1.2.0" # https://developers.google.com/android/reference/com/google/android/libraries/identity/googleid/package-summary — Google ID token for Credential Manager
+javaKeyring = "1.0.4" # https://github.com/javakeyring/java-keyring — Desktop OS credential store (Credential Manager/Keychain/Secret Service) for the Supabase session-encryption key
 koin = "4.2.2" # https://github.com/InsertKoinIO/koin
 kotlin = "2.4.10" # https://github.com/JetBrains/kotlin
 kotlinx-coroutines = "1.11.0" # https://github.com/Kotlin/kotlinx.coroutines
@@ -93,6 +94,7 @@ androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "a
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "androidx-credentials" }
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "androidx-credentials" }
 google-identity-googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
+java-keyring = { module = "com.github.javakeyring:java-keyring", version.ref = "javaKeyring" }
 androidx-fragment = { module = "androidx.fragment:fragment", version.ref = "androidx-fragment" }
 supabase-bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "supabase" }
 supabase-auth = { module = "io.github.jan-tennert.supabase:auth-kt" }

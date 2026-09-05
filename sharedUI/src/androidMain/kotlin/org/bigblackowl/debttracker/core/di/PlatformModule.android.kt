@@ -1,12 +1,17 @@
 package org.bigblackowl.debttracker.core.di
 
+import com.russhwolf.settings.Settings
+import io.github.jan.supabase.auth.SessionManager
+import io.github.jan.supabase.auth.SettingsSessionManager
 import org.bigblackowl.debttracker.core.auth.AndroidGoogleSignInLauncher
 import org.bigblackowl.debttracker.core.auth.GoogleSignInLauncher
 import org.bigblackowl.debttracker.core.notifications.AndroidLocalNotifier
 import org.bigblackowl.debttracker.core.notifications.AndroidReminderScheduler
 import org.bigblackowl.debttracker.core.notifications.LocalNotifier
 import org.bigblackowl.debttracker.core.notifications.ReminderScheduler
+import org.bigblackowl.debttracker.core.security.AndroidKeystoreStringCipher
 import org.bigblackowl.debttracker.core.security.AndroidRestoreCredentialClient
+import org.bigblackowl.debttracker.core.security.EncryptingSettings
 import org.bigblackowl.debttracker.core.security.RestoreCredentialClient
 import org.bigblackowl.debttracker.data.local.DebtTrackerDatabase
 import org.bigblackowl.debttracker.data.local.buildDatabase
@@ -29,12 +34,14 @@ actual fun platformDataModule(): Module = module {
     single { get<DebtTrackerDatabase>().creditorTransactionDao() }
     single<DebtorRepository> { RoomDebtorRepository(get(), get(), get(), get()) }
     single<CreditorRepository> { RoomCreditorRepository(get(), get(), get(), get()) }
-    single { SyncCoordinator(get(), get(), get(), get(), get(), get(), get()) }
+    single { SyncCoordinator(get(), get(), get(), get(), get(), get(), get(), get()) }
     single<SyncStatusProvider> { get<SyncCoordinator>() }
     single<LocalNotifier> { AndroidLocalNotifier(androidContext()) }
     single<ReminderScheduler> { AndroidReminderScheduler(androidContext()) }
     single<RestoreCredentialClient> { AndroidRestoreCredentialClient(androidContext()) }
     single<GoogleSignInLauncher> { AndroidGoogleSignInLauncher(get()) }
+    // Keystore-encrypted Supabase session (JWT + refresh token) — see EncryptingSettings.
+    single<SessionManager> { SettingsSessionManager(settings = EncryptingSettings(Settings(), AndroidKeystoreStringCipher)) }
 }
 
 actual val requiresRemoteAuthGate: Boolean = false

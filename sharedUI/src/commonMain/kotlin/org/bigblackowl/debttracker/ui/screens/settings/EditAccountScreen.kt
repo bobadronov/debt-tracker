@@ -104,11 +104,11 @@ fun EditAccountScreen(
             value = state.fullName,
             onValueChange = { viewModel.onIntent(EditAccountIntent.FullNameChanged(it)) },
             label = strings.fullName,
-            leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
-            isError = state.fullNameError != null,
-            supportingText = state.fullNameError,
             clipboardText = clipboardText,
             isPasteRelevant = ::isValidFullName,
+            isError = state.fullNameError != null,
+            supportingText = state.fullNameError,
+            leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
         )
 
         OutlinedTextField(
@@ -126,11 +126,11 @@ fun EditAccountScreen(
             value = state.phone,
             onValueChange = { viewModel.onIntent(EditAccountIntent.PhoneChanged(sanitizePhoneInput(it))) },
             label = strings.phone,
+            clipboardText = clipboardText,
+            isPasteRelevant = ::isPhonePasteRelevant,
             leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             visualTransformation = remember { UkrainianPhoneVisualTransformation() },
-            clipboardText = clipboardText,
-            isPasteRelevant = ::isPhonePasteRelevant,
         )
         Spacer(Modifier.height(Dimens.space12))
         LoadingButton(

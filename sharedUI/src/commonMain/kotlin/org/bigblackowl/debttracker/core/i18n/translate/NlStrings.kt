@@ -1,6 +1,7 @@
 package org.bigblackowl.debttracker.core.i18n.translate
 
 import org.bigblackowl.debttracker.core.i18n.AuthExtraStrings
+import org.bigblackowl.debttracker.core.i18n.NotificationBodyStrings
 import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
 import org.bigblackowl.debttracker.core.i18n.ExchangeRatesStrings
 import org.bigblackowl.debttracker.core.i18n.TransactionEditStrings
@@ -62,6 +63,7 @@ val NlStrings = Strings(
         offerSignUpAction = "Account aanmaken",
         continueWithGoogle = "Doorgaan met Google",
         divider = "of",
+        passwordTooShort = "Het wachtwoord moet minstens 8 tekens bevatten",
     ),
     showPassword = "Wachtwoord tonen",
     hidePassword = "Wachtwoord verbergen",
@@ -283,10 +285,14 @@ val NlStrings = Strings(
     notificationsEmpty = "Nog geen meldingen",
     notificationsMarkAllRead = "Alles als gelezen markeren",
     notificationsBell = "Meldingen",
-    notificationBodyDebtorLinked = { name, amount, currency -> "$name: je bent $amount $currency schuldig" },
-    notificationBodyCreditorLinked = { name, amount, currency -> "$name is je $amount $currency schuldig" },
-    notificationBodyDebtTransactionAdded = { name, amount, currency -> "$name heeft een transactie toegevoegd: $amount $currency" },
-    notificationBodyCreditTransactionAdded = { name, amount, currency -> "$name heeft een transactie toegevoegd: $amount $currency" },
+    notificationBody = NotificationBodyStrings(
+        debtorLinked = { name, amount, currency -> "$name: je bent $amount $currency schuldig" },
+        creditorLinked = { name, amount, currency -> "$name is je $amount $currency schuldig" },
+        debtTransactionAdded = { name, amount, currency -> "$name heeft een transactie toegevoegd: $amount $currency" },
+        creditTransactionAdded = { name, amount, currency -> "$name heeft een transactie toegevoegd: $amount $currency" },
+        hideAmountsToggle = "Bedragen verbergen in meldingen",
+        genericBody = "Er is nieuwe activiteit op je account",
+    ),
     deleteContactConfirmTitle = "Contact verwijderen?",
     deleteContactConfirmText = { name -> "$name en de volledige transactiegeschiedenis worden definitief verwijderd." },
     dueReminder = DueReminderStrings(

@@ -12,7 +12,8 @@ import org.koin.core.context.GlobalContext
  */
 
 /** True when [intent] is the `debttracker://login-callback` OAuth redirect. */
-fun isAuthCallbackIntent(intent: Intent): Boolean = intent.data?.host == "login-callback"
+fun isAuthCallbackIntent(intent: Intent): Boolean =
+    intent.data?.scheme == "debttracker" && intent.data?.host == "login-callback"
 
 /** Hands the callback intent to supabase-kt, which finishes the PKCE code exchange. */
 fun handleAuthDeeplink(intent: Intent) {

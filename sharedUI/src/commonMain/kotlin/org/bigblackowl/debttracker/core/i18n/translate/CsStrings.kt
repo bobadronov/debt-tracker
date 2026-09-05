@@ -1,6 +1,7 @@
 package org.bigblackowl.debttracker.core.i18n.translate
 
 import org.bigblackowl.debttracker.core.i18n.AuthExtraStrings
+import org.bigblackowl.debttracker.core.i18n.NotificationBodyStrings
 import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
 import org.bigblackowl.debttracker.core.i18n.ExchangeRatesStrings
 import org.bigblackowl.debttracker.core.i18n.TransactionEditStrings
@@ -62,6 +63,7 @@ val CsStrings = Strings(
         offerSignUpAction = "Vytvořit účet",
         continueWithGoogle = "Pokračovat přes Google",
         divider = "nebo",
+        passwordTooShort = "Heslo musí mít alespoň 8 znaků",
     ),
     showPassword = "Zobrazit heslo",
     hidePassword = "Skrýt heslo",
@@ -283,10 +285,14 @@ val CsStrings = Strings(
     notificationsEmpty = "Zatím žádná oznámení",
     notificationsMarkAllRead = "Označit vše jako přečtené",
     notificationsBell = "Oznámení",
-    notificationBodyDebtorLinked = { name, amount, currency -> "$name: dlužíte $amount $currency" },
-    notificationBodyCreditorLinked = { name, amount, currency -> "$name vám dluží $amount $currency" },
-    notificationBodyDebtTransactionAdded = { name, amount, currency -> "$name přidal(a) transakci: $amount $currency" },
-    notificationBodyCreditTransactionAdded = { name, amount, currency -> "$name přidal(a) transakci: $amount $currency" },
+    notificationBody = NotificationBodyStrings(
+        debtorLinked = { name, amount, currency -> "$name: dlužíte $amount $currency" },
+        creditorLinked = { name, amount, currency -> "$name vám dluží $amount $currency" },
+        debtTransactionAdded = { name, amount, currency -> "$name přidal(a) transakci: $amount $currency" },
+        creditTransactionAdded = { name, amount, currency -> "$name přidal(a) transakci: $amount $currency" },
+        hideAmountsToggle = "Skrýt částky v oznámeních",
+        genericBody = "Máte novou aktivitu na účtu",
+    ),
     deleteContactConfirmTitle = "Smazat kontakt?",
     deleteContactConfirmText = { name -> "$name a celá historie transakcí budou trvale odstraněny." },
     dueReminder = DueReminderStrings(

@@ -19,6 +19,7 @@ import org.bigblackowl.debttracker.core.i18n.resolveStrings
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.RestoreCredentialGateway
+import org.bigblackowl.debttracker.domain.validation.isStrongEnoughPassword
 import org.bigblackowl.debttracker.domain.validation.isValidFullName
 
 /** Reduces [AuthIntent]s into [AuthState], delegating sign up/in to [AuthRepository]. */
@@ -38,13 +39,13 @@ class AuthViewModel(
     fun onIntent(intent: AuthIntent) {
         when (intent) {
             is AuthIntent.EmailChanged -> _state.update { it.copy(email = intent.value, error = null, offerRegistration = false) }
-            is AuthIntent.PasswordChanged -> _state.update { it.copy(password = intent.value, error = null, confirmPasswordError = null, offerRegistration = false) }
+            is AuthIntent.PasswordChanged -> _state.update { it.copy(password = intent.value, error = null, passwordError = null, confirmPasswordError = null, offerRegistration = false) }
             is AuthIntent.ConfirmPasswordChanged -> _state.update { it.copy(confirmPassword = intent.value, confirmPasswordError = null) }
             is AuthIntent.FullNameChanged -> _state.update { it.copy(fullName = intent.value, fullNameError = null) }
             is AuthIntent.PhoneChanged -> _state.update { it.copy(phone = intent.value) }
             is AuthIntent.AvatarPicked -> _state.update { it.copy(avatarPicked = intent.picked) }
             AuthIntent.ToggleMode -> _state.update {
-                it.copy(isSignUpMode = !it.isSignUpMode, error = null, googleError = null, fullNameError = null, confirmPasswordError = null, offerRegistration = false)
+                it.copy(isSignUpMode = !it.isSignUpMode, error = null, googleError = null, fullNameError = null, passwordError = null, confirmPasswordError = null, offerRegistration = false)
             }
             AuthIntent.SwitchToSignUp -> _state.update {
                 // Keep the email/password already typed — the user just needs to add a name to register.
@@ -94,9 +95,10 @@ class AuthViewModel(
 
         if (current.isSignUpMode) {
             val fullNameError = if (!isValidFullName(current.fullName)) strings.fullNameError else null
+            val passwordError = if (!isStrongEnoughPassword(current.password)) strings.authExtra.passwordTooShort else null
             val confirmPasswordError = if (current.password != current.confirmPassword) strings.authPasswordMismatch else null
-            if (fullNameError != null || confirmPasswordError != null) {
-                _state.update { it.copy(fullNameError = fullNameError, confirmPasswordError = confirmPasswordError) }
+            if (fullNameError != null || passwordError != null || confirmPasswordError != null) {
+                _state.update { it.copy(fullNameError = fullNameError, passwordError = passwordError, confirmPasswordError = confirmPasswordError) }
                 return
             }
         }

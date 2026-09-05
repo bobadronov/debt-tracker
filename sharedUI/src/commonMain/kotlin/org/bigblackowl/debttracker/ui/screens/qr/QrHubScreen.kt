@@ -188,18 +188,18 @@ private fun ShareContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
                             value = state.myPhone,
                             onValueChange = { onIntent(QrHubIntent.MyPhoneChanged(sanitizePhoneInput(it))) },
                             label = strings.phone,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                            visualTransformation = remember { UkrainianPhoneVisualTransformation() },
                             clipboardText = clipboardText,
                             isPasteRelevant = ::isPhonePasteRelevant,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                            visualTransformation = remember { UkrainianPhoneVisualTransformation() },
                         )
                         PasteableOutlinedTextField(
                             value = state.myEmail,
                             onValueChange = { onIntent(QrHubIntent.MyEmailChanged(it)) },
                             label = strings.email,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                             clipboardText = clipboardText,
                             isPasteRelevant = ::isValidEmail,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         )
                     }
                 }

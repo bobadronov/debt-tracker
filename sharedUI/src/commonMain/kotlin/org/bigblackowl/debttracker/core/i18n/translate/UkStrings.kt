@@ -1,6 +1,7 @@
 package org.bigblackowl.debttracker.core.i18n.translate
 
 import org.bigblackowl.debttracker.core.i18n.AuthExtraStrings
+import org.bigblackowl.debttracker.core.i18n.NotificationBodyStrings
 import org.bigblackowl.debttracker.core.i18n.DueReminderStrings
 import org.bigblackowl.debttracker.core.i18n.ExchangeRatesStrings
 import org.bigblackowl.debttracker.core.i18n.TransactionEditStrings
@@ -61,6 +62,7 @@ val UkStrings = Strings(
         offerSignUpAction = "Створити акаунт",
         continueWithGoogle = "Продовжити з Google",
         divider = "або",
+        passwordTooShort = "Пароль має містити щонайменше 8 символів",
     ),
     showPassword = "Показати пароль",
     hidePassword = "Приховати пароль",
@@ -282,10 +284,14 @@ val UkStrings = Strings(
     notificationsEmpty = "Поки немає сповіщень",
     notificationsMarkAllRead = "Позначити все прочитаним",
     notificationsBell = "Сповіщення",
-    notificationBodyDebtorLinked = { name, amount, currency -> "$name: ви винні $amount $currency" },
-    notificationBodyCreditorLinked = { name, amount, currency -> "$name винен(на) вам $amount $currency" },
-    notificationBodyDebtTransactionAdded = { name, amount, currency -> "$name додав(ла) операцію на $amount $currency" },
-    notificationBodyCreditTransactionAdded = { name, amount, currency -> "$name додав(ла) операцію на $amount $currency" },
+    notificationBody = NotificationBodyStrings(
+        debtorLinked = { name, amount, currency -> "$name: ви винні $amount $currency" },
+        creditorLinked = { name, amount, currency -> "$name винен(на) вам $amount $currency" },
+        debtTransactionAdded = { name, amount, currency -> "$name додав(ла) операцію на $amount $currency" },
+        creditTransactionAdded = { name, amount, currency -> "$name додав(ла) операцію на $amount $currency" },
+        hideAmountsToggle = "Приховувати суми в сповіщеннях",
+        genericBody = "У вас нова активність в акаунті",
+    ),
     deleteContactConfirmTitle = "Видалити контакт?",
     deleteContactConfirmText = { name -> "$name та всю історію операцій буде видалено назавжди." },
     dueReminder = DueReminderStrings(

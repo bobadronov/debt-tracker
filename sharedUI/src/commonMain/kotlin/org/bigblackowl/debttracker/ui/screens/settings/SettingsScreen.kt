@@ -42,6 +42,8 @@ import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -369,6 +371,16 @@ private fun PreferencesSection(
                 onCheckedChange = { onIntent(SettingsIntent.ToggleNotifications(it, notificationPermissionRequester)) },
             )
             SettingsRowDivider()
+
+            if (settings.notificationsEnabled) {
+                SettingsSwitchRow(
+                    icon = if (settings.hideAmountsInNotifications) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                    title = strings.notificationBody.hideAmountsToggle,
+                    checked = settings.hideAmountsInNotifications,
+                    onCheckedChange = { settings.hideAmountsInNotifications = it },
+                )
+                SettingsRowDivider()
+            }
         }
 
         if (BuildConfig.SOUND_ENABLED) {

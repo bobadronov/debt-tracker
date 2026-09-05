@@ -89,7 +89,7 @@ val appModule = module {
     single<SoundPlayer> { if (BuildConfig.SOUND_ENABLED) createSoundPlayer() else NoopSoundPlayer }
     single<CoroutineScope> { ApplicationScope() }
     single { SearchFocusRequests() }
-    single<SupabaseClient> { createAppSupabaseClient() }
+    single<SupabaseClient> { createAppSupabaseClient(getOrNull()) }
     // Shared Ktor client for the app's own small REST calls (exchange rates) — the engine is
     // whatever the platform source set pulls in (OkHttp / Darwin / JS).
     single {

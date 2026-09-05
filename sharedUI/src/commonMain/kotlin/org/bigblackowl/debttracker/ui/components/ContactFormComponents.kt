@@ -166,11 +166,11 @@ fun AddEditContactForm(
                     value = fullName,
                     onValueChange = onFullNameChange,
                     label = strings.fullName,
+                    clipboardText = clipboardText,
+                    isPasteRelevant = ::isValidFullName,
                     placeholder = strings.fullNamePlaceholder,
                     isError = fullNameError != null,
                     supportingText = fullNameError,
-                    clipboardText = clipboardText,
-                    isPasteRelevant = ::isValidFullName,
                 )
                 ContactSuggestionsList(
                     suggestions = nameSuggestions,
@@ -180,20 +180,20 @@ fun AddEditContactForm(
                     value = phone,
                     onValueChange = onPhoneChange,
                     label = strings.phone,
+                    clipboardText = clipboardText,
+                    isPasteRelevant = ::isPhonePasteRelevant,
                     modifier = Modifier.semantics { contentType = ContentType.PhoneNumber },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     visualTransformation = remember { UkrainianPhoneVisualTransformation() },
-                    clipboardText = clipboardText,
-                    isPasteRelevant = ::isPhonePasteRelevant,
                 )
                 PasteableOutlinedTextField(
                     value = email,
                     onValueChange = onEmailChange,
                     label = strings.email,
-                    modifier = Modifier.semantics { contentType = ContentType.EmailAddress },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     clipboardText = clipboardText,
                     isPasteRelevant = ::isValidEmail,
+                    modifier = Modifier.semantics { contentType = ContentType.EmailAddress },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 )
                 profileSuggestion?.let { suggestion ->
                     ProfileSuggestionCard(
@@ -226,13 +226,13 @@ fun AddEditContactForm(
                             value = initialAmountText,
                             onValueChange = onInitialAmountChange,
                             label = initialAmountLabel,
+                            clipboardText = clipboardText,
+                            isPasteRelevant = ::isValidAmountText,
+                            modifier = Modifier.weight(1f),
                             isError = amountError != null,
                             supportingText = amountError,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            clipboardText = clipboardText,
-                            isPasteRelevant = ::isValidAmountText,
                             onPaste = onInitialAmountChange,
-                            modifier = Modifier.weight(1f),
                         )
                         CurrencyDropdownField(
                             selected = currency,
