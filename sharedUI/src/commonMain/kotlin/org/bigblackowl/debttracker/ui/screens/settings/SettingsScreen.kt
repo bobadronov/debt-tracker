@@ -1,5 +1,6 @@
 package org.bigblackowl.debttracker.ui.screens.settings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Login
@@ -21,17 +23,18 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
-import androidx.compose.material.icons.filled.Password
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -42,10 +45,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.SubcomposeAsyncImage
 import org.bigblackowl.debttracker.BuildConfig
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.platform.AppPlatform
@@ -54,7 +60,6 @@ import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
-import org.bigblackowl.debttracker.ui.components.AccountAvatar
 import org.bigblackowl.debttracker.ui.components.ConfirmDialog
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
 import org.bigblackowl.debttracker.ui.components.SettingsRow
@@ -65,8 +70,8 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * SettingsScreen — хаб для Захист/Сповіщення/Дані/Про застосунок (окремі екрани), але Параметри
- * (тема/мова/звук/віброзвінок/фонова робота) лишаються тут-таки, на головній сторінці — вони
+ * SettingsScreen — хаб для захисту/Сповіщення/Дані/Про застосунок (окремі екрани), але Параметри
+ * (тема/мова/звук/вібродзвінок/фонова робота) лишаються тут-таки, на головній сторінці — вони
  * достатньо короткі, щоб не виправдовувати ще один перехід.
  */
 @Composable
@@ -81,14 +86,12 @@ fun SettingsScreen(
     onOpenAbout: () -> Unit,
     viewModel: SettingsViewModel = koinViewModel(),
 ) {
+    val strings = LocalStrings.current
     val settings = koinInject<AppSettings>()
     val authRepository = koinInject<AuthRepository>()
-    val strings = LocalStrings.current
     val isAuthenticated by authRepository.isAuthenticated.collectAsStateWithLifecycle()
     var showSignOutConfirm by remember { mutableStateOf(false) }
 
-    val usesPinProtection = currentPlatform == AppPlatform.DESKTOP
-    val protectionIcon = if (usesPinProtection) Icons.Filled.Password else Icons.Filled.Fingerprint
     val showProtectionRow = currentPlatform != AppPlatform.WEB
     // Тільки Android/iOS мають реальний віброзвінок під керуванням LocalHapticFeedback —
     // на Desktop/Web це або no-op, або взагалі не підтримується, тож перемикач там ховаємо.
@@ -112,7 +115,7 @@ fun SettingsScreen(
                 SettingsSection(null) {
                     if (showProtectionRow) {
                         SettingsRow(
-                            icon = protectionIcon,
+                            icon = Icons.Default.Security,
                             title = strings.settings.protection,
                             onClick = onOpenProtection,
                         )
@@ -131,13 +134,7 @@ fun SettingsScreen(
                         title = strings.settings.data,
                         onClick = onOpenData,
                     )
-                    SettingsRowDivider()
-                    SettingsRow(
-                        icon = Icons.Filled.Info,
-                        title = strings.settings.about,
-                        subtitle = BuildConfig.APP_VERSION,
-                        onClick = onOpenAbout,
-                    )
+
                 }
                 SettingsSection(strings.settings.preferences) {
                     if (BuildConfig.SOUND_ENABLED) {
@@ -203,6 +200,13 @@ fun SettingsScreen(
                         subtitle = languageLabel,
                         onClick = onOpenLanguage,
                     )
+                    SettingsRowDivider()
+                    SettingsRow(
+                        icon = Icons.Filled.Info,
+                        title = strings.settings.about,
+                        subtitle = BuildConfig.APP_VERSION,
+                        onClick = onOpenAbout,
+                    )
                 }
             }
         }
@@ -247,10 +251,20 @@ private fun AccountSection(
                 .padding(Dimens.space16),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AccountAvatar(
-                avatarUrl = avatarUrl,
-                isUploading = false,
-                onEditClick = onOpenAccountInfo,
+            SubcomposeAsyncImage(
+                model = avatarUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Inside,
+                modifier = Modifier.size(Dimens.space120).clip(CircleShape),
+                loading = { CircularWavyProgressIndicator() },
+                error = {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant).padding(Dimens.space16),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             )
             Spacer(Modifier.width(Dimens.space16))
             Column(modifier = Modifier.weight(1f)) {
