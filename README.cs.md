@@ -21,15 +21,15 @@
 </p>
 
 <p align="center">
-  <a href="README.MD">English</a> ·
-  <a href="README.uk.md">Українська</a> ·
-  <a href="README.de.md">Deutsch</a> ·
-  <a href="README.es.md">Español</a> ·
-  <a href="README.fr.md">Français</a> ·
-  <a href="README.it.md">Italiano</a> ·
-  <a href="README.nl.md">Nederlands</a> ·
-  <a href="README.pl.md">Polski</a> ·
-  <a href="README.pt.md">Português</a> ·
+  <a href="README.MD" target="_blank" rel="noopener noreferrer">English</a> ·
+  <a href="README.uk.md" target="_blank" rel="noopener noreferrer">Українська</a> ·
+  <a href="README.de.md" target="_blank" rel="noopener noreferrer">Deutsch</a> ·
+  <a href="README.es.md" target="_blank" rel="noopener noreferrer">Español</a> ·
+  <a href="README.fr.md" target="_blank" rel="noopener noreferrer">Français</a> ·
+  <a href="README.it.md" target="_blank" rel="noopener noreferrer">Italiano</a> ·
+  <a href="README.nl.md" target="_blank" rel="noopener noreferrer">Nederlands</a> ·
+  <a href="README.pl.md" target="_blank" rel="noopener noreferrer">Polski</a> ·
+  <a href="README.pt.md" target="_blank" rel="noopener noreferrer">Português</a> ·
   <b>Čeština</b>
 </p>
 
@@ -107,11 +107,11 @@ flowchart LR
 
 | Kde | Odkaz |
 |---|---|
-| 🌐 **Web** — není co instalovat (účet zdarma) | **[bobadronov.github.io/debt-tracker](https://bobadronov.github.io/debt-tracker/)** |
-| 🤖 **Android** | [Google Play](https://play.google.com/store/apps/details?id=org.bigblackowl.debttracker.androidApp) |
-| 🖥️ **Windows** (MSI) | [Nejnovější verze](https://github.com/bobadronov/debt-tracker/releases/latest) |
-| 🐧 **Linux** (DEB) | [Nejnovější verze](https://github.com/bobadronov/debt-tracker/releases/latest) |
-| 🍎 **macOS** (DMG, Intel + Apple Silicon) | [Nejnovější verze](https://github.com/bobadronov/debt-tracker/releases/latest) |
+| 🌐 **Web** — není co instalovat (účet zdarma) | <b><a href="https://bobadronov.github.io/debt-tracker/" target="_blank" rel="noopener noreferrer">bobadronov.github.io/debt-tracker</a></b> |
+| 🤖 **Android** | <a href="https://play.google.com/store/apps/details?id=org.bigblackowl.debttracker.androidApp" target="_blank" rel="noopener noreferrer">Google Play</a> |
+| 🖥️ **Windows** (MSI) | <a href="https://github.com/bobadronov/debt-tracker/releases/latest" target="_blank" rel="noopener noreferrer">Nejnovější verze</a> |
+| 🐧 **Linux** (DEB) | <a href="https://github.com/bobadronov/debt-tracker/releases/latest" target="_blank" rel="noopener noreferrer">Nejnovější verze</a> |
+| 🍎 **macOS** (DMG, Intel + Apple Silicon) | <a href="https://github.com/bobadronov/debt-tracker/releases/latest" target="_blank" rel="noopener noreferrer">Nejnovější verze</a> |
 | 🍏 **iOS** | Sestavit ze zdrojového kódu |
 
 ---
