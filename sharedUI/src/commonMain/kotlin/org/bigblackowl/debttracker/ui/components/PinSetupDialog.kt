@@ -55,11 +55,11 @@ fun PinSetupDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
 
     fun trySubmit() {
         when {
-            pin.length < PIN_LENGTH -> error = strings.settingsPinTooShort
+            pin.length < PIN_LENGTH -> error = strings.settings.pinTooShort
             pin != confirmPin -> {
                 // Mismatch: clear both PINs and send the user back to the first page to retype from
                 // scratch, same as the wrong-PIN recovery on the unlock screen.
-                error = strings.settingsPinMismatch
+                error = strings.settings.pinMismatch
                 pin = ""
                 confirmPin = ""
                 scope.launch { pagerState.animateScrollToPage(NEW_PIN_PAGE) }
@@ -80,12 +80,12 @@ fun PinSetupDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Filled.Password, contentDescription = null) },
-        title = { Text(strings.settingsPinSetupTitle) },
+        title = { Text(strings.settings.pinSetupTitle) },
         text = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
                 Text(
-                    if (pagerState.currentPage == CONFIRM_PIN_PAGE) strings.settingsPinSetupConfirm else strings.settingsPinSetupNew,
+                    if (pagerState.currentPage == CONFIRM_PIN_PAGE) strings.settings.pinSetupConfirm else strings.settings.pinSetupNew,
                     style = MaterialTheme.typography.labelLarge,
                 )
 
@@ -93,7 +93,7 @@ fun PinSetupDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
 
                 HorizontalPager(
                     state = pagerState,
-                    modifier = Modifier.fillMaxWidth().height(Dimens.space60)
+                    modifier = Modifier.fillMaxWidth().height(Dimens.space72)
                 ) { page ->
                     when (page) {
                         NEW_PIN_PAGE -> PinCodeField(

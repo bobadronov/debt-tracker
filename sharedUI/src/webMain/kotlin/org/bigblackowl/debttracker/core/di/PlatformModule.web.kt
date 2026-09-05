@@ -31,6 +31,7 @@ actual fun platformDataModule(): Module = module {
         object : SyncStatusProvider {
             override val status = MutableStateFlow<SyncUiStatus>(SyncUiStatus.Synced)
             override suspend fun refreshNow() {}
+            override suspend fun refetchAll() {}
         }
     }
     single<LocalNotifier> { WebLocalNotifier() }

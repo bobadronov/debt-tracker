@@ -51,17 +51,17 @@ fun AppOverflowMenu(
         IconButton(onClick = { open = true }) {
             if (isAuthenticated && unread > 0) {
                 BadgedBox(badge = { Badge { Text(unread.toString()) } }) {
-                    Icon(Icons.Filled.MoreVert, contentDescription = strings.homeMenu)
+                    Icon(Icons.Filled.MoreVert, contentDescription = strings.home.menu)
                 }
             } else {
-                Icon(Icons.Filled.MoreVert, contentDescription = strings.homeMenu)
+                Icon(Icons.Filled.MoreVert, contentDescription = strings.home.menu)
             }
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             // Items for screens already on the back stack are hidden — see AppMenu.activeTargets.
             if (isAuthenticated && AppMenu.Target.Notifications !in menu.activeTargets) {
                 DropdownMenuItem(
-                    text = { Text(strings.notificationsBell) },
+                    text = { Text(strings.notifications.bell) },
                     leadingIcon = { Icon(Icons.Filled.Notifications, contentDescription = null) },
                     trailingIcon = if (unread > 0) {
                         { Badge { Text(unread.toString()) } }
@@ -71,14 +71,14 @@ fun AppOverflowMenu(
             }
             if (AppMenu.Target.Qr !in menu.activeTargets) {
                 DropdownMenuItem(
-                    text = { Text(strings.homeQr) },
+                    text = { Text(strings.qr.home) },
                     leadingIcon = { Icon(Icons.Filled.QrCode, contentDescription = null) },
                     onClick = { open = false; menu.openQr() },
                 )
             }
             if (AppMenu.Target.Stats !in menu.activeTargets) {
                 DropdownMenuItem(
-                    text = { Text(strings.homeStats) },
+                    text = { Text(strings.home.stats) },
                     leadingIcon = { Icon(Icons.Filled.QueryStats, contentDescription = null) },
                     onClick = { open = false; menu.openStats() },
                 )
@@ -92,7 +92,7 @@ fun AppOverflowMenu(
             }
             if (AppMenu.Target.Settings !in menu.activeTargets) {
                 DropdownMenuItem(
-                    text = { Text(strings.homeSettings) },
+                    text = { Text(strings.home.settings) },
                     leadingIcon = { Icon(Icons.Filled.Settings, contentDescription = null) },
                     onClick = { open = false; menu.openSettings() },
                 )

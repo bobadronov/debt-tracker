@@ -45,13 +45,13 @@ fun AddEditContactScreen(
 
     val title = when (state.direction) {
         DebtDirection.DEBTOR ->
-            if (state.isEditMode) strings.addEditDebtorTitleEdit else strings.addEditDebtorTitleNew
+            if (state.isEditMode) strings.addEditDebtor.titleEdit else strings.addEditDebtor.titleNew
         DebtDirection.CREDITOR ->
-            if (state.isEditMode) strings.addEditCreditorTitleEdit else strings.addEditCreditorTitleNew
+            if (state.isEditMode) strings.addEditCreditor.titleEdit else strings.addEditCreditor.titleNew
     }
     val initialAmountLabel = when (state.direction) {
-        DebtDirection.DEBTOR -> strings.addEditDebtorInitialAmount
-        DebtDirection.CREDITOR -> strings.addEditCreditorInitialAmount
+        DebtDirection.DEBTOR -> strings.addEditDebtor.initialAmount
+        DebtDirection.CREDITOR -> strings.addEditCreditor.initialAmount
     }
 
     AddEditContactForm(

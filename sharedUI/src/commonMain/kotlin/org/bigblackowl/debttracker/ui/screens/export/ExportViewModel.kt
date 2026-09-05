@@ -78,14 +78,14 @@ class ExportViewModel(
         viewModelScope.launch {
             _state.update { it.copy(error = null, success = false, isExporting = true) }
             val strings = resolveStrings(appSettings.locale)
-            val exportUserName = authRepository.displayName.value ?: authRepository.email.value ?: strings.settingsLocalOnly
+            val exportUserName = authRepository.displayName.value ?: authRepository.email.value ?: strings.settings.localOnly
             val format = _state.value.format
             val direction = _state.value.direction
 
             runCatching {
                 val rows = collectExportRows(direction, fromDate, toDate)
                 val fileDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-                val headers = listOf(strings.csvHeaderDate, strings.csvHeaderContact, strings.csvHeaderAmount, strings.csvHeaderComment)
+                val headers = listOf(strings.export.csvHeaderDate, strings.export.csvHeaderContact, strings.export.csvHeaderAmount, strings.export.csvHeaderComment)
                 when (format) {
                     ExportFormat.CSV -> fileExporter.saveCsv(
                         "${strings.appName}_${exportUserName}_$fileDate.csv",
@@ -95,7 +95,7 @@ class ExportViewModel(
                     ExportFormat.PDF -> fileExporter.savePdf(
                         "${strings.appName}_${exportUserName}_$fileDate.pdf",
                         strings.appName,
-                        strings.exportPdfDescription(exportUserName),
+                        strings.export.pdfDescription(exportUserName),
                         headers,
                         rows,
                     )
@@ -103,7 +103,7 @@ class ExportViewModel(
             }.onSuccess {
                 _state.update { it.copy(isExporting = false, success = true) }
             }.onFailure {
-                _state.update { it.copy(isExporting = false, error = strings.exportError) }
+                _state.update { it.copy(isExporting = false, error = strings.export.error) }
             }
         }
     }

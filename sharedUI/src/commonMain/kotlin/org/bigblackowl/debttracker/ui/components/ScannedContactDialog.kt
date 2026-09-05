@@ -21,9 +21,9 @@ fun ScannedContactDialog(
     val strings = LocalStrings.current
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(strings.qrHubScannedDialogTitle) },
-        text = { Text(strings.qrHubScannedDialogMessage(contact.fullName)) },
-        confirmButton = { TextButton(onClick = onAddAsDebtor) { Text(strings.qrHubScannedAsDebtor) } },
-        dismissButton = { TextButton(onClick = onAddAsCreditor) { Text(strings.qrHubScannedAsCreditor) } },
+        title = { Text(strings.qr.hubScannedDialogTitle) },
+        text = { Text(strings.qr.hubScannedDialogMessage(contact.fullName)) },
+        confirmButton = { TextButton(onClick = onAddAsDebtor) { Text(strings.qr.hubScannedAsDebtor) } },
+        dismissButton = { TextButton(onClick = onAddAsCreditor) { Text(strings.qr.hubScannedAsCreditor) } },
     )
 }

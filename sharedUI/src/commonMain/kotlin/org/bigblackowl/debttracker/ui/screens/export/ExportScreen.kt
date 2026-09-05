@@ -78,7 +78,7 @@ fun ExportScreen(
         kotlin.time.Instant.fromEpochMilliseconds(it).toLocalDateTime(TimeZone.UTC).date
     }
 
-    PlaceholderScreen(title = strings.exportTitle, onBack = onBack) {
+    PlaceholderScreen(title = strings.export.title, onBack = onBack) {
         Column(
             modifier = Modifier.fillMaxHeight().width(Dimens.contentMaxWidth).verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -97,11 +97,11 @@ fun ExportScreen(
                     )
                 }
 
-                SettingsSection(strings.exportFormat) {
+                SettingsSection(strings.export.format) {
                     Column(modifier = Modifier.fillMaxWidth().padding(Dimens.space16)) {
                         val formatOptions = listOf(
-                            ExportFormat.CSV to strings.exportFormatCsv,
-                            ExportFormat.PDF to strings.exportFormatPdf,
+                            ExportFormat.CSV to strings.export.formatCsv,
+                            ExportFormat.PDF to strings.export.formatPdf,
                         )
                         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                             formatOptions.forEachIndexed { index, (value, label) ->
@@ -120,12 +120,12 @@ fun ExportScreen(
                 }
 
                 if (!viewModel.isScoped) {
-                    SettingsSection(strings.exportDirection) {
+                    SettingsSection(strings.export.direction) {
                         Column(modifier = Modifier.fillMaxWidth().padding(Dimens.space16)) {
                             val directionOptions = listOf(
-                                ExportDirection.DEBTORS to strings.exportDirectionDebtors,
-                                ExportDirection.CREDITORS to strings.exportDirectionCreditors,
-                                ExportDirection.BOTH to strings.exportDirectionBoth,
+                                ExportDirection.DEBTORS to strings.export.directionDebtors,
+                                ExportDirection.CREDITORS to strings.export.directionCreditors,
+                                ExportDirection.BOTH to strings.export.directionBoth,
                             )
                             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                                 directionOptions.forEachIndexed { index, (value, label) ->
@@ -144,13 +144,13 @@ fun ExportScreen(
                     }
                 }
 
-                SettingsSection(strings.exportDateRangeHint) {
+                SettingsSection(strings.export.dateRangeHint) {
                     SettingsRow(
                         icon = Icons.Filled.CalendarMonth,
                         title = if (fromDate != null || toDate != null) {
-                            "${fromDate?.toString() ?: strings.exportFrom} — ${toDate?.toString() ?: strings.exportTo}"
+                            "${fromDate?.toString() ?: strings.export.from} — ${toDate?.toString() ?: strings.export.to}"
                         } else {
-                            "${strings.exportFrom} — ${strings.exportTo}"
+                            "${strings.export.from} — ${strings.export.to}"
                         },
                         onClick = { showDateRangePicker = true },
                         trailing = {
@@ -172,7 +172,7 @@ fun ExportScreen(
                 }
                 if (state.success) {
                     Text(
-                        strings.exportDone,
+                        strings.export.done,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.debtAccentColors.repay
                     )
@@ -189,7 +189,7 @@ fun ExportScreen(
                         modifier = Modifier.padding(end = Dimens.space8)
                     )
                 },
-                label = { Text(strings.exportSubmit) },
+                label = { Text(strings.export.submit) },
             )
 
         }

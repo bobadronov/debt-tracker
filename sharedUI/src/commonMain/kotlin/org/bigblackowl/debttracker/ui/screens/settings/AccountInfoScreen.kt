@@ -46,12 +46,12 @@ fun AccountInfoScreen(
     val email by authRepository.email.collectAsStateWithLifecycle()
     val phone by authRepository.phone.collectAsStateWithLifecycle()
 
-    SettingsDetailScaffold(title = strings.settingsAccount, onBack = onBack) {
+    SettingsDetailScaffold(title = strings.settings.account, onBack = onBack) {
         Spacer(Modifier.height(Dimens.space8))
         AccountAvatar(avatarUrl = avatarUrl, isUploading = false, onEditClick = onEdit)
         Spacer(Modifier.height(Dimens.space8))
 
-        SettingsSection(strings.settingsAccount) {
+        SettingsSection(strings.settings.account) {
             SettingsRow(icon = Icons.Filled.Person, title = strings.fullName, subtitle = name?.takeIf { it.isNotBlank() })
             SettingsRowDivider()
             SettingsRow(icon = Icons.Filled.Email, title = strings.email, subtitle = email?.takeIf { it.isNotBlank() })
@@ -60,7 +60,7 @@ fun AccountInfoScreen(
             SettingsRowDivider()
             SettingsRow(
                 icon = Icons.Filled.Devices,
-                title = strings.settingsActiveSessions,
+                title = strings.settings.activeSessions,
                 onClick = onOpenActiveSessions,
             )
         }

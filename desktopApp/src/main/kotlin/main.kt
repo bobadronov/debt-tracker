@@ -236,12 +236,12 @@ private fun TrayMenu(
     val scope = rememberCoroutineScope()
 
     val syncLabel = when (val s = syncStatus) {
-        SyncUiStatus.Synced -> strings.homeSyncSynced
-        SyncUiStatus.Syncing -> strings.homeSyncSyncing
-        is SyncUiStatus.OfflinePending -> strings.homeSyncOfflinePending(s.count)
+        SyncUiStatus.Synced -> strings.home.syncSynced
+        SyncUiStatus.Syncing -> strings.home.syncSyncing
+        is SyncUiStatus.OfflinePending -> strings.home.syncOfflinePending(s.count)
     }
     val notificationsLabel =
-        if (isAuthenticated && unread > 0) "${strings.notificationsTitle} ($unread)" else strings.notificationsTitle
+        if (isAuthenticated && unread > 0) "${strings.notifications.title} ($unread)" else strings.notifications.title
 
     Tray(
         icon = appIcon,
@@ -253,9 +253,9 @@ private fun TrayMenu(
         primaryAction = { if (isWindowShown) onHide() else onOpen() },
     ) {
         if (isWindowShown) {
-            Item(strings.trayHide, icon = Icons.Filled.CloseFullscreen, onClick = onHide)
+            Item(strings.settings.trayHide, icon = Icons.Filled.CloseFullscreen, onClick = onHide)
         } else {
-            Item(strings.trayOpen, icon = Icons.Filled.OpenInFull, onClick = onOpen)
+            Item(strings.settings.trayOpen, icon = Icons.Filled.OpenInFull, onClick = onOpen)
         }
 
         if (menu.visible) {
@@ -266,19 +266,19 @@ private fun TrayMenu(
             }
 
             Divider()
-            Item(strings.addEditDebtorTitleNew, icon = Icons.Filled.PersonAdd) { onOpen(); menu.addDebtor() }
-            Item(strings.addEditCreditorTitleNew, icon = Icons.Filled.PersonAddAlt) { onOpen(); menu.addCreditor() }
+            Item(strings.addEditDebtor.titleNew, icon = Icons.Filled.PersonAdd) { onOpen(); menu.addDebtor() }
+            Item(strings.addEditCreditor.titleNew, icon = Icons.Filled.PersonAddAlt) { onOpen(); menu.addCreditor() }
             if (AppMenu.Target.Stats !in menu.activeTargets) {
-                Item(strings.statsTitle, icon = Icons.Filled.QueryStats) { onOpen(); menu.openStats() }
+                Item(strings.stats.title, icon = Icons.Filled.QueryStats) { onOpen(); menu.openStats() }
             }
             if (AppMenu.Target.Settings !in menu.activeTargets) {
-                Item(strings.settingsTitle, icon = Icons.Filled.Settings) { onOpen(); menu.openSettings() }
+                Item(strings.settings.title, icon = Icons.Filled.Settings) { onOpen(); menu.openSettings() }
             }
 
             if (isAuthenticated) {
                 Divider()
                 Item(
-                    label = strings.traySyncNow,
+                    label = strings.settings.traySyncNow,
                     icon = Icons.Filled.Sync,
                     isEnabled = syncStatus != SyncUiStatus.Syncing,
                 ) { scope.launch { runCatching { syncStatusProvider.refreshNow() } } }
@@ -288,7 +288,7 @@ private fun TrayMenu(
 
         Divider()
         CheckableItem(
-            label = strings.settingsRunInBackground,
+            label = strings.settings.runInBackground,
             checked = settings.runInBackground,
             onCheckedChange = { on ->
                 settings.runInBackground = on
@@ -297,7 +297,7 @@ private fun TrayMenu(
         )
 
         Divider()
-        Item(strings.trayQuit, icon = Icons.Filled.PowerSettingsNew) {
+        Item(strings.settings.trayQuit, icon = Icons.Filled.PowerSettingsNew) {
             dispose() // removes the tray icon before the process exits
             onQuit()
         }

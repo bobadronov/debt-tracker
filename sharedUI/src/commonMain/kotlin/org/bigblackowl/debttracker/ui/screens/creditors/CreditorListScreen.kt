@@ -59,24 +59,24 @@ fun CreditorListScreen(
             ListSearchBar(
                 query = state.query,
                 onQueryChange = { viewModel.onIntent(CreditorListIntent.Search(it)) },
-                searchPlaceholder = strings.creditorListSearchPlaceholder,
+                searchPlaceholder = strings.creditorList.searchPlaceholder,
                 clearSearchDescription = strings.clearSearch,
                 searchFocusRequester = searchFocusRequester,
-                filterDescription = strings.creditorListSort,
+                filterDescription = strings.creditorList.sort,
                 sortOptions = listOf(
-                    MenuOption(CreditorSortOrder.NAME_ASC, strings.creditorListSortByName, Icons.Filled.SortByAlpha),
-                    MenuOption(CreditorSortOrder.BALANCE_DESC, strings.creditorListSortByBalance, Icons.Filled.Payments),
-                    MenuOption(CreditorSortOrder.RECENT, strings.creditorListSortRecent, Icons.Filled.History),
+                    MenuOption(CreditorSortOrder.NAME_ASC, strings.creditorList.sortByName, Icons.Filled.SortByAlpha),
+                    MenuOption(CreditorSortOrder.BALANCE_DESC, strings.creditorList.sortByBalance, Icons.Filled.Payments),
+                    MenuOption(CreditorSortOrder.RECENT, strings.creditorList.sortRecent, Icons.Filled.History),
                 ),
                 currentSort = state.sortOrder,
                 sortAscending = state.sortAscending,
-                sortReverseDescription = strings.creditorListSortReverse,
+                sortReverseDescription = strings.creditorList.sortReverse,
                 onToggleSortDirection = { viewModel.onIntent(CreditorListIntent.ToggleSortDirection) },
                 onChangeSort = { viewModel.onIntent(CreditorListIntent.ChangeSort(it)) },
                 statusOptions = listOf(
-                    MenuOption(CreditorStatusFilter.ACTIVE, strings.creditorListFilterActive, Icons.Filled.HourglassEmpty),
-                    MenuOption(CreditorStatusFilter.CLOSED, strings.creditorListFilterClosed, Icons.Filled.CheckCircle),
-                    MenuOption(CreditorStatusFilter.ALL, strings.creditorListFilterAll, Icons.AutoMirrored.Filled.List),
+                    MenuOption(CreditorStatusFilter.ACTIVE, strings.creditorList.filterActive, Icons.Filled.HourglassEmpty),
+                    MenuOption(CreditorStatusFilter.CLOSED, strings.creditorList.filterClosed, Icons.Filled.CheckCircle),
+                    MenuOption(CreditorStatusFilter.ALL, strings.creditorList.filterAll, Icons.AutoMirrored.Filled.List),
                 ),
                 currentStatus = state.statusFilter,
                 onChangeStatus = { viewModel.onIntent(CreditorListIntent.ChangeStatusFilter(it)) },
@@ -84,7 +84,7 @@ fun CreditorListScreen(
         },
         totalBar = {
             ListTotalBar(
-                label = strings.creditorListTotal,
+                label = strings.creditorList.total,
                 totalText = state.totalsByCurrency.formatTotals(),
                 onAdd = onAddCreditor,
             )

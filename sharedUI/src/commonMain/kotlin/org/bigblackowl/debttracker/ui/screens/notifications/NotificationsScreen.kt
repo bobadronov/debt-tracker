@@ -1,8 +1,10 @@
 package org.bigblackowl.debttracker.ui.screens.notifications
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Link
@@ -59,14 +61,14 @@ fun NotificationsScreen(
     }
 
     SettingsDetailScaffold(
-        title = strings.notificationsTitle,
+        title = strings.notifications.title,
         onBack = onBack,
         snackbarHostState = snackbarHostState,
     ) {
         when {
             state.isLoading -> CircularWavyProgressIndicator(modifier = Modifier.padding(Dimens.space16))
             state.notifications.isEmpty() -> Text(
-                strings.notificationsEmpty,
+                strings.notifications.empty,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(Dimens.space24),
@@ -78,15 +80,21 @@ fun NotificationsScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Icon(Icons.Filled.DoneAll, contentDescription = null, modifier = Modifier.padding(end = Dimens.space8))
-                        Text(strings.notificationsMarkAllRead)
+                        Text(strings.notifications.markAllRead)
                     }
                 }
-                SettingsSection(strings.notificationsTitle) {
+                SettingsSection(strings.notifications.title) {
                     state.notifications.forEachIndexed { index, notification ->
                         NotificationRow(
                             notification = notification,
                             onOpen = { viewModel.onIntent(NotificationsIntent.Open(notification)) },
                             onDelete = { viewModel.onIntent(NotificationsIntent.Delete(notification.id)) },
+                            onApprove = notification.relatedLinkRequestId?.let { requestId ->
+                                { viewModel.onIntent(NotificationsIntent.ApproveLinkRequest(notification.id, requestId)) }
+                            },
+                            onReject = notification.relatedLinkRequestId?.let { requestId ->
+                                { viewModel.onIntent(NotificationsIntent.RejectLinkRequest(notification.id, requestId)) }
+                            },
                         )
                         if (index != state.notifications.lastIndex) SettingsRowDivider()
                     }
@@ -97,11 +105,18 @@ fun NotificationsScreen(
 }
 
 @Composable
-private fun NotificationRow(notification: AppNotification, onOpen: () -> Unit, onDelete: () -> Unit) {
+private fun NotificationRow(
+    notification: AppNotification,
+    onOpen: () -> Unit,
+    onDelete: () -> Unit,
+    onApprove: (() -> Unit)? = null,
+    onReject: (() -> Unit)? = null,
+) {
     val strings = LocalStrings.current
     val accent = when (notification.type) {
         NotificationType.DEBTOR_LINKED, NotificationType.DEBT_TRANSACTION_ADDED -> MaterialTheme.debtAccentColors.debt
         NotificationType.CREDITOR_LINKED, NotificationType.CREDIT_TRANSACTION_ADDED -> MaterialTheme.debtAccentColors.repay
+        NotificationType.LINK_REQUEST, NotificationType.LINK_REQUEST_APPROVED -> MaterialTheme.debtAccentColors.repay
     }
     SettingsRow(
         icon = notification.type.icon(),
@@ -112,15 +127,28 @@ private fun NotificationRow(notification: AppNotification, onOpen: () -> Unit, o
         iconContainerColor = accent.copy(alpha = 0.14f),
         onClick = onOpen,
         trailing = {
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Filled.Close, contentDescription = null)
+            if (notification.type == NotificationType.LINK_REQUEST && onApprove != null && onReject != null) {
+                Row {
+                    IconButton(onClick = onApprove) {
+                        Icon(Icons.Filled.Check, contentDescription = strings.notificationBody.approveAction)
+                    }
+                    IconButton(onClick = onReject) {
+                        Icon(Icons.Filled.Close, contentDescription = strings.notificationBody.rejectAction)
+                    }
+                }
+            } else {
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Filled.Close, contentDescription = null)
+                }
             }
         },
     )
 }
 
 private fun NotificationType.icon(): ImageVector = when (this) {
-    NotificationType.DEBTOR_LINKED, NotificationType.CREDITOR_LINKED -> Icons.Filled.Link
+    NotificationType.DEBTOR_LINKED, NotificationType.CREDITOR_LINKED,
+    NotificationType.LINK_REQUEST, NotificationType.LINK_REQUEST_APPROVED,
+        -> Icons.Filled.Link
     NotificationType.DEBT_TRANSACTION_ADDED, NotificationType.CREDIT_TRANSACTION_ADDED -> Icons.Filled.SwapHoriz
 }
 

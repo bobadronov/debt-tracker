@@ -96,13 +96,11 @@ fun PasteableOutlinedTextField(
                 AnimatedVisibility(
                     focused,
                     enter = fadeIn() + scaleIn(
-                        // Customize your initial scale (0.0f to 1.0f). Default is 0f
-                        initialScale = 0.5f,
+                        initialScale = 0f,
                         animationSpec = tween(durationMillis = 300)
                     ),
                     exit = scaleOut(
-                        // Customize your target scale when disappearing. Default is 0f
-                        targetScale = 0.5f,
+                        targetScale = 0f,
                         animationSpec = tween(durationMillis = 300)
                     ) + fadeOut(),
                 ) {

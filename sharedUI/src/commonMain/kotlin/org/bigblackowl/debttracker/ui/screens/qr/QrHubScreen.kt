@@ -149,9 +149,9 @@ private fun ShareContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
                             modifier = Modifier.widthIn(max = Dimens.contentMaxWidth).fillMaxWidth().aspectRatio(1f),
                         )
 
-                        Text(strings.qrHubDescription, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
+                        Text(strings.qr.hubDescription, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
                     }
-                } ?: Text(strings.qrHubMyCardHint, style = MaterialTheme.typography.bodyMedium)
+                } ?: Text(strings.qr.hubMyCardHint, style = MaterialTheme.typography.bodyMedium)
             }
         }
 
@@ -216,7 +216,7 @@ private fun ShareContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
                     Button(
                         onClick = { if (canScanWithCamera) onIntent(QrHubIntent.SwitchToScan) else imagePicker.pick() },
                         modifier = Modifier.widthIn(max = Dimens.contentMaxWidth).fillMaxWidth(),
-                    ) { Text(if (canScanWithCamera) strings.qrHubScanTab else strings.qrHubSelectImageTab) }
+                    ) { Text(if (canScanWithCamera) strings.qr.hubScanTab else strings.qr.hubSelectImageTab) }
 
                     if (!canScanWithCamera) {
                         imagePicker.errorMessage?.let {
@@ -242,9 +242,9 @@ private fun ScanContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Text(strings.qrHubCameraPermissionRationale, style = MaterialTheme.typography.bodyMedium)
+            Text(strings.qr.hubCameraPermissionRationale, style = MaterialTheme.typography.bodyMedium)
             TextButton(onClick = { onIntent(QrHubIntent.SwitchToScan) }) {
-                Text(strings.qrHubCameraPermissionRetry)
+                Text(strings.qr.hubCameraPermissionRetry)
             }
         }
     } else {

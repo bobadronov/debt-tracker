@@ -82,8 +82,8 @@ fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinVi
 
     when (state.mode) {
         UnlockMode.BIOMETRIC -> UnlockScaffold(
-            title = strings.authGateTitle,
-            subtitle = if (state.biometricDismissed) strings.authGateBiometricFailed else strings.authGateBiometricPrompt,
+            title = strings.authGate.title,
+            subtitle = if (state.biometricDismissed) strings.authGate.biometricFailed else strings.authGate.biometricPrompt,
         ) {
             if (state.biometricRunning) {
                 CircularWavyProgressIndicator()
@@ -96,19 +96,19 @@ fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinVi
                 )
                 Spacer(Modifier.height(Dimens.space24))
                 Button(onClick = { viewModel.onIntent(AuthGateIntent.RetryBiometric(biometricAuthenticator)) }) {
-                    Text(strings.authGateRetry)
+                    Text(strings.authGate.retry)
                 }
                 if (settings.hasPinCode) {
                     TextButton(onClick = { viewModel.onIntent(AuthGateIntent.SwitchToPin) }) {
-                        Text(strings.authGateUsePinCode)
+                        Text(strings.authGate.usePinCode)
                     }
                 }
             }
         }
 
         UnlockMode.PIN -> UnlockScaffold(
-            title = strings.authGateTitle,
-            subtitle = strings.authGateEnterPin,
+            title = strings.authGate.title,
+            subtitle = strings.authGate.enterPin,
         ) {
             PinCodeField(
                 value = state.pinInput,
@@ -129,7 +129,7 @@ fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinVi
             if (settings.biometricEnabled) {
                 Spacer(Modifier.height(Dimens.space8))
                 TextButton(onClick = { viewModel.onIntent(AuthGateIntent.RetryBiometric(biometricAuthenticator)) }) {
-                    Text(strings.authGateUseBiometric)
+                    Text(strings.authGate.useBiometric)
                 }
             }
         }

@@ -53,6 +53,6 @@ class ActiveSessionsViewModel(
     }
 
     private suspend fun reportError() {
-        effectsChannel.send(ActiveSessionsEffect.Error(resolveStrings(appSettings.locale).activeSessionsError))
+        effectsChannel.send(ActiveSessionsEffect.Error(resolveStrings(appSettings.locale).activeSessions.error))
     }
 }

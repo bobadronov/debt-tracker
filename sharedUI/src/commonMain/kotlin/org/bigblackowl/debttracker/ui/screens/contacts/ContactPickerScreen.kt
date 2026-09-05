@@ -52,7 +52,7 @@ fun ContactPickerScreen(
     val strings = LocalStrings.current
 
     Scaffold(
-        topBar = { BackTopAppBar(title = strings.contactPickerTitle, onBack = onBack) },
+        topBar = { BackTopAppBar(title = strings.contactPicker.title, onBack = onBack) },
     ) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding),
@@ -67,7 +67,7 @@ fun ContactPickerScreen(
                     onValueChange = { viewModel.onIntent(ContactPickerIntent.Search(it)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    placeholder = { Text(strings.contactPickerSearchPlaceholder) },
+                    placeholder = { Text(strings.contactPicker.searchPlaceholder) },
                 )
 
                 OutlinedCard(
@@ -80,13 +80,13 @@ fun ContactPickerScreen(
                     ) {
                         Icon(Icons.Filled.PersonAdd, contentDescription = null)
                         Spacer(Modifier.width(Dimens.space12))
-                        Text(strings.contactPickerNewContact, style = MaterialTheme.typography.bodyLarge)
+                        Text(strings.contactPicker.newContact, style = MaterialTheme.typography.bodyLarge)
                     }
                 }
 
                 if (!state.hasAnyContacts) {
                     Text(
-                        strings.contactPickerEmpty,
+                        strings.contactPicker.empty,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = Dimens.space16),

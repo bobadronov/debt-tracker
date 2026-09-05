@@ -53,6 +53,20 @@ class NotificationsViewModel(
                 notificationRepository.markAllRead()
                 refresh()
             }
+
+            is NotificationsIntent.ApproveLinkRequest -> viewModelScope.launch {
+                if (notificationRepository.approveLinkRequest(intent.requestId)) {
+                    notificationRepository.delete(intent.notificationId)
+                    refresh()
+                }
+            }
+
+            is NotificationsIntent.RejectLinkRequest -> viewModelScope.launch {
+                if (notificationRepository.rejectLinkRequest(intent.requestId)) {
+                    notificationRepository.delete(intent.notificationId)
+                    refresh()
+                }
+            }
         }
     }
 

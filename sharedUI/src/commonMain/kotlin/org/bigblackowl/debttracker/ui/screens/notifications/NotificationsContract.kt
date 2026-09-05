@@ -12,6 +12,9 @@ sealed interface NotificationsIntent {
     data class Open(val notification: AppNotification) : NotificationsIntent
     data class Delete(val id: String) : NotificationsIntent
     data object MarkAllRead : NotificationsIntent
+    /** [org.bigblackowl.debttracker.domain.model.NotificationType.LINK_REQUEST] row actions (0013, B3-фікс). */
+    data class ApproveLinkRequest(val notificationId: String, val requestId: String) : NotificationsIntent
+    data class RejectLinkRequest(val notificationId: String, val requestId: String) : NotificationsIntent
 }
 
 sealed interface NotificationsEffect {

@@ -94,8 +94,8 @@ class DebtSummaryWidget : GlanceAppWidget() {
                 isDark = isDark,
                 debtorsAmount = debtorsAmount,
                 creditorsAmount = creditorsAmount,
-                debtorsLabel = strings.homeTabDebtors,
-                creditorsLabel = strings.homeTabCreditors,
+                debtorsLabel = strings.home.tabDebtors,
+                creditorsLabel = strings.home.tabCreditors,
                 debtorsDescription = strings.widgetDebtorsTotal(debtorsAmount),
                 creditorsDescription = strings.widgetCreditorsTotal(creditorsAmount),
             )

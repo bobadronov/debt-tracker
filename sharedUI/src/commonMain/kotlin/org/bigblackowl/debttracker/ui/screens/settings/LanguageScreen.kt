@@ -59,7 +59,7 @@ fun LanguageScreen(onBack: () -> Unit) {
     val strings = LocalStrings.current
     val languageOptions = remember(strings) { languageOptions(strings) }
 
-    PlaceholderScreen(title = strings.settingsLanguage, verticalArrangement = Arrangement.Top, onBack = onBack) {
+    PlaceholderScreen(title = strings.settings.language, verticalArrangement = Arrangement.Top, onBack = onBack) {
         LazyColumn(modifier = Modifier.fillMaxHeight().width(Dimens.contentMaxWidth)) {
             itemsIndexed(languageOptions) { index, option ->
                 val (value, label, flag) = option
@@ -80,7 +80,7 @@ fun LanguageScreen(onBack: () -> Unit) {
                             Image(
                                 painter = painterResource(res),
                                 contentDescription = null,
-                                contentScale = ContentScale.Crop,
+                                contentScale = ContentScale.Inside,
                                 modifier = Modifier.size(Dimens.space40),
                             )
                         }
@@ -110,7 +110,7 @@ internal data class LanguageOption(val value: String, val label: String, val fla
 
 /** Shared with [SettingsScreen]'s language row so both stay in sync as languages are added. */
 internal fun languageOptions(strings: Strings) = listOf(
-    LanguageOption("system", strings.settingsLanguageSystem),
+    LanguageOption("system", strings.settings.languageSystem),
     LanguageOption("cs", "Čeština", flag = Res.drawable.flag_czech_republic),
     LanguageOption("de", "Deutsch", flag = Res.drawable.flag_germany),
     LanguageOption("en", "English", flag = Res.drawable.flag_united_kingdom),

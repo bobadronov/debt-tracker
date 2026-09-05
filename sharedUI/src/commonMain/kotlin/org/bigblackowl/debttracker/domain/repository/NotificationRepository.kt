@@ -16,4 +16,8 @@ interface NotificationRepository {
     suspend fun markRead(id: String)
     suspend fun markAllRead()
     suspend fun delete(id: String)
+    /** RPC `approve_link_request` (0013) — виконує дзеркалювання, яке чекало на згоду цілі. */
+    suspend fun approveLinkRequest(requestId: String): Boolean
+    /** RPC `reject_link_request` (0013) — відхиляє pending-запит без дзеркалювання. */
+    suspend fun rejectLinkRequest(requestId: String): Boolean
 }

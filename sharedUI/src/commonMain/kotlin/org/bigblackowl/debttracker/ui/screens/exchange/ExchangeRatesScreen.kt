@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -45,7 +44,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -188,8 +186,8 @@ private fun ExchangeRatesContent(
                             val q = state.query.trim()
                             val visible = state.rates.filter { rate ->
                                 q.isEmpty() ||
-                                    rate.currency.code.contains(q, ignoreCase = true) ||
-                                    rate.currency.name.contains(q, ignoreCase = true)
+                                        rate.currency.code.contains(q, ignoreCase = true) ||
+                                        rate.currency.name.contains(q, ignoreCase = true)
                             }
                             val pinned = visible.filter { it.currency.code in state.pinned }
                             val rest = visible.filterNot { it.currency.code in state.pinned }
@@ -305,8 +303,8 @@ private fun SourceIcon(source: RateSource, modifier: Modifier = Modifier) {
     SubcomposeAsyncImage(
         model = "https://www.google.com/s2/favicons?sz=128&domain=${source.domain}",
         contentDescription = source.displayName,
-        contentScale = ContentScale.Fit,
-        modifier = modifier.clip(CircleShape),
+        contentScale = ContentScale.Inside,
+        modifier = Modifier.size(Dimens.space30),
         loading = { CircularWavyProgressIndicator() },
         error = { Icon(Icons.Filled.AccountBalance, contentDescription = null, modifier = modifier) },
     )
@@ -325,8 +323,7 @@ private fun CurrencyFlag(currency: FiatCurrency, modifier: Modifier = Modifier) 
         SubcomposeAsyncImage(
             model = url,
             contentDescription = currency.code,
-            contentScale = ContentScale.Crop,
-            modifier = modifier.clip(CircleShape),
+            contentScale = ContentScale.Inside,
             loading = { CircularWavyProgressIndicator() },
             error = { fallback() },
         )

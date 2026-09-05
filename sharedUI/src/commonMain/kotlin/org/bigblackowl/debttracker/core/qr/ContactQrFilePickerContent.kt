@@ -39,8 +39,8 @@ fun rememberContactQrImagePicker(onResult: (String) -> Unit): ContactQrImagePick
             scope.launch {
                 when (val result = decodeQrFromImage(picked.bytes)) {
                     is QrDecodeResult.Success -> onResult(result.payload)
-                    QrDecodeResult.NotFound -> errorMessage = strings.qrHubPickFileNotFound
-                    QrDecodeResult.Unsupported -> errorMessage = strings.qrHubPickFileUnsupported
+                    QrDecodeResult.NotFound -> errorMessage = strings.qr.hubPickFileNotFound
+                    QrDecodeResult.Unsupported -> errorMessage = strings.qr.hubPickFileUnsupported
                 }
             }
         }
@@ -65,12 +65,12 @@ fun ContactQrFilePickerContent(modifier: Modifier = Modifier, onResult: (String)
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(strings.qrHubPickFileHint, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
+        Text(strings.qr.hubPickFileHint, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
         Column(verticalArrangement = Arrangement.spacedBy(Dimens.space8)) {
             Button(
                 modifier = Modifier.padding(top = Dimens.space12),
                 onClick = picker.pick,
-            ) { Text(strings.qrHubPickFileButton) }
+            ) { Text(strings.qr.hubPickFileButton) }
 
             picker.errorMessage?.let {
                 Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)

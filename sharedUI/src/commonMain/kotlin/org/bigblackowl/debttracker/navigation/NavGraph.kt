@@ -75,6 +75,11 @@ import org.bigblackowl.debttracker.ui.screens.settings.AccountInfoScreen
 import org.bigblackowl.debttracker.ui.screens.settings.ActiveSessionsScreen
 import org.bigblackowl.debttracker.ui.screens.settings.EditAccountScreen
 import org.bigblackowl.debttracker.ui.screens.settings.LanguageScreen
+import org.bigblackowl.debttracker.ui.screens.settings.SettingsAboutScreen
+import org.bigblackowl.debttracker.ui.screens.settings.SettingsDataScreen
+import org.bigblackowl.debttracker.ui.screens.settings.SettingsNotificationsScreen
+import org.bigblackowl.debttracker.ui.screens.settings.SettingsPreferencesScreen
+import org.bigblackowl.debttracker.ui.screens.settings.SettingsProtectionScreen
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsScreen
 import org.bigblackowl.debttracker.ui.screens.stats.StatsScreen
 import org.koin.compose.koinInject
@@ -414,11 +419,35 @@ fun DebtTrackerNavGraph(
             entry<Screen.Settings>(metadata = listPane()) {
                 SettingsScreen(
                     onBack = { back() },
-                    onExport = { navigate(Screen.Export()) },
                     onOpenAuth = { navigate(Screen.Auth()) },
                     onOpenAccountInfo = { navigate(Screen.AccountInfo) },
+                    onOpenProtection = { navigate(Screen.SettingsProtection) },
+                    onOpenNotifications = { navigate(Screen.SettingsNotifications) },
+                    onOpenPreferences = { navigate(Screen.SettingsPreferences) },
+                    onOpenData = { navigate(Screen.SettingsData) },
+                    onOpenAbout = { navigate(Screen.SettingsAbout) },
+                )
+            }
+            entry<Screen.SettingsProtection>(metadata = detailPane()) {
+                SettingsProtectionScreen(onBack = { back() })
+            }
+            entry<Screen.SettingsNotifications>(metadata = detailPane()) {
+                SettingsNotificationsScreen(onBack = { back() })
+            }
+            entry<Screen.SettingsPreferences>(metadata = detailPane()) {
+                SettingsPreferencesScreen(
+                    onBack = { back() },
                     onOpenLanguage = { navigate(Screen.Language) },
                 )
+            }
+            entry<Screen.SettingsData>(metadata = detailPane()) {
+                SettingsDataScreen(
+                    onBack = { back() },
+                    onExport = { navigate(Screen.Export()) },
+                )
+            }
+            entry<Screen.SettingsAbout>(metadata = detailPane()) {
+                SettingsAboutScreen(onBack = { back() })
             }
             entry<Screen.Language>(metadata = detailPane()) {
                 LanguageScreen(onBack = { back() })

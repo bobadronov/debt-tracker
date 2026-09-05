@@ -58,9 +58,9 @@ fun AccountOnboardingScreen(
         Text(strings.onboardingAccountBody, textAlign = TextAlign.Center)
         Spacer(Modifier.height(Dimens.space24))
 
-        Button(onClick = { viewModel.onIntent(AccountOnboardingIntent.SignIn) }) { Text(strings.settingsSignIn) }
+        Button(onClick = { viewModel.onIntent(AccountOnboardingIntent.SignIn) }) { Text(strings.settings.signIn) }
         Spacer(Modifier.height(Dimens.space8))
-        TextButton(onClick = { viewModel.onIntent(AccountOnboardingIntent.Skip) }) { Text(strings.onboardingProtectionSkip) }
+        TextButton(onClick = { viewModel.onIntent(AccountOnboardingIntent.Skip) }) { Text(strings.onboardingProtection.skip) }
     }
 }
 

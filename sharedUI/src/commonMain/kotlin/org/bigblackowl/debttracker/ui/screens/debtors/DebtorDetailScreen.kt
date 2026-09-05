@@ -63,19 +63,19 @@ fun DebtorDetailScreen(
 
     ContactDetailScaffold(
         id = debtorId,
-        title = state.debtor?.fullName ?: strings.debtorDetailTitleFallback,
+        title = state.debtor?.fullName ?: strings.debtorDetail.titleFallback,
         avatarUrl = state.debtor?.avatarUrl,
         onBack = onBack,
-        exportLabel = strings.debtorDetailExport,
+        exportLabel = strings.debtorDetail.export,
         onExport = onExport,
         onEdit = onEdit,
         snackbarHostState = snackbarHostState,
         phone = state.debtor?.phone,
         comment = state.debtor?.comment,
-        balanceText = strings.debtorDetailBalance(state.balance.formatMoney(currency)),
-        primaryLabel = strings.debtorDetailRepay,
+        balanceText = strings.debtorDetail.balance(state.balance.formatMoney(currency)),
+        primaryLabel = strings.debtorDetail.repay,
         onPrimary = { showRepaySheet = true },
-        secondaryLabel = strings.debtorDetailLendMore,
+        secondaryLabel = strings.debtorDetail.lendMore,
         onSecondary = { showLendSheet = true },
         isRefreshing = state.isRefreshing,
         onRefresh = { viewModel.onIntent(DebtorDetailIntent.Refresh) },
@@ -124,7 +124,7 @@ fun DebtorDetailScreen(
 
     if (showRepaySheet) {
         AmountBottomSheet(
-            title = strings.debtorDetailRepaySheetTitle,
+            title = strings.debtorDetail.repaySheetTitle,
             prefillAmount = if (state.balance > BigDecimal.ZERO) state.balance.toStringExpanded() else "",
             currency = currency,
             onDismiss = { showRepaySheet = false },
@@ -137,7 +137,7 @@ fun DebtorDetailScreen(
 
     if (showLendSheet) {
         AmountBottomSheet(
-            title = strings.debtorDetailLendSheetTitle,
+            title = strings.debtorDetail.lendSheetTitle,
             currency = currency,
             onDismiss = { showLendSheet = false },
             onConfirm = { amount, method ->

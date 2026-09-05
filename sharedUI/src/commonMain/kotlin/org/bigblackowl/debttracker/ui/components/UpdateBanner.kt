@@ -124,12 +124,12 @@ private fun UpdateBannerCard(
 
                     is UpdateBannerState.Available -> {
                         Text(
-                            strings.updateAvailableTitle,
+                            strings.update.availableTitle,
                             style = MaterialTheme.typography.titleMedium
                         )
                         Spacer(Modifier.height(Dimens.space4))
                         Text(
-                            strings.updateAvailableMessage(state.info.version),
+                            strings.update.availableMessage(state.info.version),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -138,8 +138,8 @@ private fun UpdateBannerCard(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End,
                         ) {
-                            TextButton(onClick = onDismiss) { Text(strings.updateLater) }
-                            TextButton(onClick = { onDownload(state.info) }) { Text(strings.updateDownloadInstall) }
+                            TextButton(onClick = onDismiss) { Text(strings.update.later) }
+                            TextButton(onClick = { onDownload(state.info) }) { Text(strings.update.downloadInstall) }
                         }
                     }
 
@@ -148,7 +148,7 @@ private fun UpdateBannerCard(
                             CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
                             Spacer(Modifier.width(Dimens.space12))
                             Text(
-                                strings.updateDownloading,
+                                strings.update.downloading,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -166,7 +166,7 @@ private fun UpdateBannerCard(
                             if (total != null && speed != null) {
                                 Spacer(Modifier.height(Dimens.space4))
                                 Text(
-                                    strings.updateDownloadingDetail(
+                                    strings.update.downloadingDetail(
                                         formatBytes(progress.bytesDownloaded),
                                         formatBytes(total),
                                         "${formatBytes(speed)}/s",
@@ -180,7 +180,7 @@ private fun UpdateBannerCard(
 
                     is UpdateBannerState.Failed -> {
                         Text(
-                            strings.updateFailed,
+                            strings.update.failed,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.debtAccentColors.debt,
                         )
@@ -189,8 +189,8 @@ private fun UpdateBannerCard(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End
                         ) {
-                            TextButton(onClick = onDismiss) { Text(strings.updateLater) }
-                            TextButton(onClick = { onRetry(state.info) }) { Text(strings.updateRetry) }
+                            TextButton(onClick = onDismiss) { Text(strings.update.later) }
+                            TextButton(onClick = { onRetry(state.info) }) { Text(strings.update.retry) }
                         }
                     }
                 }

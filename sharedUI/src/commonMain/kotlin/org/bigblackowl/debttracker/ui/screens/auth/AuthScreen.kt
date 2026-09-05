@@ -108,7 +108,7 @@ fun AuthScreen(
     Scaffold(
         topBar = {
             BackTopAppBar(
-                title = if (state.isSignUpMode) strings.authTitleSignUp else strings.authTitleSignIn,
+                title = if (state.isSignUpMode) strings.auth.titleSignUp else strings.auth.titleSignIn,
                 onBack = if (showBackButton) onBack else null,
             )
         },
@@ -157,7 +157,7 @@ fun AuthScreen(
                     onValueChange = {
                         viewModel.onIntent(AuthIntent.EmailChanged(it))
                     },
-                    label = strings.authEmail,
+                    label = strings.auth.email,
                     clipboardText = clipboardText,
                     isPasteRelevant = ::isValidEmail,
                     modifier = Modifier
@@ -177,7 +177,7 @@ fun AuthScreen(
                     onValueChange = {
                         viewModel.onIntent(AuthIntent.PasswordChanged(it))
                     },
-                    label = { Text(strings.authPassword) },
+                    label = { Text(strings.auth.password) },
                     singleLine = true,
                     visualTransformation = if (passwordVisible) {
                         VisualTransformation.None
@@ -213,9 +213,9 @@ fun AuthScreen(
                                     Icons.Default.Visibility
                                 },
                                 contentDescription = if (passwordVisible) {
-                                    strings.hidePassword
+                                    strings.auth.hidePassword
                                 } else {
-                                    strings.showPassword
+                                    strings.auth.showPassword
                                 },
                             )
                         }
@@ -245,7 +245,7 @@ fun AuthScreen(
                     OutlinedTextField(
                         value = state.confirmPassword,
                         onValueChange = { viewModel.onIntent(AuthIntent.ConfirmPasswordChanged(it)) },
-                        label = { Text(strings.authConfirmPassword) },
+                        label = { Text(strings.auth.confirmPassword) },
                         singleLine = true,
                         visualTransformation = if (confirmPasswordVisible) {
                             VisualTransformation.None
@@ -268,9 +268,9 @@ fun AuthScreen(
                                         Icons.Default.Visibility
                                     },
                                     contentDescription = if (confirmPasswordVisible) {
-                                        strings.hidePassword
+                                        strings.auth.hidePassword
                                     } else {
-                                        strings.showPassword
+                                        strings.auth.showPassword
                                     },
                                 )
                             }
@@ -310,7 +310,7 @@ fun AuthScreen(
                     isLoading = state.isLoading,
                     enabled = !state.isGoogleLoading,
                     modifier = Modifier.fillMaxWidth(.8f),
-                    label = { Text(if (state.isSignUpMode) strings.authSubmitSignUp else strings.authSubmitSignIn) },
+                    label = { Text(if (state.isSignUpMode) strings.auth.submitSignUp else strings.auth.submitSignIn) },
                 )
 
                 if (BuildConfig.GOOGLE_SIGN_IN_ENABLED) {
@@ -355,7 +355,7 @@ fun AuthScreen(
                 }
 
                 TextButton(onClick = { viewModel.onIntent(AuthIntent.ToggleMode) }) {
-                    Text(if (state.isSignUpMode) strings.authToggleToSignIn else strings.authToggleToSignUp)
+                    Text(if (state.isSignUpMode) strings.auth.toggleToSignIn else strings.auth.toggleToSignUp)
                 }
             }
         }

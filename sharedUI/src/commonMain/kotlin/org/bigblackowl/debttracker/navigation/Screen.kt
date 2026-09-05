@@ -60,6 +60,21 @@ sealed interface Screen {
     data object Settings : Screen
 
     @Serializable
+    data object SettingsProtection : Screen
+
+    @Serializable
+    data object SettingsNotifications : Screen
+
+    @Serializable
+    data object SettingsPreferences : Screen
+
+    @Serializable
+    data object SettingsData : Screen
+
+    @Serializable
+    data object SettingsAbout : Screen
+
+    @Serializable
     data object Language : Screen
 
     @Serializable

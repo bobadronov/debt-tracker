@@ -13,6 +13,8 @@ data class SettingsState(
     val notificationsPermissionBlocked: Boolean = false,
     val deleteDone: Boolean = false,
     val deleteError: Boolean = false,
+    val cacheCleared: Boolean = false,
+    val cacheClearError: Boolean = false,
     val updateState: UpdateCheckState = UpdateCheckState.Idle,
 )
 
@@ -39,6 +41,7 @@ sealed interface SettingsIntent {
     data object DisableMobileProtection : SettingsIntent
     data object SignOut : SettingsIntent
     data object DeleteAllData : SettingsIntent
+    data object ClearAppCache : SettingsIntent
     data class CheckForInAppUpdate(val launcher: InAppUpdateLauncher) : SettingsIntent
     data class CheckForUpdate(val checker: AppUpdateChecker) : SettingsIntent
     data class DownloadUpdate(val checker: AppUpdateChecker, val info: AppUpdateInfo) : SettingsIntent

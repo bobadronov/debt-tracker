@@ -59,24 +59,24 @@ fun DebtorListScreen(
             ListSearchBar(
                 query = state.query,
                 onQueryChange = { viewModel.onIntent(DebtorListIntent.Search(it)) },
-                searchPlaceholder = strings.debtorListSearchPlaceholder,
+                searchPlaceholder = strings.debtorList.searchPlaceholder,
                 clearSearchDescription = strings.clearSearch,
                 searchFocusRequester = searchFocusRequester,
-                filterDescription = strings.debtorListSort,
+                filterDescription = strings.debtorList.sort,
                 sortOptions = listOf(
-                    MenuOption(DebtorSortOrder.NAME_ASC, strings.debtorListSortByName, Icons.Filled.SortByAlpha),
-                    MenuOption(DebtorSortOrder.BALANCE_DESC, strings.debtorListSortByBalance, Icons.Filled.Payments),
-                    MenuOption(DebtorSortOrder.RECENT, strings.debtorListSortRecent, Icons.Filled.History),
+                    MenuOption(DebtorSortOrder.NAME_ASC, strings.debtorList.sortByName, Icons.Filled.SortByAlpha),
+                    MenuOption(DebtorSortOrder.BALANCE_DESC, strings.debtorList.sortByBalance, Icons.Filled.Payments),
+                    MenuOption(DebtorSortOrder.RECENT, strings.debtorList.sortRecent, Icons.Filled.History),
                 ),
                 currentSort = state.sortOrder,
                 sortAscending = state.sortAscending,
-                sortReverseDescription = strings.debtorListSortReverse,
+                sortReverseDescription = strings.debtorList.sortReverse,
                 onToggleSortDirection = { viewModel.onIntent(DebtorListIntent.ToggleSortDirection) },
                 onChangeSort = { viewModel.onIntent(DebtorListIntent.ChangeSort(it)) },
                 statusOptions = listOf(
-                    MenuOption(DebtorStatusFilter.ACTIVE, strings.debtorListFilterActive, Icons.Filled.HourglassEmpty),
-                    MenuOption(DebtorStatusFilter.CLOSED, strings.debtorListFilterClosed, Icons.Filled.CheckCircle),
-                    MenuOption(DebtorStatusFilter.ALL, strings.debtorListFilterAll, Icons.AutoMirrored.Filled.List),
+                    MenuOption(DebtorStatusFilter.ACTIVE, strings.debtorList.filterActive, Icons.Filled.HourglassEmpty),
+                    MenuOption(DebtorStatusFilter.CLOSED, strings.debtorList.filterClosed, Icons.Filled.CheckCircle),
+                    MenuOption(DebtorStatusFilter.ALL, strings.debtorList.filterAll, Icons.AutoMirrored.Filled.List),
                 ),
                 currentStatus = state.statusFilter,
                 onChangeStatus = { viewModel.onIntent(DebtorListIntent.ChangeStatusFilter(it)) },
@@ -84,7 +84,7 @@ fun DebtorListScreen(
         },
         totalBar = {
             ListTotalBar(
-                label = strings.debtorListTotal,
+                label = strings.debtorList.total,
                 totalText = state.totalsByCurrency.formatTotals(),
                 onAdd = onAddDebtor,
             )

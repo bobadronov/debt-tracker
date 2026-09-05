@@ -65,7 +65,7 @@ class AuthGateViewModel(private val settings: AppSettings) : ViewModel() {
                 it.copy(mode = UnlockMode.BIOMETRIC, biometricRunning = true, biometricDismissed = false)
             }
             val strings = resolveStrings(settings.locale)
-            val result = authenticator.authenticate(strings.authGateTitle, strings.biometricUnlockReason)
+            val result = authenticator.authenticate(strings.authGate.title, strings.authGate.biometricUnlockReason)
             _state.update { it.copy(biometricRunning = false) }
             when {
                 result == BiometricResult.SUCCESS -> effectsChannel.send(AuthGateEffect.Unlocked)
@@ -84,7 +84,7 @@ class AuthGateViewModel(private val settings: AppSettings) : ViewModel() {
         } else {
             // Wrong PIN: clear the input so the user retypes from scratch rather than editing digits
             // they already know are wrong.
-            _state.update { it.copy(pinInput = "", error = resolveStrings(settings.locale).authGateWrongPin) }
+            _state.update { it.copy(pinInput = "", error = resolveStrings(settings.locale).authGate.wrongPin) }
         }
     }
 }

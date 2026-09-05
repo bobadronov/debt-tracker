@@ -27,25 +27,30 @@ object CurrentScreen {
  */
 fun Screen.windowTitle(strings: Strings): String = when (this) {
     Screen.Splash, Screen.Onboarding, Screen.AccountOnboarding, Screen.Home -> strings.appName
-    Screen.AuthGate -> strings.authGateTitle
-    is Screen.Auth -> if (isGate) strings.authGateTitle else strings.appName
-    is Screen.ContactPicker -> strings.contactPickerTitle
+    Screen.AuthGate -> strings.authGate.title
+    is Screen.Auth -> if (isGate) strings.authGate.title else strings.appName
+    is Screen.ContactPicker -> strings.contactPicker.title
     is Screen.AddEditContact -> when (direction) {
         DebtDirection.DEBTOR ->
-            if (editId != null) strings.addEditDebtorTitleEdit else strings.addEditDebtorTitleNew
+            if (editId != null) strings.addEditDebtor.titleEdit else strings.addEditDebtor.titleNew
         DebtDirection.CREDITOR ->
-            if (editId != null) strings.addEditCreditorTitleEdit else strings.addEditCreditorTitleNew
+            if (editId != null) strings.addEditCreditor.titleEdit else strings.addEditCreditor.titleNew
     }
-    is Screen.DebtorDetail -> strings.debtorDetailTitleFallback
-    is Screen.CreditorDetail -> strings.creditorDetailTitleFallback
-    Screen.Stats -> strings.statsTitle
+    is Screen.DebtorDetail -> strings.debtorDetail.titleFallback
+    is Screen.CreditorDetail -> strings.creditorDetail.titleFallback
+    Screen.Stats -> strings.stats.title
     Screen.ExchangeRates -> strings.exchangeRates.menuTitle
-    Screen.Settings -> strings.settingsTitle
-    Screen.Language -> strings.settingsLanguage
-    Screen.AccountInfo -> strings.settingsAccount
+    Screen.Settings -> strings.settings.title
+    Screen.SettingsProtection -> strings.settings.protection
+    Screen.SettingsNotifications -> strings.settings.notifications
+    Screen.SettingsPreferences -> strings.settings.preferences
+    Screen.SettingsData -> strings.settings.data
+    Screen.SettingsAbout -> strings.settings.about
+    Screen.Language -> strings.settings.language
+    Screen.AccountInfo -> strings.settings.account
     Screen.EditAccount -> strings.editAccountTitle
-    Screen.ActiveSessions -> strings.activeSessionsTitle
-    Screen.QrHub -> strings.homeQr
-    Screen.Notifications -> strings.notificationsTitle
-    is Screen.Export -> strings.exportTitle
+    Screen.ActiveSessions -> strings.activeSessions.title
+    Screen.QrHub -> strings.qr.home
+    Screen.Notifications -> strings.notifications.title
+    is Screen.Export -> strings.export.title
 }

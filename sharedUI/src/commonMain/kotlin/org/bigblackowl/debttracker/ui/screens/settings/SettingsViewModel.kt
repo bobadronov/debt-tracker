@@ -11,6 +11,7 @@ import org.bigblackowl.debttracker.core.i18n.resolveStrings
 import org.bigblackowl.debttracker.core.notifications.NotificationPermissionStatus
 import org.bigblackowl.debttracker.core.security.BiometricResult
 import org.bigblackowl.debttracker.core.settings.AppSettings
+import org.bigblackowl.debttracker.domain.usecase.ClearAppCacheUseCase
 import org.bigblackowl.debttracker.domain.usecase.DeleteAllDataUseCase
 import org.bigblackowl.debttracker.domain.usecase.ForceSignOutUseCase
 
@@ -24,6 +25,7 @@ class SettingsViewModel(
     private val appSettings: AppSettings,
     private val deleteAllData: DeleteAllDataUseCase,
     private val forceSignOut: ForceSignOutUseCase,
+    private val clearAppCache: ClearAppCacheUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsState())
@@ -60,12 +62,12 @@ class SettingsViewModel(
             is SettingsIntent.EnableMobileProtection -> viewModelScope.launch {
                 _state.update { it.copy(protectionConfirmError = null) }
                 val strings = resolveStrings(appSettings.locale)
-                when (intent.authenticator.authenticate(strings.biometricEnableReason)) {
+                when (intent.authenticator.authenticate(strings.authGate.biometricEnableReason)) {
                     BiometricResult.SUCCESS -> {
                         appSettings.protectionEnabled = true
                         appSettings.biometricEnabled = true
                     }
-                    else -> _state.update { it.copy(protectionConfirmError = strings.settingsProtectionConfirmFailed) }
+                    else -> _state.update { it.copy(protectionConfirmError = strings.settings.protectionConfirmFailed) }
                 }
             }
 
@@ -82,6 +84,13 @@ class SettingsViewModel(
                 deleteAllData()
                     .onSuccess { _state.update { it.copy(deleteDone = true) } }
                     .onFailure { _state.update { it.copy(deleteError = true) } }
+            }
+
+            SettingsIntent.ClearAppCache -> viewModelScope.launch {
+                _state.update { it.copy(cacheCleared = false, cacheClearError = false) }
+                clearAppCache()
+                    .onSuccess { _state.update { it.copy(cacheCleared = true) } }
+                    .onFailure { _state.update { it.copy(cacheClearError = true) } }
             }
 
             // Progress lives on the launcher itself (updateStatus/updateReadyToInstall StateFlows,

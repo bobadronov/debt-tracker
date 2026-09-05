@@ -63,19 +63,19 @@ fun CreditorDetailScreen(
 
     ContactDetailScaffold(
         id = creditorId,
-        title = state.creditor?.fullName ?: strings.creditorDetailTitleFallback,
+        title = state.creditor?.fullName ?: strings.creditorDetail.titleFallback,
         avatarUrl = state.creditor?.avatarUrl,
         onBack = onBack,
-        exportLabel = strings.creditorDetailExport,
+        exportLabel = strings.creditorDetail.export,
         onExport = onExport,
         onEdit = onEdit,
         snackbarHostState = snackbarHostState,
         phone = state.creditor?.phone,
         comment = state.creditor?.comment,
-        balanceText = strings.creditorDetailBalance(state.balance.formatMoney(currency)),
-        primaryLabel = strings.creditorDetailReturn,
+        balanceText = strings.creditorDetail.balance(state.balance.formatMoney(currency)),
+        primaryLabel = strings.creditorDetail.returnLabel,
         onPrimary = { showReturnSheet = true },
-        secondaryLabel = strings.creditorDetailBorrowMore,
+        secondaryLabel = strings.creditorDetail.borrowMore,
         onSecondary = { showBorrowSheet = true },
         isRefreshing = state.isRefreshing,
         onRefresh = { viewModel.onIntent(CreditorDetailIntent.Refresh) },
@@ -124,7 +124,7 @@ fun CreditorDetailScreen(
 
     if (showReturnSheet) {
         AmountBottomSheet(
-            title = strings.creditorDetailReturnSheetTitle,
+            title = strings.creditorDetail.returnSheetTitle,
             prefillAmount = if (state.balance > BigDecimal.ZERO) state.balance.toStringExpanded() else "",
             currency = currency,
             onDismiss = { showReturnSheet = false },
@@ -137,7 +137,7 @@ fun CreditorDetailScreen(
 
     if (showBorrowSheet) {
         AmountBottomSheet(
-            title = strings.creditorDetailBorrowSheetTitle,
+            title = strings.creditorDetail.borrowSheetTitle,
             currency = currency,
             onDismiss = { showBorrowSheet = false },
             onConfirm = { amount, method ->

@@ -55,9 +55,9 @@ fun ContactQrScanOverlay(onScanned: (ScannedContact) -> Unit, onClose: () -> Uni
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    Text(strings.qrHubCameraPermissionRationale, style = MaterialTheme.typography.bodyMedium)
+                    Text(strings.qr.hubCameraPermissionRationale, style = MaterialTheme.typography.bodyMedium)
                     TextButton(onClick = { permissionDenied = false }) {
-                        Text(strings.qrHubCameraPermissionRetry)
+                        Text(strings.qr.hubCameraPermissionRetry)
                     }
                 }
             } else {

@@ -1,5 +1,6 @@
 package org.bigblackowl.debttracker.ui.components
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,14 +11,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Checkbox
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.ToggleButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -98,9 +101,27 @@ fun PinCodeField(
                 keyboardActions = keyboardActions,
             )
         }
-        TextButton(onClick = { pinVisible = !pinVisible }) {
-            Text(if (pinVisible) strings.hidePin else strings.showPin)
-            Checkbox(pinVisible, onCheckedChange = { pinVisible = !pinVisible }, modifier = Modifier.clip(RoundedCornerShape(Dimens.space3)))
+
+        ToggleButton(
+            checked = pinVisible,
+            onCheckedChange = {
+                pinVisible = !pinVisible
+            }
+        ) {
+            Crossfade(targetState = pinVisible) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        if (it) strings.authGate.hidePin else strings.authGate.showPin,
+                        modifier = Modifier.padding(end = Dimens.space3)
+                    )
+                    Icon(
+                        imageVector = if (it) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = null
+                    )
+                }
+            }
         }
     }
 }

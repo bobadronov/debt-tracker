@@ -155,12 +155,12 @@ fun HomeScreen(
                 Tab(
                     selected = pagerState.currentPage == 0,
                     onClick = { scope.launch { pagerState.animateScrollToPage(0) } },
-                    text = { Text(strings.homeTabDebtors) }
+                    text = { Text(strings.home.tabDebtors) }
                 )
                 Tab(
                     selected = pagerState.currentPage == 1,
                     onClick = { scope.launch { pagerState.animateScrollToPage(1) } },
-                    text = { Text(strings.homeTabCreditors) }
+                    text = { Text(strings.home.tabCreditors) }
                 )
             }
             // Свайп між вкладками (HorizontalPager) замінює swipe-to-delete на рядках —
@@ -197,9 +197,9 @@ private fun SyncStatusBadge(status: SyncUiStatus, strings: Strings) {
         is SyncUiStatus.OfflinePending -> Icons.Filled.CloudOff
     }
     val label = when (status) {
-        SyncUiStatus.Synced -> strings.homeSyncSynced
-        SyncUiStatus.Syncing -> strings.homeSyncSyncing
-        is SyncUiStatus.OfflinePending -> strings.homeSyncOfflinePending(status.count)
+        SyncUiStatus.Synced -> strings.home.syncSynced
+        SyncUiStatus.Syncing -> strings.home.syncSyncing
+        is SyncUiStatus.OfflinePending -> strings.home.syncOfflinePending(status.count)
     }
     val rotation by if (status == SyncUiStatus.Syncing) {
         val transition = rememberInfiniteTransition(label = "sync-rotation")

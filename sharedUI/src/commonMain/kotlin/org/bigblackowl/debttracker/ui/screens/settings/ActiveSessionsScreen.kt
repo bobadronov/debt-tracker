@@ -62,22 +62,22 @@ fun ActiveSessionsScreen(
     }
 
     SettingsDetailScaffold(
-        title = strings.activeSessionsTitle,
+        title = strings.activeSessions.title,
         onBack = onBack,
         snackbarHostState = snackbarHostState,
     ) {
         if (state.isLoading) {
             CircularWavyProgressIndicator(modifier = Modifier.padding(Dimens.space16))
         } else {
-            SettingsSection(strings.activeSessionsTitle) {
+            SettingsSection(strings.activeSessions.title) {
                 state.sessions.forEachIndexed { index, session ->
                     SettingsRow(
                         icon = session.platform.icon(),
                         title = session.deviceName,
                         subtitle = if (session.isCurrentDevice) {
-                            strings.activeSessionsCurrentDevice
+                            strings.activeSessions.currentDevice
                         } else {
-                            strings.activeSessionsLastActive(session.lastSeenAt.formatDateTime())
+                            strings.activeSessions.lastActive(session.lastSeenAt.formatDateTime())
                         },
                         trailing = if (!session.isCurrentDevice) {
                             {
@@ -85,7 +85,7 @@ fun ActiveSessionsScreen(
                                     CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
                                 } else {
                                     TextButton(onClick = { pendingRevoke = session }) {
-                                        Text(strings.activeSessionsLogOut, color = MaterialTheme.debtAccentColors.debt)
+                                        Text(strings.activeSessions.logOut, color = MaterialTheme.debtAccentColors.debt)
                                     }
                                 }
                             }
@@ -108,7 +108,7 @@ fun ActiveSessionsScreen(
                     if (state.isRevokingAll) {
                         CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
                     } else {
-                        Text(strings.activeSessionsLogOutAllOthers, color = MaterialTheme.debtAccentColors.debt)
+                        Text(strings.activeSessions.logOutAllOthers, color = MaterialTheme.debtAccentColors.debt)
                     }
                 }}
             }
@@ -117,9 +117,9 @@ fun ActiveSessionsScreen(
 
     pendingRevoke?.let { session ->
         ConfirmDialog(
-            title = strings.activeSessionsRevokeConfirmTitle,
-            text = strings.activeSessionsRevokeConfirmText(session.deviceName),
-            confirmLabel = strings.activeSessionsLogOut,
+            title = strings.activeSessions.revokeConfirmTitle,
+            text = strings.activeSessions.revokeConfirmText(session.deviceName),
+            confirmLabel = strings.activeSessions.logOut,
             onConfirm = {
                 pendingRevoke = null
                 viewModel.onIntent(ActiveSessionsIntent.RevokeSession(session.id))
@@ -130,9 +130,9 @@ fun ActiveSessionsScreen(
 
     if (showRevokeAllConfirm) {
         ConfirmDialog(
-            title = strings.activeSessionsLogOutAllOthersConfirmTitle,
-            text = strings.activeSessionsLogOutAllOthersConfirmText,
-            confirmLabel = strings.activeSessionsLogOutAllOthers,
+            title = strings.activeSessions.logOutAllOthersConfirmTitle,
+            text = strings.activeSessions.logOutAllOthersConfirmText,
+            confirmLabel = strings.activeSessions.logOutAllOthers,
             onConfirm = {
                 showRevokeAllConfirm = false
                 viewModel.onIntent(ActiveSessionsIntent.RevokeAllOthers)

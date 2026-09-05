@@ -50,7 +50,7 @@ class EditAccountViewModel(
                 .onSuccess { url -> _state.update { it.copy(isUploadingAvatar = false, avatarUrl = url) } }
                 .onFailure {
                     val strings = resolveStrings(appSettings.locale)
-                    _state.update { it.copy(isUploadingAvatar = false, avatarError = strings.settingsAvatarUploadError) }
+                    _state.update { it.copy(isUploadingAvatar = false, avatarError = strings.settings.avatarUploadError) }
                 }
         }
     }

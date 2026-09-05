@@ -30,6 +30,7 @@ import org.bigblackowl.debttracker.domain.repository.ProfileLookupRepository
 import org.bigblackowl.debttracker.domain.repository.RestoreCredentialGateway
 import org.bigblackowl.debttracker.domain.repository.SessionRepository
 import org.bigblackowl.debttracker.domain.usecase.ClearLocalCacheUseCase
+import org.bigblackowl.debttracker.domain.usecase.ClearAppCacheUseCase
 import org.bigblackowl.debttracker.domain.usecase.DeleteAllDataUseCase
 import org.bigblackowl.debttracker.domain.usecase.FindProfileByEmailUseCase
 import org.bigblackowl.debttracker.domain.usecase.ForceSignOutUseCase
@@ -107,6 +108,7 @@ val appModule = module {
     single { NotificationsPoller(get(), get(), get(), get(), get()) }
     single { DueReminderCoordinator(get(), get(), get(), get(), get(), get()) }
     factoryOf(::DeleteAllDataUseCase)
+    factoryOf(::ClearAppCacheUseCase)
     factoryOf(::ClearLocalCacheUseCase)
     factoryOf(::FindProfileByEmailUseCase)
     factoryOf(::ForceSignOutUseCase)

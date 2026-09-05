@@ -31,13 +31,13 @@ class ProtectionOnboardingViewModel(private val settings: AppSettings) : ViewMod
 
             is ProtectionOnboardingIntent.EnableBiometric -> viewModelScope.launch {
                 val strings = resolveStrings(settings.locale)
-                when (intent.authenticator.authenticate(strings.biometricEnableReason)) {
+                when (intent.authenticator.authenticate(strings.authGate.biometricEnableReason)) {
                     BiometricResult.SUCCESS -> {
                         settings.protectionEnabled = true
                         settings.biometricEnabled = true
                         finish()
                     }
-                    else -> _state.update { it.copy(error = strings.onboardingProtectionConfirmFailed) }
+                    else -> _state.update { it.copy(error = strings.onboardingProtection.confirmFailed) }
                 }
             }
 

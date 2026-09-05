@@ -83,7 +83,7 @@ class AuthViewModel(
                     _state.update { it.copy(isGoogleLoading = false) }
                 is GoogleSignInOutcome.Failure ->
                     _state.update {
-                        it.copy(isGoogleLoading = false, googleError = resolveStrings(appSettings.locale).authError)
+                        it.copy(isGoogleLoading = false, googleError = resolveStrings(appSettings.locale).auth.error)
                     }
             }
         }
@@ -96,7 +96,7 @@ class AuthViewModel(
         if (current.isSignUpMode) {
             val fullNameError = if (!isValidFullName(current.fullName)) strings.fullNameError else null
             val passwordError = if (!isStrongEnoughPassword(current.password)) strings.authExtra.passwordTooShort else null
-            val confirmPasswordError = if (current.password != current.confirmPassword) strings.authPasswordMismatch else null
+            val confirmPasswordError = if (current.password != current.confirmPassword) strings.auth.passwordMismatch else null
             if (fullNameError != null || passwordError != null || confirmPasswordError != null) {
                 _state.update { it.copy(fullNameError = fullNameError, passwordError = passwordError, confirmPasswordError = confirmPasswordError) }
                 return
@@ -135,7 +135,7 @@ class AuthViewModel(
                     _state.update {
                         it.copy(
                             isLoading = false,
-                            error = resolveStrings(appSettings.locale).authError,
+                            error = resolveStrings(appSettings.locale).auth.error,
                             offerRegistration = !current.isSignUpMode,
                         )
                     }

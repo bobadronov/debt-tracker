@@ -64,8 +64,10 @@ fun AddEditContactForm(
     title: String,
     onDone: () -> Unit,
     snackbarHostState: SnackbarHostState,
-    /** Editing an existing contact: the opening-amount field and payment-method row are hidden
-     * (they only ever seeded the first transaction). */
+    /** Editing an existing contact: only personal data (name/phone/email/reminder) is shown —
+     * the opening-amount field, payment-method row, comment and currency are hidden (comment and
+     * currency belong to the debt itself, not the contact, and the amount/method only ever
+     * seeded the first transaction). */
     isEditMode: Boolean = false,
     /** Non-null shows the "owes me / I owe" segmented toggle at the top of the form. */
     direction: DebtDirection? = null,
@@ -117,7 +119,7 @@ fun AddEditContactForm(
                 actions = {
                     onScannedContact?.let {
                         IconButton(onClick = { showScanner = true }) {
-                            Icon(Icons.Filled.QrCodeScanner, contentDescription = strings.qrHubScanTab)
+                            Icon(Icons.Filled.QrCodeScanner, contentDescription = strings.qr.hubScanTab)
                         }
                     }
                 },
@@ -147,13 +149,13 @@ fun AddEditContactForm(
                             onClick = { onDirectionChange(DebtDirection.DEBTOR) },
                             shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
                             icon = { Icon(Icons.AutoMirrored.Filled.CallReceived, contentDescription = null) },
-                        ) { Text(strings.homeTabDebtors) }
+                        ) { Text(strings.home.tabDebtors) }
                         SegmentedButton(
                             selected = direction == DebtDirection.CREDITOR,
                             onClick = { onDirectionChange(DebtDirection.CREDITOR) },
                             shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
                             icon = { Icon(Icons.AutoMirrored.Filled.CallMade, contentDescription = null) },
-                        ) { Text(strings.homeTabCreditors) }
+                        ) { Text(strings.home.tabCreditors) }
                     }
                 }
                 EntityAvatar(
@@ -202,22 +204,14 @@ fun AddEditContactForm(
                         onDismiss = onDismissSuggestion,
                     )
                 }
-                PasteableOutlinedTextField(
-                    value = comment,
-                    onValueChange = onCommentChange,
-                    label = strings.comment,
-                    clipboardText = clipboardText,
-                    isPasteRelevant = { it.trim().length in 1..500 },
-                )
-
-                if (isEditMode) {
-                    CurrencyDropdownField(
-                        selected = currency,
-                        onSelect = onCurrencyChange,
-                        label = strings.currency,
-                        modifier = Modifier.fillMaxWidth(),
+                if (!isEditMode) {
+                    PasteableOutlinedTextField(
+                        value = comment,
+                        onValueChange = onCommentChange,
+                        label = strings.comment,
+                        clipboardText = clipboardText,
+                        isPasteRelevant = { it.trim().length in 1..500 },
                     )
-                } else {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(Dimens.space5),

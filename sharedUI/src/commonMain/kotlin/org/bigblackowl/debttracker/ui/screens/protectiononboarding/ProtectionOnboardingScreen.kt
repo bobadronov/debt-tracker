@@ -70,8 +70,8 @@ fun ProtectionOnboardingScreen(
     }
 
     UnlockScaffold(
-        title = strings.onboardingProtectionTitle,
-        subtitle = strings.onboardingProtectionBody,
+        title = strings.onboardingProtection.title,
+        subtitle = strings.onboardingProtection.body,
     ) {
         Icon(
             if (state.biometricAvailable) Icons.Filled.Fingerprint else Icons.Filled.Password,
@@ -89,16 +89,16 @@ fun ProtectionOnboardingScreen(
         // (common on tablets) fall back to the same PIN setup instead of only offering Skip.
         if (state.biometricAvailable) {
             Button(onClick = { viewModel.onIntent(ProtectionOnboardingIntent.EnableBiometric(biometricAuthenticator)) }) {
-                Text(strings.onboardingProtectionEnableBiometric)
+                Text(strings.onboardingProtection.enableBiometric)
             }
         } else {
             Button(onClick = { showPinSetupDialog = true }) {
-                Text(strings.onboardingProtectionEnablePin)
+                Text(strings.onboardingProtection.enablePin)
             }
         }
 
         Spacer(Modifier.height(Dimens.space8))
-        TextButton(onClick = { viewModel.onIntent(ProtectionOnboardingIntent.Skip) }) { Text(strings.onboardingProtectionSkip) }
+        TextButton(onClick = { viewModel.onIntent(ProtectionOnboardingIntent.Skip) }) { Text(strings.onboardingProtection.skip) }
     }
 
     if (showPinSetupDialog) {

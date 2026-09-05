@@ -23,5 +23,7 @@ fun AppNotification.formatBody(strings: Strings, redactAmount: Boolean = false):
         NotificationType.CREDITOR_LINKED -> strings.notificationBody.creditorLinked(name, amountText, currencyText)
         NotificationType.DEBT_TRANSACTION_ADDED -> strings.notificationBody.debtTransactionAdded(name, amountText, currencyText)
         NotificationType.CREDIT_TRANSACTION_ADDED -> strings.notificationBody.creditTransactionAdded(name, amountText, currencyText)
+        NotificationType.LINK_REQUEST -> strings.notificationBody.linkRequestReceived(name)
+        NotificationType.LINK_REQUEST_APPROVED -> strings.notificationBody.linkRequestApproved(name)
     }
 }

@@ -61,7 +61,7 @@ fun StatsScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val strings = LocalStrings.current
 
-    PlaceholderScreen(title = strings.statsTitle, onBack = onBack) {
+    PlaceholderScreen(title = strings.stats.title, onBack = onBack) {
         if (state.isLoading) {
             CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space60))
             return@PlaceholderScreen
@@ -81,20 +81,20 @@ fun StatsScreen(
                 ) {
                     KpiCard(
                         icon = Icons.AutoMirrored.Filled.TrendingDown,
-                        title = strings.statsDebtors,
+                        title = strings.stats.debtors,
                         value = state.totalDebtorsByCurrency,
                         modifier = Modifier.weight(1f),
                     )
 
                     KpiCard(
                         icon = Icons.AutoMirrored.Filled.TrendingUp,
-                        title = strings.statsCreditors,
+                        title = strings.stats.creditors,
                         value = state.totalCreditorsByCurrency,
                         modifier = Modifier.weight(1f),
                     )
                 }
 
-                SettingsSection(strings.statsTopDebtors) {
+                SettingsSection(strings.stats.topDebtors) {
                     state.topDebtors.forEachIndexed { index, item ->
                         TopRow(
                             rank = index + 1,
@@ -109,7 +109,7 @@ fun StatsScreen(
                     }
                 }
 
-                SettingsSection(strings.statsTopCreditors) {
+                SettingsSection(strings.stats.topCreditors) {
                     state.topCreditors.forEachIndexed { index, item ->
                         TopRow(
                             rank = index + 1,
@@ -124,11 +124,11 @@ fun StatsScreen(
                     }
                 }
 
-                SettingsSection(strings.statsMonthlyDebtTrend) {
+                SettingsSection(strings.stats.monthlyDebtTrend) {
                     MonthlyBars(state.monthlyDebtTrend, modifier = Modifier.padding(Dimens.space16))
                 }
 
-                SettingsSection(strings.statsMonthlyCreditorTrend) {
+                SettingsSection(strings.stats.monthlyCreditorTrend) {
                     MonthlyBars(
                         state.monthlyCreditorTrend,
                         modifier = Modifier.padding(Dimens.space16)
@@ -255,7 +255,7 @@ private fun MonthlyBars(points: List<MonthlyPoint>, modifier: Modifier = Modifie
             )
             val color =
                 if (amountDouble >= 0) MaterialTheme.debtAccentColors.debt else MaterialTheme.debtAccentColors.repay
-            val label = "${strings.monthsShort[point.month - 1]} ${point.year % 100}"
+            val label = "${strings.stats.monthsShort[point.month - 1]} ${point.year % 100}"
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,

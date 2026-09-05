@@ -425,6 +425,7 @@ class FakeSessionRepository : SessionRepository {
 class FakeSyncStatusProvider : SyncStatusProvider {
     override val status: StateFlow<SyncUiStatus> = MutableStateFlow(SyncUiStatus.Synced)
     override suspend fun refreshNow() {}
+    override suspend fun refetchAll() {}
 }
 
 /** Ніколи не знаходить збіг — @Preview не робить мережевих викликів. */
@@ -440,6 +441,8 @@ class FakeNotificationRepository : NotificationRepository {
     override suspend fun markRead(id: String) {}
     override suspend fun markAllRead() {}
     override suspend fun delete(id: String) {}
+    override suspend fun approveLinkRequest(requestId: String): Boolean = false
+    override suspend fun rejectLinkRequest(requestId: String): Boolean = false
 }
 
 /**

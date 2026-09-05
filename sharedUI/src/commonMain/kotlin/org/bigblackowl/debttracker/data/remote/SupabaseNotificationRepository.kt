@@ -3,8 +3,12 @@ package org.bigblackowl.debttracker.data.remote
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Count
+import io.github.jan.supabase.postgrest.rpc
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import org.bigblackowl.debttracker.data.remote.dto.NotificationDto
 import org.bigblackowl.debttracker.domain.model.AppNotification
 import org.bigblackowl.debttracker.domain.model.Currency
@@ -12,12 +16,16 @@ import org.bigblackowl.debttracker.domain.model.NotificationType
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.NotificationRepository
 
+@Serializable
+private data class LinkRequestParams(@SerialName("p_request_id") val requestId: String)
+
 private fun NotificationDto.toDomain() = AppNotification(
     id = id,
     type = NotificationType.valueOf(type),
     actorDisplayName = actorDisplayName,
     relatedDebtorId = relatedDebtorId,
     relatedCreditorId = relatedCreditorId,
+    relatedLinkRequestId = relatedLinkRequestId,
     amount = amount?.let { BigDecimal.parseString(it.toString()) },
     currency = currency?.let { runCatching { Currency.valueOf(it) }.getOrNull() },
     isRead = isRead,
@@ -102,5 +110,19 @@ class SupabaseNotificationRepository(
         runCatching {
             client.from("notifications").delete { filter { eq("id", id); eq("user_id", userId) } }
         }
+    }
+
+    override suspend fun approveLinkRequest(requestId: String): Boolean {
+        if (currentUserIdOrNull() == null) return false
+        return runCatching {
+            client.postgrest.rpc("approve_link_request", LinkRequestParams(requestId))
+        }.isSuccess
+    }
+
+    override suspend fun rejectLinkRequest(requestId: String): Boolean {
+        if (currentUserIdOrNull() == null) return false
+        return runCatching {
+            client.postgrest.rpc("reject_link_request", LinkRequestParams(requestId))
+        }.isSuccess
     }
 }

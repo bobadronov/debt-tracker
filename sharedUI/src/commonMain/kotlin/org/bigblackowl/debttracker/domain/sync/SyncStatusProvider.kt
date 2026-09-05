@@ -13,4 +13,12 @@ interface SyncStatusProvider {
 
     /** Pull-to-refresh hook: pushes any PENDING local writes immediately instead of waiting for the next cycle. */
     suspend fun refreshNow()
+
+    /**
+     * One-shot re-download of every debtor/creditor/transaction row from Supabase into the local
+     * cache — used by "Clear app cache" (Settings → Data) to repopulate immediately after wiping
+     * Room, since the ongoing Realtime pull only re-emits on the *next* remote change, not on our
+     * own local delete. A no-op where there's no local cache to repopulate (Web).
+     */
+    suspend fun refetchAll()
 }

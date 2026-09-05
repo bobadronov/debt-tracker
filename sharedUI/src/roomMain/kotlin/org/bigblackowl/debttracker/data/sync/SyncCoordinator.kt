@@ -61,6 +61,16 @@ class SyncCoordinator(
         if (authRepository.currentUserId != null) pushPending()
     }
 
+    override suspend fun refetchAll() {
+        val userId = authRepository.currentUserId ?: return
+        coroutineScope {
+            launch { mergeDebtors(client.from("debtors").select { filter { eq("user_id", userId) } }.decodeList<DebtorDto>()) }
+            launch { mergeDebtTransactions(client.from("debt_transactions").select { filter { eq("user_id", userId) } }.decodeList<DebtTransactionDto>()) }
+            launch { mergeCreditors(client.from("creditors").select { filter { eq("user_id", userId) } }.decodeList<CreditorDto>()) }
+            launch { mergeCreditorTransactions(client.from("creditor_transactions").select { filter { eq("user_id", userId) } }.decodeList<CreditorTransactionDto>()) }
+        }
+    }
+
     fun start() {
         scope.launch {
             authRepository.isAuthenticated.collectLatest { authenticated ->
@@ -181,19 +191,7 @@ class SyncCoordinator(
                 DebtorDto::id,
                 filter = { eq("user_id", userId) }
             )
-            .collectLatest { remoteRows ->
-                remoteRows.forEach { dto ->
-                    val local = debtorDao.getById(dto.id)
-                    val remoteUpdatedAt = kotlin.time.Instant.parse(dto.updatedAt)
-                    if (local == null) {
-                        debtorDao.upsert(dto.toEntity())
-                    } else if (local.syncStatus != SyncStatus.PENDING || local.updatedAt <= remoteUpdatedAt) {
-                        // A plain upsert() here would cascade-delete this debtor's transactions
-                        // (see the note in RoomDebtorRepository) since the row already exists.
-                        debtorDao.update(dto.toEntity())
-                    }
-                }
-            }
+            .collectLatest { mergeDebtors(it) }
     }
 
     private suspend fun pullDebtTransactions(userId: String) {
@@ -202,10 +200,7 @@ class SyncCoordinator(
                 DebtTransactionDto::id,
                 filter = { eq("user_id", userId) }
             )
-            .collectLatest { remoteRows ->
-                // Транзакції не мерджаться (спек §5) — прямий upsert по id.
-                remoteRows.forEach { dto -> debtTransactionDao.upsert(dto.toEntity()) }
-            }
+            .collectLatest { mergeDebtTransactions(it) }
     }
 
     private suspend fun pullCreditors(userId: String) {
@@ -214,17 +209,7 @@ class SyncCoordinator(
                 CreditorDto::id,
                 filter = { eq("user_id", userId) }
             )
-            .collectLatest { remoteRows ->
-                remoteRows.forEach { dto ->
-                    val local = creditorDao.getById(dto.id)
-                    val remoteUpdatedAt = kotlin.time.Instant.parse(dto.updatedAt)
-                    if (local == null) {
-                        creditorDao.upsert(dto.toEntity())
-                    } else if (local.syncStatus != SyncStatus.PENDING || local.updatedAt <= remoteUpdatedAt) {
-                        creditorDao.update(dto.toEntity())
-                    }
-                }
-            }
+            .collectLatest { mergeCreditors(it) }
     }
 
     private suspend fun pullCreditorTransactions(userId: String) {
@@ -233,8 +218,42 @@ class SyncCoordinator(
                 CreditorTransactionDto::id,
                 filter = { eq("user_id", userId) }
             )
-            .collectLatest { remoteRows ->
-                remoteRows.forEach { dto -> creditorTransactionDao.upsert(dto.toEntity()) }
+            .collectLatest { mergeCreditorTransactions(it) }
+    }
+
+    // Shared by the continuous Realtime pulls above and refetchAll()'s one-shot re-download.
+    private suspend fun mergeDebtors(remoteRows: List<DebtorDto>) {
+        remoteRows.forEach { dto ->
+            val local = debtorDao.getById(dto.id)
+            val remoteUpdatedAt = kotlin.time.Instant.parse(dto.updatedAt)
+            if (local == null) {
+                debtorDao.upsert(dto.toEntity())
+            } else if (local.syncStatus != SyncStatus.PENDING || local.updatedAt <= remoteUpdatedAt) {
+                // A plain upsert() here would cascade-delete this debtor's transactions
+                // (see the note in RoomDebtorRepository) since the row already exists.
+                debtorDao.update(dto.toEntity())
             }
+        }
+    }
+
+    private suspend fun mergeDebtTransactions(remoteRows: List<DebtTransactionDto>) {
+        // Транзакції не мерджаться (спек §5) — прямий upsert по id.
+        remoteRows.forEach { dto -> debtTransactionDao.upsert(dto.toEntity()) }
+    }
+
+    private suspend fun mergeCreditors(remoteRows: List<CreditorDto>) {
+        remoteRows.forEach { dto ->
+            val local = creditorDao.getById(dto.id)
+            val remoteUpdatedAt = kotlin.time.Instant.parse(dto.updatedAt)
+            if (local == null) {
+                creditorDao.upsert(dto.toEntity())
+            } else if (local.syncStatus != SyncStatus.PENDING || local.updatedAt <= remoteUpdatedAt) {
+                creditorDao.update(dto.toEntity())
+            }
+        }
+    }
+
+    private suspend fun mergeCreditorTransactions(remoteRows: List<CreditorTransactionDto>) {
+        remoteRows.forEach { dto -> creditorTransactionDao.upsert(dto.toEntity()) }
     }
 }

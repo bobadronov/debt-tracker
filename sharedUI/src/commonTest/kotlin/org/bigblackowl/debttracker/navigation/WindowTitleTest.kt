@@ -32,16 +32,16 @@ class WindowTitleTest {
     fun titleReflectsTheScreen() {
         assertEquals(strings.appName, Screen.Home.windowTitle(strings))
         assertEquals(strings.appName, Screen.Splash.windowTitle(strings))
-        assertEquals(strings.settingsTitle, Screen.Settings.windowTitle(strings))
-        assertEquals(strings.statsTitle, Screen.Stats.windowTitle(strings))
-        assertEquals(strings.notificationsTitle, Screen.Notifications.windowTitle(strings))
-        assertEquals(strings.exportTitle, Screen.Export().windowTitle(strings))
+        assertEquals(strings.settings.title, Screen.Settings.windowTitle(strings))
+        assertEquals(strings.stats.title, Screen.Stats.windowTitle(strings))
+        assertEquals(strings.notifications.title, Screen.Notifications.windowTitle(strings))
+        assertEquals(strings.export.title, Screen.Export().windowTitle(strings))
         assertEquals(
-            strings.addEditDebtorTitleNew,
+            strings.addEditDebtor.titleNew,
             Screen.AddEditContact(DebtDirection.DEBTOR).windowTitle(strings),
         )
         assertEquals(
-            strings.addEditCreditorTitleNew,
+            strings.addEditCreditor.titleNew,
             Screen.AddEditContact(DebtDirection.CREDITOR).windowTitle(strings),
         )
     }
