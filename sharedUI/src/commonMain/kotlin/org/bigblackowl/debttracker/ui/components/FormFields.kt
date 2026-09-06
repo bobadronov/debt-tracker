@@ -7,12 +7,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -49,10 +47,15 @@ import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 
 /**
- * [OutlinedTextField] + [ClipboardPasteHint] wired together — this pairing (track focus,
- * show a dismissible "paste from clipboard" suggestion while the field is empty and focused)
- * was copy-pasted across every form screen (Add/Edit debtor/creditor, account edit, auth,
- * amount sheet); consolidated here so the paste behavior only needs fixing in one place.
+ * The standard single-line text input for the app — use this for every free-text / amount
+ * field the user types data into, not a bare [OutlinedTextField]. It is an [OutlinedTextField]
+ * + [ClipboardPasteHint] wired together: tracks focus, shows a focused clear button, and lays
+ * out a dismissible "paste from clipboard" suggestion directly below the field while it is
+ * empty and focused.
+ *
+ * Bare [OutlinedTextField] stays only for inputs this wrapper deliberately doesn't cover:
+ * masked secrets (password fields — own visibility toggle, must not hint paste), read-only
+ * display rows, and transient search/filter boxes.
  */
 @Composable
 fun PasteableOutlinedTextField(
@@ -77,9 +80,7 @@ fun PasteableOutlinedTextField(
 ) {
     var focused by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = modifier,
-    ) {
+    Column(modifier = modifier) {
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
@@ -125,9 +126,7 @@ fun PasteableOutlinedTextField(
             isFieldFocused = focused,
             isRelevant = isPasteRelevant,
             onPaste = onPaste,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .offset(y = Dimens.space12),
+            modifier = Modifier.padding(top = Dimens.space4),
         )
     }
 }
@@ -217,7 +216,7 @@ private fun FormFieldsSample() {
             value = text,
             onValueChange = { text = it },
             label = "Full name",
-            clipboardText = null,
+            clipboardText = "sddfsdfsdfsadf",
             isPasteRelevant = { it.isNotBlank() },
         )
         CurrencyDropdownField(selected = currency, onSelect = { currency = it }, label = "Currency")

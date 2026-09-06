@@ -27,7 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
@@ -37,7 +36,12 @@ import org.bigblackowl.debttracker.theme.Dimens
  * Reads the system clipboard once per screen visit. Pass the result into every
  * [ClipboardPasteHint] on that screen instead of letting each field read the clipboard
  * itself — repeated reads trigger Android's "pasted from clipboard" system notice per call.
+ *
+ * Still on the deprecated [LocalClipboardManager]: the replacement [androidx.compose.ui.platform.Clipboard]
+ * has no public multiplatform way to read plain text from a `ClipEntry` (only the `internal`
+ * `ClipEntry.readText()`), so migrating would need a per-platform expect/actual for no behaviour gain.
  */
+@Suppress("DEPRECATION")
 @Composable
 fun rememberClipboardText(): State<String?> {
     val clipboardManager = LocalClipboardManager.current
@@ -73,6 +77,8 @@ fun ClipboardPasteHint(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(Dimens.space16),
         color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+        shadowElevation = Dimens.space4,
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(Dimens.space12),
@@ -126,30 +132,6 @@ private fun ClipboardPasteHintLightPhonePreview() = DebtTrackerPreview(darkTheme
 @Preview
 @Composable
 private fun ClipboardPasteHintDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    ClipboardPasteHint(
-        clipboardText = "1234.56",
-        fieldValue = "",
-        isFieldFocused = true,
-        isRelevant = { true },
-        onPaste = {},
-    )
-}
-
-@Preview(device = DESKTOP)
-@Composable
-private fun ClipboardPasteHintLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    ClipboardPasteHint(
-        clipboardText = "1234.56",
-        fieldValue = "",
-        isFieldFocused = true,
-        isRelevant = { true },
-        onPaste = {},
-    )
-}
-
-@Preview(device = DESKTOP)
-@Composable
-private fun ClipboardPasteHintDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     ClipboardPasteHint(
         clipboardText = "1234.56",
         fieldValue = "",
