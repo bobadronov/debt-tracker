@@ -1,4 +1,4 @@
-package org.bigblackowl.debttracker.ui.components
+package org.bigblackowl.debttracker.ui.components.update
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement

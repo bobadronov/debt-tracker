@@ -52,6 +52,7 @@ import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.SubcomposeAsyncImage
+import kotlin.math.roundToLong
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.number
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
@@ -61,9 +62,8 @@ import org.bigblackowl.debttracker.domain.model.FiatCurrency
 import org.bigblackowl.debttracker.domain.model.RateSource
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
-import org.bigblackowl.debttracker.ui.components.BackTopAppBar
+import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
 import org.koin.compose.viewmodel.koinViewModel
-import kotlin.math.roundToLong
 
 /**
  * Курс валют (⋮ меню). Обираєш джерело (ПриватБанк за замовчуванням, НБУ, Monobank, NBP, ECB, ČNB,

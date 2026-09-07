@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import org.bigblackowl.debttracker.navigation.DebtTrackerNavGraph
 import org.bigblackowl.debttracker.theme.AppTheme
-import org.bigblackowl.debttracker.ui.components.InAppUpdateBanner
-import org.bigblackowl.debttracker.ui.components.UpdateBanner
+import org.bigblackowl.debttracker.ui.components.update.InAppUpdateBanner
+import org.bigblackowl.debttracker.ui.components.update.UpdateBanner
 
 /**
  * Composable root of the app, shared across every platform entry point

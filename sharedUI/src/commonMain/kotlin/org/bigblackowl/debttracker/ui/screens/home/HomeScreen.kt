@@ -58,8 +58,8 @@ import org.bigblackowl.debttracker.navigation.NavPane
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
-import org.bigblackowl.debttracker.ui.components.AppOverflowMenu
-import org.bigblackowl.debttracker.ui.components.DesktopTitleBar
+import org.bigblackowl.debttracker.ui.components.appbar.AppOverflowMenu
+import org.bigblackowl.debttracker.ui.components.appbar.DesktopTitleBar
 import org.bigblackowl.debttracker.ui.screens.creditors.CreditorListScreen
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorListScreen
 import org.koin.compose.koinInject

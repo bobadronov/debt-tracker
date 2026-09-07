@@ -1,4 +1,4 @@
-package org.bigblackowl.debttracker.ui.components
+package org.bigblackowl.debttracker.ui.components.transaction
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,6 +35,9 @@ import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.domain.validation.sanitizeAmountInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.ui.components.form.PasteableOutlinedTextField
+import org.bigblackowl.debttracker.ui.components.form.PaymentMethodChipRow
+import org.bigblackowl.debttracker.ui.components.form.rememberClipboardText
 import org.koin.compose.koinInject
 
 

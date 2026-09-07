@@ -52,15 +52,15 @@ import org.bigblackowl.debttracker.domain.validation.isValidEmail
 import org.bigblackowl.debttracker.domain.validation.isValidFullName
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
-import org.bigblackowl.debttracker.ui.components.BackTopAppBar
-import org.bigblackowl.debttracker.ui.components.CurrencyDropdownField
-import org.bigblackowl.debttracker.ui.components.DueReminderField
 import org.bigblackowl.debttracker.ui.components.EntityAvatar
 import org.bigblackowl.debttracker.ui.components.LoadingButton
-import org.bigblackowl.debttracker.ui.components.PasteableOutlinedTextField
-import org.bigblackowl.debttracker.ui.components.PaymentMethodChipRow
-import org.bigblackowl.debttracker.ui.components.UkrainianPhoneVisualTransformation
-import org.bigblackowl.debttracker.ui.components.rememberClipboardText
+import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
+import org.bigblackowl.debttracker.ui.components.form.CurrencyDropdownField
+import org.bigblackowl.debttracker.ui.components.form.DueReminderField
+import org.bigblackowl.debttracker.ui.components.form.PasteableOutlinedTextField
+import org.bigblackowl.debttracker.ui.components.form.PaymentMethodChipRow
+import org.bigblackowl.debttracker.ui.components.form.UkrainianPhoneVisualTransformation
+import org.bigblackowl.debttracker.ui.components.form.rememberClipboardText
 
 /**
  * Create form used by the merged AddEditContactScreen (спек §4.1). Supplies the fields and layout;

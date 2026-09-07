@@ -20,11 +20,11 @@ import org.bigblackowl.debttracker.domain.model.DebtTransaction
 import org.bigblackowl.debttracker.domain.model.formatMoney
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.preview.PreviewIds
-import org.bigblackowl.debttracker.ui.components.AmountBottomSheet
 import org.bigblackowl.debttracker.ui.components.ConfirmDialog
-import org.bigblackowl.debttracker.ui.components.TransactionEditSheet
 import org.bigblackowl.debttracker.ui.components.contact.ContactDetailScaffold
 import org.bigblackowl.debttracker.ui.components.contact.TransactionRow
+import org.bigblackowl.debttracker.ui.components.transaction.AmountBottomSheet
+import org.bigblackowl.debttracker.ui.components.transaction.TransactionEditSheet
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 

@@ -67,11 +67,11 @@ import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.AccountAvatar
-import org.bigblackowl.debttracker.ui.components.BackTopAppBar
 import org.bigblackowl.debttracker.ui.components.LoadingButton
-import org.bigblackowl.debttracker.ui.components.PasteableOutlinedTextField
-import org.bigblackowl.debttracker.ui.components.UkrainianPhoneVisualTransformation
-import org.bigblackowl.debttracker.ui.components.rememberClipboardText
+import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
+import org.bigblackowl.debttracker.ui.components.form.PasteableOutlinedTextField
+import org.bigblackowl.debttracker.ui.components.form.UkrainianPhoneVisualTransformation
+import org.bigblackowl.debttracker.ui.components.form.rememberClipboardText
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 

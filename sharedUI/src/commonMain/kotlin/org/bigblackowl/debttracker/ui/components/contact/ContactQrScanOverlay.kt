@@ -26,7 +26,7 @@ import org.bigblackowl.debttracker.core.qr.QR_SCAN_CAPABLE_PLATFORMS
 import org.bigblackowl.debttracker.domain.model.ContactQrPayload
 import org.bigblackowl.debttracker.domain.model.ScannedContact
 import org.bigblackowl.debttracker.theme.Dimens
-import org.bigblackowl.debttracker.ui.components.BackTopAppBar
+import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
 
 /**
  * Full-screen QR scanner for a Debt Tracker contact-card code, with its own top bar (close

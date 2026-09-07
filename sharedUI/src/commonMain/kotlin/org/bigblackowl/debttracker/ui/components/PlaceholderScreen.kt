@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
 
 /**
  * Спільний каркас для екранів-заглушок Фази 1 (справжня верстка з'являється

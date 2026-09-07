@@ -1,4 +1,4 @@
-package org.bigblackowl.debttracker.ui.components
+package org.bigblackowl.debttracker.ui.components.appbar
 
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable

@@ -56,9 +56,9 @@ import org.bigblackowl.debttracker.domain.validation.formatUkrainianPhone
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
-import org.bigblackowl.debttracker.ui.components.BackTopAppBar
 import org.bigblackowl.debttracker.ui.components.EntityAvatar
 import org.bigblackowl.debttracker.ui.components.FullScreenLoadingIndicator
+import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
 
 /**
  * Shared building blocks for DebtorDetailScreen/CreditorDetailScreen: same profile-card +

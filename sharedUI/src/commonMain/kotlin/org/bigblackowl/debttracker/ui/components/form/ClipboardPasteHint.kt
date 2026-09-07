@@ -1,4 +1,4 @@
-package org.bigblackowl.debttracker.ui.components
+package org.bigblackowl.debttracker.ui.components.form
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

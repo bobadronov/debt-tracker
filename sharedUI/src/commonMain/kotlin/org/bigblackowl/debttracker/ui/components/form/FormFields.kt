@@ -1,4 +1,4 @@
-package org.bigblackowl.debttracker.ui.components
+package org.bigblackowl.debttracker.ui.components.form
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -45,6 +45,7 @@ import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.ui.components.LoadingButton
 
 /**
  * The standard single-line text input for the app — use this for every free-text / amount

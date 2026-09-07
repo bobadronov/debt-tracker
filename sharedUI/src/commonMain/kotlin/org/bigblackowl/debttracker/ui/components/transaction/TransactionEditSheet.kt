@@ -1,4 +1,4 @@
-package org.bigblackowl.debttracker.ui.components
+package org.bigblackowl.debttracker.ui.components.transaction
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -36,6 +36,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
+import kotlin.time.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
@@ -48,7 +49,9 @@ import org.bigblackowl.debttracker.domain.model.formatDueDateTime
 import org.bigblackowl.debttracker.domain.validation.sanitizeAmountInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
-import kotlin.time.Clock
+import org.bigblackowl.debttracker.ui.components.form.PasteableOutlinedTextField
+import org.bigblackowl.debttracker.ui.components.form.PaymentMethodChipRow
+import org.bigblackowl.debttracker.ui.components.form.rememberClipboardText
 
 /**
  * Bottom sheet for editing one existing transaction from a debtor/creditor history: amount

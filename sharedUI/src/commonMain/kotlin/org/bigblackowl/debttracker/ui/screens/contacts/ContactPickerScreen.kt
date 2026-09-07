@@ -33,8 +33,8 @@ import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.ContactSuggestion
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
-import org.bigblackowl.debttracker.ui.components.BackTopAppBar
 import org.bigblackowl.debttracker.ui.components.EntityAvatar
+import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
 import org.koin.compose.viewmodel.koinViewModel
 
 /**

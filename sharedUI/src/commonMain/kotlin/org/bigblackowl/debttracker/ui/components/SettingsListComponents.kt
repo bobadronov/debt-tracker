@@ -54,6 +54,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
 
 /**
  * Screen shell shared by AccountInfoScreen/EditAccountScreen/ActiveSessionsScreen: back-button
