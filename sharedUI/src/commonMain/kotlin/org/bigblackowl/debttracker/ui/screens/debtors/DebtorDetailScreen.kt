@@ -23,7 +23,6 @@ import org.bigblackowl.debttracker.preview.PreviewIds
 import org.bigblackowl.debttracker.ui.components.AmountBottomSheet
 import org.bigblackowl.debttracker.ui.components.ConfirmDialog
 import org.bigblackowl.debttracker.ui.components.ContactDetailScaffold
-import org.bigblackowl.debttracker.ui.components.FullScreenLoadingIndicator
 import org.bigblackowl.debttracker.ui.components.TransactionEditSheet
 import org.bigblackowl.debttracker.ui.components.TransactionRow
 import org.koin.compose.viewmodel.koinViewModel
@@ -56,11 +55,6 @@ fun DebtorDetailScreen(
         }
     }
 
-    if (state.isLoading) {
-        FullScreenLoadingIndicator()
-        return
-    }
-
     ContactDetailScaffold(
         id = debtorId,
         title = state.debtor?.fullName ?: strings.debtorDetail.titleFallback,
@@ -69,6 +63,7 @@ fun DebtorDetailScreen(
         exportLabel = strings.debtorDetail.export,
         onExport = onExport,
         onEdit = onEdit,
+        isLoading = state.isLoading,
         snackbarHostState = snackbarHostState,
         phone = state.debtor?.phone,
         comment = state.debtor?.comment,

@@ -76,6 +76,9 @@ fun ContactDetailScaffold(
     snackbarHostState: SnackbarHostState,
     /** Non-null adds a pencil action to the top bar → opens the contact in the edit form. */
     onEdit: (() -> Unit)? = null,
+    /** First-load: keep the top bar (title + back) so a desktop two-pane detail swap doesn't blank
+     * the native title bar for a frame, but show only a spinner in place of the profile/history. */
+    isLoading: Boolean = false,
     phone: String?,
     comment: String?,
     balanceText: String,
@@ -95,17 +98,23 @@ fun ContactDetailScaffold(
                 title = title,
                 onBack = onBack,
                 actions = {
-                    onEdit?.let {
-                        IconButton(onClick = it) {
-                            Icon(Icons.Filled.Edit, contentDescription = LocalStrings.current.edit)
+                    if (!isLoading) {
+                        onEdit?.let {
+                            IconButton(onClick = it) {
+                                Icon(Icons.Filled.Edit, contentDescription = LocalStrings.current.edit)
+                            }
                         }
+                        TextButton(onClick = onExport) { Text(exportLabel) }
                     }
-                    TextButton(onClick = onExport) { Text(exportLabel) }
                 },
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
+        if (isLoading) {
+            FullScreenLoadingIndicator(Modifier.padding(padding))
+            return@Scaffold
+        }
         Column(
             modifier = Modifier.fillMaxSize().padding(padding),
             horizontalAlignment = Alignment.CenterHorizontally,

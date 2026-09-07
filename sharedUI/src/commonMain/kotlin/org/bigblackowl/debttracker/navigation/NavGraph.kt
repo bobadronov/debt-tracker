@@ -20,9 +20,9 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -57,20 +57,18 @@ import org.bigblackowl.debttracker.domain.repository.SessionRepository
 import org.bigblackowl.debttracker.domain.usecase.ForceSignOutUseCase
 import org.bigblackowl.debttracker.ui.components.ScannedContactDialog
 import org.bigblackowl.debttracker.ui.screens.accountonboarding.AccountOnboardingScreen
-import org.bigblackowl.debttracker.ui.screens.authgate.AuthGateScreen
-import org.bigblackowl.debttracker.ui.screens.home.HomeScreen
-import org.bigblackowl.debttracker.ui.screens.notifications.NotificationsScreen
-import org.bigblackowl.debttracker.ui.screens.protectiononboarding.ProtectionOnboardingScreen
-import org.bigblackowl.debttracker.ui.screens.qr.QrHubScreen
-import org.bigblackowl.debttracker.ui.screens.splash.SplashDestination
-import org.bigblackowl.debttracker.ui.screens.splash.SplashScreen
 import org.bigblackowl.debttracker.ui.screens.auth.AuthScreen
+import org.bigblackowl.debttracker.ui.screens.authgate.AuthGateScreen
 import org.bigblackowl.debttracker.ui.screens.contacts.AddEditContactScreen
 import org.bigblackowl.debttracker.ui.screens.contacts.ContactPickerScreen
 import org.bigblackowl.debttracker.ui.screens.creditors.CreditorDetailScreen
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorDetailScreen
 import org.bigblackowl.debttracker.ui.screens.exchange.ExchangeRatesScreen
 import org.bigblackowl.debttracker.ui.screens.export.ExportScreen
+import org.bigblackowl.debttracker.ui.screens.home.HomeScreen
+import org.bigblackowl.debttracker.ui.screens.notifications.NotificationsScreen
+import org.bigblackowl.debttracker.ui.screens.protectiononboarding.ProtectionOnboardingScreen
+import org.bigblackowl.debttracker.ui.screens.qr.QrHubScreen
 import org.bigblackowl.debttracker.ui.screens.settings.AccountInfoScreen
 import org.bigblackowl.debttracker.ui.screens.settings.ActiveSessionsScreen
 import org.bigblackowl.debttracker.ui.screens.settings.EditAccountScreen
@@ -80,6 +78,8 @@ import org.bigblackowl.debttracker.ui.screens.settings.SettingsDataScreen
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsNotificationsScreen
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsProtectionScreen
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsScreen
+import org.bigblackowl.debttracker.ui.screens.splash.SplashDestination
+import org.bigblackowl.debttracker.ui.screens.splash.SplashScreen
 import org.bigblackowl.debttracker.ui.screens.stats.StatsScreen
 import org.koin.compose.koinInject
 
@@ -120,6 +120,20 @@ private fun Screen.isPastUnlock(): Boolean = when (this) {
     else -> true
 }
 
+/**
+ * Destinations that render as the detail half of a two-pane [ListDetailScene] — keep in sync with
+ * the `metadata = detailPane()` entries below. [navigateToDetail] uses this to swap (rather than
+ * stack) the open detail when another item is picked from a still-visible list pane.
+ */
+private fun Screen.isDetailPaneDestination(): Boolean = when (this) {
+    is Screen.DebtorDetail, is Screen.CreditorDetail,
+    Screen.SettingsProtection, Screen.SettingsNotifications, Screen.SettingsData,
+    Screen.SettingsAbout, Screen.Language, Screen.AccountInfo,
+        -> true
+
+    else -> false
+}
+
 /** iOS already gets a native-feeling slide from Navigation 3's platform default; Desktop/Web get
  * none at all out of the box. Setting this explicitly gives every platform the same slide+fade
  * for every screen change instead of an inconsistent (or missing) default. [towards] is the
@@ -146,12 +160,26 @@ fun DebtTrackerNavGraph(
     settings: AppSettings = koinInject(),
     notificationRepository: NotificationRepository = koinInject(),
 ) {
-    val backStack = rememberSaveable(saver = BackStackSaver) { mutableStateListOf<Screen>(Screen.Splash) }
+    val backStack = rememberSaveable(saver = BackStackSaver) { mutableStateListOf(Screen.Splash) }
     val focusRequester = remember { FocusRequester() }
     val coroutineScope = rememberCoroutineScope()
 
     fun navigate(screen: Screen) {
         backStack.add(screen)
+    }
+
+    /**
+     * List-pane → detail navigation. In two-pane mode the list stays put while the detail changes,
+     * so picking another item should replace the visible detail, not stack another entry to back
+     * through. A detail is only ever on top with the list still interactable when a split is showing
+     * (single pane hides the list behind the open detail), so the replace branch is inert there.
+     */
+    fun navigateToDetail(screen: Screen) {
+        if (backStack.lastOrNull()?.isDetailPaneDestination() == true) {
+            backStack[backStack.lastIndex] = screen
+        } else {
+            backStack.add(screen)
+        }
     }
 
     fun replaceStackWith(screen: Screen) {
@@ -355,17 +383,17 @@ fun DebtTrackerNavGraph(
             entry<Screen.Home>(metadata = listPane()) {
                 HomeScreen(
                     onAddDebtor = { navigate(Screen.ContactPicker(DebtDirection.DEBTOR)) },
-                    onOpenDebtor = { id -> navigate(Screen.DebtorDetail(id)) },
+                    onOpenDebtor = { id -> navigateToDetail(Screen.DebtorDetail(id)) },
                     onAddCreditor = { navigate(Screen.ContactPicker(DebtDirection.CREDITOR)) },
-                    onOpenCreditor = { id -> navigate(Screen.CreditorDetail(id)) },
+                    onOpenCreditor = { id -> navigateToDetail(Screen.CreditorDetail(id)) },
                     // Stats / Settings / QR / Notifications navigation now goes through AppMenu.
                 )
             }
             entry<Screen.Notifications>(metadata = listPane()) {
                 NotificationsScreen(
                     onBack = { back() },
-                    onNavigateToDebtor = { id -> navigate(Screen.DebtorDetail(id)) },
-                    onNavigateToCreditor = { id -> navigate(Screen.CreditorDetail(id)) },
+                    onNavigateToDebtor = { id -> navigateToDetail(Screen.DebtorDetail(id)) },
+                    onNavigateToCreditor = { id -> navigateToDetail(Screen.CreditorDetail(id)) },
                 )
             }
             entry<Screen.ContactPicker> { screen ->
@@ -406,8 +434,8 @@ fun DebtTrackerNavGraph(
             entry<Screen.Stats> {
                 StatsScreen(
                     onBack = { back() },
-                    onOpenDebtor = { id -> navigate(Screen.DebtorDetail(id)) },
-                    onOpenCreditor = { id -> navigate(Screen.CreditorDetail(id)) },
+                    onOpenDebtor = { id -> navigateToDetail(Screen.DebtorDetail(id)) },
+                    onOpenCreditor = { id -> navigateToDetail(Screen.CreditorDetail(id)) },
                 )
             }
             entry<Screen.ExchangeRates> {
@@ -419,12 +447,12 @@ fun DebtTrackerNavGraph(
                 SettingsScreen(
                     onBack = { back() },
                     onOpenAuth = { navigate(Screen.Auth()) },
-                    onOpenAccountInfo = { navigate(Screen.AccountInfo) },
-                    onOpenProtection = { navigate(Screen.SettingsProtection) },
-                    onOpenNotifications = { navigate(Screen.SettingsNotifications) },
-                    onOpenLanguage = { navigate(Screen.Language) },
-                    onOpenData = { navigate(Screen.SettingsData) },
-                    onOpenAbout = { navigate(Screen.SettingsAbout) },
+                    onOpenAccountInfo = { navigateToDetail(Screen.AccountInfo) },
+                    onOpenProtection = { navigateToDetail(Screen.SettingsProtection) },
+                    onOpenNotifications = { navigateToDetail(Screen.SettingsNotifications) },
+                    onOpenLanguage = { navigateToDetail(Screen.Language) },
+                    onOpenData = { navigateToDetail(Screen.SettingsData) },
+                    onOpenAbout = { navigateToDetail(Screen.SettingsAbout) },
                 )
             }
             entry<Screen.SettingsProtection>(metadata = detailPane()) {

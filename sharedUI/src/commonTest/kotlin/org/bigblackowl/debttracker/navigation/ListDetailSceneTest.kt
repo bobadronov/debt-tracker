@@ -39,4 +39,17 @@ class ListDetailSceneTest {
         assertNull(listDetailIndices(listOf(D)))
         assertNull(listDetailIndices(listOf(other, D)))
     }
+
+    /**
+     * The list pane shows a back arrow (`ListDetailScene.listCanGoBack`) exactly when its entry
+     * isn't the back-stack root — i.e. the returned list index is > 0.
+     */
+    @Test
+    fun listPaneCanGoBackOnlyWhenNotRoot() {
+        // Home(list), DebtorDetail → list is the root, no back arrow
+        assertEquals(0, listDetailIndices(listOf(L, D))?.first)
+        // Home, Settings(list), SettingsProtection → list opened from the menu, keeps a back arrow
+        assertTrue((listDetailIndices(listOf(L, L, D))?.first ?: 0) > 0)
+        assertTrue((listDetailIndices(listOf(L, other, D))?.first ?: 0) == 0)
+    }
 }

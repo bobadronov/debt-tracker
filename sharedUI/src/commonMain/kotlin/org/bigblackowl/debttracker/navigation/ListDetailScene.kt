@@ -33,6 +33,14 @@ enum class NavPane { Full, List, Detail }
 val LocalNavPane = staticCompositionLocalOf { NavPane.Full }
 
 /**
+ * Provided by [ListDetailScene] to the list pane: `true` when the list entry is *not* the back-stack
+ * root (e.g. Notifications / Settings opened from the app menu), so its in-pane top bar keeps a back
+ * arrow. `false` for the root list (Home) — there is nothing to go back to. Always `false` outside a
+ * split (`BackTopAppBar` only reads it in [NavPane.List]).
+ */
+val LocalListPaneCanGoBack = staticCompositionLocalOf { false }
+
+/**
  * Renders a list [NavEntry] and a detail [NavEntry] side by side (40 / 60). The list stays put
  * while the selected detail changes — the scene [key] is the *list's* content key, so switching
  * detail items is a plain recomposition rather than a whole-scene NavDisplay animation.
@@ -42,13 +50,17 @@ private class ListDetailScene<T : Any>(
     override val previousEntries: List<NavEntry<T>>,
     private val listEntry: NavEntry<T>,
     private val detailEntry: NavEntry<T>,
+    private val listCanGoBack: Boolean,
 ) : Scene<T> {
     override val entries: List<NavEntry<T>> = listOf(listEntry, detailEntry)
 
     override val content: @Composable () -> Unit = {
         Row(Modifier.fillMaxSize()) {
             Column(Modifier.weight(0.4f).fillMaxHeight()) {
-                CompositionLocalProvider(LocalNavPane provides NavPane.List) { listEntry.Content() }
+                CompositionLocalProvider(
+                    LocalNavPane provides NavPane.List,
+                    LocalListPaneCanGoBack provides listCanGoBack,
+                ) { listEntry.Content() }
             }
             VerticalDivider()
             Column(Modifier.weight(0.6f).fillMaxHeight()) {
@@ -78,6 +90,9 @@ private class ListDetailSceneStrategy<T : Any>(private val twoPane: Boolean) : S
             previousEntries = entries.dropLast(1),
             listEntry = entries[listIdx],
             detailEntry = entries[detailIdx],
+            // Anything before the list entry means the list itself isn't the root — its pane keeps a
+            // back arrow (Home sits at index 0 and gets none).
+            listCanGoBack = listIdx > 0,
         )
     }
 

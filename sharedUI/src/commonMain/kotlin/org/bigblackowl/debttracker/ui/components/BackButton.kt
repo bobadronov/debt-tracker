@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
+import org.bigblackowl.debttracker.navigation.LocalListPaneCanGoBack
 import org.bigblackowl.debttracker.navigation.LocalNavPane
 import org.bigblackowl.debttracker.navigation.NavPane
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
@@ -44,9 +45,17 @@ fun BackTopAppBar(
 ) {
     if (DesktopTitleBar.claimed) {
         if (LocalNavPane.current == NavPane.List) {
-            // List pane of a two-pane ListDetailScene: keep an in-pane bar for the title/actions,
-            // but no back arrow — it's the root of the split (back collapses the detail instead).
-            TopAppBar(title = { Text(title) }, actions = actions, modifier = modifier)
+            // List pane of a two-pane ListDetailScene: keep an in-pane bar for the title/actions.
+            // A back arrow only when the list isn't the split's root (Home has none) — e.g.
+            // Notifications / Settings opened from the app menu; tapping it collapses the detail.
+            TopAppBar(
+                title = { Text(title) },
+                navigationIcon = {
+                    if (LocalListPaneCanGoBack.current) onBack?.let { BackButton(onClick = it) }
+                },
+                actions = actions,
+                modifier = modifier,
+            )
         } else {
             // Full window, or the detail pane → route into the native OS title bar (`main.kt`).
             // SideEffect re-asserts every recomposition so an async title (a loaded contact name)
