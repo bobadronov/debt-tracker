@@ -11,14 +11,6 @@ enum class Currency(val symbol: String, val numericCode: Int) {
 
     /** "UAH ₴" — код + символ, для пікерів/лейблів, де сам лише символ неоднозначний (₴/¥, zł/kr тощо). */
     val label: String get() = "$code $symbol"
-
-    companion object {
-        /** ISO-4217 числовий код → [Currency], або `null` для валюти поза списком застосунку. Використовує курс валют. */
-        fun fromNumericCode(code: Int): Currency? = entries.firstOrNull { it.numericCode == code }
-
-        /** ISO-4217 літерний код ("USD") → [Currency], або `null` поза списком застосунку. */
-        fun fromCode(code: String): Currency? = entries.firstOrNull { it.code == code }
-    }
 }
 
 /** LEND = я дав, REPAY = мені повернули (Debtor-транзакції). */

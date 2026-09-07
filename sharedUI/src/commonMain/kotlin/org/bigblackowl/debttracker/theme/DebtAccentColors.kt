@@ -28,5 +28,6 @@ internal val DarkDebtAccentColors = DebtAccentColors(
 
 internal val LocalDebtAccentColors = staticCompositionLocalOf { LightDebtAccentColors }
 
+@Suppress("UnusedReceiverParameter")
 val MaterialTheme.debtAccentColors: DebtAccentColors
     @Composable get() = LocalDebtAccentColors.current

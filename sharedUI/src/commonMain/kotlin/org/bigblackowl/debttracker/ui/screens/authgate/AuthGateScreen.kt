@@ -37,6 +37,7 @@ import org.bigblackowl.debttracker.ui.components.PinCodeField
 import org.bigblackowl.debttracker.ui.components.UnlockScaffold
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Auth Gate (спек §6, п.2). Механізм розблокування — від того, що налаштовано (SettingsScreen /
@@ -75,7 +76,7 @@ fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinVi
         if (state.mode == UnlockMode.PIN) {
             repeat(10) {
                 runCatching { pinFocusRequester.requestFocus() }.onSuccess { return@LaunchedEffect }
-                delay(50)
+                delay(50.milliseconds)
             }
         }
     }

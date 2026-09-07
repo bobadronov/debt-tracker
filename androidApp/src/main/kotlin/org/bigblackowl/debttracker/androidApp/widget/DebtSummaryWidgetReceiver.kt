@@ -26,6 +26,7 @@ import org.bigblackowl.debttracker.domain.model.sumByCurrency
 import org.bigblackowl.debttracker.domain.repository.CreditorRepository
 import org.bigblackowl.debttracker.domain.repository.DebtorRepository
 import org.koin.core.context.GlobalContext
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Home-screen widget — plain [AppWidgetProvider] + [RemoteViews] (spec §6, §8).
@@ -61,7 +62,7 @@ class DebtSummaryWidgetReceiver : AppWidgetProvider() {
         val pending = goAsync()
         scope.launch {
             try {
-                val amounts = withTimeoutOrNull(BROADCAST_BUDGET_MS) { loadAmounts() }
+                val amounts = withTimeoutOrNull(BROADCAST_BUDGET_MS.milliseconds) { loadAmounts() }
                 val views = buildViews(context.applicationContext, amounts)
                 ids.forEach { manager.updateAppWidget(it, views) }
             } finally {

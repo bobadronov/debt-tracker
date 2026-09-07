@@ -8,6 +8,8 @@ import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.delay
 import org.w3c.dom.HTMLIFrameElement
+import kotlin.js.ExperimentalWasmJsInterop
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * CSV: FileKit's browser download (`openFileSaver` isn't published for js/wasmJs — browsers block
@@ -23,6 +25,7 @@ private class WebFileExporter : FileExporter {
         FileKit.download(bytes = content.encodeToByteArray(), fileName = fileName)
     }
 
+    @OptIn(ExperimentalWasmJsInterop::class)
     override suspend fun savePdf(
         fileName: String,
         title: String,
@@ -45,7 +48,7 @@ private class WebFileExporter : FileExporter {
         frameDocument?.close()
 
         // Let the iframe finish laying out the freshly-written document before print() reads it.
-        delay(150)
+        delay(150.milliseconds)
         iframe.contentWindow?.focus()
         iframe.contentWindow?.print()
 

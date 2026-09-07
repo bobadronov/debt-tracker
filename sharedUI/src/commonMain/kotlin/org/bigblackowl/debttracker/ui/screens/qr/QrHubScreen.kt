@@ -51,8 +51,8 @@ import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.BackTopAppBar
 import org.bigblackowl.debttracker.ui.components.PasteableOutlinedTextField
-import org.bigblackowl.debttracker.ui.components.UkrainianPhoneVisualTransformation
 import org.bigblackowl.debttracker.ui.components.ScannedContactDialog
+import org.bigblackowl.debttracker.ui.components.UkrainianPhoneVisualTransformation
 import org.bigblackowl.debttracker.ui.components.rememberClipboardText
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -300,19 +300,19 @@ private fun QrHubSharePreviewContent(state: QrHubState) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun QrHubScanPreviewContent(state: QrHubState) {
+private fun QrHubScanPreviewContent() {
     Scaffold(topBar = { BackTopAppBar(title = "", onBack = {}) }) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            ScanContent(state = state, onIntent = {})
+            ScanContent(state = PREVIEW_STATE_SCAN_DENIED, onIntent = {})
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun QrHubScannedDialogPreviewContent(state: QrHubState) {
-    QrHubSharePreviewContent(state)
-    state.scannedContact?.let { contact ->
+private fun QrHubScannedDialogPreviewContent() {
+    QrHubSharePreviewContent(PREVIEW_STATE_SCANNED_DIALOG)
+    PREVIEW_STATE_SCANNED_DIALOG.scannedContact?.let { contact ->
         ScannedContactDialog(contact = contact, onDismiss = {}, onAddAsDebtor = {}, onAddAsCreditor = {})
     }
 }
@@ -363,19 +363,19 @@ private val PREVIEW_STATE_SCAN_DENIED = QrHubState(mode = QrHubMode.SCAN, camera
 
 @Preview
 @Composable
-private fun QrHubScanPermissionDeniedLightPreview() = DebtTrackerPreview(darkTheme = false) { QrHubScanPreviewContent(PREVIEW_STATE_SCAN_DENIED) }
+private fun QrHubScanPermissionDeniedLightPreview() = DebtTrackerPreview(darkTheme = false) { QrHubScanPreviewContent() }
 
 @Preview
 @Composable
-private fun QrHubScanPermissionDeniedDarkPreview() = DebtTrackerPreview(darkTheme = true) { QrHubScanPreviewContent(PREVIEW_STATE_SCAN_DENIED) }
+private fun QrHubScanPermissionDeniedDarkPreview() = DebtTrackerPreview(darkTheme = true) { QrHubScanPreviewContent() }
 
 /** A completed scan: the "add as debtor or creditor?" chooser dialog on top of the share card. */
 private val PREVIEW_STATE_SCANNED_DIALOG = PREVIEW_STATE_SIGNED_IN.copy(scannedContact = PREVIEW_SCANNED_CONTACT)
 
 @Preview
 @Composable
-private fun QrHubScannedDialogLightPreview() = DebtTrackerPreview(darkTheme = false) { QrHubScannedDialogPreviewContent(PREVIEW_STATE_SCANNED_DIALOG) }
+private fun QrHubScannedDialogLightPreview() = DebtTrackerPreview(darkTheme = false) { QrHubScannedDialogPreviewContent() }
 
 @Preview
 @Composable
-private fun QrHubScannedDialogDarkPreview() = DebtTrackerPreview(darkTheme = true) { QrHubScannedDialogPreviewContent(PREVIEW_STATE_SCANNED_DIALOG) }
+private fun QrHubScannedDialogDarkPreview() = DebtTrackerPreview(darkTheme = true) { QrHubScannedDialogPreviewContent() }
