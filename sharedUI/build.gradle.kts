@@ -140,6 +140,10 @@ kotlin {
             implementation(libs.multiplatformSettings.test) // MapSettings for AppSettings in ViewModel tests
         }
 
+        getByName("jvmTest").dependencies {
+            implementation(libs.koin.test) // Module.verify() — reflective DI graph check (PreviewModuleTest)
+        }
+
         androidMain.dependencies {
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.ktor.client.okhttp)

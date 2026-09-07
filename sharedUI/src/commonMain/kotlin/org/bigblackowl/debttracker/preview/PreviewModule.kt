@@ -1,6 +1,8 @@
 package org.bigblackowl.debttracker.preview
 
 import kotlinx.coroutines.CoroutineScope
+import org.bigblackowl.debttracker.core.auth.GoogleSignInLauncher
+import org.bigblackowl.debttracker.core.auth.UnsupportedGoogleSignInLauncher
 import org.bigblackowl.debttracker.core.di.ApplicationScope
 import org.bigblackowl.debttracker.core.notifications.DueReminderCoordinator
 import org.bigblackowl.debttracker.core.notifications.InProcessReminderScheduler
@@ -94,6 +96,7 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     single<NotificationRepository> { FakeNotificationRepository() }
     single<ExchangeRatesRepository> { FakeExchangeRatesRepository() }
     single<RestoreCredentialGateway> { NoOpRestoreCredentialGateway() }
+    single<GoogleSignInLauncher> { UnsupportedGoogleSignInLauncher }
     single<LocalNotifier> { NoOpLocalNotifier() }
     single<CoroutineScope> { ApplicationScope() }
     single { NotificationsPoller(get(), get(), get(), get(), get()) }
