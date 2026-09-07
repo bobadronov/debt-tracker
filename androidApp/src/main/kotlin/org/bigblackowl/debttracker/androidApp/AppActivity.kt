@@ -7,20 +7,19 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.FragmentActivity
-import androidx.glance.appwidget.updateAll
 import org.bigblackowl.debttracker.App
-import org.bigblackowl.debttracker.androidApp.widget.DebtSummaryWidget
+import org.bigblackowl.debttracker.androidApp.widget.DebtSummaryWidgetReceiver
 import org.bigblackowl.debttracker.core.auth.handleAuthDeeplink
 import org.bigblackowl.debttracker.core.auth.isAuthCallbackIntent
 import org.bigblackowl.debttracker.core.notifications.EXTRA_NOTIFICATION_DEEP_LINK
 import org.bigblackowl.debttracker.core.notifications.NotificationDeepLinks
 import org.bigblackowl.debttracker.core.platform.AndroidActivityProvider
 import org.bigblackowl.debttracker.core.qr.ContactDeepLinks
+import org.bigblackowl.debttracker.core.shortcuts.HomeTabRequest
 
 /**
  * Android entry point — `FragmentActivity` rather than `ComponentActivity` because
@@ -47,6 +46,13 @@ class AppActivity : FragmentActivity() {
         forwardDeepLink(intent)
     }
 
+    override fun onStop() {
+        super.onStop()
+        // Leaving the app (usually back to the launcher, where the widget lives) — push the latest
+        // balances / theme into it. Cheap: one goAsync DB read, skipped entirely if no widget is placed.
+        DebtSummaryWidgetReceiver.refresh(this)
+    }
+
     override fun onDestroy() {
         AndroidActivityProvider.clear(this)
         super.onDestroy()
@@ -67,22 +73,24 @@ class AppActivity : FragmentActivity() {
             NotificationDeepLinks.onIncomingLink(link)
             intent.removeExtra(EXTRA_NOTIFICATION_DEEP_LINK) // don't re-fire on a later Activity recreate
         }
+        // Home-screen widget: a tapped row asks to land on the matching Home tab.
+        intent.getIntExtra(DebtSummaryWidgetReceiver.EXTRA_HOME_TAB, -1).takeIf { it >= 0 }?.let { tab ->
+            HomeTabRequest.request(tab)
+            intent.removeExtra(DebtSummaryWidgetReceiver.EXTRA_HOME_TAB)
+        }
     }
 }
 
 @Composable
 private fun ThemeChanged(isLight: Boolean) {
     val view = LocalView.current
-    val context = LocalContext.current
     LaunchedEffect(isLight) {
         val window = (view.context as Activity).window
         WindowInsetsControllerCompat(window, window.decorView).apply {
             isAppearanceLightStatusBars = isLight
             isAppearanceLightNavigationBars = isLight
         }
-        // Keep the home-screen widget on the same light/dark palette: it reads AppSettings.theme
-        // when it renders but otherwise only re-renders on its ~30-min tick, so push an update
-        // now that the preference changed (also runs once on launch — cheap, and keeps it fresh).
-        DebtSummaryWidget().updateAll(context)
+        // The home-screen widget follows the same light/dark preference; AppActivity.onStop pushes
+        // it the fresh palette (and balances) when the user leaves the app.
     }
 }

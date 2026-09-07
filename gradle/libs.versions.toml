@@ -6,7 +6,6 @@ androidx-biometric = "1.1.0" # https://developer.android.com/jetpack/androidx/re
 androidx-credentials = "1.6.0" # https://developer.android.com/jetpack/androidx/releases/credentials — Restore Credentials API
 androidx-core-splashscreen = "1.2.0" # https://developer.android.com/jetpack/androidx/releases/core-splashscreen
 androidx-fragment = "1.9.0" # https://developer.android.com/jetpack/androidx/releases/fragment
-androidx-glance = "1.2.0" # https://developer.android.com/jetpack/androidx/releases/glance
 androidx-lifecycle = "2.11.0" # https://developer.android.com/jetpack/androidx/releases/lifecycle
 androidx-nav3 = "1.2.0-alpha02" # https://developer.android.com/jetpack/androidx/releases/navigation3
 bignum = "0.3.10" # https://github.com/ionspin/kotlin-multiplatform-bignum
@@ -16,7 +15,6 @@ compose-multiplatform = "1.12.0" # https://github.com/JetBrains/compose-multipla
 composeNativeTray = "2.1.6" # https://github.com/NucleusFramework/ComposeNativeTray — HDPI-correct desktop tray with icon menus
 nucleus = "2.5.12" # https://github.com/NucleusFramework/Nucleus — native notifications + Tao windowing / MaterialDecoratedWindow (all dev.nucleusframework:nucleus.* modules)
 filekit = "0.15.0" # https://github.com/vinceglb/FileKit
-glanceAppwidgetPreview = "1.2.0"
 googleid = "1.2.0" # https://developers.google.com/android/reference/com/google/android/libraries/identity/googleid/package-summary — Google ID token for Credential Manager
 javaKeyring = "1.0.4" # https://github.com/javakeyring/java-keyring — Desktop OS credential store (Credential Manager/Keychain/Secret Service) for the Supabase session-encryption key
 koin = "4.2.2" # https://github.com/InsertKoinIO/koin
@@ -42,7 +40,6 @@ supabase = "3.8.0" # https://github.com/supabase-community/supabase-kt
 
 [libraries]
 
-androidx-glance-appwidget-preview = { module = "androidx.glance:glance-appwidget-preview", version.ref = "glanceAppwidgetPreview" }
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
 compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-multiplatform" }
@@ -102,8 +99,6 @@ supabase-auth = { module = "io.github.jan-tennert.supabase:auth-kt" }
 supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt" }
 supabase-realtime = { module = "io.github.jan-tennert.supabase:realtime-kt" }
 supabase-storage = { module = "io.github.jan-tennert.supabase:storage-kt" }
-androidx-glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = "androidx-glance" }
-androidx-glance-preview = { module = "androidx.glance:glance-preview", version.ref = "androidx-glance" }
 pdfkmp = { module = "io.github.conamobiledev:pdfkmp", version.ref = "pdfkmp" }
 pdfkmp-viewer = { module = "io.github.conamobiledev:pdfkmp-viewer", version.ref = "pdfkmp" }
 qr-kit = { module = "network.chaintech:qr-kit", version.ref = "qrKit" }

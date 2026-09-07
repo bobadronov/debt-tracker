@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Same glyph as Icons.AutoMirrored.Filled.TrendingDown used by KpiCard (StatsScreen.kt).
-     fillColor is overridden at runtime via Glance ColorFilter.tint. -->
+     fillColor is replaced at runtime via RemoteViews setColorFilter (DebtSummaryWidgetReceiver). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

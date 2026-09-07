@@ -1,18 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Fixed-size widget: resizeMode="none" and a single declared size. WidgetUi reads this
-     size verbatim (SizeMode.Single) and renders one layout, so minWidth/minHeight are the
-     real design dimensions (matching widget_preview.xml's 250dp-wide pills + padding), not
-     just a lower bound — DON'T drop them. Glance's SizeMode.Single composes at exactly
-     AppWidgetProviderInfo.getMinSize(), which is minWidth/minHeight verbatim (see
-     androidx.glance.appwidget.AppWidgetUtils.appWidgetMinSize); without them here that's
-     0dp x 0dp, so every child collapses to nothing and only the background Box/Column (sized
-     by the host's real grid cell, independent of Glance's own composition size) is visible —
-     the widget silently renders as an empty tinted rectangle. That shipped in v1.0.50/1.0.51;
-     fixed by adding the two attributes back.
-     targetCellWidth/Height and previewLayout are API 31+ only and harmlessly ignored below that
-     (the launcher then uses its own default sizing and a live-rendered preview) — hence
-     tools:targetApi="31". The xml-v31/ variant of this file is what API 31+ devices actually
-     read instead; keep both in sync. -->
+<!-- Fixed-size RemoteViews widget (DebtSummaryWidgetReceiver). resizeMode="none" + one declared
+     size; the layout is designed for exactly minWidth x minHeight. initialLayout and previewLayout
+     both point at the real layout now (unlike the old Glance setup, which had no layout resource
+     and needed stand-in mocks) — the launcher shows it with the placeholder strings baked into
+     widget_debt_summary.xml until the first onUpdate fills in real values.
+     targetCellWidth/Height + previewLayout are API 31+ only; the xml-v31/ copy is what those
+     devices read — keep both in sync. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:minWidth="250dp"
@@ -20,8 +13,8 @@
     android:targetCellWidth="4"
     android:targetCellHeight="2"
     android:updatePeriodMillis="1800000"
-    android:initialLayout="@layout/widget_loading"
-    android:previewLayout="@layout/widget_preview"
+    android:initialLayout="@layout/widget_debt_summary"
+    android:previewLayout="@layout/widget_debt_summary"
     android:resizeMode="none"
     android:widgetCategory="home_screen"
     tools:targetApi="31" />

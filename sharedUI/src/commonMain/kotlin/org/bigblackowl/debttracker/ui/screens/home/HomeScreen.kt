@@ -5,7 +5,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,20 +19,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.QrCode
-import androidx.compose.material.icons.filled.QueryStats
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sync
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SecondaryTabRow
@@ -46,28 +35,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 import org.bigblackowl.debttracker.core.notifications.rememberNotificationPermissionRequester
 import org.bigblackowl.debttracker.core.settings.AppSettings
+import org.bigblackowl.debttracker.core.shortcuts.HomeTabRequest
 import org.bigblackowl.debttracker.domain.model.SyncUiStatus
-import org.bigblackowl.debttracker.preview.DebtTrackerPreview
-import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.navigation.LocalNavPane
 import org.bigblackowl.debttracker.navigation.NavPane
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
+import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.AppOverflowMenu
 import org.bigblackowl.debttracker.ui.components.DesktopTitleBar
@@ -94,6 +83,17 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val strings = LocalStrings.current
+
+    // The Android home-screen widget's two rows deep-link to the matching tab (HomeTabRequest via
+    // AppActivity). No-op on other platforms — nothing ever emits there.
+    LaunchedEffect(Unit) {
+        HomeTabRequest.pending.collect { tab ->
+            if (tab != null) {
+                pagerState.scrollToPage(tab)
+                HomeTabRequest.consume()
+            }
+        }
+    }
 
     // Asked here, once — the first moment the user actually reaches the app (past onboarding/
     // auth-gate/sign-in) — rather than at raw process start (Android's OS "allow notifications?"

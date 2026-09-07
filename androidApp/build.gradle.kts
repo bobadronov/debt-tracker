@@ -103,11 +103,8 @@ dependencies {
     implementation(libs.androidx.fragment)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.koin.android)
-    implementation(libs.androidx.glance.appwidget)
-    implementation(libs.androidx.glance.preview) // WidgetUi використовує @Preview у main source set — має бути доступно й у release
-    implementation(libs.androidx.glance.appwidget.preview)
     debugImplementation(libs.compose.ui.tooling) // ComposeViewAdapter — потрібен рендереру Preview-панелі в IDE
-    implementation(libs.bignum) // DebtSummaryWidget рахує BigDecimal-суми напряму
+    implementation(libs.bignum) // DebtSummaryWidgetProvider рахує BigDecimal-суми (sumByCurrency) для віджета
     implementation(libs.qr.kit) // AppContext.set(...) in DebtTrackerApplication (QRKit setup requirement)
     implementation(libs.coil) // DebtTrackerApplication tunes the singleton Coil ImageLoader (memory-cache sizing)
 }

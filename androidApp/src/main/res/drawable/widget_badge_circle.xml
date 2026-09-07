@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Plain white disc behind a row's trend glyph. DebtSummaryWidgetReceiver tints it per row
+     (setColorFilter = accent) and knocks it back to a soft tonal fill (setImageAlpha ~48),
+     mirroring KpiCard's icon circle in StatsScreen. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="#FFFFFFFF" />
+</shape>

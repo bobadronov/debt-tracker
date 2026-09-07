@@ -3,37 +3,40 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-permission android:name="android.permission.FLASHLIGHT"/>
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.FLASHLIGHT" />
     <!-- Показ системних сповіщень про дзеркальні борги (core/notifications) — потрібен runtime-запит на API 33+ -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Точні нагадування про повернення боргу в задану дату/час (core/notifications/AndroidReminderScheduler).
          SCHEDULE_EXACT_ALARM — auto-grant на API ≤ 32; USE_EXACT_ALARM — на 33+ (для reminder-застосунків).
          Якщо дозвіл недоступний, планувальник відкочується на неточний setAndAllowWhileIdle. -->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32"/>
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM"
+    <uses-permission
+        android:name="android.permission.SCHEDULE_EXACT_ALARM"
+        android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.USE_EXACT_ALARM"
         tools:ignore="ExactAlarmPolicy" />
     <!-- Перепланувати нагадування після перезавантаження (алярми не переживають reboot). -->
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-    <uses-feature android:name="android.hardware.camera.autofocus"
-        android:required="false" />
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
 
     <application
         android:name=".DebtTrackerApplication"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="Debt Tracker"
-        android:allowBackup="false"
         android:theme="@android:style/Theme.Material.NoActionBar"
-        tools:replace="android:name,android:allowBackup"
-        tools:ignore="DataExtractionRules">
+        tools:ignore="DataExtractionRules"
+        tools:replace="android:name,android:allowBackup">
         <activity
             android:name=".AppActivity"
-            android:theme="@style/Theme.DebtTracker.Splash"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:exported="true"
             android:launchMode="singleInstance"
-            android:windowSoftInputMode="adjustPan"
-            android:exported="true">
+            android:theme="@style/Theme.DebtTracker.Splash"
+            android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -43,18 +46,26 @@
                  app instead of just showing inert text — see core/qr/ContactDeepLinks. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="debttracker" android:host="contact" />
+
+                <data
+                    android:host="contact"
+                    android:scheme="debttracker" />
             </intent-filter>
             <!-- OAuth "Continue with Google" redirect target (debttracker://login-callback). Android
                  signs in natively via Credential Manager, but supabase-kt's Auth {} scheme/host is
                  debttracker/login-callback for the shared OAuth fallback, so register the filter too. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="debttracker" android:host="login-callback" />
+
+                <data
+                    android:host="login-callback"
+                    android:scheme="debttracker" />
             </intent-filter>
         </activity>
 
@@ -63,6 +74,8 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <!-- In-widget refresh button (DebtSummaryWidgetReceiver.refresh / ACTION_REFRESH). -->
+                <action android:name="org.bigblackowl.debttracker.androidApp.widget.REFRESH" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
