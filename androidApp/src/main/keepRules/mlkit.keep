@@ -1,0 +1,12 @@
+# ML Kit / Firebase component discovery.
+#
+# ML Kit's ComponentRegistrar classes (BarcodeRegistrar, CommonComponentRegistrar, ...)
+# are instantiated reflectively from AndroidManifest <meta-data> by ComponentDiscovery.
+# firebase-components ships only `-keep class * implements ...ComponentRegistrar`, which
+# keeps the class but not its members; in R8 full mode the never-directly-called <init>()
+# is stripped, reflective newInstance() then fails silently, the barcode component is
+# never registered, and BarcodeScanning.getClient() NPEs on the first analysed frame
+# (QR scanner — QrHubScreen / qrscanner.QRCodeAnalyzer).
+-keepclassmembers class * implements com.google.firebase.components.ComponentRegistrar {
+    <init>();
+}
