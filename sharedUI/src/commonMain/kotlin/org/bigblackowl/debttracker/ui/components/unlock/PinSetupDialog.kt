@@ -1,4 +1,4 @@
-package org.bigblackowl.debttracker.ui.components
+package org.bigblackowl.debttracker.ui.components.unlock
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer

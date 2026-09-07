@@ -1,4 +1,4 @@
-package org.bigblackowl.debttracker.ui.components
+package org.bigblackowl.debttracker.ui.components.contact
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text

@@ -1,4 +1,4 @@
-package org.bigblackowl.debttracker.ui.components
+package org.bigblackowl.debttracker.ui.components.contact
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -52,6 +52,15 @@ import org.bigblackowl.debttracker.domain.validation.isValidEmail
 import org.bigblackowl.debttracker.domain.validation.isValidFullName
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.ui.components.BackTopAppBar
+import org.bigblackowl.debttracker.ui.components.CurrencyDropdownField
+import org.bigblackowl.debttracker.ui.components.DueReminderField
+import org.bigblackowl.debttracker.ui.components.EntityAvatar
+import org.bigblackowl.debttracker.ui.components.LoadingButton
+import org.bigblackowl.debttracker.ui.components.PasteableOutlinedTextField
+import org.bigblackowl.debttracker.ui.components.PaymentMethodChipRow
+import org.bigblackowl.debttracker.ui.components.UkrainianPhoneVisualTransformation
+import org.bigblackowl.debttracker.ui.components.rememberClipboardText
 
 /**
  * Create form used by the merged AddEditContactScreen (спек §4.1). Supplies the fields and layout;

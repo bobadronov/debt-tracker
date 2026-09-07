@@ -14,7 +14,7 @@ import org.bigblackowl.debttracker.domain.model.DebtDirection
 import org.bigblackowl.debttracker.domain.validation.sanitizeAmountInput
 import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
-import org.bigblackowl.debttracker.ui.components.AddEditContactForm
+import org.bigblackowl.debttracker.ui.components.contact.AddEditContactForm
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 

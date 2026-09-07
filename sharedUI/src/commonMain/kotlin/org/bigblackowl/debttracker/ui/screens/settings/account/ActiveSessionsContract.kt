@@ -1,4 +1,4 @@
-package org.bigblackowl.debttracker.ui.screens.settings
+package org.bigblackowl.debttracker.ui.screens.settings.account
 
 import org.bigblackowl.debttracker.domain.model.DeviceSession
 

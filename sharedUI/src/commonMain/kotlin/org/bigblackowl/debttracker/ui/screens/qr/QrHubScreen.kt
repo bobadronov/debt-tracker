@@ -51,8 +51,8 @@ import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.BackTopAppBar
 import org.bigblackowl.debttracker.ui.components.PasteableOutlinedTextField
-import org.bigblackowl.debttracker.ui.components.ScannedContactDialog
 import org.bigblackowl.debttracker.ui.components.UkrainianPhoneVisualTransformation
+import org.bigblackowl.debttracker.ui.components.contact.ScannedContactDialog
 import org.bigblackowl.debttracker.ui.components.rememberClipboardText
 import org.koin.compose.viewmodel.koinViewModel
 

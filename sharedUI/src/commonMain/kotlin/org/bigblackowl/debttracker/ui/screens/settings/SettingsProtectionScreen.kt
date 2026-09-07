@@ -25,10 +25,10 @@ import org.bigblackowl.debttracker.core.platform.currentPlatform
 import org.bigblackowl.debttracker.core.security.rememberBiometricAuthenticator
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.theme.Dimens
-import org.bigblackowl.debttracker.ui.components.PinSetupDialog
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
 import org.bigblackowl.debttracker.ui.components.SettingsRow
 import org.bigblackowl.debttracker.ui.components.SettingsSection
+import org.bigblackowl.debttracker.ui.components.unlock.PinSetupDialog
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 

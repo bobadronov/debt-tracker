@@ -55,7 +55,7 @@ import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.NotificationRepository
 import org.bigblackowl.debttracker.domain.repository.SessionRepository
 import org.bigblackowl.debttracker.domain.usecase.ForceSignOutUseCase
-import org.bigblackowl.debttracker.ui.components.ScannedContactDialog
+import org.bigblackowl.debttracker.ui.components.contact.ScannedContactDialog
 import org.bigblackowl.debttracker.ui.screens.accountonboarding.AccountOnboardingScreen
 import org.bigblackowl.debttracker.ui.screens.auth.AuthScreen
 import org.bigblackowl.debttracker.ui.screens.authgate.AuthGateScreen
@@ -69,15 +69,15 @@ import org.bigblackowl.debttracker.ui.screens.home.HomeScreen
 import org.bigblackowl.debttracker.ui.screens.notifications.NotificationsScreen
 import org.bigblackowl.debttracker.ui.screens.protectiononboarding.ProtectionOnboardingScreen
 import org.bigblackowl.debttracker.ui.screens.qr.QrHubScreen
-import org.bigblackowl.debttracker.ui.screens.settings.AccountInfoScreen
-import org.bigblackowl.debttracker.ui.screens.settings.ActiveSessionsScreen
-import org.bigblackowl.debttracker.ui.screens.settings.EditAccountScreen
 import org.bigblackowl.debttracker.ui.screens.settings.LanguageScreen
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsAboutScreen
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsDataScreen
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsNotificationsScreen
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsProtectionScreen
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsScreen
+import org.bigblackowl.debttracker.ui.screens.settings.account.AccountInfoScreen
+import org.bigblackowl.debttracker.ui.screens.settings.account.ActiveSessionsScreen
+import org.bigblackowl.debttracker.ui.screens.settings.account.EditAccountScreen
 import org.bigblackowl.debttracker.ui.screens.splash.SplashDestination
 import org.bigblackowl.debttracker.ui.screens.splash.SplashScreen
 import org.bigblackowl.debttracker.ui.screens.stats.StatsScreen

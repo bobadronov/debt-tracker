@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.platform.AppPlatform
@@ -33,11 +34,10 @@ import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
-import org.bigblackowl.debttracker.ui.components.PinCodeField
-import org.bigblackowl.debttracker.ui.components.UnlockScaffold
+import org.bigblackowl.debttracker.ui.components.unlock.PinCodeField
+import org.bigblackowl.debttracker.ui.components.unlock.UnlockScaffold
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Auth Gate (спек §6, п.2). Механізм розблокування — від того, що налаштовано (SettingsScreen /

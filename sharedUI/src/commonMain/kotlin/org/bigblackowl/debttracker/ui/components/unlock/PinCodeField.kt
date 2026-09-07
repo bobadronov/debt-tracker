@@ -1,4 +1,4 @@
-package org.bigblackowl.debttracker.ui.components
+package org.bigblackowl.debttracker.ui.components.unlock
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState

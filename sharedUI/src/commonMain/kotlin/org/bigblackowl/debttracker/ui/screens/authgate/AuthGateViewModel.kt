@@ -13,7 +13,7 @@ import org.bigblackowl.debttracker.core.i18n.resolveStrings
 import org.bigblackowl.debttracker.core.security.BiometricAuthenticator
 import org.bigblackowl.debttracker.core.security.BiometricResult
 import org.bigblackowl.debttracker.core.settings.AppSettings
-import org.bigblackowl.debttracker.ui.components.PIN_LENGTH
+import org.bigblackowl.debttracker.ui.components.unlock.PIN_LENGTH
 
 /**
  * PIN/biometric unlock check (спек §6, п.2) — verification lives here, [AuthGateScreen] only renders state.
