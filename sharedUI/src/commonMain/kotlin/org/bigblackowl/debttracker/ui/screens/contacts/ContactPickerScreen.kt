@@ -31,6 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.ContactSuggestion
+import org.bigblackowl.debttracker.domain.validation.formatUkrainianPhone
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.EntityAvatar
@@ -119,7 +120,7 @@ private fun ContactPickerRow(contact: ContactSuggestion, onClick: () -> Unit) {
         Spacer(Modifier.width(Dimens.space12))
         Column {
             Text(contact.fullName, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            (contact.phone?.takeIf(String::isNotBlank) ?: contact.email?.takeIf(String::isNotBlank))?.let {
+            (formatUkrainianPhone(contact.phone) ?: contact.email?.takeIf(String::isNotBlank))?.let {
                 Text(
                     it,
                     style = MaterialTheme.typography.bodySmall,

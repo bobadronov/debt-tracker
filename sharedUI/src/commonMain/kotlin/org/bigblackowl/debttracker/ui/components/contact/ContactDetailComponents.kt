@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
@@ -33,7 +34,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,8 +45,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
-import kotlin.time.Clock
-import kotlin.time.Instant
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
@@ -59,6 +57,8 @@ import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.EntityAvatar
 import org.bigblackowl.debttracker.ui.components.FullScreenLoadingIndicator
 import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Shared building blocks for DebtorDetailScreen/CreditorDetailScreen: same profile-card +
@@ -74,7 +74,6 @@ fun ContactDetailScaffold(
     title: String,
     avatarUrl: String?,
     onBack: () -> Unit,
-    exportLabel: String,
     onExport: () -> Unit,
     snackbarHostState: SnackbarHostState,
     /** Non-null adds a pencil action to the top bar → opens the contact in the edit form. */
@@ -107,7 +106,7 @@ fun ContactDetailScaffold(
                                 Icon(Icons.Filled.Edit, contentDescription = LocalStrings.current.edit)
                             }
                         }
-                        TextButton(onClick = onExport) { Text(exportLabel) }
+                        IconButton(onClick = onExport) { Icon(Icons.Default.Share, contentDescription = null) }
                     }
                 },
             )
@@ -260,7 +259,6 @@ private fun ContactDetailComponentsSample() {
         title = "Олена Коваль",
         avatarUrl = null,
         onBack = {},
-        exportLabel = "Export",
         onExport = {},
         snackbarHostState = snackbarHostState,
         phone = "+380 67 123 4567",

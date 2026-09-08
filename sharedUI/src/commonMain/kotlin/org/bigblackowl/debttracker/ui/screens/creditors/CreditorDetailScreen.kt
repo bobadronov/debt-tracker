@@ -60,7 +60,6 @@ fun CreditorDetailScreen(
         title = state.creditor?.fullName ?: strings.creditorDetail.titleFallback,
         avatarUrl = state.creditor?.avatarUrl,
         onBack = onBack,
-        exportLabel = strings.creditorDetail.export,
         onExport = onExport,
         onEdit = onEdit,
         isLoading = state.isLoading,

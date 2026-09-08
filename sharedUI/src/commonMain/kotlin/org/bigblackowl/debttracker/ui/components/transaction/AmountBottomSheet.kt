@@ -98,8 +98,12 @@ fun AmountBottomSheet(
                         error = strings.amountError
                         return@Button
                     }
-                    if (appSettings.hapticEnabled) haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                    // Dispatch the write first — a haptic must never be able to swallow the
+                    // confirm (some platforms' performHapticFeedback throws on unsupported types).
                     onConfirm(parsed, method)
+                    if (appSettings.hapticEnabled) {
+                        runCatching { haptics.performHapticFeedback(HapticFeedbackType.Confirm) }
+                    }
                 },
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(strings.confirm) }

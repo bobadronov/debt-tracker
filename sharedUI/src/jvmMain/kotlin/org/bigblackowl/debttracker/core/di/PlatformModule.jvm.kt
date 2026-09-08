@@ -31,10 +31,10 @@ actual fun platformDataModule(): Module = module {
     single { get<DebtTrackerDatabase>().debtTransactionDao() }
     single { get<DebtTrackerDatabase>().creditorDao() }
     single { get<DebtTrackerDatabase>().creditorTransactionDao() }
-    single<DebtorRepository> { RoomDebtorRepository(get(), get(), get(), get()) }
-    single<CreditorRepository> { RoomCreditorRepository(get(), get(), get(), get()) }
     single { SyncCoordinator(get(), get(), get(), get(), get(), get(), get(), get()) }
     single<SyncStatusProvider> { get<SyncCoordinator>() }
+    single<DebtorRepository> { RoomDebtorRepository(get(), get(), get(), get(), get()) }
+    single<CreditorRepository> { RoomCreditorRepository(get(), get(), get(), get(), get()) }
     single<LocalNotifier> { DesktopLocalNotifier() }
     single<ReminderScheduler> { InProcessReminderScheduler(get(), get()) }
     single<RestoreCredentialClient> { UnsupportedRestoreCredentialClient }

@@ -35,7 +35,8 @@ import kotlin.time.Duration.Companion.milliseconds
  * on API 31+): Glance's `SizeMode.Single` composes at `AppWidgetProviderInfo.getMinSize()`, and any
  * mismatch in the size metadata collapsed the whole tree. RemoteViews has none of that — the
  * launcher inflates `R.layout.widget_debt_summary` itself and this class only pushes text, colours
- * and click intents into it.
+ * and click intents into it. One fluid layout covers the whole resize range (2x2 .. 4x2); the
+ * refresh control is a full-width bar along the bottom.
  *
  * Data is read straight from Koin (`GlobalContext`): the widget process starts
  * `DebtTrackerApplication` (so Koin is up) but never the Compose nav graph. Colours follow the
@@ -148,6 +149,10 @@ class DebtSummaryWidgetReceiver : AppWidgetProvider() {
                     R.id.widget_root, "setBackgroundResource",
                     if (isDark) R.drawable.widget_card_dark else R.drawable.widget_card_light,
                 )
+                setInt(
+                    R.id.widget_refresh, "setBackgroundResource",
+                    if (isDark) R.drawable.widget_refresh_dark else R.drawable.widget_refresh_light,
+                )
 
                 bindRow(
                     labelId = R.id.widget_label_debtors,
@@ -176,7 +181,9 @@ class DebtSummaryWidgetReceiver : AppWidgetProvider() {
                     click = activityIntent(context, HomeTabRequest.TAB_CREDITORS),
                 )
 
-                setInt(R.id.widget_refresh, "setColorFilter", label)
+                setInt(R.id.widget_refresh_icon, "setColorFilter", label)
+                setTextViewText(R.id.widget_refresh_label, strings.exchangeRates.refresh)
+                setTextColor(R.id.widget_refresh_label, label)
                 setContentDescription(R.id.widget_refresh, strings.exchangeRates.refresh)
                 setOnClickPendingIntent(R.id.widget_refresh, refreshIntent(context))
 

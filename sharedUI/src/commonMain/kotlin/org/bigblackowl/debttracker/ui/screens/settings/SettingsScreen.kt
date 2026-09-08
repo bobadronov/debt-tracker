@@ -58,6 +58,7 @@ import org.bigblackowl.debttracker.core.platform.AppPlatform
 import org.bigblackowl.debttracker.core.platform.currentPlatform
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
+import org.bigblackowl.debttracker.domain.validation.formatUkrainianPhone
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.ConfirmDialog
@@ -275,7 +276,7 @@ private fun AccountSection(
                 )
                 if (isAuthenticated) {
                     accountEmail?.takeIf { it.isNotBlank() }?.let { ContactLine(Icons.Filled.Email, it) }
-                    accountPhone?.takeIf { it.isNotBlank() }?.let { ContactLine(Icons.Filled.Phone, it) }
+                    formatUkrainianPhone(accountPhone)?.let { ContactLine(Icons.Filled.Phone, it) }
                 }
             }
         }

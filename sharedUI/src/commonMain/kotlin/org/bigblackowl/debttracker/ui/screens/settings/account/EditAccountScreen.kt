@@ -27,8 +27,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.media.rememberImagePicker
-import org.bigblackowl.debttracker.domain.validation.isPhonePasteRelevant
-import org.bigblackowl.debttracker.domain.validation.isValidFullName
 import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
@@ -36,9 +34,7 @@ import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.AccountAvatar
 import org.bigblackowl.debttracker.ui.components.LoadingButton
 import org.bigblackowl.debttracker.ui.components.SettingsDetailScaffold
-import org.bigblackowl.debttracker.ui.components.form.PasteableOutlinedTextField
 import org.bigblackowl.debttracker.ui.components.form.UkrainianPhoneVisualTransformation
-import org.bigblackowl.debttracker.ui.components.form.rememberClipboardText
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -54,7 +50,6 @@ fun EditAccountScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val strings = LocalStrings.current
-    val clipboardText by rememberClipboardText()
     val imagePicker = rememberImagePicker()
 
     LaunchedEffect(Unit) {
@@ -100,15 +95,15 @@ fun EditAccountScreen(
         }
         Spacer(Modifier.height(Dimens.space8))
 
-        PasteableOutlinedTextField(
+        OutlinedTextField(
             value = state.fullName,
             onValueChange = { viewModel.onIntent(EditAccountIntent.FullNameChanged(it)) },
-            label = strings.fullName,
-            clipboardText = clipboardText,
-            isPasteRelevant = ::isValidFullName,
+            label = { Text(strings.fullName) },
             isError = state.fullNameError != null,
-            supportingText = state.fullNameError,
+            supportingText = state.fullNameError?.let { { Text(it) } },
             leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
         )
 
         OutlinedTextField(
@@ -122,15 +117,15 @@ fun EditAccountScreen(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        PasteableOutlinedTextField(
+        OutlinedTextField(
             value = state.phone,
             onValueChange = { viewModel.onIntent(EditAccountIntent.PhoneChanged(sanitizePhoneInput(it))) },
-            label = strings.phone,
-            clipboardText = clipboardText,
-            isPasteRelevant = ::isPhonePasteRelevant,
+            label = { Text(strings.phone) },
             leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             visualTransformation = remember { UkrainianPhoneVisualTransformation() },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
         )
         Spacer(Modifier.height(Dimens.space12))
         LoadingButton(

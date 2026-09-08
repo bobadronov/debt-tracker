@@ -1,27 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Home-screen widget (RemoteViews) — DebtSummaryWidgetReceiver fills every value at runtime:
-  card background, the two accent colours, the tinted icon circles, the amounts, and the
-  click targets. Colours are driven by the app's own light/dark preference (AppSettings.theme),
-  NOT the launcher's uiMode, so nothing here is a -night resource and every colour below is a
-  placeholder overwritten on update. Fixed size (see debt_summary_widget_info.xml).
+  card + refresh-bar backgrounds, the two accent colours, the tinted icon circles, the amounts,
+  the refresh label and every click target. Colours are driven by the app's own light/dark
+  preference (AppSettings.theme), NOT the launcher's uiMode, so nothing here is a -night resource
+  and every colour below is a placeholder overwritten on update.
+
+  One fluid layout for the whole resize range (2x2 .. 4x2, see debt_summary_widget_info.xml):
+  the two totals stack in a weighted column that shrinks with the widget, the refresh control is
+  a full-width bar pinned to the bottom.
 
   tools:* values only affect the layout editor / the system widget picker preview.
 -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:background="@drawable/widget_card_light"
-    android:padding="14dp"
-    tools:layout_width="250dp"
-    tools:layout_height="130dp"
+    android:padding="12dp"
+    tools:layout_width="160dp"
+    tools:layout_height="160dp"
     tools:ignore="HardcodedText,ContentDescription">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center_vertical">
 
@@ -34,20 +40,20 @@
             android:gravity="center_vertical">
 
             <FrameLayout
-                android:layout_width="42dp"
-                android:layout_height="42dp">
+                android:layout_width="36dp"
+                android:layout_height="36dp">
 
                 <ImageView
                     android:id="@+id/widget_badge_debtors"
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
                     android:contentDescription="@null"
                     android:src="@drawable/widget_badge_circle" />
 
                 <ImageView
                     android:id="@+id/widget_icon_debtors"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:layout_gravity="center"
                     android:contentDescription="@null"
                     android:src="@drawable/ic_widget_trend_down" />
@@ -57,7 +63,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="10dp"
                 android:orientation="vertical">
 
                 <TextView
@@ -68,7 +74,7 @@
                     android:ellipsize="end"
                     android:text="Owed to me"
                     android:textColor="#404941"
-                    android:textSize="13sp" />
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/widget_amount_debtors"
@@ -78,7 +84,7 @@
                     android:ellipsize="end"
                     android:text="0 ₴"
                     android:textColor="#2E7D32"
-                    android:textSize="19sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </LinearLayout>
@@ -88,25 +94,25 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
             <FrameLayout
-                android:layout_width="42dp"
-                android:layout_height="42dp">
+                android:layout_width="36dp"
+                android:layout_height="36dp">
 
                 <ImageView
                     android:id="@+id/widget_badge_creditors"
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
                     android:contentDescription="@null"
                     android:src="@drawable/widget_badge_circle" />
 
                 <ImageView
                     android:id="@+id/widget_icon_creditors"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:layout_gravity="center"
                     android:contentDescription="@null"
                     android:src="@drawable/ic_widget_trend_up" />
@@ -116,7 +122,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="10dp"
                 android:orientation="vertical">
 
                 <TextView
@@ -127,7 +133,7 @@
                     android:ellipsize="end"
                     android:text="I owe"
                     android:textColor="#404941"
-                    android:textSize="13sp" />
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/widget_amount_creditors"
@@ -137,18 +143,39 @@
                     android:ellipsize="end"
                     android:text="0 ₴"
                     android:textColor="#BB152C"
-                    android:textSize="19sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 
-    <ImageView
+    <LinearLayout
         android:id="@+id/widget_refresh"
-        android:layout_width="34dp"
-        android:layout_height="34dp"
-        android:layout_gravity="top|end"
-        android:padding="7dp"
-        android:contentDescription="@null"
-        android:src="@drawable/ic_widget_refresh" />
-</FrameLayout>
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="@drawable/widget_refresh_light"
+        android:paddingTop="7dp"
+        android:paddingBottom="7dp">
+
+        <ImageView
+            android:id="@+id/widget_refresh_icon"
+            android:layout_width="17dp"
+            android:layout_height="17dp"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_widget_refresh" />
+
+        <TextView
+            android:id="@+id/widget_refresh_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="7dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="Refresh"
+            android:textColor="#404941"
+            android:textSize="12sp" />
+    </LinearLayout>
+</LinearLayout>

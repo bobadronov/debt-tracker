@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
+import org.bigblackowl.debttracker.domain.validation.formatUkrainianPhone
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.AccountAvatar
@@ -56,7 +57,7 @@ fun AccountInfoScreen(
             SettingsRowDivider()
             SettingsRow(icon = Icons.Filled.Email, title = strings.email, subtitle = email?.takeIf { it.isNotBlank() })
             SettingsRowDivider()
-            SettingsRow(icon = Icons.Filled.Phone, title = strings.phone, subtitle = phone?.takeIf { it.isNotBlank() })
+            SettingsRow(icon = Icons.Filled.Phone, title = strings.phone, subtitle = formatUkrainianPhone(phone))
             SettingsRowDivider()
             SettingsRow(
                 icon = Icons.Filled.Devices,

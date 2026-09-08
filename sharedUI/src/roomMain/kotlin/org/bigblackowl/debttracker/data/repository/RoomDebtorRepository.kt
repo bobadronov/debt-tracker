@@ -21,6 +21,7 @@ import org.bigblackowl.debttracker.domain.model.toDebtStatus
 import org.bigblackowl.debttracker.domain.model.toDebtTransactionType
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.DebtorRepository
+import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
 
 @Serializable
 private data class LinkDebtorParams(@SerialName("p_debtor_id") val debtorId: String)
@@ -34,6 +35,7 @@ class RoomDebtorRepository(
     private val transactionDao: DebtTransactionDao,
     private val client: SupabaseClient,
     private val authRepository: AuthRepository,
+    private val syncStatusProvider: SyncStatusProvider,
 ) : DebtorRepository {
 
     override fun observeDebtors(): Flow<List<DebtorWithBalance>> =
@@ -108,6 +110,10 @@ class RoomDebtorRepository(
     // Realtime pull SyncCoordinator'а, окремо тут його в Room не пишемо.
     override suspend fun linkToRegisteredUser(debtorId: String): String? {
         if (!authRepository.isAuthenticated.value) return null
+        // The RPC looks the debtor up server-side by id; a freshly-created row may not have been
+        // pushed yet (SyncCoordinator's 30s loop), which made it raise "not found" and the link
+        // was silently lost until a later edit. Flush pending writes first.
+        runCatching { syncStatusProvider.refreshNow() }
         return runCatching {
             client.postgrest.rpc("link_debtor_to_registered_user", LinkDebtorParams(debtorId)).decodeAs<String?>()
         }.getOrNull()

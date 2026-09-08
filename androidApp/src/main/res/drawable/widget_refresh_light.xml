@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Full-width "refresh" bar background, light. One step deeper than widget_card_light
+     (#F3F3F4) so the bar reads as a distinct strip. Runtime-selected sibling of
+     widget_refresh_dark by DebtSummaryWidgetReceiver — NOT a -night resource. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#FFE7E7EA" />
+    <corners android:radius="16dp" />
+</shape>

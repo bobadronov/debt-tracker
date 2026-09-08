@@ -60,7 +60,6 @@ fun DebtorDetailScreen(
         title = state.debtor?.fullName ?: strings.debtorDetail.titleFallback,
         avatarUrl = state.debtor?.avatarUrl,
         onBack = onBack,
-        exportLabel = strings.debtorDetail.export,
         onExport = onExport,
         onEdit = onEdit,
         isLoading = state.isLoading,

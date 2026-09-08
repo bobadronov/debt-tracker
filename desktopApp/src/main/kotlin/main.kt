@@ -57,8 +57,8 @@ import org.bigblackowl.debttracker.navigation.AppMenu
 import org.bigblackowl.debttracker.navigation.CurrentScreen
 import org.bigblackowl.debttracker.navigation.windowTitle
 import org.bigblackowl.debttracker.theme.rememberAppColorScheme
-import org.bigblackowl.debttracker.ui.components.AppOverflowMenu
-import org.bigblackowl.debttracker.ui.components.DesktopTitleBar
+import org.bigblackowl.debttracker.ui.components.appbar.AppOverflowMenu
+import org.bigblackowl.debttracker.ui.components.appbar.DesktopTitleBar
 import org.jetbrains.compose.resources.decodeToImageBitmap
 import org.koin.core.Koin
 
@@ -67,9 +67,16 @@ private const val APP_ID = "org.bigblackowl.debttracker"
 
 /** Desktop (JVM) entry point: starts Koin + background sync/notifications, then opens the app window. */
 fun main(args: Array<String>) {
-    // Nucleus reads this for the single-instance lock and the Windows toast AUMID / Start Menu
+    // Nucleus reads these for the single-instance lock and the Windows toast AUMID / Start Menu
     // shortcut (notification-common); ignored on Linux/macOS. Set before nucleusApplication().
     System.setProperty("nucleus.app.id", APP_ID)
+    System.setProperty("nucleus.app.name", APP_NAME) // shortcut display name + toast app label
+    // Without the Nucleus Gradle plugin, ExecutableRuntime can't tell a packaged install from a
+    // dev run and assumes "dev" — which makes the Windows notification backend *require* a
+    // pre-existing Start Menu shortcut instead of creating one, so no toast ever shows (from
+    // `./gradlew run` or the MSI alike). Declaring a concrete type flips it to "create the
+    // shortcut". Only the notification layer reads this property.
+    System.setProperty("nucleus.executable.type", "EXE")
     DesktopTitleBar.claim() // screens route their TopAppBar into the native title bar from here on
     FileKit.init(appId = APP_ID) // required for FileKit's Save-As dialogs and cache/files dirs on JVM
     val koinApp = initKoin()

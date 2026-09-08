@@ -21,12 +21,22 @@ object DesktopNotificationWindow {
  * an event that can't be shown as a toast is still in the `notifications` table, so the in-app
  * notifications screen and the unread-count badge surface it when the window is next opened.
  *
- * The Windows toast AUMID + Start Menu shortcut are derived from the `nucleus.app.id` system
- * property, set in the desktop app's `main()`.
+ * The Windows toast AUMID + Start Menu shortcut are derived from the `nucleus.app.id` /
+ * `nucleus.app.name` system properties (set in the desktop app's `main()`, which also sets
+ * `nucleus.executable.type` so Nucleus creates the shortcut rather than requiring a pre-existing
+ * one). [init] eagerly triggers that creation so the very first toast isn't lost.
  *
  * Немає окремого дозволу (на відміну від Android/iOS/Web), тож [requestPermission] завжди `true`.
  */
 internal class DesktopLocalNotifier : LocalNotifier {
+
+    init {
+        // Nucleus creates the Windows Start Menu shortcut (required for toast delivery) lazily on
+        // the first send(); do it now instead so a notification that lands during startup still
+        // shows. No-op on Linux/macOS.
+        runCatching { NotificationManager.initialize() }
+            .onFailure { Napier.w { "NotificationManager.initialize failed: ${it.message}" } }
+    }
 
     override suspend fun requestPermission(): Boolean = true
 
