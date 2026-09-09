@@ -8,6 +8,7 @@ import org.bigblackowl.debttracker.core.i18n.AuthGateStrings
 import org.bigblackowl.debttracker.core.i18n.AuthStrings
 import org.bigblackowl.debttracker.core.i18n.ClearCacheStrings
 import org.bigblackowl.debttracker.core.i18n.ContactPickerStrings
+import org.bigblackowl.debttracker.core.i18n.CorrectionDialogStrings
 import org.bigblackowl.debttracker.core.i18n.CreditorDetailStrings
 import org.bigblackowl.debttracker.core.i18n.CreditorListStrings
 import org.bigblackowl.debttracker.core.i18n.DebtorDetailStrings
@@ -326,6 +327,15 @@ val PtStrings = Strings(
         empty = "Ainda não há notificações",
         markAllRead = "Marcar todas como lidas",
         bell = "Notificações",
+        correction = CorrectionDialogStrings(
+            rowAction = "Valor errado?",
+            title = "Comunicar um problema",
+            reasonWrongAmount = "Valor errado",
+            reasonNotHappened = "Isto não aconteceu",
+            amountLabel = { currency -> "Valor correto ($currency)" },
+            notHappenedHint = "Propõe remover esta transação.",
+            send = "Enviar",
+        ),
     ),
     notificationBody = NotificationBodyStrings(
         debtorLinked = { name, amount, currency -> "$name: deve $amount $currency" },
@@ -338,6 +348,10 @@ val PtStrings = Strings(
         linkRequestApproved = { name -> "$name aprovou a associação da dívida" },
         approveAction = "Aprovar",
         rejectAction = "Rejeitar",
+        transactionCorrectionProposed = { name, amount, currency -> "$name diz que o valor deveria ser $amount $currency — aprove ou rejeite abaixo" },
+        transactionCorrectionRemovalProposed = { name -> "$name diz que esta transação não aconteceu — aprove ou rejeite abaixo" },
+        transactionCorrectionApproved = { name -> "$name aceitou a sua correção" },
+        transactionCorrectionRejected = { name -> "$name rejeitou a sua correção" },
     ),
     deleteContactConfirmTitle = "Eliminar contacto?",
     deleteContactConfirmText = { name -> "$name e todo o histórico de transações serão eliminados permanentemente." },

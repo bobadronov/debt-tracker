@@ -8,6 +8,7 @@ import org.bigblackowl.debttracker.core.i18n.AuthGateStrings
 import org.bigblackowl.debttracker.core.i18n.AuthStrings
 import org.bigblackowl.debttracker.core.i18n.ClearCacheStrings
 import org.bigblackowl.debttracker.core.i18n.ContactPickerStrings
+import org.bigblackowl.debttracker.core.i18n.CorrectionDialogStrings
 import org.bigblackowl.debttracker.core.i18n.CreditorDetailStrings
 import org.bigblackowl.debttracker.core.i18n.CreditorListStrings
 import org.bigblackowl.debttracker.core.i18n.DebtorDetailStrings
@@ -325,6 +326,15 @@ val EnStrings = Strings(
         empty = "No notifications yet",
         markAllRead = "Mark all as read",
         bell = "Notifications",
+        correction = CorrectionDialogStrings(
+            rowAction = "Wrong amount?",
+            title = "Report a problem",
+            reasonWrongAmount = "Wrong amount",
+            reasonNotHappened = "This didn't happen",
+            amountLabel = { currency -> "Correct amount ($currency)" },
+            notHappenedHint = "Proposes removing this transaction.",
+            send = "Send",
+        ),
     ),
     notificationBody = NotificationBodyStrings(
         debtorLinked = { name, amount, currency -> "$name: you owe $amount $currency" },
@@ -337,6 +347,10 @@ val EnStrings = Strings(
         linkRequestApproved = { name -> "$name approved the debt link" },
         approveAction = "Approve",
         rejectAction = "Reject",
+        transactionCorrectionProposed = { name, amount, currency -> "$name says the amount should be $amount $currency — approve or reject below" },
+        transactionCorrectionRemovalProposed = { name -> "$name says this transaction didn't happen — approve or reject below" },
+        transactionCorrectionApproved = { name -> "$name accepted your correction" },
+        transactionCorrectionRejected = { name -> "$name rejected your correction" },
     ),
     deleteContactConfirmTitle = "Delete contact?",
     deleteContactConfirmText = { name -> "$name and their whole transaction history will be permanently removed." },

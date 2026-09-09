@@ -8,6 +8,7 @@ import org.bigblackowl.debttracker.core.i18n.AuthGateStrings
 import org.bigblackowl.debttracker.core.i18n.AuthStrings
 import org.bigblackowl.debttracker.core.i18n.ClearCacheStrings
 import org.bigblackowl.debttracker.core.i18n.ContactPickerStrings
+import org.bigblackowl.debttracker.core.i18n.CorrectionDialogStrings
 import org.bigblackowl.debttracker.core.i18n.CreditorDetailStrings
 import org.bigblackowl.debttracker.core.i18n.CreditorListStrings
 import org.bigblackowl.debttracker.core.i18n.DebtorDetailStrings
@@ -326,6 +327,15 @@ val EsStrings = Strings(
         empty = "Aún no hay notificaciones",
         markAllRead = "Marcar todo como leído",
         bell = "Notificaciones",
+        correction = CorrectionDialogStrings(
+            rowAction = "¿Importe incorrecto?",
+            title = "Informar de un problema",
+            reasonWrongAmount = "Importe incorrecto",
+            reasonNotHappened = "Esto no ocurrió",
+            amountLabel = { currency -> "Importe correcto ($currency)" },
+            notHappenedHint = "Propone eliminar esta transacción.",
+            send = "Enviar",
+        ),
     ),
     notificationBody = NotificationBodyStrings(
         debtorLinked = { name, amount, currency -> "$name: debes $amount $currency" },
@@ -338,6 +348,10 @@ val EsStrings = Strings(
         linkRequestApproved = { name -> "$name aprobó la vinculación de la deuda" },
         approveAction = "Aprobar",
         rejectAction = "Rechazar",
+        transactionCorrectionProposed = { name, amount, currency -> "$name dice que el importe debería ser $amount $currency — apruébalo o recházalo abajo" },
+        transactionCorrectionRemovalProposed = { name -> "$name dice que esta transacción no ocurrió — apruébalo o recházalo abajo" },
+        transactionCorrectionApproved = { name -> "$name aceptó tu corrección" },
+        transactionCorrectionRejected = { name -> "$name rechazó tu corrección" },
     ),
     deleteContactConfirmTitle = "¿Eliminar contacto?",
     deleteContactConfirmText = { name -> "$name y todo su historial de transacciones se eliminarán de forma permanente." },

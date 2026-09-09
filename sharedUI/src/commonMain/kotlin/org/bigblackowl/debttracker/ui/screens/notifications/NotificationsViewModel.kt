@@ -67,6 +67,34 @@ class NotificationsViewModel(
                     refresh()
                 }
             }
+
+            is NotificationsIntent.OpenCorrectionDialog ->
+                _state.update { it.copy(correctionDialogFor = intent.notification) }
+
+            NotificationsIntent.DismissCorrectionDialog ->
+                _state.update { it.copy(correctionDialogFor = null) }
+
+            is NotificationsIntent.SubmitCorrection -> viewModelScope.launch {
+                _state.update { it.copy(correctionDialogFor = null) }
+                if (notificationRepository.proposeTransactionCorrection(intent.notificationId, intent.reason, intent.amount)) {
+                    notificationRepository.delete(intent.notificationId)
+                    refresh()
+                }
+            }
+
+            is NotificationsIntent.ApproveCorrection -> viewModelScope.launch {
+                if (notificationRepository.approveTransactionCorrection(intent.correctionId)) {
+                    notificationRepository.delete(intent.notificationId)
+                    refresh()
+                }
+            }
+
+            is NotificationsIntent.RejectCorrection -> viewModelScope.launch {
+                if (notificationRepository.rejectTransactionCorrection(intent.correctionId)) {
+                    notificationRepository.delete(intent.notificationId)
+                    refresh()
+                }
+            }
         }
     }
 

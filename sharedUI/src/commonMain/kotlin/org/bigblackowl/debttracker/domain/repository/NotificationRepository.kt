@@ -1,6 +1,8 @@
 package org.bigblackowl.debttracker.domain.repository
 
+import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import org.bigblackowl.debttracker.domain.model.AppNotification
+import org.bigblackowl.debttracker.domain.model.CorrectionReason
 
 /**
  * Онлайн-only доступ до таблиці `notifications` (без Room — сповіщення мають сенс лише в
@@ -20,4 +22,18 @@ interface NotificationRepository {
     suspend fun approveLinkRequest(requestId: String): Boolean
     /** RPC `reject_link_request` (0013) — відхиляє pending-запит без дзеркалювання. */
     suspend fun rejectLinkRequest(requestId: String): Boolean
+
+    /**
+     * RPC `propose_transaction_correction` (0014) — отримувач *_TRANSACTION_ADDED пропонує авторові
+     * правку. [amount] — модуль нової суми, потрібен лише для [CorrectionReason.WRONG_AMOUNT].
+     */
+    suspend fun proposeTransactionCorrection(
+        notificationId: String,
+        reason: CorrectionReason,
+        amount: BigDecimal?,
+    ): Boolean
+    /** RPC `approve_transaction_correction` (0014) — автор приймає правку, зміна дзеркалиться назад. */
+    suspend fun approveTransactionCorrection(correctionId: String): Boolean
+    /** RPC `reject_transaction_correction` (0014) — автор відхиляє правку, пропонувача сповіщено. */
+    suspend fun rejectTransactionCorrection(correctionId: String): Boolean
 }

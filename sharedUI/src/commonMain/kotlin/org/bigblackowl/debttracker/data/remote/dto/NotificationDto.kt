@@ -12,6 +12,8 @@ data class NotificationDto(
     @SerialName("related_debtor_id") val relatedDebtorId: String? = null,
     @SerialName("related_creditor_id") val relatedCreditorId: String? = null,
     @SerialName("related_link_request_id") val relatedLinkRequestId: String? = null,
+    @SerialName("related_transaction_id") val relatedTransactionId: String? = null,
+    @SerialName("related_correction_id") val relatedCorrectionId: String? = null,
     val amount: Double? = null,
     val currency: String? = null,
     @SerialName("is_read") val isRead: Boolean = false,

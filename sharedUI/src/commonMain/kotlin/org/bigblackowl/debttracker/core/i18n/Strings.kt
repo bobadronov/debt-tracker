@@ -289,6 +289,22 @@ data class NotificationsStrings(
     val empty: String,
     val markAllRead: String,
     val bell: String,
+    /** "Wrong amount?" reject flow on a *_TRANSACTION_ADDED row (0014). */
+    val correction: CorrectionDialogStrings,
+)
+
+/** Діалог «відхилити операцію» на рядку *_TRANSACTION_ADDED (0014). */
+data class CorrectionDialogStrings(
+    /** Кнопка на рядку сповіщення, що відкриває діалог. */
+    val rowAction: String,
+    val title: String,
+    val reasonWrongAmount: String,
+    val reasonNotHappened: String,
+    /** Label для поля нової суми. */
+    val amountLabel: (currency: String) -> String,
+    /** Пояснення під «Операції не було». */
+    val notHappenedHint: String,
+    val send: String,
 )
 
 /** [org.bigblackowl.debttracker.core.notifications.NotificationText] / Settings → notifications. */
@@ -308,6 +324,14 @@ data class NotificationBodyStrings(
     /** Approve/reject buttons on a [org.bigblackowl.debttracker.domain.model.NotificationType.LINK_REQUEST] row. */
     val approveAction: String,
     val rejectAction: String,
+    /** [org.bigblackowl.debttracker.domain.model.NotificationType.TRANSACTION_CORRECTION] — shown to the author who must approve. */
+    val transactionCorrectionProposed: (name: String, amount: String, currency: String) -> String,
+    /** Same, when the proposal is "didn't happen" (no amount). */
+    val transactionCorrectionRemovalProposed: (name: String) -> String,
+    /** [org.bigblackowl.debttracker.domain.model.NotificationType.TRANSACTION_CORRECTION_APPROVED] — shown back to the proposer. */
+    val transactionCorrectionApproved: (name: String) -> String,
+    /** [org.bigblackowl.debttracker.domain.model.NotificationType.TRANSACTION_CORRECTION_REJECTED] — shown back to the proposer. */
+    val transactionCorrectionRejected: (name: String) -> String,
 )
 
 data class DueReminderStrings(

@@ -8,6 +8,7 @@ import org.bigblackowl.debttracker.core.i18n.AuthGateStrings
 import org.bigblackowl.debttracker.core.i18n.AuthStrings
 import org.bigblackowl.debttracker.core.i18n.ClearCacheStrings
 import org.bigblackowl.debttracker.core.i18n.ContactPickerStrings
+import org.bigblackowl.debttracker.core.i18n.CorrectionDialogStrings
 import org.bigblackowl.debttracker.core.i18n.CreditorDetailStrings
 import org.bigblackowl.debttracker.core.i18n.CreditorListStrings
 import org.bigblackowl.debttracker.core.i18n.DebtorDetailStrings
@@ -325,6 +326,15 @@ val UkStrings = Strings(
         empty = "Поки немає сповіщень",
         markAllRead = "Позначити все прочитаним",
         bell = "Сповіщення",
+        correction = CorrectionDialogStrings(
+            rowAction = "Неправильна сума?",
+            title = "Повідомити про помилку",
+            reasonWrongAmount = "Неправильна сума",
+            reasonNotHappened = "Операції не було",
+            amountLabel = { currency -> "Правильна сума ($currency)" },
+            notHappenedHint = "Пропонує видалити цю операцію.",
+            send = "Надіслати",
+        ),
     ),
     notificationBody = NotificationBodyStrings(
         debtorLinked = { name, amount, currency -> "$name: ви винні $amount $currency" },
@@ -337,6 +347,10 @@ val UkStrings = Strings(
         linkRequestApproved = { name -> "$name підтвердив(ла) зв'язок боргу" },
         approveAction = "Підтвердити",
         rejectAction = "Відхилити",
+        transactionCorrectionProposed = { name, amount, currency -> "$name вважає, що сума має бути $amount $currency — підтвердьте або відхиліть нижче" },
+        transactionCorrectionRemovalProposed = { name -> "$name вважає, що цієї операції не було — підтвердьте або відхиліть нижче" },
+        transactionCorrectionApproved = { name -> "$name прийняв(ла) вашу правку" },
+        transactionCorrectionRejected = { name -> "$name відхилив(ла) вашу правку" },
     ),
     deleteContactConfirmTitle = "Видалити контакт?",
     deleteContactConfirmText = { name -> "$name та всю історію операцій буде видалено назавжди." },

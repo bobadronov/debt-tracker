@@ -8,6 +8,7 @@ import org.bigblackowl.debttracker.core.i18n.AuthGateStrings
 import org.bigblackowl.debttracker.core.i18n.AuthStrings
 import org.bigblackowl.debttracker.core.i18n.ClearCacheStrings
 import org.bigblackowl.debttracker.core.i18n.ContactPickerStrings
+import org.bigblackowl.debttracker.core.i18n.CorrectionDialogStrings
 import org.bigblackowl.debttracker.core.i18n.CreditorDetailStrings
 import org.bigblackowl.debttracker.core.i18n.CreditorListStrings
 import org.bigblackowl.debttracker.core.i18n.DebtorDetailStrings
@@ -326,6 +327,15 @@ val CsStrings = Strings(
         empty = "Zatím žádná oznámení",
         markAllRead = "Označit vše jako přečtené",
         bell = "Oznámení",
+        correction = CorrectionDialogStrings(
+            rowAction = "Špatná částka?",
+            title = "Nahlásit problém",
+            reasonWrongAmount = "Špatná částka",
+            reasonNotHappened = "Tohle se nestalo",
+            amountLabel = { currency -> "Správná částka ($currency)" },
+            notHappenedHint = "Navrhne odstranění této transakce.",
+            send = "Odeslat",
+        ),
     ),
     notificationBody = NotificationBodyStrings(
         debtorLinked = { name, amount, currency -> "$name: dlužíte $amount $currency" },
@@ -338,6 +348,10 @@ val CsStrings = Strings(
         linkRequestApproved = { name -> "$name potvrdil(a) propojení dluhu" },
         approveAction = "Potvrdit",
         rejectAction = "Odmítnout",
+        transactionCorrectionProposed = { name, amount, currency -> "$name tvrdí, že částka má být $amount $currency — potvrďte nebo odmítněte níže" },
+        transactionCorrectionRemovalProposed = { name -> "$name tvrdí, že tato transakce se nestala — potvrďte nebo odmítněte níže" },
+        transactionCorrectionApproved = { name -> "$name přijal(a) vaši opravu" },
+        transactionCorrectionRejected = { name -> "$name odmítl(a) vaši opravu" },
     ),
     deleteContactConfirmTitle = "Smazat kontakt?",
     deleteContactConfirmText = { name -> "$name a celá historie transakcí budou trvale odstraněny." },

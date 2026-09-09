@@ -443,6 +443,13 @@ class FakeNotificationRepository : NotificationRepository {
     override suspend fun delete(id: String) {}
     override suspend fun approveLinkRequest(requestId: String): Boolean = false
     override suspend fun rejectLinkRequest(requestId: String): Boolean = false
+    override suspend fun proposeTransactionCorrection(
+        notificationId: String,
+        reason: org.bigblackowl.debttracker.domain.model.CorrectionReason,
+        amount: BigDecimal?,
+    ): Boolean = false
+    override suspend fun approveTransactionCorrection(correctionId: String): Boolean = false
+    override suspend fun rejectTransactionCorrection(correctionId: String): Boolean = false
 }
 
 /**

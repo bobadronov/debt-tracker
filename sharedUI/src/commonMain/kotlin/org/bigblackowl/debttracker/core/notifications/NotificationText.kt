@@ -25,5 +25,10 @@ fun AppNotification.formatBody(strings: Strings, redactAmount: Boolean = false):
         NotificationType.CREDIT_TRANSACTION_ADDED -> strings.notificationBody.creditTransactionAdded(name, amountText, currencyText)
         NotificationType.LINK_REQUEST -> strings.notificationBody.linkRequestReceived(name)
         NotificationType.LINK_REQUEST_APPROVED -> strings.notificationBody.linkRequestApproved(name)
+        NotificationType.TRANSACTION_CORRECTION ->
+            if (amount == null) strings.notificationBody.transactionCorrectionRemovalProposed(name)
+            else strings.notificationBody.transactionCorrectionProposed(name, amountText, currencyText)
+        NotificationType.TRANSACTION_CORRECTION_APPROVED -> strings.notificationBody.transactionCorrectionApproved(name)
+        NotificationType.TRANSACTION_CORRECTION_REJECTED -> strings.notificationBody.transactionCorrectionRejected(name)
     }
 }

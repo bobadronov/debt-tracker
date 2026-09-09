@@ -11,6 +11,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bigblackowl.debttracker.data.remote.dto.NotificationDto
 import org.bigblackowl.debttracker.domain.model.AppNotification
+import org.bigblackowl.debttracker.domain.model.CorrectionReason
 import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.NotificationType
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
@@ -19,6 +20,16 @@ import org.bigblackowl.debttracker.domain.repository.NotificationRepository
 @Serializable
 private data class LinkRequestParams(@SerialName("p_request_id") val requestId: String)
 
+@Serializable
+private data class ProposeCorrectionParams(
+    @SerialName("p_notification_id") val notificationId: String,
+    @SerialName("p_reason") val reason: String,
+    @SerialName("p_proposed_amount") val proposedAmount: Double?,
+)
+
+@Serializable
+private data class CorrectionParams(@SerialName("p_correction_id") val correctionId: String)
+
 private fun NotificationDto.toDomain() = AppNotification(
     id = id,
     type = NotificationType.valueOf(type),
@@ -26,6 +37,8 @@ private fun NotificationDto.toDomain() = AppNotification(
     relatedDebtorId = relatedDebtorId,
     relatedCreditorId = relatedCreditorId,
     relatedLinkRequestId = relatedLinkRequestId,
+    relatedTransactionId = relatedTransactionId,
+    relatedCorrectionId = relatedCorrectionId,
     amount = amount?.let { BigDecimal.parseString(it.toString()) },
     currency = currency?.let { runCatching { Currency.valueOf(it) }.getOrNull() },
     isRead = isRead,
@@ -123,6 +136,38 @@ class SupabaseNotificationRepository(
         if (currentUserIdOrNull() == null) return false
         return runCatching {
             client.postgrest.rpc("reject_link_request", LinkRequestParams(requestId))
+        }.isSuccess
+    }
+
+    override suspend fun proposeTransactionCorrection(
+        notificationId: String,
+        reason: CorrectionReason,
+        amount: BigDecimal?,
+    ): Boolean {
+        if (currentUserIdOrNull() == null) return false
+        return runCatching {
+            client.postgrest.rpc(
+                "propose_transaction_correction",
+                ProposeCorrectionParams(
+                    notificationId = notificationId,
+                    reason = reason.wire,
+                    proposedAmount = amount?.let { it.abs().toStringExpanded().toDouble() },
+                ),
+            )
+        }.isSuccess
+    }
+
+    override suspend fun approveTransactionCorrection(correctionId: String): Boolean {
+        if (currentUserIdOrNull() == null) return false
+        return runCatching {
+            client.postgrest.rpc("approve_transaction_correction", CorrectionParams(correctionId))
+        }.isSuccess
+    }
+
+    override suspend fun rejectTransactionCorrection(correctionId: String): Boolean {
+        if (currentUserIdOrNull() == null) return false
+        return runCatching {
+            client.postgrest.rpc("reject_transaction_correction", CorrectionParams(correctionId))
         }.isSuccess
     }
 }

@@ -1,35 +1,49 @@
 package org.bigblackowl.debttracker.ui.screens.notifications
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.PriceChange
 import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.notifications.formatBody
 import org.bigblackowl.debttracker.domain.model.AppNotification
+import org.bigblackowl.debttracker.domain.model.CorrectionReason
 import org.bigblackowl.debttracker.domain.model.NotificationType
 import org.bigblackowl.debttracker.domain.model.formatDateTime
+import org.bigblackowl.debttracker.domain.validation.sanitizeAmountInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
@@ -37,6 +51,8 @@ import org.bigblackowl.debttracker.ui.components.SettingsDetailScaffold
 import org.bigblackowl.debttracker.ui.components.SettingsRow
 import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
 import org.bigblackowl.debttracker.ui.components.SettingsSection
+import org.bigblackowl.debttracker.ui.components.form.PasteableOutlinedTextField
+import org.bigblackowl.debttracker.ui.components.form.rememberClipboardText
 import org.koin.compose.viewmodel.koinViewModel
 
 /** Історія сповіщень про дзеркальні борги (спек §7) — доступна лише в Account+Sync (бейдж у Home top bar). */
@@ -95,6 +111,19 @@ fun NotificationsScreen(
                             onReject = notification.relatedLinkRequestId?.let { requestId ->
                                 { viewModel.onIntent(NotificationsIntent.RejectLinkRequest(notification.id, requestId)) }
                             },
+                            onApproveCorrection = notification.relatedCorrectionId
+                                ?.takeIf { notification.type == NotificationType.TRANSACTION_CORRECTION }
+                                ?.let { correctionId ->
+                                    { viewModel.onIntent(NotificationsIntent.ApproveCorrection(notification.id, correctionId)) }
+                                },
+                            onRejectCorrection = notification.relatedCorrectionId
+                                ?.takeIf { notification.type == NotificationType.TRANSACTION_CORRECTION }
+                                ?.let { correctionId ->
+                                    { viewModel.onIntent(NotificationsIntent.RejectCorrection(notification.id, correctionId)) }
+                                },
+                            onProposeCorrection = notification.relatedTransactionId
+                                ?.takeIf { notification.type.isTransactionAdded() }
+                                ?.let { { viewModel.onIntent(NotificationsIntent.OpenCorrectionDialog(notification)) } },
                         )
                         if (index != state.notifications.lastIndex) SettingsRowDivider()
                     }
@@ -102,7 +131,20 @@ fun NotificationsScreen(
             }
         }
     }
+
+    state.correctionDialogFor?.let { notification ->
+        CorrectionDialog(
+            notification = notification,
+            onDismiss = { viewModel.onIntent(NotificationsIntent.DismissCorrectionDialog) },
+            onSubmit = { reason, amount ->
+                viewModel.onIntent(NotificationsIntent.SubmitCorrection(notification.id, reason, amount))
+            },
+        )
+    }
 }
+
+private fun NotificationType.isTransactionAdded() =
+    this == NotificationType.DEBT_TRANSACTION_ADDED || this == NotificationType.CREDIT_TRANSACTION_ADDED
 
 @Composable
 private fun NotificationRow(
@@ -111,12 +153,19 @@ private fun NotificationRow(
     onDelete: () -> Unit,
     onApprove: (() -> Unit)? = null,
     onReject: (() -> Unit)? = null,
+    onApproveCorrection: (() -> Unit)? = null,
+    onRejectCorrection: (() -> Unit)? = null,
+    onProposeCorrection: (() -> Unit)? = null,
 ) {
     val strings = LocalStrings.current
     val accent = when (notification.type) {
         NotificationType.DEBTOR_LINKED, NotificationType.DEBT_TRANSACTION_ADDED -> MaterialTheme.debtAccentColors.debt
         NotificationType.CREDITOR_LINKED, NotificationType.CREDIT_TRANSACTION_ADDED -> MaterialTheme.debtAccentColors.repay
         NotificationType.LINK_REQUEST, NotificationType.LINK_REQUEST_APPROVED -> MaterialTheme.debtAccentColors.repay
+        NotificationType.TRANSACTION_CORRECTION,
+        NotificationType.TRANSACTION_CORRECTION_APPROVED,
+        NotificationType.TRANSACTION_CORRECTION_REJECTED,
+            -> MaterialTheme.debtAccentColors.debt
     }
     SettingsRow(
         icon = notification.type.icon(),
@@ -127,8 +176,8 @@ private fun NotificationRow(
         iconContainerColor = accent.copy(alpha = 0.14f),
         onClick = onOpen,
         trailing = {
-            if (notification.type == NotificationType.LINK_REQUEST && onApprove != null && onReject != null) {
-                Row {
+            when {
+                notification.type == NotificationType.LINK_REQUEST && onApprove != null && onReject != null -> Row {
                     IconButton(onClick = onApprove) {
                         Icon(Icons.Filled.Check, contentDescription = strings.notificationBody.approveAction)
                     }
@@ -136,8 +185,26 @@ private fun NotificationRow(
                         Icon(Icons.Filled.Close, contentDescription = strings.notificationBody.rejectAction)
                     }
                 }
-            } else {
-                IconButton(onClick = onDelete) {
+
+                notification.type == NotificationType.TRANSACTION_CORRECTION && onApproveCorrection != null && onRejectCorrection != null -> Row {
+                    IconButton(onClick = onApproveCorrection) {
+                        Icon(Icons.Filled.Check, contentDescription = strings.notificationBody.approveAction)
+                    }
+                    IconButton(onClick = onRejectCorrection) {
+                        Icon(Icons.Filled.Close, contentDescription = strings.notificationBody.rejectAction)
+                    }
+                }
+
+                onProposeCorrection != null -> Row {
+                    IconButton(onClick = onProposeCorrection) {
+                        Icon(Icons.Filled.PriceChange, contentDescription = strings.notifications.correction.rowAction)
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(Icons.Filled.Close, contentDescription = null)
+                    }
+                }
+
+                else -> IconButton(onClick = onDelete) {
                     Icon(Icons.Filled.Close, contentDescription = null)
                 }
             }
@@ -145,11 +212,93 @@ private fun NotificationRow(
     )
 }
 
+/** Діалог «відхилити операцію» на рядку *_TRANSACTION_ADDED — причина + (для «неправильна сума») нова сума (0014). */
+@Composable
+private fun CorrectionDialog(
+    notification: AppNotification,
+    onDismiss: () -> Unit,
+    onSubmit: (CorrectionReason, BigDecimal?) -> Unit,
+) {
+    val strings = LocalStrings.current
+    val clipboardText by rememberClipboardText()
+    var reason by remember { mutableStateOf(CorrectionReason.WRONG_AMOUNT) }
+    var amountText by remember { mutableStateOf("") }
+
+    val parsedAmount = runCatching { BigDecimal.parseString(amountText.trim()) }.getOrNull()
+        ?.takeIf { it > BigDecimal.ZERO }
+    val canSend = reason == CorrectionReason.NOT_HAPPENED || parsedAmount != null
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(strings.notifications.correction.title) },
+        text = {
+            Column {
+                ReasonRow(
+                    selected = reason == CorrectionReason.WRONG_AMOUNT,
+                    label = strings.notifications.correction.reasonWrongAmount,
+                    onSelect = { reason = CorrectionReason.WRONG_AMOUNT },
+                )
+                if (reason == CorrectionReason.WRONG_AMOUNT) {
+                    PasteableOutlinedTextField(
+                        value = amountText,
+                        onValueChange = { amountText = sanitizeAmountInput(it) },
+                        label = strings.notifications.correction.amountLabel(notification.currency?.symbol ?: ""),
+                        clipboardText = clipboardText,
+                        isPasteRelevant = { text ->
+                            val s = sanitizeAmountInput(text)
+                            s.isNotBlank() && runCatching { BigDecimal.parseString(s) }.getOrNull()?.let { it > BigDecimal.ZERO } == true
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.padding(start = Dimens.space40, top = Dimens.space4, bottom = Dimens.space8),
+                    ) { amountText = sanitizeAmountInput(it) }
+                }
+                ReasonRow(
+                    selected = reason == CorrectionReason.NOT_HAPPENED,
+                    label = strings.notifications.correction.reasonNotHappened,
+                    onSelect = { reason = CorrectionReason.NOT_HAPPENED },
+                )
+                if (reason == CorrectionReason.NOT_HAPPENED) {
+                    Text(
+                        strings.notifications.correction.notHappenedHint,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = Dimens.space40, top = Dimens.space4),
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onSubmit(reason, parsedAmount?.takeIf { reason == CorrectionReason.WRONG_AMOUNT }) },
+                enabled = canSend,
+            ) { Text(strings.notifications.correction.send) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(strings.cancel) }
+        },
+    )
+}
+
+@Composable
+private fun ReasonRow(selected: Boolean, label: String, onSelect: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().selectable(selected = selected, onClick = onSelect).padding(vertical = Dimens.space4),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(selected = selected, onClick = onSelect)
+        Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = Dimens.space8))
+    }
+}
+
 private fun NotificationType.icon(): ImageVector = when (this) {
     NotificationType.DEBTOR_LINKED, NotificationType.CREDITOR_LINKED,
     NotificationType.LINK_REQUEST, NotificationType.LINK_REQUEST_APPROVED,
         -> Icons.Filled.Link
     NotificationType.DEBT_TRANSACTION_ADDED, NotificationType.CREDIT_TRANSACTION_ADDED -> Icons.Filled.SwapHoriz
+    NotificationType.TRANSACTION_CORRECTION,
+    NotificationType.TRANSACTION_CORRECTION_APPROVED,
+    NotificationType.TRANSACTION_CORRECTION_REJECTED,
+        -> Icons.AutoMirrored.Filled.ReceiptLong
 }
 
 @Composable

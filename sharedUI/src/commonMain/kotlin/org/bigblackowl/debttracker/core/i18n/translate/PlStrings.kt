@@ -8,6 +8,7 @@ import org.bigblackowl.debttracker.core.i18n.AuthGateStrings
 import org.bigblackowl.debttracker.core.i18n.AuthStrings
 import org.bigblackowl.debttracker.core.i18n.ClearCacheStrings
 import org.bigblackowl.debttracker.core.i18n.ContactPickerStrings
+import org.bigblackowl.debttracker.core.i18n.CorrectionDialogStrings
 import org.bigblackowl.debttracker.core.i18n.CreditorDetailStrings
 import org.bigblackowl.debttracker.core.i18n.CreditorListStrings
 import org.bigblackowl.debttracker.core.i18n.DebtorDetailStrings
@@ -325,6 +326,15 @@ val PlStrings = Strings(
         empty = "Brak powiadomień",
         markAllRead = "Oznacz wszystkie jako przeczytane",
         bell = "Powiadomienia",
+        correction = CorrectionDialogStrings(
+            rowAction = "Zła kwota?",
+            title = "Zgłoś problem",
+            reasonWrongAmount = "Zła kwota",
+            reasonNotHappened = "To się nie wydarzyło",
+            amountLabel = { currency -> "Poprawna kwota ($currency)" },
+            notHappenedHint = "Proponuje usunięcie tej transakcji.",
+            send = "Wyślij",
+        ),
     ),
     notificationBody = NotificationBodyStrings(
         debtorLinked = { name, amount, currency -> "$name: jesteś winien/winna $amount $currency" },
@@ -337,6 +347,10 @@ val PlStrings = Strings(
         linkRequestApproved = { name -> "$name zatwierdził(a) połączenie długu" },
         approveAction = "Zatwierdź",
         rejectAction = "Odrzuć",
+        transactionCorrectionProposed = { name, amount, currency -> "$name uważa, że kwota powinna wynosić $amount $currency — zatwierdź lub odrzuć poniżej" },
+        transactionCorrectionRemovalProposed = { name -> "$name twierdzi, że ta transakcja się nie odbyła — zatwierdź lub odrzuć poniżej" },
+        transactionCorrectionApproved = { name -> "$name zaakceptował(a) Twoją poprawkę" },
+        transactionCorrectionRejected = { name -> "$name odrzucił(a) Twoją poprawkę" },
     ),
     deleteContactConfirmTitle = "Usunąć kontakt?",
     deleteContactConfirmText = { name -> "$name i cała historia transakcji zostaną trwale usunięte." },

@@ -8,6 +8,7 @@ import org.bigblackowl.debttracker.core.i18n.AuthGateStrings
 import org.bigblackowl.debttracker.core.i18n.AuthStrings
 import org.bigblackowl.debttracker.core.i18n.ClearCacheStrings
 import org.bigblackowl.debttracker.core.i18n.ContactPickerStrings
+import org.bigblackowl.debttracker.core.i18n.CorrectionDialogStrings
 import org.bigblackowl.debttracker.core.i18n.CreditorDetailStrings
 import org.bigblackowl.debttracker.core.i18n.CreditorListStrings
 import org.bigblackowl.debttracker.core.i18n.DebtorDetailStrings
@@ -326,6 +327,15 @@ val NlStrings = Strings(
         empty = "Nog geen meldingen",
         markAllRead = "Alles als gelezen markeren",
         bell = "Meldingen",
+        correction = CorrectionDialogStrings(
+            rowAction = "Verkeerd bedrag?",
+            title = "Een probleem melden",
+            reasonWrongAmount = "Verkeerd bedrag",
+            reasonNotHappened = "Dit is niet gebeurd",
+            amountLabel = { currency -> "Juiste bedrag ($currency)" },
+            notHappenedHint = "Stelt voor deze transactie te verwijderen.",
+            send = "Verzenden",
+        ),
     ),
     notificationBody = NotificationBodyStrings(
         debtorLinked = { name, amount, currency -> "$name: je bent $amount $currency schuldig" },
@@ -338,6 +348,10 @@ val NlStrings = Strings(
         linkRequestApproved = { name -> "$name heeft de koppeling goedgekeurd" },
         approveAction = "Goedkeuren",
         rejectAction = "Afwijzen",
+        transactionCorrectionProposed = { name, amount, currency -> "$name zegt dat het bedrag $amount $currency moet zijn — keur hieronder goed of af" },
+        transactionCorrectionRemovalProposed = { name -> "$name zegt dat deze transactie niet is gebeurd — keur hieronder goed of af" },
+        transactionCorrectionApproved = { name -> "$name heeft je correctie geaccepteerd" },
+        transactionCorrectionRejected = { name -> "$name heeft je correctie afgewezen" },
     ),
     deleteContactConfirmTitle = "Contact verwijderen?",
     deleteContactConfirmText = { name -> "$name en de volledige transactiegeschiedenis worden definitief verwijderd." },
