@@ -10,8 +10,12 @@ plugins {
 val versionProps = Properties().apply {
     rootProject.file("version.properties").inputStream().use { load(it) }
 }
-val appVersionName: String = versionProps.getProperty("VERSION_NAME")
-val appVersionCode: Int = versionProps.getProperty("VERSION_CODE").toInt()
+// java.util.Properties does no interpolation, so resolve the `$VERSION_CODE` placeholder that
+// version.properties uses in VERSION_NAME (`1.0.$VERSION_CODE`) — the code is the single number to bump.
+val appVersionCode: Int = versionProps.getProperty("VERSION_CODE").trim().toInt()
+val appVersionName: String = versionProps.getProperty("VERSION_NAME").trim()
+    .replace("\${VERSION_CODE}", appVersionCode.toString())
+    .replace("\$VERSION_CODE", appVersionCode.toString())
 
 // Release signing comes from env vars (CI secrets) — never hardcoded/committed.
 // Missing/blank env vars → release build stays unsigned locally, but fails fast in CI

@@ -173,9 +173,9 @@ private fun startApp(koin: Koin, args: Array<String>) = nucleusApplication(args)
         appScope.MaterialDecoratedWindow(
             title = windowTitle, // OS window title (taskbar / alt-tab)
             icon = appIcon,
-            state = rememberWindowState(width = 800.dp, height = 600.dp),
+            state = rememberWindowState(width = 500.dp, height = 700.dp),
             visible = isWindowVisible,
-            minimumSize = DpSize(350.dp, 600.dp),
+            minimumSize = DpSize(500.dp, 700.dp),
             onCloseRequest = {
                 if (settings.runInBackground) isWindowVisible = false else exitApplication()
             },

@@ -22,6 +22,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.tooling.preview.Devices.DESKTOP
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.bigblackowl.debttracker.BuildConfig
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
@@ -34,6 +36,7 @@ import org.bigblackowl.debttracker.core.update.appUpdateSupported
 import org.bigblackowl.debttracker.core.update.inAppUpdateSupported
 import org.bigblackowl.debttracker.core.update.rememberAppUpdateChecker
 import org.bigblackowl.debttracker.core.update.rememberInAppUpdateLauncher
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
 import org.bigblackowl.debttracker.ui.components.SettingsRow
@@ -170,3 +173,27 @@ private fun feedbackUrl(locale: String, theme: String): String = buildString {
     if (locale != "system") append("&lang=").append(locale)
     if (theme == "light" || theme == "dark") append("&theme=").append(theme)
 }
+
+// The @Preview functions render this rather than SettingsAboutScreen directly: the extra hop keeps
+// the koinViewModel() call out of the previewed function's own body (matching SettingsScreen). The
+// screen renders through SettingsViewModel, backed by the fakes in preview/PreviewModule.kt.
+@Composable
+private fun SettingsAboutScreenPreviewContent() {
+    SettingsAboutScreen(onBack = {})
+}
+
+@Preview
+@Composable
+private fun SettingsAboutScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { SettingsAboutScreenPreviewContent() }
+
+@Preview
+@Composable
+private fun SettingsAboutScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { SettingsAboutScreenPreviewContent() }
+
+@Preview(device = DESKTOP)
+@Composable
+private fun SettingsAboutScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { SettingsAboutScreenPreviewContent() }
+
+@Preview(device = DESKTOP)
+@Composable
+private fun SettingsAboutScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { SettingsAboutScreenPreviewContent() }

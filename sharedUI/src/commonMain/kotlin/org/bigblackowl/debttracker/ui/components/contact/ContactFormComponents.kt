@@ -248,13 +248,13 @@ fun AddEditContactForm(
                         selected = method,
                         onSelect = onMethodChange,
                     )
+                    DueReminderField(
+                        dueDate = dueDate,
+                        onDueDateChange = onDueDateChange,
+                        reminderLeadDays = reminderLeadDays,
+                        onToggleReminderLead = onToggleReminderLead,
+                    )
                 }
-                DueReminderField(
-                    dueDate = dueDate,
-                    onDueDateChange = onDueDateChange,
-                    reminderLeadDays = reminderLeadDays,
-                    onToggleReminderLead = onToggleReminderLead,
-                )
             }
             LoadingButton(
                 onClick = onSave,
@@ -279,7 +279,7 @@ fun AddEditContactForm(
 @Composable
 private fun AddEditContactFormSample() {
     var fullName by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("976651807") }
     var email by remember { mutableStateOf("") }
     var comment by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
@@ -291,6 +291,7 @@ private fun AddEditContactFormSample() {
     AddEditContactForm(
         title = "New record",
         onDone = {},
+        isEditMode = true,
         snackbarHostState = snackbarHostState,
         direction = direction,
         onDirectionChange = { direction = it },

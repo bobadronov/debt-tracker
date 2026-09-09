@@ -26,11 +26,11 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Vibration
@@ -116,7 +116,7 @@ fun SettingsScreen(
                 SettingsSection(null) {
                     if (showProtectionRow) {
                         SettingsRow(
-                            icon = Icons.Default.Security,
+                            icon = Icons.Filled.Lock,
                             title = strings.settings.protection,
                             onClick = onOpenProtection,
                         )
@@ -135,7 +135,13 @@ fun SettingsScreen(
                         title = strings.settings.data,
                         onClick = onOpenData,
                     )
-
+                    SettingsRowDivider()
+                    SettingsRow(
+                        icon = Icons.Filled.Info,
+                        title = strings.settings.about,
+                        subtitle = BuildConfig.APP_VERSION,
+                        onClick = onOpenAbout,
+                    )
                 }
                 SettingsSection(strings.settings.preferences) {
                     if (BuildConfig.SOUND_ENABLED) {
@@ -200,13 +206,6 @@ fun SettingsScreen(
                         title = strings.settings.language,
                         subtitle = languageLabel,
                         onClick = onOpenLanguage,
-                    )
-                    SettingsRowDivider()
-                    SettingsRow(
-                        icon = Icons.Filled.Info,
-                        title = strings.settings.about,
-                        subtitle = BuildConfig.APP_VERSION,
-                        onClick = onOpenAbout,
                     )
                 }
             }

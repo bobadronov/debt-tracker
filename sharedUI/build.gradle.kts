@@ -214,6 +214,12 @@ fun optionalSecret(key: String): String =
 val versionProps = Properties().apply {
     rootProject.file("version.properties").inputStream().use { load(it) }
 }
+// java.util.Properties does no interpolation, so resolve the `$VERSION_CODE` placeholder that
+// version.properties uses in VERSION_NAME (`1.0.$VERSION_CODE`) — the code is the single number to bump.
+val appVersionCode: Int = versionProps.getProperty("VERSION_CODE").trim().toInt()
+val appVersionName: String = versionProps.getProperty("VERSION_NAME").trim()
+    .replace("\${VERSION_CODE}", appVersionCode.toString())
+    .replace("\$VERSION_CODE", appVersionCode.toString())
 
 // Desktop/KMP has no real debug/release build variant (unlike Android's AGP), so this approximates
 // it from which Gradle task is running: release.yml's packaging/publishing tasks vs. everything
@@ -240,8 +246,8 @@ buildConfig {
     // native Credential Manager flow (see GoogleSignInLauncher.android.kt). Public value, same
     // rationale as the anon key: it identifies the app, it doesn't authorize anything on its own.
     buildConfigField("GOOGLE_SERVER_CLIENT_ID", optionalSecret("GOOGLE_SERVER_CLIENT_ID"))
-    buildConfigField("APP_VERSION", versionProps.getProperty("VERSION_NAME"))
-    buildConfigField("APP_VERSION_CODE", versionProps.getProperty("VERSION_CODE").toInt())
+    buildConfigField("APP_VERSION", appVersionName)
+    buildConfigField("APP_VERSION_CODE", appVersionCode)
     buildConfigField("APP_AUTHOR", "BigBlackOwl")
     buildConfigField("SOUND_ENABLED", false)
     buildConfigField("DEBUG", isDebugBuild)

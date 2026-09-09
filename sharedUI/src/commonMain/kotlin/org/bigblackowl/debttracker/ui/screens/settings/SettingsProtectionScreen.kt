@@ -18,12 +18,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Devices.DESKTOP
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.platform.AppPlatform
 import org.bigblackowl.debttracker.core.platform.currentPlatform
 import org.bigblackowl.debttracker.core.security.rememberBiometricAuthenticator
 import org.bigblackowl.debttracker.core.settings.AppSettings
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
 import org.bigblackowl.debttracker.ui.components.SettingsRow
@@ -101,3 +104,27 @@ fun SettingsProtectionScreen(
         )
     }
 }
+
+// The @Preview functions render this rather than SettingsProtectionScreen directly: the extra hop
+// keeps the koinViewModel() call out of the previewed function's own body (matching SettingsScreen).
+// The screen renders through SettingsViewModel, backed by the fakes in preview/PreviewModule.kt.
+@Composable
+private fun SettingsProtectionScreenPreviewContent() {
+    SettingsProtectionScreen(onBack = {})
+}
+
+@Preview
+@Composable
+private fun SettingsProtectionScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { SettingsProtectionScreenPreviewContent() }
+
+@Preview
+@Composable
+private fun SettingsProtectionScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { SettingsProtectionScreenPreviewContent() }
+
+@Preview(device = DESKTOP)
+@Composable
+private fun SettingsProtectionScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { SettingsProtectionScreenPreviewContent() }
+
+@Preview(device = DESKTOP)
+@Composable
+private fun SettingsProtectionScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { SettingsProtectionScreenPreviewContent() }

@@ -1,6 +1,5 @@
 package org.bigblackowl.debttracker.ui.components.unlock
 
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -38,6 +37,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
@@ -71,11 +71,16 @@ fun PinCodeField(
     var isFocused by remember { mutableStateOf(false) }
     var pinVisible by remember { mutableStateOf(false) }
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Box(
+            modifier = modifier,
+            contentAlignment = Alignment.Center
+        ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(Dimens.space16),
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(Dimens.space16), verticalAlignment = Alignment.CenterVertically
             ) {
                 repeat(length) { index ->
                     PinDot(
@@ -93,9 +98,7 @@ fun PinCodeField(
                 onValueChange = { new ->
                     if (new.length <= length && new.all(Char::isDigit)) onValueChange(new)
                 },
-                modifier = Modifier.matchParentSize().alpha(0f)
-                    .focusRequester(focusRequester)
-                    .onFocusChanged { isFocused = it.isFocused },
+                modifier = Modifier.matchParentSize().alpha(0f).focusRequester(focusRequester).onFocusChanged { isFocused = it.isFocused },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword, imeAction = imeAction),
                 keyboardActions = keyboardActions,
@@ -103,25 +106,16 @@ fun PinCodeField(
         }
 
         ToggleButton(
-            checked = pinVisible,
-            onCheckedChange = {
+            checked = pinVisible, onCheckedChange = {
                 pinVisible = !pinVisible
-            }
-        ) {
-            Crossfade(targetState = pinVisible) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        if (it) strings.authGate.hidePin else strings.authGate.showPin,
-                        modifier = Modifier.padding(end = Dimens.space3)
-                    )
-                    Icon(
-                        imageVector = if (it) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = null
-                    )
-                }
-            }
+            }) {
+            Text(
+                if (pinVisible) strings.authGate.hidePin else strings.authGate.showPin, modifier = Modifier.padding(end = Dimens.space3)
+            )
+            Icon(
+                imageVector = if (pinVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null
+            )
+
         }
     }
 }
@@ -151,16 +145,9 @@ private fun PinDot(
     )
 
     Box(
-        modifier = Modifier
-            .size(Dimens.space40)
-            .clip(CircleShape)
-            .background(animatedFillColor)
-            .border(
-                width = if (highlighted) Dimens.space3 else Dimens.space1,
-                color = animatedBorderColor,
-                shape = CircleShape
-            )
-            .padding(if (filled) Dimens.space3 else Dimens.space1),
+        modifier = Modifier.size(Dimens.space40).clip(CircleShape).background(animatedFillColor).border(
+            width = if (highlighted) Dimens.space3 else Dimens.space1, color = animatedBorderColor, shape = CircleShape
+        ).padding(if (filled) Dimens.space3 else Dimens.space1),
         contentAlignment = Alignment.Center,
     ) {
         if (visible && filled) {

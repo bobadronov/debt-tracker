@@ -24,7 +24,6 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/widget_card_light"
-
     tools:layout_width="160dp"
     tools:layout_height="160dp"
     tools:ignore="HardcodedText,ContentDescription">

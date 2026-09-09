@@ -27,9 +27,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Devices.DESKTOP
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.ConfirmDialog
@@ -173,3 +176,27 @@ private fun ColumnScope.DataResultLine(visible: Boolean, text: String, color: Co
         )
     }
 }
+
+// The @Preview functions render this rather than SettingsDataScreen directly: the extra hop keeps
+// the koinViewModel() call out of the previewed function's own body (matching SettingsScreen). The
+// screen renders through SettingsViewModel, backed by the fakes in preview/PreviewModule.kt.
+@Composable
+private fun SettingsDataScreenPreviewContent() {
+    SettingsDataScreen(onBack = {}, onExport = {})
+}
+
+@Preview
+@Composable
+private fun SettingsDataScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { SettingsDataScreenPreviewContent() }
+
+@Preview
+@Composable
+private fun SettingsDataScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { SettingsDataScreenPreviewContent() }
+
+@Preview(device = DESKTOP)
+@Composable
+private fun SettingsDataScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { SettingsDataScreenPreviewContent() }
+
+@Preview(device = DESKTOP)
+@Composable
+private fun SettingsDataScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { SettingsDataScreenPreviewContent() }
