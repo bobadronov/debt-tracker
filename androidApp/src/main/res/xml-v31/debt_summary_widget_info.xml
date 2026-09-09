@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- API 31+ copy of xml/debt_summary_widget_info.xml — keep both in sync. Resizable RemoteViews
-     widget (DebtSummaryWidgetReceiver); one fluid layout from 2x2 up to 4x2, horizontal resize
-     only. -->
+     widget (DebtSummaryWidgetReceiver); one fluid layout from 2x2 up to 4x3, resizable both ways. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="110dp"
-    android:minHeight="110dp"
+    android:minHeight="180dp"
     android:minResizeWidth="110dp"
     android:minResizeHeight="110dp"
     android:maxResizeWidth="320dp"
-    android:maxResizeHeight="140dp"
+    android:maxResizeHeight="320dp"
     android:targetCellWidth="2"
-    android:targetCellHeight="2"
+    android:targetCellHeight="3"
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/widget_debt_summary"
     android:previewLayout="@layout/widget_debt_summary"
-    android:resizeMode="horizontal"
+    android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen" />

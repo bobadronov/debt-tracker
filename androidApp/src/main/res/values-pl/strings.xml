@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget picker preview labels — synced with sharedUI PlStrings. See values/strings.xml. -->
+<resources>
+    <string name="widget_label_debtors">Winni mi</string>
+    <string name="widget_label_creditors">Moje długi</string>
+    <string name="widget_refresh">Odśwież</string>
+</resources>

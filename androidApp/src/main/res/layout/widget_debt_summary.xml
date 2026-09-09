@@ -6,9 +6,14 @@
   preference (AppSettings.theme), NOT the launcher's uiMode, so nothing here is a -night resource
   and every colour below is a placeholder overwritten on update.
 
-  One fluid layout for the whole resize range (2x2 .. 4x2, see debt_summary_widget_info.xml):
+  One fluid layout for the whole resize range (2x2 .. 4x3, see debt_summary_widget_info.xml):
   the two totals stack in a weighted column that shrinks with the widget, the refresh control is
-  a full-width bar pinned to the bottom.
+  a full-width bar pinned to the bottom. Amount text is 15sp so ~3 per-currency lines fit a side
+  at the default 3-cell height.
+
+  The label placeholders (@string/widget_label_*, @string/widget_refresh) are localised via
+  values-<lang>/strings.xml so the picker preview follows the device language; a placed widget's
+  labels are then overwritten by DebtSummaryWidgetReceiver from the app's own locale setting.
 
   tools:* values only affect the layout editor / the system widget picker preview.
 -->
@@ -19,7 +24,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/widget_card_light"
-    android:padding="12dp"
+
     tools:layout_width="160dp"
     tools:layout_height="160dp"
     tools:ignore="HardcodedText,ContentDescription">
@@ -29,6 +34,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="vertical"
+        android:padding="10dp"
         android:gravity="center_vertical">
 
         <LinearLayout
@@ -36,8 +42,10 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
+            android:baselineAligned="false"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            tools:ignore="NestedWeights">
 
             <FrameLayout
                 android:layout_width="36dp"
@@ -72,7 +80,7 @@
                     android:layout_height="wrap_content"
                     android:maxLines="1"
                     android:ellipsize="end"
-                    android:text="Owed to me"
+                    android:text="@string/widget_label_debtors"
                     android:textColor="#404941"
                     android:textSize="12sp" />
 
@@ -80,11 +88,12 @@
                     android:id="@+id/widget_amount_debtors"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:maxLines="2"
+                    android:maxLines="3"
                     android:ellipsize="end"
-                    android:text="0 ₴"
+                    android:text="0"
+                    tools:text="1 200 ₴\n80 $\n450 €"
                     android:textColor="#2E7D32"
-                    android:textSize="18sp"
+                    android:textSize="15sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </LinearLayout>
@@ -94,7 +103,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginTop="6dp"
+            android:baselineAligned="false"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
@@ -131,7 +140,7 @@
                     android:layout_height="wrap_content"
                     android:maxLines="1"
                     android:ellipsize="end"
-                    android:text="I owe"
+                    android:text="@string/widget_label_creditors"
                     android:textColor="#404941"
                     android:textSize="12sp" />
 
@@ -139,11 +148,12 @@
                     android:id="@+id/widget_amount_creditors"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:maxLines="2"
+                    android:maxLines="3"
                     android:ellipsize="end"
-                    android:text="0 ₴"
+                    android:text="0"
+                    tools:text="450 €"
                     android:textColor="#BB152C"
-                    android:textSize="18sp"
+                    android:textSize="15sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </LinearLayout>
@@ -153,12 +163,11 @@
         android:id="@+id/widget_refresh"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:orientation="horizontal"
-        android:gravity="center"
         android:background="@drawable/widget_refresh_light"
-        android:paddingTop="7dp"
-        android:paddingBottom="7dp">
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingTop="3dp"
+        android:paddingBottom="3dp">
 
         <ImageView
             android:id="@+id/widget_refresh_icon"
@@ -172,9 +181,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="7dp"
-            android:maxLines="1"
             android:ellipsize="end"
-            android:text="Refresh"
+            android:maxLines="1"
+            android:text="@string/widget_refresh"
             android:textColor="#404941"
             android:textSize="12sp" />
     </LinearLayout>

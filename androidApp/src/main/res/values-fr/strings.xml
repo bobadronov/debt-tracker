@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget picker preview labels — synced with sharedUI FrStrings. See values/strings.xml. -->
+<resources>
+    <string name="widget_label_debtors">On me doit</string>
+    <string name="widget_label_creditors">Je dois</string>
+    <string name="widget_refresh">Actualiser</string>
+</resources>

@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Resizable RemoteViews widget (DebtSummaryWidgetReceiver). One fluid layout covers the whole
-     range: 2x2 (compact square) up to 4x2 (wide). Horizontal resize only — height stays 2 cells.
+     range: 2x2 (compact) up to 4x3 (tall enough for ~3 per-currency total lines a side).
      initialLayout and previewLayout both point at the real layout; the launcher shows it with the
-     placeholder strings baked into widget_debt_summary.xml until the first onUpdate fills in real
-     values.
+     localised @string placeholders (values-<lang>/strings.xml → device language) until the first
+     onUpdate overwrites them from the app's own locale setting.
      targetCellWidth/Height + previewLayout are API 31+ only; the xml-v31/ copy is what those
      devices read — keep both in sync. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:minWidth="110dp"
-    android:minHeight="110dp"
+    android:minHeight="180dp"
     android:minResizeWidth="110dp"
     android:minResizeHeight="110dp"
     android:maxResizeWidth="320dp"
-    android:maxResizeHeight="140dp"
+    android:maxResizeHeight="320dp"
     android:targetCellWidth="2"
-    android:targetCellHeight="2"
+    android:targetCellHeight="3"
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/widget_debt_summary"
     android:previewLayout="@layout/widget_debt_summary"
-    android:resizeMode="horizontal"
+    android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
     tools:targetApi="31" />

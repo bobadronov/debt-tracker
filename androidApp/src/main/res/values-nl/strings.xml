@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget picker preview labels — synced with sharedUI NlStrings. See values/strings.xml. -->
+<resources>
+    <string name="widget_label_debtors">Aan mij verschuldigd</string>
+    <string name="widget_label_creditors">Ik ben schuldig</string>
+    <string name="widget_refresh">Vernieuwen</string>
+</resources>

@@ -4,5 +4,10 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <solid android:color="#FF262A29" />
-    <corners android:radius="16dp" />
+    <!-- Square top (meets the card above), rounded bottom (widget's outer edge). -->
+    <corners
+        android:topLeftRadius="0dp"
+        android:topRightRadius="0dp"
+        android:bottomLeftRadius="16dp"
+        android:bottomRightRadius="16dp" />
 </shape>

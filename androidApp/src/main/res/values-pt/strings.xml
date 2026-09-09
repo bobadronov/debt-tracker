@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget picker preview labels — synced with sharedUI PtStrings. See values/strings.xml. -->
+<resources>
+    <string name="widget_label_debtors">Devem-me</string>
+    <string name="widget_label_creditors">Eu devo</string>
+    <string name="widget_refresh">Atualizar</string>
+</resources>

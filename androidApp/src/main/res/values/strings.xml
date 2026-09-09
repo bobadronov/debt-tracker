@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Home-screen widget placeholder labels only. DebtSummaryWidgetReceiver overwrites these at
+  runtime from the app's own i18n (AppSettings.locale → resolveStrings), so a placed widget
+  always follows the in-app language. These resources exist so the launcher's widget picker
+  preview and the brief pre-bind frame follow the device language instead of showing English.
+  Keep the wording in sync with sharedUI core/i18n Strings.home.tabDebtors / tabCreditors /
+  exchangeRates.refresh.
+-->
+<resources>
+    <string name="widget_label_debtors">Owed to me</string>
+    <string name="widget_label_creditors">I owe</string>
+    <string name="widget_refresh">Refresh</string>
+</resources>

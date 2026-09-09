@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget picker preview labels — synced with sharedUI EsStrings. See values/strings.xml. -->
+<resources>
+    <string name="widget_label_debtors">Me deben</string>
+    <string name="widget_label_creditors">Debo</string>
+    <string name="widget_refresh">Actualizar</string>
+</resources>

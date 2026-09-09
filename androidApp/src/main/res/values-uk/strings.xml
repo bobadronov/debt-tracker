@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget picker preview labels — synced with sharedUI UkStrings. See values/strings.xml. -->
+<resources>
+    <string name="widget_label_debtors">Мені винні</string>
+    <string name="widget_label_creditors">Мої борги</string>
+    <string name="widget_refresh">Оновити</string>
+</resources>
