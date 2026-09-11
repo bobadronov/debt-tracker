@@ -71,7 +71,7 @@ fun main(args: Array<String>) {
     // shortcut (notification-common); ignored on Linux/macOS. Set before nucleusApplication().
     System.setProperty("nucleus.app.id", APP_ID)
     System.setProperty("nucleus.app.name", APP_NAME) // shortcut display name + toast app label
-    // Without the Nucleus Gradle plugin, ExecutableRuntime can't tell a packaged install from a
+    // Without the Nucleus Gradle plugin, ExecutableRuntime can't tell a packaged installation from a
     // dev run and assumes "dev" — which makes the Windows notification backend *require* a
     // pre-existing Start Menu shortcut instead of creating one, so no toast ever shows (from
     // `./gradlew run` or the MSI alike). Declaring a concrete type flips it to "create the
@@ -108,8 +108,8 @@ private fun startApp(koin: Koin, args: Array<String>) = nucleusApplication(args)
     val windowHandle = remember { mutableStateOf<NucleusWindow?>(null) }
 
     // The tray "show / hide" item must flip on BOTH states, not just `isWindowVisible`: a window the
-    // user shrank with the native minimise button is still `visible`, but the item should then read
-    // "restore", not "hide to tray". `minimizedFlow` gives us the real minimise state.
+    // user shrank with the native minimize button is still `visible`, but the item should then read
+    // "restore", not "hide to tray". `minimizedFlow` gives us the real minimize state.
     var isWindowMinimized by remember { mutableStateOf(false) }
     LaunchedEffect(windowHandle.value) {
         windowHandle.value?.minimizedFlow?.collect { isWindowMinimized = it }
@@ -202,7 +202,7 @@ private fun startApp(koin: Koin, args: Array<String>) = nucleusApplication(args)
     }
 }
 
-/** Left-pointing chevron drawn to the current content colour — the title-bar back affordance. */
+/** Left-pointing chevron drawn to the current content color — the title-bar back affordance. */
 @Composable
 private fun BackChevron() {
     val color = LocalContentColor.current
@@ -216,7 +216,7 @@ private fun BackChevron() {
 }
 
 /**
- * System-tray icon + a fully reactive "control centre" menu. Left-click opens the window; the menu
+ * System-tray icon + a fully reactive "control center" menu. Left-click opens the window; the menu
  * mirrors the app menu (Notifications with unread count, quick-add, Stats, Settings), plus a
  * "sync now" action with live status and a "run in background" toggle. Everything past the first
  * two items is gated on [AppMenu] being visible, i.e. the user is past the lock / onboarding
@@ -226,7 +226,7 @@ private fun BackChevron() {
 private fun TrayMenu(
     appIcon: Painter,
     strings: Strings,
-    /** Window is on screen and not minimised — drives whether the first item hides or restores it. */
+    /** Window is on screen and not minimized — drives whether the first item hides or restores it. */
     isWindowShown: Boolean,
     settings: AppSettings,
     poller: NotificationsPoller,
@@ -256,7 +256,7 @@ private fun TrayMenu(
             append(APP_NAME)
             if (isAuthenticated) append(" · ").append(if (unread > 0) notificationsLabel else syncLabel)
         },
-        // Left-click / double-click toggles: hide a shown window, restore a hidden/minimised one.
+        // Left-click / double-click toggles: hide a shown window, restore a hidden/minimized one.
         primaryAction = { if (isWindowShown) onHide() else onOpen() },
     ) {
         if (isWindowShown) {

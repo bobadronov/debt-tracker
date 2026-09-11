@@ -28,8 +28,8 @@ val versionProps = Properties().apply {
 // version.properties uses in VERSION_NAME (`1.0.$VERSION_CODE`) — the code is the single number to bump.
 val appVersionCode: Int = versionProps.getProperty("VERSION_CODE").trim().toInt()
 val appVersionName: String = versionProps.getProperty("VERSION_NAME").trim()
-    .replace("\${VERSION_CODE}", appVersionCode.toString())
-    .replace("\$VERSION_CODE", appVersionCode.toString())
+    .replace($$"${VERSION_CODE}", appVersionCode.toString())
+    .replace($$"$VERSION_CODE", appVersionCode.toString())
 
 dependencies {
     implementation(project(":sharedUI"))
