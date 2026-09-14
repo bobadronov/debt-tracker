@@ -8,7 +8,7 @@ import org.bigblackowl.debttracker.core.di.initKoin
 import org.bigblackowl.debttracker.core.notifications.DueReminderCoordinator
 import org.bigblackowl.debttracker.core.notifications.NotificationsPoller
 import org.bigblackowl.debttracker.data.sync.SyncCoordinator
-import org.koin.core.context.GlobalContext
+import org.koin.mp.KoinPlatformTools
 import platform.Foundation.NSURL
 import platform.UIKit.UIApplication
 import platform.UIKit.UIStatusBarStyleDarkContent
@@ -39,7 +39,7 @@ fun MainViewController(): UIViewController {
  */
 fun handleAuthDeeplink(url: String) {
     val nsUrl = NSURL.URLWithString(url) ?: return
-    GlobalContext.get().get<SupabaseClient>().handleDeeplinks(nsUrl)
+    KoinPlatformTools.defaultContext().get().get<SupabaseClient>().handleDeeplinks(nsUrl)
 }
 
 @Composable
