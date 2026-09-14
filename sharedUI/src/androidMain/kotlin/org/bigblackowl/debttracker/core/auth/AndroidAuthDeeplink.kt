@@ -3,7 +3,7 @@ package org.bigblackowl.debttracker.core.auth
 import android.content.Intent
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.handleDeeplinks
-import org.koin.core.context.GlobalContext
+import org.koin.mp.KoinPlatformTools
 
 /**
  * OAuth "Continue with Google" callback handling for `AppActivity`. Lives here (not in the app
@@ -17,5 +17,5 @@ fun isAuthCallbackIntent(intent: Intent): Boolean =
 
 /** Hands the callback intent to supabase-kt, which finishes the PKCE code exchange. */
 fun handleAuthDeeplink(intent: Intent) {
-    GlobalContext.get().get<SupabaseClient>().handleDeeplinks(intent)
+    KoinPlatformTools.defaultContext().get().get<SupabaseClient>().handleDeeplinks(intent)
 }
