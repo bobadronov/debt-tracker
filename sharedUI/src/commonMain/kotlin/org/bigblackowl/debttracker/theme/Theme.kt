@@ -6,7 +6,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import org.bigblackowl.debttracker.core.i18n.ProvideAppStrings
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.koin.compose.koinInject

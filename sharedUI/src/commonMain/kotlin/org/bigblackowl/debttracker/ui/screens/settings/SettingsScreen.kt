@@ -67,6 +67,7 @@ import org.bigblackowl.debttracker.ui.components.SettingsRow
 import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
 import org.bigblackowl.debttracker.ui.components.SettingsSection
 import org.bigblackowl.debttracker.ui.components.SettingsSwitchRow
+import org.bigblackowl.debttracker.ui.screens.settings.language.languageOptions
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -256,7 +257,7 @@ private fun AccountSection(
                 contentDescription = null,
                 contentScale = ContentScale.Inside,
                 modifier = Modifier.size(Dimens.space120).clip(CircleShape),
-                loading = { CircularWavyProgressIndicator() },
+                loading = { CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space30)) },
                 error = {
                     Icon(
                         Icons.Default.Person,

@@ -6,3 +6,7 @@ import androidx.compose.runtime.Composable
 @Composable
 actual fun rememberNotificationPermissionRequester(): NotificationPermissionRequester =
     rememberLocalNotifierPermissionRequester()
+
+/** Never invoked — Desktop's requester never returns DENIED, so nothing surfaces this action. */
+@Composable
+actual fun rememberOpenNotificationSettings(): () -> Unit = {}

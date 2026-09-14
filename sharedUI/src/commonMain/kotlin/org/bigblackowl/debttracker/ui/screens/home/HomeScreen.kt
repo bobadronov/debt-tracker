@@ -1,10 +1,15 @@
 package org.bigblackowl.debttracker.ui.screens.home
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -39,6 +44,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +52,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
@@ -64,6 +71,7 @@ import org.bigblackowl.debttracker.ui.screens.creditors.CreditorListScreen
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorListScreen
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * HomeScreen: верхній TabRow "Мені винні" / "Я винен" (спек §6, п. 3, §4.1).
@@ -105,8 +113,8 @@ fun HomeScreen(
     val notificationPermissionRequester = rememberNotificationPermissionRequester()
     LaunchedEffect(Unit) {
         if (!appSettings.notificationsPermissionRequested) {
-            appSettings.notificationsPermissionRequested = true
             notificationPermissionRequester.request()
+            appSettings.notificationsPermissionRequested = true
         }
     }
 
@@ -124,7 +132,8 @@ fun HomeScreen(
                 back = null,
                 actions = {
                     if (state.isAuthenticated) {
-                        SyncStatusBadge(status = state.syncStatus, strings = strings)
+                        Spacer(Modifier.width(Dimens.space8))
+                        SyncStatusBadge(status = state.syncStatus, strings = strings, modifier = Modifier.align(Alignment.CenterVertically))
                         Spacer(Modifier.width(Dimens.space8))
                     }
                 },
@@ -138,7 +147,7 @@ fun HomeScreen(
             if (inDesktopTitleBar) return@Scaffold
             TopAppBar(
                 title = {
-                    Column {
+                    Column(verticalArrangement = Arrangement.Center) {
                         Text(strings.appName)
                         if (state.isAuthenticated) {
                             Spacer(Modifier.height(Dimens.space2))
@@ -154,46 +163,49 @@ fun HomeScreen(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-        Column(modifier = Modifier.width(Dimens.contentMaxWidth).padding(padding)) {
-            SecondaryTabRow(
-                selectedTabIndex = pagerState.currentPage,
-                modifier = Modifier.clip( RoundedCornerShape(
-                    topStart = Dimens.space16,
-                    topEnd = Dimens.space16,
-                    bottomStart = Dimens.space0,
-                    bottomEnd = Dimens.space0
-                )),
-                containerColor = TabRowDefaults.primaryContainerColor,
-                contentColor = TabRowDefaults.primaryContentColor,
-                indicator = {
-                    TabRowDefaults.SecondaryIndicator(
-                        Modifier.tabIndicatorOffset(selectedTabIndex = pagerState.currentPage)
+            Column(modifier = Modifier.width(Dimens.contentMaxWidth).padding(padding)) {
+                SecondaryTabRow(
+                    selectedTabIndex = pagerState.currentPage,
+                    modifier = Modifier.clip(
+                        RoundedCornerShape(
+                            topStart = Dimens.space16,
+                            topEnd = Dimens.space16,
+                            bottomStart = Dimens.space0,
+                            bottomEnd = Dimens.space0
+                        )
+                    ),
+                    containerColor = TabRowDefaults.primaryContainerColor,
+                    contentColor = TabRowDefaults.primaryContentColor,
+                    indicator = {
+                        TabRowDefaults.SecondaryIndicator(
+                            Modifier.tabIndicatorOffset(selectedTabIndex = pagerState.currentPage)
+                        )
+                    },
+                    divider = { HorizontalDivider() }) {
+                    Tab(
+                        selected = pagerState.currentPage == 0,
+                        onClick = { scope.launch { pagerState.animateScrollToPage(0) } },
+                        text = { Text(strings.home.tabDebtors) }
                     )
-                },
-                divider = { HorizontalDivider() }) {
-                Tab(
-                    selected = pagerState.currentPage == 0,
-                    onClick = { scope.launch { pagerState.animateScrollToPage(0) } },
-                    text = { Text(strings.home.tabDebtors) }
-                )
-                Tab(
-                    selected = pagerState.currentPage == 1,
-                    onClick = { scope.launch { pagerState.animateScrollToPage(1) } },
-                    text = { Text(strings.home.tabCreditors) }
-                )
-            }
-            // Свайп між вкладками (HorizontalPager) замінює swipe-to-delete на рядках —
-            // горизонтальний жест тепер однозначно належить перемиканню Debtor/Creditor.
-            HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
-                when (page) {
-                    0 -> DebtorListScreen(onAddDebtor = onAddDebtor, onOpenDebtor = onOpenDebtor)
-                    else -> CreditorListScreen(
-                        onAddCreditor = onAddCreditor,
-                        onOpenCreditor = onOpenCreditor
+                    Tab(
+                        selected = pagerState.currentPage == 1,
+                        onClick = { scope.launch { pagerState.animateScrollToPage(1) } },
+                        text = { Text(strings.home.tabCreditors) }
                     )
                 }
+                // Свайп між вкладками (HorizontalPager) замінює swipe-to-delete на рядках —
+                // горизонтальний жест тепер однозначно належить перемиканню Debtor/Creditor.
+                HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+                    when (page) {
+                        0 -> DebtorListScreen(onAddDebtor = onAddDebtor, onOpenDebtor = onOpenDebtor)
+                        else -> CreditorListScreen(
+                            onAddCreditor = onAddCreditor,
+                            onOpenCreditor = onOpenCreditor
+                        )
+                    }
+                }
             }
-        }}
+        }
     }
 }
 
@@ -204,22 +216,27 @@ fun HomeScreen(
  */
 /** Tonal-бейдж статусу синхронізації (спек §5): іконка, що обертається під час Syncing, + колір за станом. */
 @Composable
-private fun SyncStatusBadge(status: SyncUiStatus, strings: Strings) {
+private fun SyncStatusBadge(status: SyncUiStatus, strings: Strings, modifier: Modifier = Modifier) {
+    var isBadgeVisible by remember { mutableStateOf(true) }
+
     val tint = when (status) {
         SyncUiStatus.Synced -> MaterialTheme.debtAccentColors.repay
         SyncUiStatus.Syncing -> MaterialTheme.colorScheme.primary
         is SyncUiStatus.OfflinePending -> MaterialTheme.debtAccentColors.debt
     }
+
     val icon = when (status) {
         SyncUiStatus.Synced -> Icons.Filled.CloudDone
         SyncUiStatus.Syncing -> Icons.Filled.Sync
         is SyncUiStatus.OfflinePending -> Icons.Filled.CloudOff
     }
+
     val label = when (status) {
         SyncUiStatus.Synced -> strings.home.syncSynced
         SyncUiStatus.Syncing -> strings.home.syncSyncing
         is SyncUiStatus.OfflinePending -> strings.home.syncOfflinePending(status.count)
     }
+
     val rotation by if (status == SyncUiStatus.Syncing) {
         val transition = rememberInfiniteTransition(label = "sync-rotation")
         transition.animateFloat(
@@ -232,14 +249,28 @@ private fun SyncStatusBadge(status: SyncUiStatus, strings: Strings) {
         remember { mutableStateOf(0f) }
     }
 
-    Surface(shape = RoundedCornerShape(Dimens.space6), color = tint.copy(alpha = 0.14f)) {
+    LaunchedEffect(status) {
+        isBadgeVisible = true
+        delay(2.seconds)
+        isBadgeVisible = false
+    }
+
+    Surface(modifier = modifier.animateContentSize(animationSpec = tween(easing = LinearEasing)), shape = RoundedCornerShape(Dimens.space6), color = tint.copy(alpha = 0.14f)) {
         Row(
             modifier = Modifier.padding(horizontal = Dimens.space6, vertical = Dimens.space2),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(Dimens.space12).rotate(rotation))
-            Spacer(Modifier.width(Dimens.space4))
-            Text(label, style = MaterialTheme.typography.labelSmall, color = tint)
+            AnimatedVisibility(
+                visible = isBadgeVisible,
+                enter = slideInHorizontally(animationSpec = tween(easing = LinearEasing)) { it },
+                exit = slideOutHorizontally(animationSpec = tween(easing = LinearEasing)) { -it },
+            ) {
+                Row {
+                    Spacer(Modifier.width(Dimens.space4))
+                    Text(label, style = MaterialTheme.typography.labelSmall, color = tint)
+                }
+            }
         }
     }
 }

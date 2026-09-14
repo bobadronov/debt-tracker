@@ -32,6 +32,15 @@ fun interface NotificationPermissionRequester {
 expect fun rememberNotificationPermissionRequester(): NotificationPermissionRequester
 
 /**
+ * Jumps to the OS's notification settings for this app, for when [NotificationPermissionRequester]
+ * came back [NotificationPermissionStatus.DENIED] and re-requesting in-app can't do anything more
+ * (Android/iOS won't show their own prompt again after a denial). A no-op where no such deep link
+ * exists (Desktop needs no permission; browsers give web pages no way to open their own settings UI).
+ */
+@Composable
+expect fun rememberOpenNotificationSettings(): () -> Unit
+
+/**
  * Shared actual body for platforms where [LocalNotifier.requestPermission] already shows the OS
  * prompt itself (iOS, Web) or needs no permission at all (Desktop) — only Android has to go through
  * an `ActivityResultLauncher` instead.

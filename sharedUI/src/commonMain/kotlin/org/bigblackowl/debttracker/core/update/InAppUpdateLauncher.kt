@@ -28,7 +28,7 @@ interface InAppUpdateLauncher {
     fun completeUpdate()
 }
 
-/** Mirrors [org.bigblackowl.debttracker.ui.screens.settings.UpdateCheckState] for the Play-driven flow, which has no "available but not downloading yet" step — a flexible update starts downloading as soon as it's found. */
+/** Mirrors [org.bigblackowl.debttracker.ui.screens.settings.about.UpdateCheckState] for the Play-driven flow, which has no "available but not downloading yet" step — a flexible update starts downloading as soon as it's found. */
 sealed interface InAppUpdateStatus {
     data object Idle : InAppUpdateStatus
     data object Checking : InAppUpdateStatus

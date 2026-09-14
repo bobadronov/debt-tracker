@@ -1,4 +1,4 @@
-package org.bigblackowl.debttracker.ui.screens.settings
+package org.bigblackowl.debttracker.ui.screens.settings.language
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState

@@ -2,8 +2,10 @@ package org.bigblackowl.debttracker.core.notifications
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -57,5 +59,17 @@ actual fun rememberNotificationPermissionRequester(): NotificationPermissionRequ
     }
     return remember(context, launcher) {
         AndroidNotificationPermissionRequester(context, launcher, pending)
+    }
+}
+
+@Composable
+actual fun rememberOpenNotificationSettings(): () -> Unit {
+    val context = LocalContext.current
+    return remember(context) {
+        {
+            val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+            runCatching { context.startActivity(intent) }
+        }
     }
 }

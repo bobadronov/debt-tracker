@@ -31,5 +31,5 @@ object Dimens {
     val space120 = 120.dp
 
     /** Максимальна ширина основного контенту на великих екранах (desktop/tablet). */
-    val contentMaxWidth = 400.dp
+    val contentMaxWidth = 500.dp
 }

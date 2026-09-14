@@ -1,6 +1,6 @@
-
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloseFullscreen
@@ -56,6 +56,7 @@ import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
 import org.bigblackowl.debttracker.navigation.AppMenu
 import org.bigblackowl.debttracker.navigation.CurrentScreen
 import org.bigblackowl.debttracker.navigation.windowTitle
+import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.rememberAppColorScheme
 import org.bigblackowl.debttracker.ui.components.appbar.AppOverflowMenu
 import org.bigblackowl.debttracker.ui.components.appbar.DesktopTitleBar
@@ -184,7 +185,7 @@ private fun startApp(koin: Koin, args: Array<String>) = nucleusApplication(args)
 
             MaterialTitleBar {
                 titleBar.back?.let { onBack ->
-                    IconButton(onClick = onBack, modifier = Modifier.align(Alignment.Start)) {
+                    IconButton(onClick = onBack, modifier = Modifier.align(Alignment.Start).padding(Dimens.space5)) {
                         BackChevron()
                     }
                 }

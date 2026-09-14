@@ -43,6 +43,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
@@ -137,6 +138,7 @@ fun SettingsRow(
     iconTint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     iconContainerColor: Color = MaterialTheme.colorScheme.surfaceVariant,
     onClick: (() -> Unit)? = null,
+    onSubtitleClick: (() -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
     leadingContent: (@Composable () -> Unit)? = null,
 ) {
@@ -167,6 +169,8 @@ fun SettingsRow(
                     subtitle.orEmpty(),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textDecoration = if (onSubtitleClick != null) TextDecoration.Underline else null,
+                    modifier = if (onSubtitleClick != null) Modifier.clickable(onClick = onSubtitleClick) else Modifier,
                 )
             }
         }
@@ -189,12 +193,14 @@ fun SettingsSwitchRow(
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
+    onSubtitleClick: (() -> Unit)? = null,
 ) {
     SettingsRow(
         icon = icon,
         title = title,
         modifier = modifier,
         subtitle = subtitle,
+        onSubtitleClick = onSubtitleClick,
         trailing = { Switch(checked = checked, onCheckedChange = onCheckedChange) },
     )
 }

@@ -1,4 +1,4 @@
-package org.bigblackowl.debttracker.ui.screens.settings
+package org.bigblackowl.debttracker.ui.screens.settings.protection
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -39,7 +39,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun SettingsProtectionScreen(
     onBack: () -> Unit,
-    viewModel: SettingsViewModel = koinViewModel(),
+    viewModel: SettingsProtectionViewModel = koinViewModel(),
 ) {
     val settings = koinInject<AppSettings>()
     val biometricAuthenticator = rememberBiometricAuthenticator()
@@ -49,7 +49,7 @@ fun SettingsProtectionScreen(
     var showPinSetupDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        viewModel.onIntent(SettingsIntent.CheckBiometricHardware(biometricAuthenticator))
+        viewModel.onIntent(SettingsProtectionIntent.CheckBiometricHardware(biometricAuthenticator))
     }
 
     // Мобільні платформи без біометричного заліза (або незареєстрованою біометрією — типово
@@ -77,13 +77,13 @@ fun SettingsProtectionScreen(
                                 onCheckedChange = { checked ->
                                     when {
                                         usesPinProtection && checked && !settings.hasPinCode -> showPinSetupDialog = true
-                                        usesPinProtection -> viewModel.onIntent(SettingsIntent.TogglePinProtection(checked))
+                                        usesPinProtection -> viewModel.onIntent(SettingsProtectionIntent.TogglePinProtection(checked))
 
                                         // Мобільні платформи з біометрією: увімкнення захисту потребує
                                         // підтвердження відбитком/обличчям одразу — інакше можна ввімкнути
                                         // перемикач, маючи чужий палець на сканері, і сам захист виявиться фікцією.
-                                        checked -> viewModel.onIntent(SettingsIntent.EnableMobileProtection(biometricAuthenticator))
-                                        else -> viewModel.onIntent(SettingsIntent.DisableMobileProtection)
+                                        checked -> viewModel.onIntent(SettingsProtectionIntent.EnableMobileProtection(biometricAuthenticator))
+                                        else -> viewModel.onIntent(SettingsProtectionIntent.DisableMobileProtection)
                                     }
                                 },
                             )
@@ -99,7 +99,7 @@ fun SettingsProtectionScreen(
             onDismiss = { showPinSetupDialog = false },
             onConfirm = { pin ->
                 showPinSetupDialog = false
-                viewModel.onIntent(SettingsIntent.SetupPinAndEnableProtection(pin))
+                viewModel.onIntent(SettingsProtectionIntent.SetupPinAndEnableProtection(pin))
             },
         )
     }
@@ -107,7 +107,7 @@ fun SettingsProtectionScreen(
 
 // The @Preview functions render this rather than SettingsProtectionScreen directly: the extra hop
 // keeps the koinViewModel() call out of the previewed function's own body (matching SettingsScreen).
-// The screen renders through SettingsViewModel, backed by the fakes in preview/PreviewModule.kt.
+// The screen renders through SettingsProtectionViewModel, backed by the fakes in preview/PreviewModule.kt.
 @Composable
 private fun SettingsProtectionScreenPreviewContent() {
     SettingsProtectionScreen(onBack = {})

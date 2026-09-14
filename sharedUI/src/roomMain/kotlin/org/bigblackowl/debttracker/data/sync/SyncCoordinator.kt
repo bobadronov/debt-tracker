@@ -33,9 +33,9 @@ import kotlin.time.Duration.Companion.milliseconds
 /**
  * Offline-first sync (спек §5): push — цикл раз на 30с відправляє PENDING-рядки
  * у Supabase; pull — реактивна Realtime-підписка (selectAsFlow) на всі 4 таблиці,
- * відфільтрована по user_id. LWW за updatedAt застосовується тільки до
- * Debtor/Creditor-метаданих; транзакції не мерджаться (просто upsert по id),
- * оскільки конфлікт на рівні одного запису з різним id неможливий.
+ * відфільтрована по user_id. LWW за updatedAt застосовується до всіх 4 таблиць,
+ * зокрема й до транзакцій — той самий id можна редагувати (UpdateDebtTransactionUseCase,
+ * approve_transaction_correction), тож конфлікт цілком можливий.
  *
  * Спрощення відносно оригінального опису (WorkManager на Android): єдиний
  * coroutine-цикл на всіх платформах замість платформо-специфічного планувальника
@@ -159,25 +159,40 @@ class SyncCoordinator(
                 // These rows already exist locally (read from getPending()) — upsert() is
                 // "INSERT OR REPLACE", which deletes-then-reinserts on a PK conflict and would
                 // cascade-delete this debtor's transactions via their ON DELETE CASCADE FK.
-                debtorDao.update(entity.copy(syncStatus = SyncStatus.SYNCED))
+                // Only clear PENDING if nothing edited this row since the snapshot above was
+                // taken — otherwise we'd overwrite a newer local edit's data with the stale
+                // snapshot and wrongly mark it SYNCED, even though that edit was never pushed.
+                val current = debtorDao.getById(entity.id)
+                if (current != null && current.updatedAt == entity.updatedAt) {
+                    debtorDao.update(entity.copy(syncStatus = SyncStatus.SYNCED))
+                }
             }.onFailure { failures++ }
         }
         pendingDebtTx.forEach { entity ->
             runCatching {
                 client.from("debt_transactions").upsert(entity.toDto(userId))
-                debtTransactionDao.upsert(entity.copy(syncStatus = SyncStatus.SYNCED))
+                val current = debtTransactionDao.getById(entity.id)
+                if (current != null && current.updatedAt == entity.updatedAt) {
+                    debtTransactionDao.upsert(entity.copy(syncStatus = SyncStatus.SYNCED))
+                }
             }.onFailure { failures++ }
         }
         pendingCreditors.forEach { entity ->
             runCatching {
                 client.from("creditors").upsert(entity.toDto(userId))
-                creditorDao.update(entity.copy(syncStatus = SyncStatus.SYNCED))
+                val current = creditorDao.getById(entity.id)
+                if (current != null && current.updatedAt == entity.updatedAt) {
+                    creditorDao.update(entity.copy(syncStatus = SyncStatus.SYNCED))
+                }
             }.onFailure { failures++ }
         }
         pendingCreditorTx.forEach { entity ->
             runCatching {
                 client.from("creditor_transactions").upsert(entity.toDto(userId))
-                creditorTransactionDao.upsert(entity.copy(syncStatus = SyncStatus.SYNCED))
+                val current = creditorTransactionDao.getById(entity.id)
+                if (current != null && current.updatedAt == entity.updatedAt) {
+                    creditorTransactionDao.upsert(entity.copy(syncStatus = SyncStatus.SYNCED))
+                }
             }.onFailure { failures++ }
         }
 
@@ -228,17 +243,26 @@ class SyncCoordinator(
             val remoteUpdatedAt = kotlin.time.Instant.parse(dto.updatedAt)
             if (local == null) {
                 debtorDao.upsert(dto.toEntity())
-            } else if (local.syncStatus != SyncStatus.PENDING || local.updatedAt <= remoteUpdatedAt) {
+            } else if (local.syncStatus != SyncStatus.PENDING || local.updatedAt < remoteUpdatedAt) {
                 // A plain upsert() here would cascade-delete this debtor's transactions
                 // (see the note in RoomDebtorRepository) since the row already exists.
+                // On an exact tie, keep the not-yet-pushed local edit rather than discard it.
                 debtorDao.update(dto.toEntity())
             }
         }
     }
 
     private suspend fun mergeDebtTransactions(remoteRows: List<DebtTransactionDto>) {
-        // Транзакції не мерджаться (спек §5) — прямий upsert по id.
-        remoteRows.forEach { dto -> debtTransactionDao.upsert(dto.toEntity()) }
+        // Транзакції МОЖУТЬ мерджитись (UpdateDebtTransactionUseCase / approve_transaction_correction
+        // редагують той самий id), тож потрібен той самий LWW-guard, що й для Debtor/Creditor —
+        // інакше безумовний upsert затирає ще не запушену локальну правку старою версією з сервера.
+        remoteRows.forEach { dto ->
+            val local = debtTransactionDao.getById(dto.id)
+            val remoteUpdatedAt = kotlin.time.Instant.parse(dto.updatedAt)
+            if (local == null || local.syncStatus != SyncStatus.PENDING || local.updatedAt < remoteUpdatedAt) {
+                debtTransactionDao.upsert(dto.toEntity())
+            }
+        }
     }
 
     private suspend fun mergeCreditors(remoteRows: List<CreditorDto>) {
@@ -247,13 +271,19 @@ class SyncCoordinator(
             val remoteUpdatedAt = kotlin.time.Instant.parse(dto.updatedAt)
             if (local == null) {
                 creditorDao.upsert(dto.toEntity())
-            } else if (local.syncStatus != SyncStatus.PENDING || local.updatedAt <= remoteUpdatedAt) {
+            } else if (local.syncStatus != SyncStatus.PENDING || local.updatedAt < remoteUpdatedAt) {
                 creditorDao.update(dto.toEntity())
             }
         }
     }
 
     private suspend fun mergeCreditorTransactions(remoteRows: List<CreditorTransactionDto>) {
-        remoteRows.forEach { dto -> creditorTransactionDao.upsert(dto.toEntity()) }
+        remoteRows.forEach { dto ->
+            val local = creditorTransactionDao.getById(dto.id)
+            val remoteUpdatedAt = kotlin.time.Instant.parse(dto.updatedAt)
+            if (local == null || local.syncStatus != SyncStatus.PENDING || local.updatedAt < remoteUpdatedAt) {
+                creditorTransactionDao.upsert(dto.toEntity())
+            }
+        }
     }
 }

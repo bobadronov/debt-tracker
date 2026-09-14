@@ -52,6 +52,8 @@ import org.bigblackowl.debttracker.ui.screens.auth.AuthViewModel
 import org.bigblackowl.debttracker.ui.screens.authgate.AuthGateViewModel
 import org.bigblackowl.debttracker.ui.screens.contacts.AddEditContactViewModel
 import org.bigblackowl.debttracker.ui.screens.contacts.ContactPickerViewModel
+import org.bigblackowl.debttracker.ui.screens.contacts.CreditorActions
+import org.bigblackowl.debttracker.ui.screens.contacts.DebtorActions
 import org.bigblackowl.debttracker.ui.screens.creditors.CreditorDetailViewModel
 import org.bigblackowl.debttracker.ui.screens.creditors.CreditorListViewModel
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorDetailViewModel
@@ -63,8 +65,12 @@ import org.bigblackowl.debttracker.ui.screens.notifications.NotificationsViewMod
 import org.bigblackowl.debttracker.ui.screens.protectiononboarding.ProtectionOnboardingViewModel
 import org.bigblackowl.debttracker.ui.screens.qr.QrHubViewModel
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsViewModel
+import org.bigblackowl.debttracker.ui.screens.settings.about.SettingsAboutViewModel
 import org.bigblackowl.debttracker.ui.screens.settings.account.ActiveSessionsViewModel
 import org.bigblackowl.debttracker.ui.screens.settings.account.EditAccountViewModel
+import org.bigblackowl.debttracker.ui.screens.settings.data.SettingsDataViewModel
+import org.bigblackowl.debttracker.ui.screens.settings.notifications.SettingsNotificationsViewModel
+import org.bigblackowl.debttracker.ui.screens.settings.protection.SettingsProtectionViewModel
 import org.bigblackowl.debttracker.ui.screens.splash.SplashViewModel
 import org.bigblackowl.debttracker.ui.screens.stats.StatsViewModel
 import org.koin.core.module.Module
@@ -129,6 +135,8 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     factoryOf(::LinkCreditorToRegisteredUserUseCase)
 
     factoryOf(::ObserveContactSuggestionsUseCase)
+    factoryOf(::DebtorActions)
+    factoryOf(::CreditorActions)
 
     viewModelOf(::DebtorListViewModel)
     viewModelOf(::CreditorListViewModel)
@@ -136,7 +144,7 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     viewModel { (direction: DebtDirection, prefill: ContactPrefill?, editId: String?) ->
         AddEditContactViewModel(
             direction, prefill, editId,
-            get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),
+            get(), get(), get(), get(), get(), get(), get(), get(),
         )
     }
     viewModel { (debtorId: String) -> DebtorDetailViewModel(debtorId, get(), get(), get(), get(), get(), get(), get()) }
@@ -152,6 +160,10 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     viewModelOf(::AuthGateViewModel)
     viewModelOf(::HomeViewModel)
     viewModelOf(::SettingsViewModel)
+    viewModelOf(::SettingsProtectionViewModel)
+    viewModelOf(::SettingsNotificationsViewModel)
+    viewModelOf(::SettingsDataViewModel)
+    viewModelOf(::SettingsAboutViewModel)
     viewModelOf(::QrHubViewModel)
     viewModelOf(::NotificationsViewModel)
     viewModel { (debtorId: String?, creditorId: String?) ->

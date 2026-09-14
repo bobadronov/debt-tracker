@@ -7,24 +7,24 @@ plugins {
 }
 
 // Version is defined once in /version.properties and shared by every target (спек: single source of truth).
-val versionProps = Properties().apply {
+private val versionProps = Properties().apply {
     rootProject.file("version.properties").inputStream().use { load(it) }
 }
 // java.util.Properties does no interpolation, so resolve the `$VERSION_CODE` placeholder that
 // version.properties uses in VERSION_NAME (`1.0.$VERSION_CODE`) — the code is the single number to bump.
-val appVersionCode: Int = versionProps.getProperty("VERSION_CODE").trim().toInt()
-val appVersionName: String = versionProps.getProperty("VERSION_NAME").trim()
+private val appVersionCode: Int = versionProps.getProperty("VERSION_CODE").trim().toInt()
+private val appVersionName: String = versionProps.getProperty("VERSION_NAME").trim()
     .replace("\${VERSION_CODE}", appVersionCode.toString())
     .replace("\$VERSION_CODE", appVersionCode.toString())
 
 // Release signing comes from env vars (CI secrets) — never hardcoded/committed.
 // Missing/blank env vars → release build stays unsigned locally, but fails fast in CI
 // (see the task-execution check below `android {}`) instead of silently shipping unsigned.
-val releaseKeystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
-val releaseKeystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-val releaseKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
-val releaseKeyPassword = System.getenv("ANDROID_KEY_PASSWORD")
-val hasReleaseSigning = !releaseKeystorePath.isNullOrBlank() &&
+private val releaseKeystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+private val releaseKeystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+private val releaseKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
+private val releaseKeyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+private val hasReleaseSigning = !releaseKeystorePath.isNullOrBlank() &&
         !releaseKeystorePassword.isNullOrBlank() &&
         !releaseKeyAlias.isNullOrBlank() &&
         !releaseKeyPassword.isNullOrBlank()

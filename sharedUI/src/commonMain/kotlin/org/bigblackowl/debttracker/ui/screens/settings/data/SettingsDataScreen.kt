@@ -1,4 +1,4 @@
-package org.bigblackowl.debttracker.ui.screens.settings
+package org.bigblackowl.debttracker.ui.screens.settings.data
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -51,7 +51,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun SettingsDataScreen(
     onBack: () -> Unit,
     onExport: () -> Unit,
-    viewModel: SettingsViewModel = koinViewModel(),
+    viewModel: SettingsDataViewModel = koinViewModel(),
 ) {
     val strings = LocalStrings.current
     val authRepository = koinInject<AuthRepository>()
@@ -129,7 +129,7 @@ fun SettingsDataScreen(
             confirmLabel = strings.settings.clearCache.title,
             onConfirm = {
                 showClearCacheConfirm = false
-                viewModel.onIntent(SettingsIntent.ClearAppCache)
+                viewModel.onIntent(SettingsDataIntent.ClearAppCache)
             },
             onDismiss = { showClearCacheConfirm = false },
         )
@@ -154,7 +154,7 @@ fun SettingsDataScreen(
             confirmLabel = strings.deleteForever,
             onConfirm = {
                 showDeleteConfirm2 = false
-                viewModel.onIntent(SettingsIntent.DeleteAllData)
+                viewModel.onIntent(SettingsDataIntent.DeleteAllData)
             },
             onDismiss = { showDeleteConfirm2 = false },
         )
@@ -179,7 +179,7 @@ private fun ColumnScope.DataResultLine(visible: Boolean, text: String, color: Co
 
 // The @Preview functions render this rather than SettingsDataScreen directly: the extra hop keeps
 // the koinViewModel() call out of the previewed function's own body (matching SettingsScreen). The
-// screen renders through SettingsViewModel, backed by the fakes in preview/PreviewModule.kt.
+// screen renders through SettingsDataViewModel, backed by the fakes in preview/PreviewModule.kt.
 @Composable
 private fun SettingsDataScreenPreviewContent() {
     SettingsDataScreen(onBack = {}, onExport = {})

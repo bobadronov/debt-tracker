@@ -1,4 +1,4 @@
-package org.bigblackowl.debttracker.ui.screens.settings
+package org.bigblackowl.debttracker.ui.screens.settings.notifications
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.notifications.rememberNotificationPermissionRequester
+import org.bigblackowl.debttracker.core.notifications.rememberOpenNotificationSettings
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
@@ -38,10 +39,11 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun SettingsNotificationsScreen(
     onBack: () -> Unit,
-    viewModel: SettingsViewModel = koinViewModel(),
+    viewModel: SettingsNotificationsViewModel = koinViewModel(),
 ) {
     val settings = koinInject<AppSettings>()
     val notificationPermissionRequester = rememberNotificationPermissionRequester()
+    val openNotificationSettings = rememberOpenNotificationSettings()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val strings = LocalStrings.current
 
@@ -59,8 +61,9 @@ fun SettingsNotificationsScreen(
                         icon = if (settings.notificationsEnabled) Icons.Filled.Notifications else Icons.Filled.NotificationsOff,
                         title = strings.settings.notifications,
                         subtitle = if (settings.notificationsEnabled && state.notificationsPermissionBlocked) strings.settings.notificationsBlocked else null,
+                        onSubtitleClick = if (settings.notificationsEnabled && state.notificationsPermissionBlocked) openNotificationSettings else null,
                         checked = settings.notificationsEnabled,
-                        onCheckedChange = { viewModel.onIntent(SettingsIntent.ToggleNotifications(it, notificationPermissionRequester)) },
+                        onCheckedChange = { viewModel.onIntent(SettingsNotificationsIntent.ToggleNotifications(it, notificationPermissionRequester)) },
                     )
                     if (settings.notificationsEnabled) {
                         SettingsRowDivider()
@@ -79,7 +82,7 @@ fun SettingsNotificationsScreen(
 
 // The @Preview functions render this rather than SettingsNotificationsScreen directly: the extra hop
 // keeps the koinViewModel() call out of the previewed function's own body (matching SettingsScreen).
-// The screen renders through SettingsViewModel, backed by the fakes in preview/PreviewModule.kt.
+// The screen renders through SettingsNotificationsViewModel, backed by the fakes in preview/PreviewModule.kt.
 @Composable
 private fun SettingsNotificationsScreenPreviewContent() {
     SettingsNotificationsScreen(onBack = {})

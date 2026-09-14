@@ -14,9 +14,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.time.Clock
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 import org.bigblackowl.debttracker.core.i18n.resolveStrings
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.sound.SoundEffect
@@ -36,10 +33,10 @@ import org.bigblackowl.debttracker.domain.model.TransactionType
 import org.bigblackowl.debttracker.domain.usecase.FindProfileByEmailUseCase
 import org.bigblackowl.debttracker.domain.usecase.ObserveContactSuggestionsUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddCreditorTransactionUseCase
-import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddOrUpdateCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.DeleteCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.LinkCreditorToRegisteredUserUseCase
+import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.AddDebtTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.AddOrUpdateDebtorUseCase
 import org.bigblackowl.debttracker.domain.usecase.debtor.DeleteDebtorUseCase
@@ -48,6 +45,10 @@ import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorUseCase
 import org.bigblackowl.debttracker.domain.validation.isValidEmail
 import org.bigblackowl.debttracker.domain.validation.isValidFullName
 import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 private const val EMAIL_LOOKUP_DEBOUNCE_MS = 500L
 private const val NAME_SUGGESTIONS_LIMIT = 5
@@ -58,24 +59,34 @@ private const val NAME_SUGGESTIONS_LIMIT = 5
  * ([AddEditContactIntent.DirectionChanged]). Merges the former `AddEditDebtorViewModel` and
  * `AddEditCreditorViewModel`, which were identical apart from those domain types.
  *
- * While the user types an email, debounces a lookup against [findProfileByEmail] to offer a
+ * While the user types an email, debounce a lookup against [findProfileByEmail] to offer a
  * name/photo autofill suggestion (§ProfileLookup) — purely additive, never blocks saving.
  * Separately, [observeContactSuggestions] feeds the inline name-autocomplete list; picking one
  * ([AddEditContactIntent.NameSuggestionSelected]) carries over its phone/email/comment too.
  */
+/** Bundles the debtor-side use cases [AddEditContactViewModel] needs, so its constructor takes one DI-resolved param instead of four. */
+class DebtorActions(
+    val addOrUpdate: AddOrUpdateDebtorUseCase,
+    val addTransaction: AddDebtTransactionUseCase,
+    val delete: DeleteDebtorUseCase,
+    val linkToRegisteredUser: LinkDebtorToRegisteredUserUseCase,
+)
+
+/** Bundles the creditor-side use cases [AddEditContactViewModel] needs — mirrors [DebtorActions]. */
+class CreditorActions(
+    val addOrUpdate: AddOrUpdateCreditorUseCase,
+    val addTransaction: AddCreditorTransactionUseCase,
+    val delete: DeleteCreditorUseCase,
+    val linkToRegisteredUser: LinkCreditorToRegisteredUserUseCase,
+)
+
 @OptIn(ExperimentalUuidApi::class)
 class AddEditContactViewModel(
     direction: DebtDirection,
     prefill: ContactPrefill?,
-    private val editId: String?,
-    private val addOrUpdateDebtor: AddOrUpdateDebtorUseCase,
-    private val addDebtTransaction: AddDebtTransactionUseCase,
-    private val deleteDebtor: DeleteDebtorUseCase,
-    private val linkDebtorToRegisteredUser: LinkDebtorToRegisteredUserUseCase,
-    private val addOrUpdateCreditor: AddOrUpdateCreditorUseCase,
-    private val addCreditorTransaction: AddCreditorTransactionUseCase,
-    private val deleteCreditor: DeleteCreditorUseCase,
-    private val linkCreditorToRegisteredUser: LinkCreditorToRegisteredUserUseCase,
+    editId: String?,
+    private val debtorActions: DebtorActions,
+    private val creditorActions: CreditorActions,
     private val appSettings: AppSettings,
     private val soundPlayer: SoundPlayer,
     private val findProfileByEmail: FindProfileByEmailUseCase,
@@ -234,7 +245,7 @@ class AddEditContactViewModel(
         emailLookupJob?.cancel()
         if (!isValidEmail(value)) return
         emailLookupJob = viewModelScope.launch {
-            delay(EMAIL_LOOKUP_DEBOUNCE_MS)
+            delay(EMAIL_LOOKUP_DEBOUNCE_MS.milliseconds)
             val suggestion = findProfileByEmail(value.trim())
             if (suggestion != null && _state.value.email == value) {
                 _state.update { it.copy(profileSuggestion = suggestion) }
@@ -248,7 +259,7 @@ class AddEditContactViewModel(
             it.copy(
                 fullName = suggestion.displayName?.takeIf(String::isNotBlank) ?: it.fullName,
                 fullNameError = null,
-                suggestedAvatarUrl = suggestion.avatarUrl,
+                suggestedAvatarUrl = suggestion.avatarUrl ?: it.suggestedAvatarUrl,
                 profileSuggestion = null,
             )
         }
@@ -283,6 +294,16 @@ class AddEditContactViewModel(
         }
     }
 
+    /** Runs [action]; on failure, resets [AddEditContactState.isSaving] and emits [saveError]. Returns whether it succeeded. */
+    private suspend fun tryOrReportError(saveError: String, action: suspend () -> Unit): Boolean {
+        return runCatching { action() }
+            .onFailure {
+                _state.update { it.copy(isSaving = false) }
+                effectsChannel.send(AddEditContactEffect.Error(saveError))
+            }
+            .isSuccess
+    }
+
     private fun saveDebtor(current: AddEditContactState, amount: BigDecimal, saveError: String) {
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true) }
@@ -303,14 +324,10 @@ class AddEditContactViewModel(
                 reminderLeadDays = current.reminderLeadDays,
             )
 
-            runCatching { addOrUpdateDebtor(debtor) }.onFailure {
-                _state.update { it.copy(isSaving = false) }
-                effectsChannel.send(AddEditContactEffect.Error(saveError))
-                return@launch
-            }
+            if (!tryOrReportError(saveError) { debtorActions.addOrUpdate(debtor) }) return@launch
 
-            runCatching {
-                addDebtTransaction(
+            val transactionSaved = tryOrReportError(saveError) {
+                debtorActions.addTransaction(
                     DebtTransaction(
                         id = Uuid.random().toString(),
                         debtorId = debtor.id,
@@ -324,16 +341,15 @@ class AddEditContactViewModel(
                         syncStatus = SyncStatus.PENDING,
                     )
                 )
-            }.onFailure {
+            }
+            if (!transactionSaved) {
                 // The debtor write committed but its opening transaction didn't — undo it.
-                runCatching { deleteDebtor(debtor.id) }
-                _state.update { it.copy(isSaving = false) }
-                effectsChannel.send(AddEditContactEffect.Error(saveError))
+                runCatching { debtorActions.delete(debtor.id) }
                 return@launch
             }
 
             finishSave()
-            viewModelScope.launch { runCatching { linkDebtorToRegisteredUser(debtor.id) } }
+            viewModelScope.launch { runCatching { debtorActions.linkToRegisteredUser(debtor.id) } }
         }
     }
 
@@ -357,14 +373,10 @@ class AddEditContactViewModel(
                 reminderLeadDays = current.reminderLeadDays,
             )
 
-            runCatching { addOrUpdateCreditor(creditor) }.onFailure {
-                _state.update { it.copy(isSaving = false) }
-                effectsChannel.send(AddEditContactEffect.Error(saveError))
-                return@launch
-            }
+            if (!tryOrReportError(saveError) { creditorActions.addOrUpdate(creditor) }) return@launch
 
-            runCatching {
-                addCreditorTransaction(
+            val transactionSaved = tryOrReportError(saveError) {
+                creditorActions.addTransaction(
                     CreditorTransaction(
                         id = Uuid.random().toString(),
                         creditorId = creditor.id,
@@ -378,16 +390,15 @@ class AddEditContactViewModel(
                         syncStatus = SyncStatus.PENDING,
                     )
                 )
-            }.onFailure {
+            }
+            if (!transactionSaved) {
                 // The creditor write committed but its opening transaction didn't — undo it.
-                runCatching { deleteCreditor(creditor.id) }
-                _state.update { it.copy(isSaving = false) }
-                effectsChannel.send(AddEditContactEffect.Error(saveError))
+                runCatching { creditorActions.delete(creditor.id) }
                 return@launch
             }
 
             finishSave()
-            viewModelScope.launch { runCatching { linkCreditorToRegisteredUser(creditor.id) } }
+            viewModelScope.launch { runCatching { creditorActions.linkToRegisteredUser(creditor.id) } }
         }
     }
 
@@ -409,14 +420,10 @@ class AddEditContactViewModel(
                 updatedAt = Clock.System.now(),
                 syncStatus = SyncStatus.PENDING,
             )
-            runCatching { addOrUpdateDebtor(updated) }.onFailure {
-                _state.update { it.copy(isSaving = false) }
-                effectsChannel.send(AddEditContactEffect.Error(saveError))
-                return@launch
-            }
+            if (!tryOrReportError(saveError) { debtorActions.addOrUpdate(updated) }) return@launch
             finishSave()
             // Re-link in case the email/phone changed to (or away from) a registered user's.
-            viewModelScope.launch { runCatching { linkDebtorToRegisteredUser(updated.id) } }
+            viewModelScope.launch { runCatching { debtorActions.linkToRegisteredUser(updated.id) } }
         }
     }
 
@@ -438,13 +445,9 @@ class AddEditContactViewModel(
                 updatedAt = Clock.System.now(),
                 syncStatus = SyncStatus.PENDING,
             )
-            runCatching { addOrUpdateCreditor(updated) }.onFailure {
-                _state.update { it.copy(isSaving = false) }
-                effectsChannel.send(AddEditContactEffect.Error(saveError))
-                return@launch
-            }
+            if (!tryOrReportError(saveError) { creditorActions.addOrUpdate(updated) }) return@launch
             finishSave()
-            viewModelScope.launch { runCatching { linkCreditorToRegisteredUser(updated.id) } }
+            viewModelScope.launch { runCatching { creditorActions.linkToRegisteredUser(updated.id) } }
         }
     }
 

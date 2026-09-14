@@ -1,4 +1,4 @@
-package org.bigblackowl.debttracker.ui.screens.settings
+package org.bigblackowl.debttracker.ui.screens.settings.about
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -52,7 +52,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun SettingsAboutScreen(
     onBack: () -> Unit,
-    viewModel: SettingsViewModel = koinViewModel(),
+    viewModel: SettingsAboutViewModel = koinViewModel(),
 ) {
     val strings = LocalStrings.current
     val settings = koinInject<AppSettings>()
@@ -109,7 +109,7 @@ fun SettingsAboutScreen(
                                     inAppUpdateStatus == InAppUpdateStatus.Checking || inAppUpdateStatus == InAppUpdateStatus.Downloading ->
                                         CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
 
-                                    else -> IconButton(onClick = { viewModel.onIntent(SettingsIntent.CheckForInAppUpdate(inAppUpdateLauncher)) }) {
+                                    else -> IconButton(onClick = { viewModel.onIntent(SettingsAboutIntent.CheckForInAppUpdate(inAppUpdateLauncher)) }) {
                                         Icon(Icons.Filled.Refresh, contentDescription = strings.settings.checkForUpdates)
                                     }
                                 }
@@ -120,15 +120,15 @@ fun SettingsAboutScreen(
                                     UpdateCheckState.Checking, is UpdateCheckState.Downloading ->
                                         CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
 
-                                    is UpdateCheckState.Available -> IconButton(onClick = { viewModel.onIntent(SettingsIntent.DownloadUpdate(updateChecker, s.info)) }) {
+                                    is UpdateCheckState.Available -> IconButton(onClick = { viewModel.onIntent(SettingsAboutIntent.DownloadUpdate(updateChecker, s.info)) }) {
                                         Icon(Icons.Filled.Download, contentDescription = strings.update.downloadInstall)
                                     }
 
-                                    is UpdateCheckState.Failed -> IconButton(onClick = { viewModel.onIntent(SettingsIntent.DownloadUpdate(updateChecker, s.info)) }) {
+                                    is UpdateCheckState.Failed -> IconButton(onClick = { viewModel.onIntent(SettingsAboutIntent.DownloadUpdate(updateChecker, s.info)) }) {
                                         Icon(Icons.Filled.Refresh, contentDescription = strings.update.retry)
                                     }
 
-                                    UpdateCheckState.Idle, UpdateCheckState.UpToDate, UpdateCheckState.CheckFailed -> IconButton(onClick = { viewModel.onIntent(SettingsIntent.CheckForUpdate(updateChecker)) }) {
+                                    UpdateCheckState.Idle, UpdateCheckState.UpToDate, UpdateCheckState.CheckFailed -> IconButton(onClick = { viewModel.onIntent(SettingsAboutIntent.CheckForUpdate(updateChecker)) }) {
                                         Icon(Icons.Filled.Refresh, contentDescription = strings.settings.checkForUpdates)
                                     }
                                 }
@@ -176,7 +176,7 @@ private fun feedbackUrl(locale: String, theme: String): String = buildString {
 
 // The @Preview functions render this rather than SettingsAboutScreen directly: the extra hop keeps
 // the koinViewModel() call out of the previewed function's own body (matching SettingsScreen). The
-// screen renders through SettingsViewModel, backed by the fakes in preview/PreviewModule.kt.
+// screen renders through SettingsAboutViewModel, backed by the fakes in preview/PreviewModule.kt.
 @Composable
 private fun SettingsAboutScreenPreviewContent() {
     SettingsAboutScreen(onBack = {})

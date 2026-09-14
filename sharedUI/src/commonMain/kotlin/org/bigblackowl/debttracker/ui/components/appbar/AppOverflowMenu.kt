@@ -1,6 +1,7 @@
 package org.bigblackowl.debttracker.ui.components.appbar
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CurrencyExchange
 import androidx.compose.material.icons.filled.MoreVert
@@ -21,11 +22,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 import org.bigblackowl.debttracker.core.notifications.NotificationsPoller
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.navigation.AppMenu
+import org.bigblackowl.debttracker.theme.Dimens
 import org.koin.compose.koinInject
 
 /**
@@ -47,7 +50,7 @@ fun AppOverflowMenu(
     val unread by poller.unreadCount.collectAsState()
     var open by remember { mutableStateOf(false) }
 
-    Box {
+    Box(modifier = Modifier.padding(Dimens.space5)) {
         IconButton(onClick = { open = true }) {
             if (isAuthenticated && unread > 0) {
                 BadgedBox(badge = { Badge { Text(unread.toString()) } }) {
