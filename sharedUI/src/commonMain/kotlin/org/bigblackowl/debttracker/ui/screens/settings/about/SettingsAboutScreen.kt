@@ -73,7 +73,7 @@ fun SettingsAboutScreen(
                 verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.xl),
             ) {
                 SettingsSection(strings.settings.about) {
-                    val versionLine = "${BuildConfig.APP_VERSION}-${BuildConfig.APP_VERSION_CODE}"
+                    val versionLine = BuildConfig.APP_VERSION
                     val versionSubtitle = if (currentPlatform == AppPlatform.ANDROID) {
                         when {
                             inAppUpdateReady -> strings.updateReadyToInstall
