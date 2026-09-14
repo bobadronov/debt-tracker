@@ -20,7 +20,9 @@ import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.BrightnessAuto
+import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Info
@@ -31,6 +33,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Vibration
@@ -47,6 +50,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -91,6 +96,7 @@ fun SettingsScreen(
     val strings = LocalStrings.current
     val settings = koinInject<AppSettings>()
     val authRepository = koinInject<AuthRepository>()
+    val uriHandler = LocalUriHandler.current
     val isAuthenticated by authRepository.isAuthenticated.collectAsStateWithLifecycle()
     var showSignOutConfirm by remember { mutableStateOf(false) }
 
@@ -209,6 +215,7 @@ fun SettingsScreen(
                         onClick = onOpenLanguage,
                     )
                 }
+                GetAppSection(uriHandler = uriHandler)
             }
         }
     }
@@ -309,6 +316,47 @@ private fun ContactLine(icon: ImageVector, value: String) {
         )
         Spacer(Modifier.width(Dimens.Spacing.xs))
         CaptionText(value)
+    }
+}
+
+// --- Get the app ---
+// Points to the other platforms' builds and the marketing site — hides only the platform the user
+// is already running, since Desktop covers Windows/macOS/Linux as one link (currentPlatform can't
+// tell them apart) and there's no iOS row yet (no App Store listing).
+private const val WEBSITE_URL = "https://bobadronov.github.io/debt-tracker/"
+private const val PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=org.bigblackowl.debttracker.androidApp"
+private const val RELEASES_URL = "https://github.com/bobadronov/debt-tracker/releases/latest"
+
+@Composable
+private fun GetAppSection(uriHandler: UriHandler) {
+    val strings = LocalStrings.current
+    SettingsSection(strings.settings.getAppTitle) {
+        if (currentPlatform != AppPlatform.WEB) {
+            SettingsRow(
+                icon = Icons.Filled.Public,
+                title = strings.settings.getAppWebsite,
+                subtitle = WEBSITE_URL,
+                onClick = { uriHandler.openUri(WEBSITE_URL) },
+            )
+            SettingsRowDivider()
+        }
+        if (currentPlatform != AppPlatform.ANDROID) {
+            SettingsRow(
+                icon = Icons.Filled.Android,
+                title = strings.settings.getAppAndroid,
+                subtitle = "Google Play",
+                onClick = { uriHandler.openUri(PLAY_STORE_URL) },
+            )
+        }
+        if (currentPlatform != AppPlatform.DESKTOP) {
+            if (currentPlatform != AppPlatform.ANDROID) SettingsRowDivider()
+            SettingsRow(
+                icon = Icons.Filled.Computer,
+                title = strings.settings.getAppDesktop,
+                subtitle = "Windows · macOS · Linux",
+                onClick = { uriHandler.openUri(RELEASES_URL) },
+            )
+        }
     }
 }
 

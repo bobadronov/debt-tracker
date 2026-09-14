@@ -221,6 +221,11 @@ data class SettingsStrings(
     val upToDate: String,
     /** Settings row label — the whole "Active devices" screen is [ActiveSessionsStrings]. */
     val activeSessions: String,
+    /** Main Settings screen panel linking to the other platforms' builds and the website. */
+    val getAppTitle: String,
+    val getAppWebsite: String,
+    val getAppAndroid: String,
+    val getAppDesktop: String,
 )
 
 /** Active sessions (Settings → Active devices — session management/remote logout). */
