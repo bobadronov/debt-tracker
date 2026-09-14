@@ -96,6 +96,27 @@ class AppSettings(private val settings: Settings) {
             else settings.putString(KEY_EXCHANGE_RATES_CACHE, value)
         }
 
+    /** Last chosen rate source ([org.bigblackowl.debttracker.domain.model.RateSource] name); `null` — default. Not UI state. */
+    var exchangeRatesSource: String?
+        get() = settings.getStringOrNull(KEY_EXCHANGE_RATES_SOURCE)
+        set(value) {
+            if (value == null) settings.remove(KEY_EXCHANGE_RATES_SOURCE)
+            else settings.putString(KEY_EXCHANGE_RATES_SOURCE, value)
+        }
+
+    /** Last chosen base currency (ISO code) for sources with an arbitrary base; `null` — default. Not UI state. */
+    var exchangeRatesBase: String?
+        get() = settings.getStringOrNull(KEY_EXCHANGE_RATES_BASE)
+        set(value) {
+            if (value == null) settings.remove(KEY_EXCHANGE_RATES_BASE)
+            else settings.putString(KEY_EXCHANGE_RATES_BASE, value)
+        }
+
+    /** Currencies pinned by the user on the rates screen — CSV of ISO codes. Empty string — none. Not UI state. */
+    var exchangeRatesPinnedCsv: String
+        get() = settings.getString(KEY_EXCHANGE_RATES_PINNED, "")
+        set(value) = settings.putString(KEY_EXCHANGE_RATES_PINNED, value)
+
     /**
      * Whether an OS restore credential (zero-tap sign-in) has already been registered for the
      * account signed in on this install — a local guard so [org.bigblackowl.debttracker.data.remote.RestoreCredentialCoordinator]
@@ -163,6 +184,9 @@ class AppSettings(private val settings: Settings) {
         const val KEY_LAST_SYNCED_USER_ID = "last_synced_user_id"
         const val KEY_RESTORE_CREDENTIAL_REGISTERED = "restore_credential_registered"
         const val KEY_EXCHANGE_RATES_CACHE = "exchange_rates_cache"
+        const val KEY_EXCHANGE_RATES_SOURCE = "exchange_rates_source"
+        const val KEY_EXCHANGE_RATES_BASE = "exchange_rates_base"
+        const val KEY_EXCHANGE_RATES_PINNED = "exchange_rates_pinned"
     }
 }
 
