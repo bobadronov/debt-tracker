@@ -2,8 +2,8 @@ package org.bigblackowl.debttracker.core.qr
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,6 +19,9 @@ import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.media.rememberImagePicker
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.ui.components.button.Button
+import org.bigblackowl.debttracker.ui.components.text.BodyText
+import org.bigblackowl.debttracker.ui.components.text.CaptionText
 
 /** [ContactQrFilePickerContent]'s pick-and-decode logic, exposed standalone so callers that want
  * their own trigger (e.g. QrHubScreen's single share-screen button) can launch the OS file picker
@@ -61,19 +64,19 @@ fun ContactQrFilePickerContent(modifier: Modifier = Modifier, onResult: (String)
     val picker = rememberContactQrImagePicker(onResult)
 
     Column(
-        modifier = modifier.padding(Dimens.space16),
+        modifier = modifier.padding(Dimens.Spacing.lg),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(strings.qr.hubPickFileHint, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
-        Column(verticalArrangement = Arrangement.spacedBy(Dimens.space8)) {
+        BodyText(strings.qr.hubPickFileHint, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm)) {
             Button(
-                modifier = Modifier.padding(top = Dimens.space12),
+                modifier = Modifier.padding(top = Dimens.Spacing.md),
                 onClick = picker.pick,
             ) { Text(strings.qr.hubPickFileButton) }
 
             picker.errorMessage?.let {
-                Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
+                CaptionText(it, modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
             }
         }
     }

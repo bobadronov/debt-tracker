@@ -16,7 +16,7 @@ import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.ui.components.unlock.PIN_LENGTH
 
 /**
- * PIN/biometric unlock check (спек §6, п.2) — verification lives here, [AuthGateScreen] only renders state.
+ * PIN/biometric unlock check (spec §6, item 2) — verification lives here, [AuthGateScreen] only renders state.
  *
  * Failure handling is deliberate: a biometric that errors / is cancelled / is no longer available
  * must NEVER strand the user. If a PIN is set we drop straight to the PIN keypad; otherwise we keep

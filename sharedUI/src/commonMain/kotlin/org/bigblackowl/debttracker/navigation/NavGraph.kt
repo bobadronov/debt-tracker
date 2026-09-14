@@ -146,10 +146,10 @@ private fun <T : Any> navSlideTransitionSpec(
 }
 
 /**
- * Навігаційний граф з усіма екранами зі спека §6 (Navigation 3). Desktop
- * hotkeys (спек §6: Ctrl+N/Ctrl+Shift+N/Ctrl+F/Esc) навішені тут через
- * onPreviewKeyEvent — той самий код компілюється на Android/iOS теж
- * (апаратна клавіатура там просто рідкість, не помилка).
+ * The navigation graph with all screens from spec §6 (Navigation 3). Desktop
+ * hotkeys (spec §6: Ctrl+N/Ctrl+Shift+N/Ctrl+F/Esc) are wired up here via
+ * onPreviewKeyEvent — the same code also compiles on Android/iOS
+ * (a hardware keyboard there is just rare, not an error).
  */
 @Composable
 fun DebtTrackerNavGraph(
@@ -233,7 +233,7 @@ fun DebtTrackerNavGraph(
 
     // First-launch onboarding runs account → app-lock, in that order (Screen.AccountOnboarding then
     // Screen.Onboarding), each step falling through here once its "seen" flag is set. Web has no
-    // local cache (спек §1) — repositories need a signed-in Supabase session to work at all — so it
+    // local cache (spec §1) — repositories need a signed-in Supabase session to work at all — so it
     // forces the sign-in screen and skips both onboarding steps (no local-only mode, no app lock).
     // Other platforms are fully offline-capable; Supabase auth there is opt-in sync — surfaced once
     // via AccountOnboarding (skippable), then only reachable from Settings after that.

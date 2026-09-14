@@ -46,10 +46,10 @@ private fun NotificationDto.toDomain() = AppNotification(
 )
 
 /**
- * [NotificationRepository] backed directly by Postgrest — deliberately no Room (сповіщення мають
- * сенс лише в Account+Sync режимі, як і саме дзеркалювання боргів). Мережеві помилки ковтаються
- * до порожнього результату, як і [SupabaseProfileLookupRepository] — опитування раз на 15с не
- * повинно валити застосунок чи спамити помилками при відсутності мережі.
+ * [NotificationRepository] backed directly by Postgrest — deliberately no Room (notifications only
+ * make sense in Account+Sync mode, same as debt mirroring itself). Network errors are swallowed
+ * down to an empty result, same as [SupabaseProfileLookupRepository] — polling once every 15s
+ * shouldn't crash the app or spam errors when there's no network.
  */
 class SupabaseNotificationRepository(
     private val client: SupabaseClient,
@@ -89,8 +89,8 @@ class SupabaseNotificationRepository(
     override suspend fun unreadCount(): Int {
         val userId = currentUserIdOrNull() ?: return 0
         return runCatching {
-            // Лише count(), без завантаження тіла рядків — раз на 15с опитування не повинно
-            // тягнути повні DTO заради самого лише числа.
+            // Just count(), without loading the row bodies — polling once every 15s shouldn't
+            // pull full DTOs just for a single number.
             client.from("notifications")
                 .select(columns = Columns.list("id")) {
                     filter { eq("user_id", userId); eq("is_read", false) }

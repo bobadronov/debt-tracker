@@ -1,28 +1,28 @@
 package org.bigblackowl.debttracker.core.notifications
 
 /**
- * Показує справжнє системне сповіщення ОС (Android `NotificationManager`, iOS
- * `UNUserNotificationCenter`, Desktop System Tray, Web `Notification` API) — за зразком
- * [org.bigblackowl.debttracker.core.sound.SoundPlayer]: plain-інтерфейс (не `expect class`), щоб
- * [org.bigblackowl.debttracker.preview.previewModule] міг підв'язати no-op реалізацію замість
- * справжньої, і Compose Preview ніколи не торкався платформних API сповіщень.
+ * Shows a real OS-level system notification (Android `NotificationManager`, iOS
+ * `UNUserNotificationCenter`, Desktop System Tray, Web `Notification` API) — following the pattern
+ * of [org.bigblackowl.debttracker.core.sound.SoundPlayer]: a plain interface (not `expect class`)
+ * so [org.bigblackowl.debttracker.preview.previewModule] can bind a no-op implementation instead
+ * of the real one, and Compose Preview never touches platform notification APIs.
  */
 interface LocalNotifier {
-    /** Запитує дозвіл на сповіщення, якщо платформа цього вимагає (Android 13+, iOS, Web); no-op/true там, де дозвіл не потрібен (Desktop). */
+    /** Requests notification permission where the platform requires it (Android 13+, iOS, Web); no-op/true where no permission is needed (Desktop). */
     suspend fun requestPermission(): Boolean
 
     /**
-     * Показує сповіщення. [deepLink] (див. [NotificationDeepLinks.linkFor]) — куди навігувати при
-     * тапі: платформа чіпляє його до сповіщення й повертає в [NotificationDeepLinks] при кліку.
-     * `null` — сповіщення без переходу (тап лише розгортає застосунок).
+     * Shows a notification. [deepLink] (see [NotificationDeepLinks.linkFor]) — where to navigate on
+     * tap: the platform attaches it to the notification and returns it to [NotificationDeepLinks]
+     * on click. `null` means a notification with no navigation (tapping only brings the app to front).
      */
     fun notify(title: String, body: String, deepLink: String? = null)
 }
 
-// Немає `expect fun createLocalNotifier()` (на відміну від SoundPlayer) — Android-реалізація
-// потребує Context, тож кожна платформа біндить свій [LocalNotifier] напряму в
-// `platformDataModule()` (той самий підхід, що й Room/SyncCoordinator), а не через
-// параметризовану expect-функцію в спільному AppModule.
+// No `expect fun createLocalNotifier()` (unlike SoundPlayer) — the Android implementation needs a
+// Context, so each platform binds its own [LocalNotifier] directly in `platformDataModule()` (the
+// same approach as Room/SyncCoordinator), rather than through a parameterized expect function in
+// the shared AppModule.
 //
-// No-op реалізація для Compose Preview живе в preview/PreviewFakes.kt
-// (NoOpLocalNotifier), поруч з рештою фейкових залежностей preview-модуля.
+// The no-op implementation for Compose Preview lives in preview/PreviewFakes.kt
+// (NoOpLocalNotifier), alongside the rest of the preview module's fake dependencies.

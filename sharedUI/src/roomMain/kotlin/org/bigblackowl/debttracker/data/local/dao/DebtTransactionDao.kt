@@ -9,7 +9,7 @@ import org.bigblackowl.debttracker.data.local.entity.DebtTransactionEntity
 
 @Dao
 interface DebtTransactionDao {
-    /** Усі транзакції по всіх боржниках — для агрегації балансу в списку (DebtorRepository.observeDebtors). */
+    /** All transactions across all debtors — for balance aggregation in the list (DebtorRepository.observeDebtors). */
     @Query("SELECT * FROM debt_transactions WHERE isDeleted = 0")
     fun observeAll(): Flow<List<DebtTransactionEntity>>
 

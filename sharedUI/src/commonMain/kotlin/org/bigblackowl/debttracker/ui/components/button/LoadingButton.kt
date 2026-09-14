@@ -1,8 +1,7 @@
-package org.bigblackowl.debttracker.ui.components
+package org.bigblackowl.debttracker.ui.components.button
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -25,7 +24,7 @@ fun LoadingButton(
         modifier = modifier.animateContentSize(),
     ) {
         if (isLoading) {
-            CircularWavyProgressIndicator(modifier = Modifier.padding(end = Dimens.space8))
+            CircularWavyProgressIndicator(modifier = Modifier.padding(end = Dimens.Spacing.sm))
         } else {
             leadingIcon?.invoke()
             label()

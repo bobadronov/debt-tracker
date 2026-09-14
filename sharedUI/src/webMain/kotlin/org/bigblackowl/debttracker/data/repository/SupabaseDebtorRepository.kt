@@ -2,8 +2,8 @@ package org.bigblackowl.debttracker.data.repository
 
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseExperimental
-import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
 import io.github.jan.supabase.realtime.selectAsFlow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -18,8 +18,8 @@ import org.bigblackowl.debttracker.data.remote.dto.DebtTransactionDto
 import org.bigblackowl.debttracker.data.remote.dto.DebtorDto
 import org.bigblackowl.debttracker.data.remote.mapper.toDomain
 import org.bigblackowl.debttracker.data.remote.mapper.toDto
-import org.bigblackowl.debttracker.domain.model.Debtor
 import org.bigblackowl.debttracker.domain.model.DebtTransaction
+import org.bigblackowl.debttracker.domain.model.Debtor
 import org.bigblackowl.debttracker.domain.model.DebtorWithBalance
 import org.bigblackowl.debttracker.domain.model.debtorBalance
 import org.bigblackowl.debttracker.domain.model.toDebtStatus
@@ -31,9 +31,9 @@ import org.bigblackowl.debttracker.domain.repository.DebtorRepository
 private data class LinkDebtorParams(@SerialName("p_debtor_id") val debtorId: String)
 
 /**
- * Web: online-only [DebtorRepository] — no local cache (Room has no wasmJs/js target, спек §1),
+ * Web: online-only [DebtorRepository] — no local cache (Room has no wasmJs/js target, spec §1),
  * reads/writes go straight through Supabase Postgrest, list screens stay live via Realtime
- * ([selectAsFlow], мірор [org.bigblackowl.debttracker.data.sync.SyncCoordinator]'s pull side).
+ * ([selectAsFlow], mirroring [org.bigblackowl.debttracker.data.sync.SyncCoordinator]'s pull side).
  */
 @OptIn(SupabaseExperimental::class, ExperimentalCoroutinesApi::class)
 class SupabaseDebtorRepository(
@@ -154,7 +154,7 @@ class SupabaseDebtorRepository(
         }.getOrNull()
     }
 
-    /** Мірор Room-репозиторію: status рахується з транзакцій, а не приходить з Postgres-тригера напряму сюди. */
+    /** Mirrors the Room repository: status is computed from transactions rather than coming directly from a Postgres trigger here. */
     private suspend fun recalcDebtorStatus(debtorId: String, userId: String) {
         val debtor = client.from("debtors")
             .select { filter { eq("id", debtorId); eq("user_id", userId) } }

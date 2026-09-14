@@ -10,11 +10,10 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
- * Налаштування користувача (спек §9.1 `profiles`, локальний аналог). Поля,
- * що впливають на UI (protectionEnabled/biometricEnabled/soundEnabled/theme),
- * зроблені Compose-реактивними через [mutableStateOf], щоб SettingsScreen міг
- * змінювати їх, а решта застосунку (AppTheme, AuthGate) одразу бачила зміну —
- * без окремого шару DataStore/Flow.
+ * User settings (spec §9.1 `profiles`, local counterpart). Fields that affect the UI
+ * (protectionEnabled/biometricEnabled/soundEnabled/theme) are made Compose-reactive via
+ * [mutableStateOf], so SettingsScreen can change them and the rest of the app (AppTheme,
+ * AuthGate) sees the change immediately — without a separate DataStore/Flow layer.
  */
 class AppSettings(private val settings: Settings) {
 
@@ -55,9 +54,9 @@ class AppSettings(private val settings: Settings) {
     }
 
     /**
-     * ISO-8601 (`kotlin.time.Instant.toString()`) курсор для [org.bigblackowl.debttracker.core.notifications.NotificationsPoller] —
-     * `created_at` останнього вже показаного системного сповіщення на цьому пристрої. `null` —
-     * ще жодного не показано. Не Compose-реактивне (не UI-стан), тож звичайний get/set поверх Settings.
+     * ISO-8601 (`kotlin.time.Instant.toString()`) cursor for [org.bigblackowl.debttracker.core.notifications.NotificationsPoller] —
+     * the `created_at` of the last system notification already shown on this device. `null` —
+     * none shown yet. Not Compose-reactive (not UI state), so a plain get/set over Settings.
      */
     var lastSeenNotificationAt: String?
         get() = settings.getStringOrNull(KEY_LAST_SEEN_NOTIFICATION_AT)
@@ -74,7 +73,7 @@ class AppSettings(private val settings: Settings) {
      * the cache has never been synced to any account (pure local-only, or freshly cleared).
      * [org.bigblackowl.debttracker.data.sync.SyncCoordinator] uses this to tell "first sign-in from
      * local-only" (migrate the existing local rows into the new account, as onboarding promises)
-     * apart from "signing into a DIFFERENT account on a device that still has a prior account's
+     * apart from "signing in to a DIFFERENT account on a device that still has a prior account's
      * cached data because it was never explicitly signed out of" (wipe the stale rows first, so
      * they don't render mixed into the new account's list or get pushed under the wrong user_id).
      * Not UI state.
@@ -87,8 +86,8 @@ class AppSettings(private val settings: Settings) {
         }
 
     /**
-     * Останній вдалий зріз курсів валют, серіалізований [org.bigblackowl.debttracker.data.remote.HttpExchangeRatesRepository]
-     * (одна JSON-мапа `джерело -> зріз`). `null` — ще жодного разу не вантажилось. Не UI-стан.
+     * The last successful exchange rate snapshot, serialized by [org.bigblackowl.debttracker.data.remote.HttpExchangeRatesRepository]
+     * (a single JSON map `source -> snapshot`). `null` — never loaded yet. Not UI state.
      */
     var exchangeRatesCache: String?
         get() = settings.getStringOrNull(KEY_EXCHANGE_RATES_CACHE)
@@ -96,27 +95,6 @@ class AppSettings(private val settings: Settings) {
             if (value == null) settings.remove(KEY_EXCHANGE_RATES_CACHE)
             else settings.putString(KEY_EXCHANGE_RATES_CACHE, value)
         }
-
-    /** Останнє обране джерело курсів ([org.bigblackowl.debttracker.domain.model.RateSource] name); `null` — дефолт. Не UI-стан. */
-    var exchangeRatesSource: String?
-        get() = settings.getStringOrNull(KEY_EXCHANGE_RATES_SOURCE)
-        set(value) {
-            if (value == null) settings.remove(KEY_EXCHANGE_RATES_SOURCE)
-            else settings.putString(KEY_EXCHANGE_RATES_SOURCE, value)
-        }
-
-    /** Остання обрана базова валюта курсів (ISO-код) для джерел із довільною базою; `null` — дефолт. Не UI-стан. */
-    var exchangeRatesBase: String?
-        get() = settings.getStringOrNull(KEY_EXCHANGE_RATES_BASE)
-        set(value) {
-            if (value == null) settings.remove(KEY_EXCHANGE_RATES_BASE)
-            else settings.putString(KEY_EXCHANGE_RATES_BASE, value)
-        }
-
-    /** Закріплені користувачем валюти на екрані курсів — CSV ISO-кодів. Порожній рядок — жодної. Не UI-стан. */
-    var exchangeRatesPinnedCsv: String
-        get() = settings.getString(KEY_EXCHANGE_RATES_PINNED, "")
-        set(value) = settings.putString(KEY_EXCHANGE_RATES_PINNED, value)
 
     /**
      * Whether an OS restore credential (zero-tap sign-in) has already been registered for the
@@ -185,9 +163,6 @@ class AppSettings(private val settings: Settings) {
         const val KEY_LAST_SYNCED_USER_ID = "last_synced_user_id"
         const val KEY_RESTORE_CREDENTIAL_REGISTERED = "restore_credential_registered"
         const val KEY_EXCHANGE_RATES_CACHE = "exchange_rates_cache"
-        const val KEY_EXCHANGE_RATES_SOURCE = "exchange_rates_source"
-        const val KEY_EXCHANGE_RATES_BASE = "exchange_rates_base"
-        const val KEY_EXCHANGE_RATES_PINNED = "exchange_rates_pinned"
     }
 }
 

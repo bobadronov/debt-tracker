@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -35,16 +34,18 @@ import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.domain.validation.sanitizeAmountInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.ui.components.button.Button
 import org.bigblackowl.debttracker.ui.components.form.PasteableOutlinedTextField
 import org.bigblackowl.debttracker.ui.components.form.PaymentMethodChipRow
 import org.bigblackowl.debttracker.ui.components.form.rememberClipboardText
+import org.bigblackowl.debttracker.ui.components.text.HeadingText
 import org.koin.compose.koinInject
 
 
 /**
- * Спільний bottom sheet для введення суми/способу оплати — використовується
- * для "Повернути"/"Ще позичив" (Debtor) і "Повернути борг"/"Ще взяв у борг" (Creditor).
- * [currency] — валюта батьківського боржника/кредитора (транзакція успадковує її, без вибору тут).
+ * Shared bottom sheet for entering an amount/payment method — used for
+ * "Repay"/"Lend more" (Debtor) and "Repay debt"/"Borrow more" (Creditor).
+ * [currency] — the parent debtor's/creditor's currency (the transaction inherits it, no picker here).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,10 +72,10 @@ fun AmountBottomSheet(
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(
-            modifier = Modifier.fillMaxWidth().imePadding().padding(Dimens.space16),
-            verticalArrangement = Arrangement.spacedBy(Dimens.space12),
+            modifier = Modifier.fillMaxWidth().imePadding().padding(Dimens.Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.md),
         ) {
-            Text(title, style = MaterialTheme.typography.titleMedium)
+            HeadingText(title, style = MaterialTheme.typography.titleMedium)
             PasteableOutlinedTextField(
                 value = amountText,
                 onValueChange = { amountText = sanitizeAmountInput(it); error = null },

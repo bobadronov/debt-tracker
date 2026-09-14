@@ -1,3 +1,4 @@
+<!--suppress ALL -->
 <p align="center">
   <img src="https://bobadronov.github.io/debt-tracker/android-chrome-512x512.png" width="120" alt="DebtTracker Logo">
 </p>
@@ -49,7 +50,7 @@ nicht in deinem Kopf.
 ## ✨ Warum du es mögen wirst
 
 ### 🔀 Zwei Listen, nie durcheinander
-**„Schulden mir"** und **„Ich schulde"** stehen nebeneinander, jede mit
+**"Schulden mir"** und **"Ich schulde"** stehen nebeneinander, jede mit
 eigener laufender Summe. Dieselbe Person kann in beiden auftauchen — wir
 verrechnen nie heimlich das eine gegen das andere. Dein Buchhalter weint
 vielleicht. Deine Freundschaften nicht.
@@ -107,18 +108,18 @@ flowchart LR
 
 ## 📥 Herunterladen
 
-| Wo | Link |
-|---|---|
-| 🌐 **Web** — nichts zu installieren (kostenloses Konto) | <b><a href="https://bobadronov.github.io/debt-tracker/" target="_blank" rel="noopener noreferrer">bobadronov.github.io/debt-tracker</a></b> |
-| 🤖 **Android** | <a href="https://play.google.com/store/apps/details?id=org.bigblackowl.debttracker.androidApp" target="_blank" rel="noopener noreferrer">Google Play</a> |
-| 🖥️ **Windows** (MSI) | <a href="https://github.com/bobadronov/debt-tracker/releases/latest" target="_blank" rel="noopener noreferrer">Neuestes Release</a> |
-| 🐧 **Linux** (DEB) | <a href="https://github.com/bobadronov/debt-tracker/releases/latest" target="_blank" rel="noopener noreferrer">Neuestes Release</a> |
-| 🍎 **macOS** (DMG, Intel + Apple Silicon) | <a href="https://github.com/bobadronov/debt-tracker/releases/latest" target="_blank" rel="noopener noreferrer">Neuestes Release</a> |
-| 🍏 **iOS** | Aus dem Quellcode bauen |
+| Wo                                                      | Link                                                                                                                                                     |
+|---------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 🌐 **Web** — nichts zu installieren (kostenloses Konto) | <b><a href="https://bobadronov.github.io/debt-tracker/" target="_blank" rel="noopener noreferrer">bobadronov.github.io/debt-tracker</a></b>              |
+| 🤖 **Android**                                          | <a href="https://play.google.com/store/apps/details?id=org.bigblackowl.debttracker.androidApp" target="_blank" rel="noopener noreferrer">Google Play</a> |
+| 🖥️ **Windows** (MSI)                                   | <a href="https://github.com/bobadronov/debt-tracker/releases/latest" target="_blank" rel="noopener noreferrer">Neuestes Release</a>                      |
+| 🐧 **Linux** (DEB)                                      | <a href="https://github.com/bobadronov/debt-tracker/releases/latest" target="_blank" rel="noopener noreferrer">Neuestes Release</a>                      |
+| 🍎 **macOS** (DMG, Intel + Apple Silicon)               | <a href="https://github.com/bobadronov/debt-tracker/releases/latest" target="_blank" rel="noopener noreferrer">Neuestes Release</a>                      |
+| 🍏 **iOS**                                              | Aus dem Quellcode bauen                                                                                                                                  |
 
 ---
 
-## 🔐 Deine Daten, deine Regeln
+## 🔐 Deine Daten, Deine Regeln
 
 Keine Werbung. Kein Tracking. Keine Analytics-SDKs. Nichts verlässt dein
 Gerät, es sei denn, **du** legst ein Konto für die Synchronisierung an — und

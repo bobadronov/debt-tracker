@@ -11,8 +11,8 @@ data class MonthlyPoint(val month: Int, val year: Int, val amount: BigDecimal)
 
 /**
  * Derived stats for [StatsScreen] — computed straight from the live debtor/creditor lists, no separate aggregation query.
- * Місячна динаміка (monthly*Trend) підсумовує суми напряму, без розбивки по валютах —
- * прийнятне спрощення, поки немає курсів обміну для кросвалютного графіка.
+ * The monthly trend (monthly*Trend) sums amounts directly, without a per-currency breakdown —
+ * an acceptable simplification until exchange rates exist for a cross-currency chart.
  */
 data class StatsState(
     val isLoading: Boolean = true,

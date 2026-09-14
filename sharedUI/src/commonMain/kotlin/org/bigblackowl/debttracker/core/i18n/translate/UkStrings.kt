@@ -335,6 +335,7 @@ val UkStrings = Strings(
             notHappenedHint = "Пропонує видалити цю операцію.",
             send = "Надіслати",
         ),
+        actionError = "Не вдалося виконати дію. Спробуйте ще раз.",
     ),
     notificationBody = NotificationBodyStrings(
         debtorLinked = { name, amount, currency -> "$name: ви винні $amount $currency" },

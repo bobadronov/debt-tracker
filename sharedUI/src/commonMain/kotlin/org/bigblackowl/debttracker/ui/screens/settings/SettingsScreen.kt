@@ -37,7 +37,6 @@ import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,14 +66,15 @@ import org.bigblackowl.debttracker.ui.components.SettingsRow
 import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
 import org.bigblackowl.debttracker.ui.components.SettingsSection
 import org.bigblackowl.debttracker.ui.components.SettingsSwitchRow
+import org.bigblackowl.debttracker.ui.components.text.CaptionText
 import org.bigblackowl.debttracker.ui.screens.settings.language.languageOptions
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * SettingsScreen — хаб для захисту/Сповіщення/Дані/Про застосунок (окремі екрани), але Параметри
- * (тема/мова/звук/вібродзвінок/фонова робота) лишаються тут-таки, на головній сторінці — вони
- * достатньо короткі, щоб не виправдовувати ще один перехід.
+ * SettingsScreen — a hub for Protection/Notifications/Data/About the app (separate screens), but
+ * Preferences (theme/language/sound/haptics/background work) stay right here, on the main page —
+ * they're short enough not to justify yet another navigation hop.
  */
 @Composable
 fun SettingsScreen(
@@ -95,8 +95,8 @@ fun SettingsScreen(
     var showSignOutConfirm by remember { mutableStateOf(false) }
 
     val showProtectionRow = currentPlatform != AppPlatform.WEB
-    // Тільки Android/iOS мають реальний віброзвінок під керуванням LocalHapticFeedback —
-    // на Desktop/Web це або no-op, або взагалі не підтримується, тож перемикач там ховаємо.
+    // Only Android/iOS have real haptics driven by LocalHapticFeedback —
+    // on Desktop/Web it's either a no-op or unsupported entirely, so we hide the toggle there.
     val showHapticRow = currentPlatform == AppPlatform.ANDROID || currentPlatform == AppPlatform.IOS
 
     PlaceholderScreen(title = strings.settings.title, onBack = onBack) {
@@ -106,7 +106,7 @@ fun SettingsScreen(
         ) {
             Column(
                 modifier = Modifier.width(Dimens.contentMaxWidth),
-                verticalArrangement = Arrangement.spacedBy(Dimens.space24),
+                verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.xl),
             ) {
                 AccountSection(
                     authRepository = authRepository,
@@ -176,7 +176,7 @@ fun SettingsScreen(
                         SettingsRowDivider()
                     }
 
-                    // Один тап по рядку циклічно перемикає system → light → dark — іконка відображає поточний стан.
+                    // One tap on the row cycles system → light → dark — the icon reflects the current state.
                     val themeOptions = remember(strings) {
                         listOf(
                             "system" to strings.settings.themeSystem,
@@ -249,30 +249,29 @@ private fun AccountSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .let { if (isAuthenticated) it.clickable(onClick = onOpenAccountInfo) else it }
-                .padding(Dimens.space16),
+                .padding(Dimens.Spacing.lg),
             verticalAlignment = Alignment.CenterVertically
         ) {
             SubcomposeAsyncImage(
                 model = avatarUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Inside,
-                modifier = Modifier.size(Dimens.space120).clip(CircleShape),
-                loading = { CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space30)) },
+                modifier = Modifier.size(Dimens.IconSize.xxl).clip(CircleShape),
+                loading = { CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.IconSize.sm)) },
                 error = {
                     Icon(
                         Icons.Default.Person,
                         contentDescription = null,
-                        modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant).padding(Dimens.space16),
+                        modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant).padding(Dimens.Spacing.lg),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             )
-            Spacer(Modifier.width(Dimens.space16))
+            Spacer(Modifier.width(Dimens.Spacing.lg))
             Column(modifier = Modifier.weight(1f)) {
-                Text(
+                CaptionText(
                     if (isAuthenticated) strings.settings.accountSynced(accountName ?: accountEmail.orEmpty()) else strings.settings.localOnly,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (isAuthenticated) {
                     accountEmail?.takeIf { it.isNotBlank() }?.let { ContactLine(Icons.Filled.Email, it) }
@@ -300,20 +299,16 @@ private fun AccountSection(
 /** Small icon + text line under the account name (email, phone). */
 @Composable
 private fun ContactLine(icon: ImageVector, value: String) {
-    Spacer(Modifier.height(Dimens.space4))
+    Spacer(Modifier.height(Dimens.Spacing.xs))
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
             icon,
             contentDescription = null,
-            modifier = Modifier.size(Dimens.space16),
+            modifier = Modifier.size(Dimens.IconSize.sm),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(Modifier.width(Dimens.space4))
-        Text(
-            value,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Spacer(Modifier.width(Dimens.Spacing.xs))
+        CaptionText(value)
     }
 }
 

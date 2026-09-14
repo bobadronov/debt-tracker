@@ -27,7 +27,7 @@ import org.bigblackowl.debttracker.core.i18n.Strings
 import org.bigblackowl.debttracker.core.i18n.TransactionEditStrings
 import org.bigblackowl.debttracker.core.i18n.UpdateStrings
 
-// První strojový překlad – ke kontrole rodilým mluvčím.
+// First machine translation pass – to be reviewed by a native speaker.
 val CsStrings = Strings(
 
     cancel = "Zrušit",
@@ -336,6 +336,7 @@ val CsStrings = Strings(
             notHappenedHint = "Navrhne odstranění této transakce.",
             send = "Odeslat",
         ),
+        actionError = "Akce se nezdařila. Zkuste to znovu.",
     ),
     notificationBody = NotificationBodyStrings(
         debtorLinked = { name, amount, currency -> "$name: dlužíte $amount $currency" },

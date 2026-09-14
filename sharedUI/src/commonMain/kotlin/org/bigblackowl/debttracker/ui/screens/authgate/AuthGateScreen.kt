@@ -8,12 +8,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fingerprint
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,7 +22,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.platform.AppPlatform
@@ -34,17 +31,21 @@ import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
+import org.bigblackowl.debttracker.ui.components.button.Button
+import org.bigblackowl.debttracker.ui.components.button.TextButton
+import org.bigblackowl.debttracker.ui.components.text.BodyText
 import org.bigblackowl.debttracker.ui.components.unlock.PinCodeField
 import org.bigblackowl.debttracker.ui.components.unlock.UnlockScaffold
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * Auth Gate (спек §6, п.2). Механізм розблокування — від того, що налаштовано (SettingsScreen /
- * ProtectionOnboardingScreen): Android/iOS з увімкненою біометрією — біометрія з відкотом на
- * PIN-клавіатуру, якщо вона доступна; Desktop і планшети без біометрії — одразу PIN. Web — екран
- * не рендериться (там вхід уже захищено обов'язковим email/паролем). Уся перевірка та обробка
- * невдач — у [AuthGateViewModel]; цей екран лише малює [AuthGateState.mode].
+ * Auth Gate (spec §6, item 2). The unlock mechanism depends on what's configured (SettingsScreen /
+ * ProtectionOnboardingScreen): Android/iOS with biometrics enabled — biometrics with a fallback to
+ * the PIN keypad if available; Desktop and tablets without biometrics — straight to PIN. Web — this
+ * screen isn't rendered there (sign-in is already protected by a mandatory email/password). All
+ * validation and failure handling lives in [AuthGateViewModel]; this screen only renders [AuthGateState.mode].
  */
 @Composable
 fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinViewModel()) {
@@ -87,15 +88,15 @@ fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinVi
             subtitle = if (state.biometricDismissed) strings.authGate.biometricFailed else strings.authGate.biometricPrompt,
         ) {
             if (state.biometricRunning) {
-                CircularWavyProgressIndicator()
+                CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.IconSize.lg))
             } else {
                 Icon(
                     Icons.Filled.Fingerprint,
                     contentDescription = null,
-                    modifier = Modifier.size(Dimens.space60),
+                    modifier = Modifier.size(Dimens.IconSize.lg),
                     tint = MaterialTheme.colorScheme.primary,
                 )
-                Spacer(Modifier.height(Dimens.space24))
+                Spacer(Modifier.height(Dimens.Spacing.xl))
                 Button(onClick = { viewModel.onIntent(AuthGateIntent.RetryBiometric(biometricAuthenticator)) }) {
                     Text(strings.authGate.retry)
                 }
@@ -121,14 +122,14 @@ fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinVi
                 enter = slideInVertically { -it },
                 exit = slideOutVertically { it },
             ) {
-                Text(
+                BodyText(
                     state.error ?: "",
                     color = MaterialTheme.debtAccentColors.debt,
                     textAlign = TextAlign.Center,
                 )
             }
             if (settings.biometricEnabled) {
-                Spacer(Modifier.height(Dimens.space8))
+                Spacer(Modifier.height(Dimens.Spacing.sm))
                 TextButton(onClick = { viewModel.onIntent(AuthGateIntent.RetryBiometric(biometricAuthenticator)) }) {
                     Text(strings.authGate.useBiometric)
                 }

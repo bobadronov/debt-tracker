@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,11 +19,12 @@ import androidx.compose.ui.unit.Dp
 import coil3.compose.AsyncImage
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.ui.components.text.TitleText
 
 /**
- * Кругла аватарка для рядків списку боржників/кредиторів (спек: Debtor.avatarUrl doc):
- * фото за [avatarUrl], якщо воно є, інакше — перша літера [name] на кольоровому фоні,
- * детермінованому від [id], щоб той самий боржник/кредитор завжди отримував той самий колір.
+ * Round avatar for debtor/creditor list rows (spec: Debtor.avatarUrl doc):
+ * the photo at [avatarUrl] if present, otherwise the first letter of [name] on a colored
+ * background derived deterministically from [id], so the same debtor/creditor always gets the same color.
  */
 @Composable
 fun EntityAvatar(
@@ -33,7 +32,7 @@ fun EntityAvatar(
     name: String,
     avatarUrl: String?,
     modifier: Modifier = Modifier,
-    size: Dp = Dimens.space40,
+    size: Dp = Dimens.IconSize.md,
 ) {
     Box(
         modifier = modifier.size(size).clip(CircleShape).background(avatarColorFor(id)),
@@ -47,10 +46,9 @@ fun EntityAvatar(
                 modifier = Modifier.size(size).clip(CircleShape),
             )
         } else {
-            Text(
+            TitleText(
                 text = name.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "?",
                 color = Color.White,
-                style = MaterialTheme.typography.titleMedium,
             )
         }
     }
@@ -73,8 +71,8 @@ private fun avatarColorFor(id: String): Color =
 @Composable
 private fun EntityAvatarSample() {
     Row(
-        modifier = Modifier.padding(Dimens.space16),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.space12),
+        modifier = Modifier.padding(Dimens.Spacing.lg),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.Spacing.md),
     ) {
         EntityAvatar(id = "1", name = "Олена Коваль", avatarUrl = null)
         EntityAvatar(id = "2", name = "Іван Петренко", avatarUrl = null)

@@ -2,10 +2,10 @@ package org.bigblackowl.debttracker.ui.components.contact
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.ScannedContact
+import org.bigblackowl.debttracker.ui.components.button.TextButton
 
 /** "Add as debtor or creditor?" chooser shown after decoding a contact QR — shared by
  * [org.bigblackowl.debttracker.ui.screens.qr.QrHubScreen] (in-app camera scan) and

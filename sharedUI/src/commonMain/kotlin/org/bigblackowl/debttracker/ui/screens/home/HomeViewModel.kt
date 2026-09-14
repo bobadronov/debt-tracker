@@ -10,7 +10,7 @@ import org.bigblackowl.debttracker.core.notifications.NotificationsPoller
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
 
-/** Combines auth state + sync status + unread notifications for [HomeScreen]'s top bar (спек §5, §7) — sync badge/bell only show once signed in. */
+/** Combines auth state + sync status + unread notifications for [HomeScreen]'s top bar (spec §5, §7) — sync badge/bell only show once signed in. */
 class HomeViewModel(
     authRepository: AuthRepository,
     syncStatusProvider: SyncStatusProvider,

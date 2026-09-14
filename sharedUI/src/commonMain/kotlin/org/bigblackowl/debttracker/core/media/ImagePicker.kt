@@ -13,10 +13,28 @@ import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.readBytes
 import kotlinx.coroutines.launch
 
-/** Байти обраного зображення + розширення файлу (без крапки, напр. "jpg"), для завантаження в Storage. */
-data class PickedImage(val bytes: ByteArray, val fileExtension: String)
+/** Bytes of the picked image + file extension (no dot, e.g. "jpg"), for uploading to Storage. */
+data class PickedImage(val bytes: ByteArray, val fileExtension: String) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
 
-/** Відкриває системний вибір фото з галереї/файлової системи. */
+        other as PickedImage
+
+        if (!bytes.contentEquals(other.bytes)) return false
+        if (fileExtension != other.fileExtension) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = bytes.contentHashCode()
+        result = 31 * result + fileExtension.hashCode()
+        return result
+    }
+}
+
+/** Opens the system photo picker from the gallery/file system. */
 interface ImagePicker {
     fun pickImage(onPicked: (PickedImage?) -> Unit)
 }

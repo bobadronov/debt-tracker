@@ -12,14 +12,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,6 +37,11 @@ import org.bigblackowl.debttracker.core.update.rememberAppUpdateChecker
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
+import org.bigblackowl.debttracker.ui.components.button.TextButton
+import org.bigblackowl.debttracker.ui.components.card.ElevatedInfoCard
+import org.bigblackowl.debttracker.ui.components.text.BodyText
+import org.bigblackowl.debttracker.ui.components.text.CaptionText
+import org.bigblackowl.debttracker.ui.components.text.TitleText
 
 private sealed interface UpdateBannerState {
     data object Hidden : UpdateBannerState
@@ -111,29 +112,22 @@ private fun UpdateBannerCard(
 ) {
     val strings = LocalStrings.current
     Box(
-        modifier = Modifier.fillMaxWidth().padding(Dimens.space16),
+        modifier = Modifier.fillMaxWidth().padding(Dimens.Spacing.lg),
         contentAlignment = Alignment.BottomCenter
     ) {
-        Card(
-            modifier = Modifier.widthIn(max = Dimens.contentMaxWidth),
-            elevation = CardDefaults.cardElevation(defaultElevation = Dimens.space8),
-        ) {
-            Column(modifier = Modifier.padding(Dimens.space16)) {
+        ElevatedInfoCard {
+            Column(modifier = Modifier.padding(Dimens.Spacing.lg)) {
                 when (state) {
                     is UpdateBannerState.Hidden -> Unit
 
                     is UpdateBannerState.Available -> {
-                        Text(
-                            strings.update.availableTitle,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Spacer(Modifier.height(Dimens.space4))
-                        Text(
+                        TitleText(strings.update.availableTitle)
+                        Spacer(Modifier.height(Dimens.Spacing.xs))
+                        CaptionText(
                             strings.update.availableMessage(state.info.version),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        Spacer(Modifier.height(Dimens.space8))
+                        Spacer(Modifier.height(Dimens.Spacing.sm))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End,
@@ -145,16 +139,13 @@ private fun UpdateBannerCard(
 
                     is UpdateBannerState.Downloading -> {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
-                            Spacer(Modifier.width(Dimens.space12))
-                            Text(
-                                strings.update.downloading,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+                            CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.IconSize.sm))
+                            Spacer(Modifier.width(Dimens.Spacing.md))
+                            BodyText(strings.update.downloading, style = MaterialTheme.typography.bodyMedium)
                         }
                         val progress = state.progress
                         if (progress != null) {
-                            Spacer(Modifier.height(Dimens.space8))
+                            Spacer(Modifier.height(Dimens.Spacing.sm))
                             LinearWavyProgressIndicator(
                                 progress = { progress.fraction ?: 0f },
                                 modifier = Modifier.fillMaxWidth(),
@@ -164,27 +155,25 @@ private fun UpdateBannerCard(
                             val total = progress.totalBytes
                             val speed = progress.bytesPerSecond
                             if (total != null && speed != null) {
-                                Spacer(Modifier.height(Dimens.space4))
-                                Text(
+                                Spacer(Modifier.height(Dimens.Spacing.xs))
+                                CaptionText(
                                     strings.update.downloadingDetail(
                                         formatBytes(progress.bytesDownloaded),
                                         formatBytes(total),
                                         "${formatBytes(speed)}/s",
                                     ),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                         }
                     }
 
                     is UpdateBannerState.Failed -> {
-                        Text(
+                        BodyText(
                             strings.update.failed,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.debtAccentColors.debt,
                         )
-                        Spacer(Modifier.height(Dimens.space8))
+                        Spacer(Modifier.height(Dimens.Spacing.sm))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End

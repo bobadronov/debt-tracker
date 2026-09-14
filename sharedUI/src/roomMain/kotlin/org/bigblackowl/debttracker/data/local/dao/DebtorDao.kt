@@ -34,7 +34,7 @@ interface DebtorDao {
     @Query("DELETE FROM debtors")
     suspend fun deleteAll()
 
-    /** Фаза 6: рядки, ще не відправлені у Supabase (спек §5, offline-first). */
+    /** Phase 6: rows not yet pushed to Supabase (spec §5, offline-first). */
     @Query("SELECT * FROM debtors WHERE syncStatus = 'PENDING'")
     suspend fun getPending(): List<DebtorEntity>
 }

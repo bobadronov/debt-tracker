@@ -1,14 +1,14 @@
 package org.bigblackowl.debttracker.domain.repository
 
 import kotlinx.coroutines.flow.Flow
-import org.bigblackowl.debttracker.domain.model.Debtor
 import org.bigblackowl.debttracker.domain.model.DebtTransaction
+import org.bigblackowl.debttracker.domain.model.Debtor
 import org.bigblackowl.debttracker.domain.model.DebtorWithBalance
 
 /**
- * Offline-first: усі write-операції спершу йдуть у локальне сховище
- * (спек §5). Android/iOS/Desktop — Room-backed реалізація ([roomMain]),
- * Web (Фаза 10) — online-only реалізація напряму через Supabase.
+ * Offline-first: all write operations go to local storage first
+ * (spec §5). Android/iOS/Desktop — Room-backed implementation ([roomMain]),
+ * Web (Phase 10) — online-only implementation directly through Supabase.
  */
 interface DebtorRepository {
     fun observeDebtors(): Flow<List<DebtorWithBalance>>
@@ -26,9 +26,9 @@ interface DebtorRepository {
     /** Wipes this device's local cache only, leaving Supabase data untouched — Room: clears Room; Web: no-op (no local cache). */
     suspend fun clearLocalCache()
     /**
-     * Прив'язує боржника до зареєстрованого користувача за телефоном/email (RPC
-     * `link_debtor_to_registered_user`, ідемпотентна) — дзеркалить наявні транзакції й сповіщає.
-     * Онлайн-only операція (потребує сесію): повертає `null` без сесії/мережі/збігу.
+     * Links a debtor to a registered user by phone/email (RPC
+     * `link_debtor_to_registered_user`, idempotent) — mirrors existing transactions and notifies.
+     * Online-only operation (requires a session): returns `null` without a session/network/match.
      */
     suspend fun linkToRegisteredUser(debtorId: String): String?
 }

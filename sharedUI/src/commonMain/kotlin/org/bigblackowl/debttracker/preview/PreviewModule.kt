@@ -80,9 +80,9 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 /**
- * Дзеркало [org.bigblackowl.debttracker.core.di.appModule] для @Preview: ті самі use case/
- * ViewModel біндинги, але репозиторії/AuthRepository/AppSettings — фейкові (in-memory,
- * без Room/Supabase), щоб превʼю рендерились ізольовано й миттєво.
+ * Mirror of [org.bigblackowl.debttracker.core.di.appModule] for @Preview: the same use case/
+ * ViewModel bindings, but the repositories/AuthRepository/AppSettings are fakes (in-memory,
+ * no Room/Supabase), so previews render in isolation and instantly.
  */
 fun previewModule(darkTheme: Boolean? = null): Module = module {
     single {

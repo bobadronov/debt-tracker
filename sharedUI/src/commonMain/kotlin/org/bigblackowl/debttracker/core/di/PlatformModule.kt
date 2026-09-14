@@ -3,8 +3,8 @@ package org.bigblackowl.debttracker.core.di
 import org.koin.core.module.Module
 
 /**
- * Платформо-специфічна DI-збірка (спек §1: `localSyncModule` на Android/iOS/Desktop
- * з Room+Supabase, `remoteOnlyModule` на Web з тільки Supabase). Наповнюється у Фазі 2.
+ * Platform-specific DI assembly (spec §1: `localSyncModule` on Android/iOS/Desktop
+ * with Room+Supabase, `remoteOnlyModule` on Web with Supabase only). Populated in Phase 2.
  */
 expect fun platformDataModule(): Module
 

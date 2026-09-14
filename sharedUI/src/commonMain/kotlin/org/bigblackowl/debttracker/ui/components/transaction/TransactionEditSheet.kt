@@ -2,7 +2,6 @@ package org.bigblackowl.debttracker.ui.components.transaction
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -10,17 +9,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.material3.rememberDatePickerState
@@ -30,13 +26,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
-import kotlin.time.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
@@ -49,9 +43,17 @@ import org.bigblackowl.debttracker.domain.model.formatDueDateTime
 import org.bigblackowl.debttracker.domain.validation.sanitizeAmountInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.ui.components.button.Button
+import org.bigblackowl.debttracker.ui.components.button.TextButton
+import org.bigblackowl.debttracker.ui.components.card.ClickableOutlinedRow
 import org.bigblackowl.debttracker.ui.components.form.PasteableOutlinedTextField
 import org.bigblackowl.debttracker.ui.components.form.PaymentMethodChipRow
 import org.bigblackowl.debttracker.ui.components.form.rememberClipboardText
+import org.bigblackowl.debttracker.ui.components.text.HeadingText
+import org.bigblackowl.debttracker.ui.components.text.LabelText
+import org.bigblackowl.debttracker.ui.components.text.TitleText
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Bottom sheet for editing one existing transaction from a debtor/creditor history: amount
@@ -86,10 +88,10 @@ fun TransactionEditSheet(
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(
-            modifier = Modifier.fillMaxWidth().imePadding().padding(Dimens.space16),
-            verticalArrangement = Arrangement.spacedBy(Dimens.space12),
+            modifier = Modifier.fillMaxWidth().imePadding().padding(Dimens.Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.md),
         ) {
-            Text(strings.transactionEdit.editTitle, style = MaterialTheme.typography.titleMedium)
+            HeadingText(strings.transactionEdit.editTitle, style = MaterialTheme.typography.titleMedium)
 
             PasteableOutlinedTextField(
                 value = amountText,
@@ -117,17 +119,12 @@ fun TransactionEditSheet(
                 isPasteRelevant = { it.isNotBlank() },
             )
 
-            OutlinedCard(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(Dimens.space16),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text(strings.transactionEdit.dateLabel, style = MaterialTheme.typography.labelMedium)
-                        Text(date.formatDueDateTime(), style = MaterialTheme.typography.bodyLarge)
-                    }
-                    Icon(Icons.Filled.EditCalendar, contentDescription = strings.transactionEdit.dateLabel)
+            ClickableOutlinedRow(onClick = { showDatePicker = true }) {
+                Column(Modifier.weight(1f)) {
+                    LabelText(strings.transactionEdit.dateLabel)
+                    TitleText(date.formatDueDateTime(), style = MaterialTheme.typography.bodyLarge)
                 }
+                Icon(Icons.Filled.EditCalendar, contentDescription = strings.transactionEdit.dateLabel)
             }
 
             Button(
@@ -178,7 +175,7 @@ fun TransactionEditSheet(
                     showTimePicker = false
                     if (dateMillis != null) {
                         // DatePicker keeps the picked calendar day as UTC-midnight millis (M3 default).
-                        val pickedDate = kotlin.time.Instant.fromEpochMilliseconds(dateMillis)
+                        val pickedDate = Instant.fromEpochMilliseconds(dateMillis)
                             .toLocalDateTime(TimeZone.UTC).date
                         val local = LocalDateTime(pickedDate, LocalTime(tpState.hour, tpState.minute))
                         date = local.toInstant(TimeZone.currentSystemDefault())

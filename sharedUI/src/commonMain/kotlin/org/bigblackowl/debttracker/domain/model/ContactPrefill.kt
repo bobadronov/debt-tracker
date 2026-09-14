@@ -3,10 +3,10 @@ package org.bigblackowl.debttracker.domain.model
 import kotlinx.serialization.Serializable
 
 /**
- * Дані для передзаповнення форми «Додати запис» — приходять або зі сканованої QR-картки
- * ([ScannedContact]), або з вибору раніше введеного контакту в пікері ([ContactSuggestion]).
+ * Data for prefilling the "Add record" form — comes either from a scanned QR card
+ * ([ScannedContact]), or from picking a previously entered contact in the picker ([ContactSuggestion]).
  *
- * `@Serializable` — щоб цей стан переживав перестворення Activity у складі [org.bigblackowl.debttracker.navigation.Screen].
+ * `@Serializable` — so this state survives Activity re-creation as part of [org.bigblackowl.debttracker.navigation.Screen].
  */
 @Serializable
 data class ContactPrefill(
@@ -16,7 +16,7 @@ data class ContactPrefill(
     val comment: String?,
 )
 
-/** QR-картка не несе коментаря. */
+/** A QR card carries no comment. */
 fun ScannedContact.toPrefill() = ContactPrefill(
     fullName = fullName,
     phone = phone,

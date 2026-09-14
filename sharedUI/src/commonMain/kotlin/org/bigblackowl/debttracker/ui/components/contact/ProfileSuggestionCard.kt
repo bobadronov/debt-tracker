@@ -16,11 +16,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,10 +29,15 @@ import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.ProfileSuggestion
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.ui.components.button.IconButton
+import org.bigblackowl.debttracker.ui.components.button.TextButton
+import org.bigblackowl.debttracker.ui.components.card.TonalCard
+import org.bigblackowl.debttracker.ui.components.text.CaptionText
+import org.bigblackowl.debttracker.ui.components.text.TitleText
 
 /**
- * Банер автозаповнення: показується, коли введений email у формі боржника/кредитора
- * збігається із зареєстрованим користувачем застосунку (§ProfileLookup).
+ * Autofill banner: shown when the email entered in the debtor/creditor form
+ * matches a registered app user (§ProfileLookup).
  */
 @Composable
 fun ProfileSuggestionCard(
@@ -45,24 +47,24 @@ fun ProfileSuggestionCard(
     modifier: Modifier = Modifier,
 ) {
     val strings = LocalStrings.current
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Dimens.space16),
+    TonalCard(
+        modifier = modifier,
         color = MaterialTheme.colorScheme.secondaryContainer,
+        shape = RoundedCornerShape(Dimens.Radius.sm),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(Dimens.space12),
+            modifier = Modifier.fillMaxWidth().padding(Dimens.Spacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
-                modifier = Modifier.size(Dimens.space40).clip(CircleShape).background(MaterialTheme.colorScheme.surface),
+                modifier = Modifier.size(Dimens.IconSize.md).clip(CircleShape).background(MaterialTheme.colorScheme.surface),
                 contentAlignment = Alignment.Center,
             ) {
                 if (suggestion.avatarUrl != null) {
                     AsyncImage(
                         model = suggestion.avatarUrl,
                         contentDescription = null,
-                        modifier = Modifier.size(Dimens.space40).clip(CircleShape),
+                        modifier = Modifier.size(Dimens.IconSize.md).clip(CircleShape),
                     )
                 } else {
                     Icon(
@@ -72,15 +74,14 @@ fun ProfileSuggestionCard(
                     )
                 }
             }
-            Spacer(Modifier.width(Dimens.space12))
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Dimens.space2)) {
-                Text(
+            Spacer(Modifier.width(Dimens.Spacing.md))
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.xs)) {
+                CaptionText(
                     strings.contactSuggestionFound,
-                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                 )
                 suggestion.displayName?.takeIf(String::isNotBlank)?.let {
-                    Text(
+                    TitleText(
                         it,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,

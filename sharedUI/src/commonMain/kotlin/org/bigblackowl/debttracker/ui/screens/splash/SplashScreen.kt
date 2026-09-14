@@ -22,7 +22,7 @@ private val SplashGradientStart = Color(0xFF3B82F6)
 private val SplashGradientEnd = Color(0xFF29AE38)
 
 /**
- * Splash → перевірка onboarding/auth/biometric → редірект (спек §6, п.1), decided by [SplashViewModel].
+ * Splash → onboarding/auth/biometric check → redirect (spec §6, item 1), decided by [SplashViewModel].
  */
 @Composable
 fun SplashScreen(onFinished: (SplashDestination) -> Unit, viewModel: SplashViewModel = koinViewModel()) {
@@ -40,7 +40,7 @@ fun SplashScreen(onFinished: (SplashDestination) -> Unit, viewModel: SplashViewM
         contentAlignment = Alignment.Center,
     ) {
         CircularWavyProgressIndicator(
-            modifier = Modifier.size(Dimens.space60),
+            modifier = Modifier.size(Dimens.IconSize.lg),
             color = Color.White,
         )
     }

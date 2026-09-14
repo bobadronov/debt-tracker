@@ -87,9 +87,9 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 /**
- * Спільні (platform-agnostic) біндинги: use cases поверх [org.bigblackowl.debttracker.domain.repository.DebtorRepository]/
- * [org.bigblackowl.debttracker.domain.repository.CreditorRepository] — самі репозиторії
- * прив'язуються в [platformDataModule] (різні реалізації на Android/iOS/Desktop vs Web).
+ * Shared (platform-agnostic) bindings: use cases on top of [org.bigblackowl.debttracker.domain.repository.DebtorRepository]/
+ * [org.bigblackowl.debttracker.domain.repository.CreditorRepository] — the repositories
+ * themselves are bound in [platformDataModule] (different implementations on Android/iOS/Desktop vs Web).
  */
 val appModule = module {
     single { AppSettings(Settings()) }

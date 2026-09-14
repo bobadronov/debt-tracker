@@ -7,11 +7,12 @@ import org.bigblackowl.debttracker.domain.model.FiatCurrency
 import org.bigblackowl.debttracker.domain.model.RateSource
 
 /**
- * Стан [ExchangeRatesScreen]. [rates] можуть бути з кешу (тоді [isRefreshing] поки триває мережевий
- * запит) або свіжі. [error] — коли показати нема чого; [stale] — коли оновлення впало, але лишився
- * попередній зріз. [base] — валюта котирування (для банків = їх домашня, для [RateSource.arbitraryBase]
- * — обрана користувачем). [pinned] — закріплені коди (показуються зверху, глобально). [query] —
- * фільтр пошуку. [amount] — сума конвертера (кожен курс множиться на неї; порожнє/невалідне = 1).
+ * State of [ExchangeRatesScreen]. [rates] may come from the cache (then [isRefreshing] is true while
+ * the network request is in flight) or be fresh. [error] — when there's nothing to show; [stale] —
+ * when a refresh failed but a previous snapshot remains. [base] — the quoting currency (for banks it's
+ * their home currency, for [RateSource.arbitraryBase] it's chosen by the user). [pinned] — pinned
+ * codes (shown at the top, globally). [query] — search filter. [amount] — the converter amount
+ * (each rate is multiplied by it; empty/invalid = 1).
  */
 data class ExchangeRatesState(
     val source: RateSource = RateSource.PRIVATBANK,
@@ -26,9 +27,9 @@ data class ExchangeRatesState(
     val error: Boolean = false,
     val stale: Boolean = false,
 ) {
-    /** [amount] як множник: порожнє поле чи сміття → 1.0. */
+    /** [amount] as a multiplier: an empty field or garbage → 1.0. */
     val amountFactor: Double get() = amount.replace(',', '.').trim().toDoubleOrNull()?.takeIf { it > 0.0 } ?: 1.0
 
-    /** Чи можна міняти базу (лише джерела з довільною базою). */
+    /** Whether the base can be changed (only sources with an arbitrary base). */
     val baseSelectable: Boolean get() = source.arbitraryBase
 }

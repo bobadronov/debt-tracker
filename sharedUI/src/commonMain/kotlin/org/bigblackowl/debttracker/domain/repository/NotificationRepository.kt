@@ -5,35 +5,35 @@ import org.bigblackowl.debttracker.domain.model.AppNotification
 import org.bigblackowl.debttracker.domain.model.CorrectionReason
 
 /**
- * Онлайн-only доступ до таблиці `notifications` (без Room — сповіщення мають сенс лише в
- * Account+Sync режимі, як і саме дзеркалювання боргів, спек §7). Жоден метод не кидає
- * виняток — мережеві помилки ковтаються, повертаючи порожній результат/false.
+ * Online-only access to the `notifications` table (no Room — notifications only make sense in
+ * Account+Sync mode, same as debt mirroring itself, spec §7). No method throws an
+ * exception — network errors are swallowed, returning an empty result/false.
  */
 interface NotificationRepository {
-    /** Сповіщення, створені пізніше за [after] (або всі, якщо null), від найновіших до найстаріших. */
+    /** Notifications created after [after] (or all, if null), newest to oldest. */
     suspend fun fetchSince(after: kotlin.time.Instant?): List<AppNotification>
-    /** Повна історія для екрана "Сповіщення", від найновіших до найстаріших. */
+    /** Full history for the "Notifications" screen, newest to oldest. */
     suspend fun fetchAll(): List<AppNotification>
     suspend fun unreadCount(): Int
     suspend fun markRead(id: String)
     suspend fun markAllRead()
     suspend fun delete(id: String)
-    /** RPC `approve_link_request` (0013) — виконує дзеркалювання, яке чекало на згоду цілі. */
+    /** RPC `approve_link_request` (0013) — performs the mirroring that was waiting on the target's consent. */
     suspend fun approveLinkRequest(requestId: String): Boolean
-    /** RPC `reject_link_request` (0013) — відхиляє pending-запит без дзеркалювання. */
+    /** RPC `reject_link_request` (0013) — rejects the pending request without mirroring. */
     suspend fun rejectLinkRequest(requestId: String): Boolean
 
     /**
-     * RPC `propose_transaction_correction` (0014) — отримувач *_TRANSACTION_ADDED пропонує авторові
-     * правку. [amount] — модуль нової суми, потрібен лише для [CorrectionReason.WRONG_AMOUNT].
+     * RPC `propose_transaction_correction` (0014) — the recipient of a *_TRANSACTION_ADDED proposes
+     * a fix to the author. [amount] — magnitude of the new amount, only needed for [CorrectionReason.WRONG_AMOUNT].
      */
     suspend fun proposeTransactionCorrection(
         notificationId: String,
         reason: CorrectionReason,
         amount: BigDecimal?,
     ): Boolean
-    /** RPC `approve_transaction_correction` (0014) — автор приймає правку, зміна дзеркалиться назад. */
+    /** RPC `approve_transaction_correction` (0014) — the author accepts the fix, the change is mirrored back. */
     suspend fun approveTransactionCorrection(correctionId: String): Boolean
-    /** RPC `reject_transaction_correction` (0014) — автор відхиляє правку, пропонувача сповіщено. */
+    /** RPC `reject_transaction_correction` (0014) — the author rejects the fix, the proposer is notified. */
     suspend fun rejectTransactionCorrection(correctionId: String): Boolean
 }

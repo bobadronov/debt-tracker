@@ -2,7 +2,7 @@ package org.bigblackowl.debttracker.domain.validation
 
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
 
-/** Залишає в полі вводу суми лише цифри та один десятковий роздільник, ігноруючи літери й інші символи. */
+/** Keeps only digits and a single decimal separator in the amount input field, ignoring letters and other characters. */
 fun sanitizeAmountInput(raw: String): String {
     val sb = StringBuilder()
     var hasSeparator = false

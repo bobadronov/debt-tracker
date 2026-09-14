@@ -6,7 +6,7 @@ import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.DebtStatus
 import org.bigblackowl.debttracker.domain.model.SyncStatus
 
-/** Дзеркало [DebtorEntity] для напрямку "Я винен" (спек §4.1). */
+/** Mirror of [DebtorEntity] for the "I owe" direction (spec §4.1). */
 @Entity(tableName = "creditors")
 data class CreditorEntity(
     @PrimaryKey val id: String,

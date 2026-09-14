@@ -3,6 +3,9 @@ package org.bigblackowl.debttracker.core.qr
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.bigblackowl.debttracker.core.qr.ContactDeepLinks.consume
+import org.bigblackowl.debttracker.core.qr.ContactDeepLinks.onIncomingLink
+import org.bigblackowl.debttracker.core.qr.ContactDeepLinks.pendingLink
 
 /**
  * Bridges a `debttracker://contact?...` link opened from *outside* the app (a third-party QR

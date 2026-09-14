@@ -27,7 +27,7 @@ import org.bigblackowl.debttracker.core.i18n.Strings
 import org.bigblackowl.debttracker.core.i18n.TransactionEditStrings
 import org.bigblackowl.debttracker.core.i18n.UpdateStrings
 
-// Première traduction automatique – à relire par un locuteur natif.
+// First machine translation pass – to be reviewed by a native speaker.
 val FrStrings = Strings(
 
     cancel = "Annuler",
@@ -336,6 +336,7 @@ val FrStrings = Strings(
             notHappenedHint = "Propose de supprimer cette transaction.",
             send = "Envoyer",
         ),
+        actionError = "Échec de l'action. Réessayez.",
     ),
     notificationBody = NotificationBodyStrings(
         debtorLinked = { name, amount, currency -> "$name : vous devez $amount $currency" },

@@ -1,8 +1,8 @@
 package org.bigblackowl.debttracker.ui.screens.contacts
 
+import org.bigblackowl.debttracker.domain.model.ContactSuggestion
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import org.bigblackowl.debttracker.domain.model.ContactSuggestion
 
 class ContactPickerFilterTest {
 

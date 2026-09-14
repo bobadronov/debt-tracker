@@ -1,6 +1,5 @@
 package org.bigblackowl.debttracker.ui.components.contact
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,16 +24,12 @@ import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.SortByAlpha
-import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -60,10 +55,16 @@ import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.ConfirmDialog
 import org.bigblackowl.debttracker.ui.components.EntityAvatar
+import org.bigblackowl.debttracker.ui.components.button.FloatingActionButton
+import org.bigblackowl.debttracker.ui.components.button.IconButton
+import org.bigblackowl.debttracker.ui.components.card.ContentCard
+import org.bigblackowl.debttracker.ui.components.card.SemanticOutlinedCard
+import org.bigblackowl.debttracker.ui.components.text.BodyText
+import org.bigblackowl.debttracker.ui.components.text.TitleText
 import org.koin.compose.koinInject
 
 /**
- * Shared building blocks for DebtorListScreen/CreditorListScreen (спек §6): the two
+ * Shared building blocks for DebtorListScreen/CreditorListScreen (spec §6): the two
  * screens are the same contact list (search + sort/filter, row, running total) over
  * a different domain model, so the UI lives here once and each screen only supplies
  * its own state/intents/strings.
@@ -73,7 +74,7 @@ import org.koin.compose.koinInject
 data class MenuOption<T>(val value: T, val label: String, val icon: ImageVector)
 
 /**
- * Search field + combined sort/status dropdown (спек §6, п.2-3). Sort entries are
+ * Search field + combined sort/status dropdown (spec §6, items 2-3). Sort entries are
  * single-click toggles: tapping the already-active one flips [sortAscending] via
  * [onToggleSortDirection] instead of re-selecting it via [onChangeSort].
  */
@@ -97,8 +98,8 @@ fun <S, F> ListSearchBar(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth().padding(Dimens.space12),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.space8),
+        modifier = modifier.fillMaxWidth().padding(Dimens.Spacing.md),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         OutlinedTextField(
@@ -182,26 +183,27 @@ fun ContactRow(
     var menuOpen by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
 
-    OutlinedCard(
+    SemanticOutlinedCard(
+        borderColor = MaterialTheme.colorScheme.primary,
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.space12, vertical = Dimens.space4),
-        border = BorderStroke(Dimens.space1, MaterialTheme.colorScheme.primary),
+        modifier = Modifier.padding(horizontal = Dimens.Spacing.md, vertical = Dimens.Spacing.xs),
+        borderWidth = Dimens.Border.thin,
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(start = Dimens.space16, top = Dimens.space16, bottom = Dimens.space16, end = Dimens.space4),
+            modifier = Modifier.fillMaxWidth().padding(start = Dimens.Spacing.lg, top = Dimens.Spacing.lg, bottom = Dimens.Spacing.lg, end = Dimens.Spacing.xs),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 EntityAvatar(id = id, name = name, avatarUrl = avatarUrl)
-                Spacer(Modifier.width(Dimens.space12))
+                Spacer(Modifier.width(Dimens.Spacing.md))
                 Column {
-                    Text(name, style = MaterialTheme.typography.bodyLarge)
-                    formatUkrainianPhone(phone)?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
+                    TitleText(name, style = MaterialTheme.typography.bodyLarge)
+                    formatUkrainianPhone(phone)?.let { BodyText(it, style = MaterialTheme.typography.bodyMedium) }
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(balanceText, color = MaterialTheme.debtAccentColors.debt)
+                TitleText(balanceText, color = MaterialTheme.debtAccentColors.debt, style = MaterialTheme.typography.bodyLarge)
                 Box {
                     IconButton(onClick = { menuOpen = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = null)
@@ -240,9 +242,9 @@ fun ContactRow(
 /** Running total + add button, pinned under the list. */
 @Composable
 fun ListTotalBar(label: String, totalText: String, onAdd: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth().padding(Dimens.space12)) {
+    ContentCard(modifier = Modifier.padding(Dimens.Spacing.md)) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(Dimens.space16),
+            modifier = Modifier.fillMaxWidth().padding(Dimens.Spacing.lg),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -250,12 +252,12 @@ fun ListTotalBar(label: String, totalText: String, onAdd: () -> Unit) {
                 modifier = Modifier.weight(1f),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text(label)
-                Text(totalText, color = MaterialTheme.debtAccentColors.debt)
+                TitleText(label, style = MaterialTheme.typography.bodyLarge)
+                TitleText(totalText, color = MaterialTheme.debtAccentColors.debt, style = MaterialTheme.typography.bodyLarge)
             }
             FloatingActionButton(
                 onClick = onAdd,
-                modifier = Modifier.padding(start = Dimens.space12),
+                modifier = Modifier.padding(start = Dimens.Spacing.md),
             ) { Icon(Icons.Default.Add, null) }
         }
     }
@@ -283,7 +285,7 @@ fun <T> ContactListScaffold(
     ) {
         Column(
             modifier = Modifier.width(Dimens.contentMaxWidth),
-            verticalArrangement = Arrangement.spacedBy(Dimens.space5),
+            verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.xs),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             searchBar()

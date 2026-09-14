@@ -14,10 +14,10 @@ import org.bigblackowl.debttracker.domain.model.RateSource
 import org.bigblackowl.debttracker.domain.repository.ExchangeRatesRepository
 
 /**
- * [ExchangeRatesScreen]: показує курси обраного [RateSource] у обраній базі. Джерело, база й
- * закріплені валюти памʼятаються в [AppSettings]. Відкривається з кешу, потім тихо оновлюється
- * з мережі; зміна джерела/бази та pull-to-refresh — той самий шлях [load]. Пошук і сума конвертера
- * ([setQuery]/[setAmount]) — лише стан, без мережі.
+ * [ExchangeRatesScreen]: shows rates of the selected [RateSource] in the selected base. The source,
+ * base, and pinned currencies are remembered in [AppSettings]. Opens from the cache, then silently
+ * refreshes from the network; changing the source/base and pull-to-refresh go through the same
+ * [load] path. The converter's search and amount ([setQuery]/[setAmount]) are state-only, no network.
  */
 class ExchangeRatesViewModel(
     private val repository: ExchangeRatesRepository,
@@ -46,8 +46,9 @@ class ExchangeRatesViewModel(
     fun selectSource(source: RateSource) {
         if (source == _state.value.source) return
         settings.exchangeRatesSource = source.name
-        // Для банків база фіксована. Для джерел із довільною базою беремо збережений вибір користувача
-        // (або дефолт джерела) — а не перенесену базу попереднього джерела, яку нове може не підтримувати.
+        // For banks the base is fixed. For sources with an arbitrary base we take the user's saved
+        // choice (or the source's default) — not the carried-over base of the previous source, which
+        // the new one may not support.
         val base = when {
             !source.arbitraryBase -> source.homeCurrency
             _state.value.source.arbitraryBase -> _state.value.base

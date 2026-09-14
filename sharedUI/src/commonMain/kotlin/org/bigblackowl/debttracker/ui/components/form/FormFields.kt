@@ -25,7 +25,6 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -45,7 +44,8 @@ import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
-import org.bigblackowl.debttracker.ui.components.LoadingButton
+import org.bigblackowl.debttracker.ui.components.button.IconButton
+import org.bigblackowl.debttracker.ui.components.button.LoadingButton
 
 /**
  * The standard single-line text input for the app — use this for every free-text / amount
@@ -127,7 +127,7 @@ fun PasteableOutlinedTextField(
             isFieldFocused = focused,
             isRelevant = isPasteRelevant,
             onPaste = onPaste,
-            modifier = Modifier.padding(top = Dimens.space4),
+            modifier = Modifier.padding(top = Dimens.Spacing.xs),
         )
     }
 }
@@ -180,7 +180,7 @@ fun PaymentMethodChipRow(
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(
-            Dimens.space8,
+            Dimens.Spacing.sm,
             alignment = Alignment.CenterHorizontally
         ),
     ) {
@@ -210,8 +210,8 @@ private fun FormFieldsSample() {
     var saving by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier.padding(Dimens.space16),
-        verticalArrangement = Arrangement.spacedBy(Dimens.space12),
+        modifier = Modifier.padding(Dimens.Spacing.lg),
+        verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.md),
     ) {
         PasteableOutlinedTextField(
             value = text,

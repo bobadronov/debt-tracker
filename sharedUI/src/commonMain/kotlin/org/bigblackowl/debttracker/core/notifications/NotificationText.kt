@@ -5,9 +5,9 @@ import org.bigblackowl.debttracker.domain.model.AppNotification
 import org.bigblackowl.debttracker.domain.model.NotificationType
 
 /**
- * Локалізований текст сповіщення — спільний для [NotificationsPoller] (показ системного
- * сповіщення) і [org.bigblackowl.debttracker.ui.screens.notifications.NotificationsScreen]
- * (історія), щоб формулювання не розходилось між ними.
+ * Localized notification text — shared by [NotificationsPoller] (showing the system
+ * notification) and [org.bigblackowl.debttracker.ui.screens.notifications.NotificationsScreen]
+ * (history), so the wording doesn't drift between them.
  *
  * @param redactAmount When true (Settings → "hide amounts in notifications"), returns a generic
  * body instead of the name/amount detail — used only for the OS notification

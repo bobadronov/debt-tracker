@@ -20,7 +20,7 @@ java {
     targetCompatibility = JavaVersion.VERSION_21
 }
 
-// Version is defined once in /version.properties and shared by every target (спек: single source of truth).
+// Version is defined once in /version.properties and shared by every target (spec: single source of truth).
 val versionProps = Properties().apply {
     rootProject.file("version.properties").inputStream().use { load(it) }
 }
@@ -33,7 +33,7 @@ val appVersionName: String = versionProps.getProperty("VERSION_NAME").trim()
 
 dependencies {
     implementation(project(":sharedUI"))
-    implementation(libs.koin.core) // main.kt звертається до KoinApplication.koin.get<SyncCoordinator>()
+    implementation(libs.koin.core) // main.kt calls KoinApplication.koin.get<SyncCoordinator>()
     implementation(libs.compose.native.tray) // HDPI-correct system tray with icon-capable menu items (main.kt)
     implementation(libs.material.icons.extended) // ImageVector icons for the tray menu (main.kt's TrayMenu)
 

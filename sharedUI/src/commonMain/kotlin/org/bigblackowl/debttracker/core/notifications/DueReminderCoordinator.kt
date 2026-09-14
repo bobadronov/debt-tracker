@@ -19,8 +19,8 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Instant
 
 /**
- * Keeps local due-date reminders in sync with the debtor/creditor lists (спек — нагадування про
- * повернення боргу). Whenever the lists change it recomputes the full set of pending reminders —
+ * Keeps local due-date reminders in sync with the debtor/creditor lists (spec — debt repayment
+ * reminders). Whenever the lists change it recomputes the full set of pending reminders —
  * one "on the day" reminder for every active contact with a [Debtor.dueDate], plus one for each
  * user-chosen lead day (1 / 2 days before) — and hands it to the platform [ReminderScheduler].
  *
@@ -101,7 +101,7 @@ class DueReminderCoordinator(
             body: (whenText: String) -> String,
             deepLink: String,
         ): List<ScheduledReminder> {
-            // On-the-day (0) is always scheduled; lead days are opt-in ("сьогодні обовязково").
+            // On-the-day (0) is always scheduled; lead days are opt-in.
             val offsets = (listOf(0) + leadDays.filter { it > 0 }).distinct()
             return offsets.mapNotNull { daysBefore ->
                 val at = due - daysBefore.days

@@ -11,9 +11,9 @@ import io.github.jan.supabase.storage.Storage
 import org.bigblackowl.debttracker.BuildConfig
 
 /**
- * supabase-kt клієнт (спек §1.1) — проєкт "debt-tracker" (nywvasgnbgnixfjzadbu),
- * створений і мігрований у Фазі 6 через Supabase MCP. Ktor-engine підбирається
- * автоматично з класпату кожної платформи (okhttp — Android/Desktop, darwin — iOS).
+ * supabase-kt client (spec §1.1) — the "debt-tracker" project (nywvasgnbgnixfjzadbu),
+ * created and migrated in Phase 6 via the Supabase MCP. The Ktor engine is picked
+ * automatically from each platform's classpath (okhttp — Android/Desktop, darwin — iOS).
  *
  * @param sessionManager Platform-specific encrypted session storage (see [org.bigblackowl.debttracker.core.di.platformDataModule]) —
  * `null` (Web) falls back to supabase-kt's own default [io.github.jan.supabase.auth.SettingsSessionManager] (localStorage there).

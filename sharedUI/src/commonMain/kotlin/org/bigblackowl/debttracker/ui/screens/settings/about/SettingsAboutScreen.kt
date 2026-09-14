@@ -15,7 +15,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -42,12 +41,13 @@ import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
 import org.bigblackowl.debttracker.ui.components.SettingsRow
 import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
 import org.bigblackowl.debttracker.ui.components.SettingsSection
+import org.bigblackowl.debttracker.ui.components.button.IconButton
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * Settings → Про застосунок (версія/оновлення, автор, фідбек) — виокремлено з колишнього
- * єдиного SettingsScreen.
+ * Settings → About the app (version/update, author, feedback) — split out from the former
+ * single SettingsScreen.
  */
 @Composable
 fun SettingsAboutScreen(
@@ -70,7 +70,7 @@ fun SettingsAboutScreen(
         ) {
             Column(
                 modifier = Modifier.width(Dimens.contentMaxWidth),
-                verticalArrangement = Arrangement.spacedBy(Dimens.space24),
+                verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.xl),
             ) {
                 SettingsSection(strings.settings.about) {
                     val versionLine = "${BuildConfig.APP_VERSION}-${BuildConfig.APP_VERSION_CODE}"
@@ -107,7 +107,7 @@ fun SettingsAboutScreen(
                                     }
 
                                     inAppUpdateStatus == InAppUpdateStatus.Checking || inAppUpdateStatus == InAppUpdateStatus.Downloading ->
-                                        CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
+                                        CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.IconSize.sm))
 
                                     else -> IconButton(onClick = { viewModel.onIntent(SettingsAboutIntent.CheckForInAppUpdate(inAppUpdateLauncher)) }) {
                                         Icon(Icons.Filled.Refresh, contentDescription = strings.settings.checkForUpdates)
@@ -118,7 +118,7 @@ fun SettingsAboutScreen(
                             {
                                 when (val s = state.updateState) {
                                     UpdateCheckState.Checking, is UpdateCheckState.Downloading ->
-                                        CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
+                                        CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.IconSize.sm))
 
                                     is UpdateCheckState.Available -> IconButton(onClick = { viewModel.onIntent(SettingsAboutIntent.DownloadUpdate(updateChecker, s.info)) }) {
                                         Icon(Icons.Filled.Download, contentDescription = strings.update.downloadInstall)

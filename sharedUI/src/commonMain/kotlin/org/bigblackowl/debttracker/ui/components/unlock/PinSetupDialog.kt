@@ -14,7 +14,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,6 +32,9 @@ import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
+import org.bigblackowl.debttracker.ui.components.button.TextButton
+import org.bigblackowl.debttracker.ui.components.text.BodyText
+import org.bigblackowl.debttracker.ui.components.text.LabelText
 
 private const val NEW_PIN_PAGE = 0
 private const val CONFIRM_PIN_PAGE = 1
@@ -84,16 +86,16 @@ fun PinSetupDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
         text = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-                Text(
+                LabelText(
                     if (pagerState.currentPage == CONFIRM_PIN_PAGE) strings.settings.pinSetupConfirm else strings.settings.pinSetupNew,
                     style = MaterialTheme.typography.labelLarge,
                 )
 
-                Spacer(Modifier.height(Dimens.space4))
+                Spacer(Modifier.height(Dimens.Spacing.xs))
 
                 HorizontalPager(
                     state = pagerState,
-                    modifier = Modifier.fillMaxWidth().height(Dimens.space72)
+                    modifier = Modifier.fillMaxWidth().height(Dimens.IconSize.xl)
                 ) { page ->
                     when (page) {
                         NEW_PIN_PAGE -> PinCodeField(
@@ -135,8 +137,8 @@ fun PinSetupDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
                 }
 
                 error?.let {
-                    Spacer(Modifier.height(Dimens.space8))
-                    Text(it, color = MaterialTheme.debtAccentColors.debt)
+                    Spacer(Modifier.height(Dimens.Spacing.sm))
+                    BodyText(it, color = MaterialTheme.debtAccentColors.debt)
                 }
             }
         },

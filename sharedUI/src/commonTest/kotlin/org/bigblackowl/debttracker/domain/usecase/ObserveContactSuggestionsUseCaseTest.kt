@@ -2,9 +2,6 @@ package org.bigblackowl.debttracker.domain.usecase
 
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.time.Clock
 import org.bigblackowl.debttracker.domain.model.Creditor
 import org.bigblackowl.debttracker.domain.model.DebtStatus
 import org.bigblackowl.debttracker.domain.model.Debtor
@@ -13,6 +10,9 @@ import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorsUseCa
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorsUseCase
 import org.bigblackowl.debttracker.preview.FakeCreditorRepository
 import org.bigblackowl.debttracker.preview.FakeDebtorRepository
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.time.Clock
 
 class ObserveContactSuggestionsUseCaseTest {
 

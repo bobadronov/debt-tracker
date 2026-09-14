@@ -6,7 +6,7 @@ import org.bigblackowl.debttracker.domain.repository.DebtorRepository
 import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
 
 /**
- * Settings → Data "Очистити кеш" — wipes only this device's offline cache (Room), unlike
+ * Settings → Data "Clear cache" — wipes only this device's offline cache (Room), unlike
  * [DeleteAllDataUseCase] which really deletes Supabase data too. Safe only while signed in
  * (Account+Sync), where Supabase remains the source of truth: immediately re-downloads
  * everything via [SyncStatusProvider.refetchAll] afterwards, since the ongoing Realtime pull only

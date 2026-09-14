@@ -2,8 +2,8 @@ package org.bigblackowl.debttracker.data.repository
 
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseExperimental
-import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
 import io.github.jan.supabase.realtime.selectAsFlow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,7 +30,7 @@ import org.bigblackowl.debttracker.domain.repository.CreditorRepository
 @Serializable
 private data class LinkCreditorParams(@SerialName("p_creditor_id") val creditorId: String)
 
-/** Дзеркало [SupabaseDebtorRepository] для напрямку "Я винен" (спек §4.1). */
+/** Mirror of [SupabaseDebtorRepository] for the "I owe" direction (spec §4.1). */
 @OptIn(SupabaseExperimental::class, ExperimentalCoroutinesApi::class)
 class SupabaseCreditorRepository(
     private val client: SupabaseClient,

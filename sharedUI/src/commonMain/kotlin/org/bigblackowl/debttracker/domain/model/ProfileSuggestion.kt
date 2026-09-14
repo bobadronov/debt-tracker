@@ -1,6 +1,6 @@
 package org.bigblackowl.debttracker.domain.model
 
-/** Публічні дані зареєстрованого користувача, знайденого за email — для автозаповнення форми боржника/кредитора. */
+/** Public data of a registered user found by email — for autofilling the debtor/creditor form. */
 data class ProfileSuggestion(
     val displayName: String?,
     val avatarUrl: String?,

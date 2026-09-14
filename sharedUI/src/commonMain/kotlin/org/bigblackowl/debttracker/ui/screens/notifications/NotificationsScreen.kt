@@ -15,14 +15,11 @@ import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.PriceChange
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,15 +44,20 @@ import org.bigblackowl.debttracker.domain.validation.sanitizeAmountInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
+import org.bigblackowl.debttracker.ui.components.FullScreenLoadingIndicator
 import org.bigblackowl.debttracker.ui.components.SettingsDetailScaffold
 import org.bigblackowl.debttracker.ui.components.SettingsRow
 import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
 import org.bigblackowl.debttracker.ui.components.SettingsSection
+import org.bigblackowl.debttracker.ui.components.button.IconButton
+import org.bigblackowl.debttracker.ui.components.button.TextButton
 import org.bigblackowl.debttracker.ui.components.form.PasteableOutlinedTextField
 import org.bigblackowl.debttracker.ui.components.form.rememberClipboardText
+import org.bigblackowl.debttracker.ui.components.text.BodyText
+import org.bigblackowl.debttracker.ui.components.text.CaptionText
 import org.koin.compose.viewmodel.koinViewModel
 
-/** Історія сповіщень про дзеркальні борги (спек §7) — доступна лише в Account+Sync (бейдж у Home top bar). */
+/** History of notifications about mirrored debts (spec §7) — available only in Account+Sync (badge in the Home top bar). */
 @Composable
 fun NotificationsScreen(
     onBack: () -> Unit,
@@ -72,6 +74,7 @@ fun NotificationsScreen(
             when (effect) {
                 is NotificationsEffect.NavigateToDebtor -> onNavigateToDebtor(effect.debtorId)
                 is NotificationsEffect.NavigateToCreditor -> onNavigateToCreditor(effect.creditorId)
+                is NotificationsEffect.Error -> snackbarHostState.showSnackbar(effect.message)
             }
         }
     }
@@ -82,12 +85,12 @@ fun NotificationsScreen(
         snackbarHostState = snackbarHostState,
     ) {
         when {
-            state.isLoading -> CircularWavyProgressIndicator(modifier = Modifier.padding(Dimens.space16))
-            state.notifications.isEmpty() -> Text(
+            state.isLoading -> FullScreenLoadingIndicator()
+            state.notifications.isEmpty() -> BodyText(
                 strings.notifications.empty,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(Dimens.space24),
+                modifier = Modifier.padding(Dimens.Spacing.xl),
             )
             else -> {
                 if (state.notifications.any { !it.isRead }) {
@@ -95,7 +98,7 @@ fun NotificationsScreen(
                         onClick = { viewModel.onIntent(NotificationsIntent.MarkAllRead) },
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Icon(Icons.Filled.DoneAll, contentDescription = null, modifier = Modifier.padding(end = Dimens.space8))
+                        Icon(Icons.Filled.DoneAll, contentDescription = null, modifier = Modifier.padding(end = Dimens.Spacing.sm))
                         Text(strings.notifications.markAllRead)
                     }
                 }
@@ -212,7 +215,7 @@ private fun NotificationRow(
     )
 }
 
-/** Діалог «відхилити операцію» на рядку *_TRANSACTION_ADDED — причина + (для «неправильна сума») нова сума (0014). */
+/** "Reject transaction" dialog on a *_TRANSACTION_ADDED row — reason + (for "wrong amount") a new amount (0014). */
 @Composable
 private fun CorrectionDialog(
     notification: AppNotification,
@@ -249,7 +252,7 @@ private fun CorrectionDialog(
                             s.isNotBlank() && runCatching { BigDecimal.parseString(s) }.getOrNull()?.let { it > BigDecimal.ZERO } == true
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.padding(start = Dimens.space40, top = Dimens.space4, bottom = Dimens.space8),
+                        modifier = Modifier.padding(start = Dimens.Spacing.xxl, top = Dimens.Spacing.xs, bottom = Dimens.Spacing.sm),
                     ) { amountText = sanitizeAmountInput(it) }
                 }
                 ReasonRow(
@@ -258,11 +261,9 @@ private fun CorrectionDialog(
                     onSelect = { reason = CorrectionReason.NOT_HAPPENED },
                 )
                 if (reason == CorrectionReason.NOT_HAPPENED) {
-                    Text(
+                    CaptionText(
                         strings.notifications.correction.notHappenedHint,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = Dimens.space40, top = Dimens.space4),
+                        modifier = Modifier.padding(start = Dimens.Spacing.xxl, top = Dimens.Spacing.xs),
                     )
                 }
             }
@@ -282,11 +283,11 @@ private fun CorrectionDialog(
 @Composable
 private fun ReasonRow(selected: Boolean, label: String, onSelect: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().selectable(selected = selected, onClick = onSelect).padding(vertical = Dimens.space4),
+        modifier = Modifier.fillMaxWidth().selectable(selected = selected, onClick = onSelect).padding(vertical = Dimens.Spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RadioButton(selected = selected, onClick = onSelect)
-        Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = Dimens.space8))
+        BodyText(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = Dimens.Spacing.sm))
     }
 }
 

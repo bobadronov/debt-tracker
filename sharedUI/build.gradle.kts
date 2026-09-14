@@ -123,6 +123,7 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(libs.bignum)
             api(libs.filekit.dialogs.compose) // cross-platform file pick/save (avatar picker, CSV/PDF export); api so desktopApp's main() can call FileKit.init()
+            implementation(libs.kcsv) // CSV generation (spec §6, item 8)
             implementation(libs.qrose) // contact-card QR display — pure Kotlin, unlike qr-kit publishes a real js/wasmJs target, so this needs no expect/actual
             // room-runtime is NOT here: Room has no js/wasmJs target (spec §1 — Web has no local DB).
 
@@ -193,33 +194,33 @@ kotlin {
 
 // Supabase URL/key live in secrets.properties (git-ignored, see secrets.properties.example)
 // so they aren't committed to VCS alongside the source.
-val secretsFile = rootProject.file("secrets.properties")
-val secrets = Properties().apply {
+private val secretsFile = rootProject.file("secrets.properties")
+private val secrets = Properties().apply {
     if (secretsFile.exists()) secretsFile.inputStream().use { load(it) }
 }
 
-fun secret(key: String): String =
+private fun secret(key: String): String =
     (System.getenv(key) ?: secrets.getProperty(key))
         ?: error("Missing $key: define it in secrets.properties (see secrets.properties.example) or as an env var.")
 
 // Like [secret] but tolerates a missing value (returns "") — for optional/feature-flagged config
 // whose absence must not fail a build, e.g. GOOGLE_SERVER_CLIENT_ID before its CI secret is set.
-fun optionalSecret(key: String): String =
+private fun optionalSecret(key: String): String =
     System.getenv(key) ?: secrets.getProperty(key) ?: ""
 
 // Version is defined once in /version.properties and shared by every target (single source of truth) —
 // androidApp/desktopApp read it for their own versionName/packageVersion, and it's exposed here as
 // BuildConfig.APP_VERSION so every Compose target (Android, Desktop, Web, iOS) shows the same value
 // on the Settings → About screen.
-val versionProps = Properties().apply {
+private val versionProps = Properties().apply {
     rootProject.file("version.properties").inputStream().use { load(it) }
 }
 // java.util.Properties does no interpolation, so resolve the `$VERSION_CODE` placeholder that
 // version.properties uses in VERSION_NAME (`1.0.$VERSION_CODE`) — the code is the single number to bump.
-val appVersionCode: Int = versionProps.getProperty("VERSION_CODE").trim().toInt()
-val appVersionName: String = versionProps.getProperty("VERSION_NAME").trim()
-    .replace("\${VERSION_CODE}", appVersionCode.toString())
-    .replace("\$VERSION_CODE", appVersionCode.toString())
+private val appVersionCode: Int = versionProps.getProperty("VERSION_CODE").trim().toInt()
+private val appVersionName: String = versionProps.getProperty("VERSION_NAME").trim()
+    .replace($$"${VERSION_CODE}", appVersionCode.toString())
+    .replace($$"$VERSION_CODE", appVersionCode.toString())
 
 // Desktop/KMP has no real debug/release build variant (unlike Android's AGP), so this approximates
 // it from which Gradle task is running: release.yml's packaging/publishing tasks vs. everything
@@ -228,12 +229,12 @@ val appVersionName: String = versionProps.getProperty("VERSION_NAME").trim()
 // packageReleaseDistributionForCurrentOS, createReleaseDistributable, ...), same as AGP's
 // (assembleRelease, bundleRelease) — except release.yml's actual desktop packaging tasks, which
 // invoke the default/"main" build type (packageMsi/packageDeb, no "Release" in the name).
-val releaseTaskSuffixes = setOf(
+private val releaseTaskSuffixes = setOf(
     "packageMsi", "packageDeb", // desktopApp (release.yml's actual CI tasks)
     "composeCompatibilityBrowserDistribution", // webApp
 )
 
-val isDebugBuild = gradle.startParameter.taskNames.none { taskName ->
+private val isDebugBuild = gradle.startParameter.taskNames.none { taskName ->
     taskName.contains("Release") || releaseTaskSuffixes.any { taskName.endsWith(it) }
 }
 

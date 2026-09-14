@@ -12,8 +12,8 @@ import org.bigblackowl.debttracker.data.local.dao.DebtTransactionDao
 import org.bigblackowl.debttracker.data.local.dao.DebtorDao
 import org.bigblackowl.debttracker.data.local.mapper.toDomain
 import org.bigblackowl.debttracker.data.local.mapper.toEntity
-import org.bigblackowl.debttracker.domain.model.Debtor
 import org.bigblackowl.debttracker.domain.model.DebtTransaction
+import org.bigblackowl.debttracker.domain.model.Debtor
 import org.bigblackowl.debttracker.domain.model.DebtorWithBalance
 import org.bigblackowl.debttracker.domain.model.SyncStatus
 import org.bigblackowl.debttracker.domain.model.debtorBalance
@@ -27,8 +27,8 @@ import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
 private data class LinkDebtorParams(@SerialName("p_debtor_id") val debtorId: String)
 
 /**
- * Offline-first (спек §5): усі write-операції йдуть у Room із `syncStatus = PENDING`.
- * Фактичний push у Supabase — Фаза 6 (background sync worker читає PENDING-записи).
+ * Offline-first (spec §5): all write operations go into Room with `syncStatus = PENDING`.
+ * The actual push to Supabase is Phase 6 (background sync worker reads the PENDING records).
  */
 class RoomDebtorRepository(
     private val debtorDao: DebtorDao,
@@ -106,8 +106,8 @@ class RoomDebtorRepository(
         debtorDao.deleteAll()
     }
 
-    // Онлайн-only RPC (не Room) — оновлений debtors-рядок повертається назад через звичайний
-    // Realtime pull SyncCoordinator'а, окремо тут його в Room не пишемо.
+    // Online-only RPC (not Room) — the updated debtors row comes back through SyncCoordinator's
+    // regular Realtime pull, so it isn't written to Room separately here.
     override suspend fun linkToRegisteredUser(debtorId: String): String? {
         if (!authRepository.isAuthenticated.value) return null
         // The RPC looks the debtor up server-side by id; a freshly-created row may not have been
@@ -119,7 +119,7 @@ class RoomDebtorRepository(
         }.getOrNull()
     }
 
-    /** Мірор Postgres-тригера з Фази 0 (recalc_debtor_status): status/updatedAt рахуються з транзакцій. */
+    /** Mirrors the Phase 0 Postgres trigger (recalc_debtor_status): status/updatedAt are computed from transactions. */
     private suspend fun recalcDebtorStatus(debtorId: String) {
         val entity = debtorDao.getById(debtorId) ?: return
         val balance = transactionDao.getAllForDebtor(debtorId).map { it.toDomain() }.debtorBalance()

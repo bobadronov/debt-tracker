@@ -26,7 +26,7 @@ object DesktopNotificationWindow {
  * `nucleus.executable.type` so Nucleus creates the shortcut rather than requiring a pre-existing
  * one). [init] eagerly triggers that creation so the very first toast isn't lost.
  *
- * Немає окремого дозволу (на відміну від Android/iOS/Web), тож [requestPermission] завжди `true`.
+ * There is no separate permission (unlike Android/iOS/Web), so [requestPermission] is always `true`.
  */
 internal class DesktopLocalNotifier : LocalNotifier {
 

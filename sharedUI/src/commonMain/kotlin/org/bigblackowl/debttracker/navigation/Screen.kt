@@ -5,11 +5,11 @@ import org.bigblackowl.debttracker.domain.model.ContactPrefill
 import org.bigblackowl.debttracker.domain.model.DebtDirection
 
 /**
- * Типізовані маршрути навігаційного графа (спек §6).
+ * Typed routes for the navigation graph (spec §6).
  *
- * `@Serializable` — щоб увесь back stack переживав перестворення Activity (зміна теми/локалі
- * системи, звільнення пам'яті процесу). Без цього граф перезапускався б зі [Splash] і повторно
- * показував екран блокування (`AuthGate`) при кожному перестворенні. Див. `BackStackSaver` у
+ * `@Serializable` — so the whole back stack survives Activity recreation (system theme/locale
+ * change, process memory reclaim). Without this the graph would restart from [Splash] and show
+ * the lock screen (`AuthGate`) again on every recreation. See `BackStackSaver` in
  * [DebtTrackerNavGraph].
  */
 @Serializable
@@ -29,13 +29,13 @@ sealed interface Screen {
     @Serializable
     data object Home : Screen
 
-    /** Крок вибору раніше введеного контакту перед формою «Додати запис». */
+    /** Step for picking a previously entered contact before the "Add record" form. */
     @Serializable
     data class ContactPicker(val direction: DebtDirection) : Screen
 
     /**
-     * Об'єднана форма «Додати запис» (боржник або кредитор — за [direction]).
-     * [editId] != null → режим редагування наявного контакту (без стартової транзакції).
+     * Unified "Add record" form (debtor or creditor — per [direction]).
+     * [editId] != null → editing mode for an existing contact (no starting transaction).
      */
     @Serializable
     data class AddEditContact(

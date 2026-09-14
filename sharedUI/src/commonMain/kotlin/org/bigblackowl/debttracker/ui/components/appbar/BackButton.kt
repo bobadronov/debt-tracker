@@ -5,7 +5,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -19,6 +18,7 @@ import org.bigblackowl.debttracker.navigation.LocalListPaneCanGoBack
 import org.bigblackowl.debttracker.navigation.LocalNavPane
 import org.bigblackowl.debttracker.navigation.NavPane
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
+import org.bigblackowl.debttracker.ui.components.button.IconButton
 
 
 @Composable

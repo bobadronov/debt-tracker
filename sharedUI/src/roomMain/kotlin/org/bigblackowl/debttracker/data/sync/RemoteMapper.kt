@@ -11,10 +11,8 @@ import org.bigblackowl.debttracker.data.remote.dto.DebtTransactionDto
 import org.bigblackowl.debttracker.data.remote.dto.DebtorDto
 import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.DebtStatus
-import org.bigblackowl.debttracker.domain.model.MyDebtTransactionType
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.domain.model.SyncStatus
-import org.bigblackowl.debttracker.domain.model.TransactionType
 import org.bigblackowl.debttracker.domain.model.toCreditorTransactionType
 import org.bigblackowl.debttracker.domain.model.toDebtTransactionType
 

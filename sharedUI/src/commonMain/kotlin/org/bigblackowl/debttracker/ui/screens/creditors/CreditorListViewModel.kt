@@ -19,6 +19,7 @@ import org.bigblackowl.debttracker.domain.model.DebtStatus
 import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
 import org.bigblackowl.debttracker.domain.usecase.creditor.DeleteCreditorUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.ObserveCreditorsUseCase
+import kotlin.time.Duration.Companion.milliseconds
 
 /** Combines the live creditor list with search/sort/filter state into [CreditorListState]. */
 class CreditorListViewModel(
@@ -84,7 +85,7 @@ class CreditorListViewModel(
             CreditorListIntent.Refresh -> viewModelScope.launch {
                 isRefreshing.value = true
                 runCatching { syncStatusProvider.refreshNow() }
-                delay(300)
+                delay(300.milliseconds)
                 isRefreshing.value = false
             }
         }

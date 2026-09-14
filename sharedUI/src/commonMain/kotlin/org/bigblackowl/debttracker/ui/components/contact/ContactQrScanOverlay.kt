@@ -9,7 +9,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,6 +26,8 @@ import org.bigblackowl.debttracker.domain.model.ContactQrPayload
 import org.bigblackowl.debttracker.domain.model.ScannedContact
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
+import org.bigblackowl.debttracker.ui.components.button.TextButton
+import org.bigblackowl.debttracker.ui.components.text.BodyText
 
 /**
  * Full-screen QR scanner for a Debt Tracker contact-card code, with its own top bar (close
@@ -52,11 +53,11 @@ fun ContactQrScanOverlay(onScanned: (ScannedContact) -> Unit, onClose: () -> Uni
                 )
             } else if (permissionDenied) {
                 Column(
-                    modifier = Modifier.fillMaxSize().padding(Dimens.space16),
+                    modifier = Modifier.fillMaxSize().padding(Dimens.Spacing.lg),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    Text(strings.qr.hubCameraPermissionRationale, style = MaterialTheme.typography.bodyMedium)
+                    BodyText(strings.qr.hubCameraPermissionRationale, style = MaterialTheme.typography.bodyMedium)
                     TextButton(onClick = { permissionDenied = false }) {
                         Text(strings.qr.hubCameraPermissionRetry)
                     }

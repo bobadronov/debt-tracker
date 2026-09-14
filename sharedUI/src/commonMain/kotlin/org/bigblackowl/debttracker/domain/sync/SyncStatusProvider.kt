@@ -4,9 +4,9 @@ import kotlinx.coroutines.flow.StateFlow
 import org.bigblackowl.debttracker.domain.model.SyncUiStatus
 
 /**
- * Абстракція над [org.bigblackowl.debttracker.data.sync.SyncCoordinator] (roomMain,
- * недоступний з commonMain) — щоб HomeScreen міг показати індикатор
- * синхронізації (спек §5) без залежності від Room-типів на Web.
+ * Abstraction over [org.bigblackowl.debttracker.data.sync.SyncCoordinator] (roomMain,
+ * unavailable from commonMain) — so HomeScreen can show a sync indicator
+ * (spec §5) without depending on Room types on Web.
  */
 interface SyncStatusProvider {
     val status: StateFlow<SyncUiStatus>

@@ -35,7 +35,7 @@ import org.bigblackowl.debttracker.ui.components.unlock.PinSetupDialog
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
-/** Settings → Захист входу (PIN/біометрія) — виокремлено з колишнього єдиного SettingsScreen. */
+/** Settings → Login protection (PIN/biometrics) — split out from the former single SettingsScreen. */
 @Composable
 fun SettingsProtectionScreen(
     onBack: () -> Unit,
@@ -52,8 +52,8 @@ fun SettingsProtectionScreen(
         viewModel.onIntent(SettingsProtectionIntent.CheckBiometricHardware(biometricAuthenticator))
     }
 
-    // Мобільні платформи без біометричного заліза (або незареєстрованою біометрією — типово
-    // для планшетів) падають на той самий PIN-механізм, що й Desktop, замість ховати перемикач.
+    // Mobile platforms without biometric hardware (or with no biometrics enrolled — typical
+    // for tablets) fall back to the same PIN mechanism as Desktop instead of hiding the toggle.
     val usesPinProtection = currentPlatform == AppPlatform.DESKTOP || !state.biometricHardwareAvailable
     val protectionIcon = if (usesPinProtection) Icons.Filled.Password else Icons.Filled.Fingerprint
 
@@ -64,7 +64,7 @@ fun SettingsProtectionScreen(
         ) {
             Column(
                 modifier = Modifier.width(Dimens.contentMaxWidth),
-                verticalArrangement = Arrangement.spacedBy(Dimens.space24),
+                verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.xl),
             ) {
                 SettingsSection(strings.settings.protection) {
                     SettingsRow(
@@ -79,9 +79,10 @@ fun SettingsProtectionScreen(
                                         usesPinProtection && checked && !settings.hasPinCode -> showPinSetupDialog = true
                                         usesPinProtection -> viewModel.onIntent(SettingsProtectionIntent.TogglePinProtection(checked))
 
-                                        // Мобільні платформи з біометрією: увімкнення захисту потребує
-                                        // підтвердження відбитком/обличчям одразу — інакше можна ввімкнути
-                                        // перемикач, маючи чужий палець на сканері, і сам захист виявиться фікцією.
+                                        // Mobile platforms with biometrics: enabling protection requires
+                                        // immediate fingerprint/face confirmation — otherwise the toggle
+                                        // could be flipped with someone else's finger on the sensor,
+                                        // making the protection itself a fiction.
                                         checked -> viewModel.onIntent(SettingsProtectionIntent.EnableMobileProtection(biometricAuthenticator))
                                         else -> viewModel.onIntent(SettingsProtectionIntent.DisableMobileProtection)
                                     }

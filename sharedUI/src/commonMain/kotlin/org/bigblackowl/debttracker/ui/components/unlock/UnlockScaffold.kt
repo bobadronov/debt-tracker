@@ -30,6 +30,8 @@ import debt_tracker.sharedui.generated.resources.Res
 import debt_tracker.sharedui.generated.resources.ic_app_logo
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.ui.components.text.CaptionText
+import org.bigblackowl.debttracker.ui.components.text.HeadingText
 import org.jetbrains.compose.resources.painterResource
 
 /**
@@ -52,31 +54,30 @@ fun UnlockScaffold(
                 .safeDrawingPadding()
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = Dimens.space24, vertical = Dimens.space24),
+                .padding(horizontal = Dimens.Spacing.xl, vertical = Dimens.Spacing.xl),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
             Image(
                 painter = painterResource(Res.drawable.ic_app_logo),
                 contentDescription = null,
-                modifier = Modifier.size(Dimens.space72).clip(RoundedCornerShape(Dimens.space20)),
+                modifier = Modifier.size(Dimens.IconSize.xl).clip(RoundedCornerShape(Dimens.Radius.lg)),
             )
-            Spacer(Modifier.height(Dimens.space24))
-            Text(
+            Spacer(Modifier.height(Dimens.Spacing.xl))
+            HeadingText(
                 text = title,
                 style = MaterialTheme.typography.headlineSmall,
                 textAlign = TextAlign.Center,
             )
             subtitle?.let {
-                Spacer(Modifier.height(Dimens.space8))
-                Text(
+                Spacer(Modifier.height(Dimens.Spacing.sm))
+                CaptionText(
                     text = it,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
             }
-            Spacer(Modifier.height(Dimens.space40))
+            Spacer(Modifier.height(Dimens.Spacing.xxl))
             Column(
                 modifier = Modifier.fillMaxWidth().widthIn(max = Dimens.contentMaxWidth),
                 horizontalAlignment = Alignment.CenterHorizontally,

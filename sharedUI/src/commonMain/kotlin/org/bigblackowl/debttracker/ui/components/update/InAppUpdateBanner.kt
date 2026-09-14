@@ -7,12 +7,8 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -26,6 +22,9 @@ import org.bigblackowl.debttracker.core.update.inAppUpdateSupported
 import org.bigblackowl.debttracker.core.update.rememberInAppUpdateLauncher
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.ui.components.button.TextButton
+import org.bigblackowl.debttracker.ui.components.card.ElevatedInfoCard
+import org.bigblackowl.debttracker.ui.components.text.BodyText
 
 /**
  * Play's own in-app update flow (Android only, see [inAppUpdateSupported]): checks once at app
@@ -56,19 +55,16 @@ fun BoxScope.InAppUpdateBanner() {
 private fun InAppUpdateBannerCard(onRestart: () -> Unit) {
     val strings = LocalStrings.current
     Box(
-        modifier = Modifier.fillMaxWidth().padding(Dimens.space16),
+        modifier = Modifier.fillMaxWidth().padding(Dimens.Spacing.lg),
         contentAlignment = Alignment.BottomCenter
     ) {
-        Card(
-            modifier = Modifier.widthIn(max = Dimens.contentMaxWidth),
-            elevation = CardDefaults.cardElevation(defaultElevation = Dimens.space8),
-        ) {
+        ElevatedInfoCard {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(Dimens.space16),
+                modifier = Modifier.fillMaxWidth().padding(Dimens.Spacing.lg),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
+                BodyText(
                     strings.updateReadyToInstall,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.weight(1f),

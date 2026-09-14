@@ -6,11 +6,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Password
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,6 +28,9 @@ import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
+import org.bigblackowl.debttracker.ui.components.button.Button
+import org.bigblackowl.debttracker.ui.components.button.TextButton
+import org.bigblackowl.debttracker.ui.components.text.BodyText
 import org.bigblackowl.debttracker.ui.components.unlock.PinSetupDialog
 import org.bigblackowl.debttracker.ui.components.unlock.UnlockScaffold
 import org.koin.compose.viewmodel.koinViewModel
@@ -76,14 +77,14 @@ fun ProtectionOnboardingScreen(
         Icon(
             if (state.biometricAvailable) Icons.Filled.Fingerprint else Icons.Filled.Password,
             contentDescription = null,
-            modifier = Modifier.size(Dimens.space60),
+            modifier = Modifier.size(Dimens.IconSize.lg),
             tint = MaterialTheme.colorScheme.primary,
         )
         state.error?.let {
-            Spacer(Modifier.height(Dimens.space8))
-            Text(it, color = MaterialTheme.debtAccentColors.debt, textAlign = TextAlign.Center)
+            Spacer(Modifier.height(Dimens.Spacing.sm))
+            BodyText(it, color = MaterialTheme.debtAccentColors.debt, textAlign = TextAlign.Center)
         }
-        Spacer(Modifier.height(Dimens.space24))
+        Spacer(Modifier.height(Dimens.Spacing.xl))
 
         // Desktop has no biometric at all; mobile devices without biometric hardware/enrollment
         // (common on tablets) fall back to the same PIN setup instead of only offering Skip.
@@ -97,7 +98,7 @@ fun ProtectionOnboardingScreen(
             }
         }
 
-        Spacer(Modifier.height(Dimens.space8))
+        Spacer(Modifier.height(Dimens.Spacing.sm))
         TextButton(onClick = { viewModel.onIntent(ProtectionOnboardingIntent.Skip) }) { Text(strings.onboardingProtection.skip) }
     }
 

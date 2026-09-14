@@ -25,14 +25,14 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 
 /**
- * [ExchangeRatesRepository] поверх публічних API центробанків/банків та агрегаторів (ПриватБанк, НБУ,
- * Monobank, NBP, ECB через frankfurter.dev, ČNB, ExchangeRate-API через open.er-api.com). Кожне
- * віддає свій формат — розбір ізольований у `fetch*` нижче. Показуємо всі валюти, які повертає
- * джерело, окрім самої бази зрізу; кожен курс нормалізуємо до «1 валюта = N одиниць бази».
+ * [ExchangeRatesRepository] on top of public central bank/bank and aggregator APIs (PrivatBank, NBU,
+ * Monobank, NBP, ECB via frankfurter.dev, ČNB, ExchangeRate-API via open.er-api.com). Each returns
+ * its own format — parsing is isolated in the `fetch*` methods below. We show every currency the
+ * source returns except the snapshot's own base; each rate is normalized to "1 currency = N base units".
  *
- * База: для банків фіксована (домашня валюта), для [RateSource.arbitraryBase]-джерел — обрана
- * користувачем ([baseCode]). Кеш: останній вдалий зріз кожної пари `джерело|база` лежить однією
- * JSON-мапою в [AppSettings.exchangeRatesCache], тож екран відкривається з даними ще до запиту.
+ * Base: fixed (home currency) for banks, chosen by the user ([baseCode]) for [RateSource.arbitraryBase]
+ * sources. Cache: the last successful snapshot of each `source|base` pair sits as one JSON map in
+ * [AppSettings.exchangeRatesCache], so the screen opens with data even before the request completes.
  */
 class HttpExchangeRatesRepository(
     private val client: HttpClient,
@@ -64,9 +64,9 @@ class HttpExchangeRatesRepository(
         return snapshot
     }
 
-    // --- ПриватБанк: архівний ендпоінт віддає і курс НБУ, і курс банку; беремо курс банку, а якщо
-    // рядок має лише курс НБУ — показуємо його. Рано вранці банк ще не виставив курс на сьогодні
-    // (`exchangeRate: []`) — тоді відкочуємось на вчорашній зріз.
+    // --- PrivatBank: the archive endpoint returns both the NBU rate and the bank's own rate; we take
+    // the bank's rate, and if a row only has the NBU rate, we show that instead. Early in the morning
+    // the bank hasn't set today's rate yet (`exchangeRate: []`) — then we fall back to yesterday's snapshot.
     private suspend fun fetchPrivatBank(): ExchangeRatesSnapshot {
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
         val response = fetchPrivatBankOn(today).takeIf { it.exchangeRate.isNotEmpty() }
@@ -85,7 +85,7 @@ class HttpExchangeRatesRepository(
             parameter("date", date.toDdMmYyyy())
         }.body()
 
-    // --- НБУ: `cc` — літерний код, `rate` вже «гривень за 1 одиницю».
+    // --- NBU: `cc` is the letter code, `rate` is already "hryvnias per 1 unit".
     private suspend fun fetchNbu(): ExchangeRatesSnapshot {
         val rows: List<NbuRow> =
             client.get("https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json").body()
@@ -101,8 +101,8 @@ class HttpExchangeRatesRepository(
         )
     }
 
-    // --- Monobank: ISO-числові коди, база — 980 (UAH). Екзотичні пари приходять лише з rateCross
-    // (без купівлі/продажу) — тоді показуємо один крос-курс з обох боків.
+    // --- Monobank: ISO numeric codes, base is 980 (UAH). Exotic pairs come only via rateCross
+    // (no separate buy/sell) — then we show a single cross-rate for both sides.
     private suspend fun fetchMonobank(): ExchangeRatesSnapshot {
         val rows: List<MonoRow> = client.get("https://api.monobank.ua/bank/currency").body()
         var date: LocalDate? = null
@@ -117,7 +117,7 @@ class HttpExchangeRatesRepository(
         return snapshot(RateSource.MONOBANK, RateSource.MONOBANK.homeCurrency, rates, date)
     }
 
-    // --- NBP (Польща): таблиця A, середній курс `mid` = скільки злотих за 1 одиницю валюти.
+    // --- NBP (Poland): table A, the mid rate `mid` = how many złoty per 1 unit of currency.
     private suspend fun fetchNbp(): ExchangeRatesSnapshot {
         val tables: List<NbpTable> = client.get("https://api.nbp.pl/api/exchangerates/tables/A?format=json").body()
         val table = tables.firstOrNull() ?: error("NBP returned no table")
@@ -129,8 +129,8 @@ class HttpExchangeRatesRepository(
         return snapshot(RateSource.NBP, RateSource.NBP.homeCurrency, rates, table.effectiveDate?.let { parseIso(it) })
     }
 
-    // --- ECB через frankfurter.dev: `?base=<base>` → `rates[X]` = скільки X за 1 одиницю бази,
-    // тож інвертуємо на «1 X = N бази». Гривню ЄЦБ не публікує — просто не потрапить у список.
+    // --- ECB via frankfurter.dev: `?base=<base>` → `rates[X]` = how many X per 1 unit of the base,
+    // so we invert to "1 X = N base". The ECB doesn't publish the hryvnia — it just won't appear in the list.
     private suspend fun fetchEcb(baseCode: String): ExchangeRatesSnapshot {
         val response: FrankfurterResponse =
             client.get("https://api.frankfurter.dev/v1/latest") { parameter("base", baseCode) }.body()
@@ -141,7 +141,7 @@ class HttpExchangeRatesRepository(
         return snapshot(RateSource.ECB, FiatCurrencies.of(baseCode), rates, response.date?.let { parseIso(it) })
     }
 
-    // --- ČNB (Чехія): `rate` крон за `amount` одиниць валюти (деякі — за 100), нормалізуємо на 1.
+    // --- ČNB (Czechia): `rate` is korunas per `amount` units of currency (some are per 100), we normalize to 1.
     private suspend fun fetchCnb(): ExchangeRatesSnapshot {
         val response: CnbResponse = client.get("https://api.cnb.cz/cnbapi/exrates/daily?lang=EN").body()
         var date: LocalDate? = null
@@ -155,8 +155,8 @@ class HttpExchangeRatesRepository(
         return snapshot(RateSource.CNB, RateSource.CNB.homeCurrency, rates, date)
     }
 
-    // --- ExchangeRate-API через open.er-api.com (безкоштовно, без ключа, ~160 валют):
-    // `/v6/latest/<base>` → `rates[X]` = скільки X за 1 одиницю бази, інвертуємо на «1 X = N бази».
+    // --- ExchangeRate-API via open.er-api.com (free, no key, ~160 currencies):
+    // `/v6/latest/<base>` → `rates[X]` = how many X per 1 unit of the base, we invert to "1 X = N base".
     private suspend fun fetchExchangerateApi(baseCode: String): ExchangeRatesSnapshot {
         val response: ErApiResponse = client.get("https://open.er-api.com/v6/latest/$baseCode").body()
         if (response.result != null && response.result != "success") error("ExchangeRate-API: ${response.result}")
@@ -295,7 +295,7 @@ class HttpExchangeRatesRepository(
 
         const val UAH_NUMERIC = 980
 
-        /** Валюти, які показуємо першими (решта — за алфавітом коду). */
+        /** Currencies shown first (the rest sorted alphabetically by code). */
         val PRIORITY = listOf("USD", "EUR", "GBP", "PLN", "UAH", "CHF", "JPY", "CZK", "CAD", "AUD", "CNY")
 
         fun List<ExchangeRate>.sortedForDisplay(): List<ExchangeRate> = sortedWith(
@@ -305,7 +305,7 @@ class HttpExchangeRatesRepository(
             ),
         )
 
-        /** ISO-4217 числовий → літерний, для Monobank (він віддає лише числові коди). */
+        /** ISO-4217 numeric → letter code, for Monobank (it only returns numeric codes). */
         val ISO_4217_NUMERIC: Map<Int, String> = mapOf(
             840 to "USD", 978 to "EUR", 826 to "GBP", 985 to "PLN", 756 to "CHF", 392 to "JPY",
             203 to "CZK", 124 to "CAD", 36 to "AUD", 554 to "NZD", 156 to "CNY", 752 to "SEK",

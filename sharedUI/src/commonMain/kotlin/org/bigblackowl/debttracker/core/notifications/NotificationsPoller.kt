@@ -12,19 +12,21 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.i18n.resolveStrings
+import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.NotificationRepository
-import org.bigblackowl.debttracker.core.settings.AppSettings
 import kotlin.time.Duration.Companion.milliseconds
 
 private const val POLL_INTERVAL_MS = 15_000L
 
 /**
- * Опитує таблицю `notifications` кожні 15с, поки є активна сесія (Account+Sync — Local-only не
- * бере участі в дзеркалюванні боргів взагалі) і показує системне сповіщення ([LocalNotifier]) для
- * кожного нового рядка. За зразком [org.bigblackowl.debttracker.data.sync.SyncCoordinator.start] —
- * `collectLatest` на [AuthRepository.isAuthenticated] сам зупиняє/перезапускає цикл при вході/виході.
- * Навмисно НЕ Realtime — за явним запитом: клієнт-платформа сама опитує раз на 15с, а не підписується.
+ * Polls the `notifications` table every 15s while there is an active session (Account+Sync —
+ * Local-only doesn't participate in debt mirroring at all) and shows a system notification
+ * ([LocalNotifier]) for each new row. Modeled on
+ * [org.bigblackowl.debttracker.data.sync.SyncCoordinator.start] — `collectLatest` on
+ * [AuthRepository.isAuthenticated] stops/restarts the loop itself on sign-in/sign-out.
+ * Deliberately NOT Realtime — by explicit requirement: each client platform polls once every
+ * 15s itself, rather than subscribing.
  */
 class NotificationsPoller(
     private val scope: CoroutineScope,
@@ -54,22 +56,22 @@ class NotificationsPoller(
 
     private suspend fun poll() = coroutineScope {
         val lastSeen = appSettings.lastSeenNotificationAt?.let { runCatching { kotlin.time.Instant.parse(it) }.getOrNull() }
-        // Незалежні запити — виконуються паралельно замість послідовних round-trip'ів.
+        // Independent requests — run in parallel instead of sequential round trips.
         val freshDeferred = async { notificationRepository.fetchSince(lastSeen) }
         val unreadDeferred = async { notificationRepository.unreadCount() }
 
         val fresh = freshDeferred.await()
-        // appSettings.notificationsEnabled — перемикач користувача (Settings → Preferences). Вимкнено:
-        // курсор lastSeenNotificationAt усе одно рухаємо (щоб повторне ввімкнення не показало лавину
-        // пропущених), а лічильник непрочитаних оновлюється незалежно нижче — тож дзвіночок у застосунку живий.
+        // appSettings.notificationsEnabled — the user's toggle (Settings → Preferences). When off:
+        // the lastSeenNotificationAt cursor is still advanced (so re-enabling doesn't dump a flood
+        // of missed ones), and the unread count is updated independently below — so the in-app bell stays live.
         if (fresh.isNotEmpty() && appSettings.notificationsEnabled) {
             val strings = resolveStrings(appSettings.locale)
             fresh.forEach { notification ->
                 localNotifier.notify(strings.appName, notification.formatBody(strings, redactAmount = appSettings.hideAmountsInNotifications), NotificationDeepLinks.linkFor(notification))
             }
         }
-        // fetchSince повертає найновіші спочатку (SupabaseNotificationRepository), тож перший
-        // елемент — найсвіжіший, без потреби повторно сканувати список компаратором.
+        // fetchSince returns the newest first (SupabaseNotificationRepository), so the first
+        // element is the freshest, with no need to rescan the list with a comparator.
         fresh.firstOrNull()?.let { appSettings.lastSeenNotificationAt = it.createdAt.toString() }
         _unreadCount.value = unreadDeferred.await()
     }

@@ -2,8 +2,8 @@ package org.bigblackowl.debttracker.data.local.mapper
 
 import org.bigblackowl.debttracker.data.local.entity.DebtTransactionEntity
 import org.bigblackowl.debttracker.data.local.entity.DebtorEntity
-import org.bigblackowl.debttracker.domain.model.Debtor
 import org.bigblackowl.debttracker.domain.model.DebtTransaction
+import org.bigblackowl.debttracker.domain.model.Debtor
 import org.bigblackowl.debttracker.domain.model.encodeReminderLeadDays
 import org.bigblackowl.debttracker.domain.model.parseReminderLeadDays
 

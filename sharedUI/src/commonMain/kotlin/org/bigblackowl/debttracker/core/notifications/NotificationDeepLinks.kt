@@ -3,6 +3,9 @@ package org.bigblackowl.debttracker.core.notifications
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.bigblackowl.debttracker.core.notifications.NotificationDeepLinks.consume
+import org.bigblackowl.debttracker.core.notifications.NotificationDeepLinks.linkFor
+import org.bigblackowl.debttracker.core.notifications.NotificationDeepLinks.parse
 import org.bigblackowl.debttracker.domain.model.AppNotification
 
 /**

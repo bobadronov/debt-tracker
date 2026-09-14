@@ -1,5 +1,8 @@
 package org.bigblackowl.debttracker.core.export
 
+import net.codinux.csv.writer.CsvWriter
+import net.codinux.csv.writer.LineDelimiter
+
 enum class ExportFormat { PDF, CSV }
 enum class ExportDirection { DEBTORS, CREDITORS, BOTH }
 
@@ -10,27 +13,16 @@ data class ExportRow(
     val comment: String?,
 )
 
-private fun csvEscape(value: String): String =
-    if (value.contains(',') || value.contains('"') || value.contains('\n')) {
-        "\"${value.replace("\"", "\"\"")}\""
-    } else {
-        value
-    }
-
 /**
- * CSV (спек §6, п.8) — UTF-8, кома як роздільник. Leads with a UTF-8 BOM so Excel (which guesses
+ * CSV (spec §6, item 8) — UTF-8, comma as the separator. Leads with a UTF-8 BOM so Excel (which guesses
  * the system codepage for a BOM-less file) renders Cyrillic content correctly instead of mojibake.
  */
 fun buildCsvContent(rows: List<ExportRow>, header: List<String>): String {
-    val sb = StringBuilder()
-    sb.append("\uFEFF")
-    sb.append(header.joinToString(",") { csvEscape(it) }).append('\n')
+    val sb = StringBuilder("﻿")
+    val writer = CsvWriter.builder(lineDelimiter = LineDelimiter.LF).writer(sb)
+    writer.writeRow(header)
     rows.forEach { row ->
-        sb.append(csvEscape(row.date)).append(',')
-            .append(csvEscape(row.label)).append(',')
-            .append(csvEscape(row.amount)).append(',')
-            .append(csvEscape(row.comment.orEmpty()))
-            .append('\n')
+        writer.writeRow(row.date, row.label, row.amount, row.comment.orEmpty())
     }
     return sb.toString()
 }

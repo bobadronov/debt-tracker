@@ -2,33 +2,33 @@ package org.bigblackowl.debttracker.domain.model
 
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
 
-/** Боржник: людина, якій я дав у борг (мені винні). */
+/** Debtor: a person I lent money to (they owe me). */
 data class Debtor(
-    val id: String,               // UUID, генерується локально (для offline-first)
+    val id: String,               // UUID, generated locally (for offline-first)
     val fullName: String,
     val phone: String?,
-    val email: String?,           // якщо збігається з профілем зареєстрованого користувача — джерело автозаповнення (§ProfileLookup)
-    val avatarUrl: String?,       // null → ініціали на кольоровому фоні (детермінований колір з hash(id))
+    val email: String?,           // if it matches a registered user's profile — source of autofill (§ProfileLookup)
+    val avatarUrl: String?,       // null → initials on a colored background (deterministic color from hash(id))
     val comment: String?,
     val createdAt: kotlin.time.Instant,
     val updatedAt: kotlin.time.Instant,
     val status: DebtStatus,
     val syncStatus: SyncStatus,
     val currency: Currency = Currency.UAH,
-    val isDeleted: Boolean = false, // soft delete для синхронізації
-    val linkedUserId: String? = null,      // auth.uid() зареєстрованого користувача, знайденого за phone/email
-    val mirrorCreditorId: String? = null,  // id дзеркального рядка в акаунті linkedUserId
-    /** Очікувана дата+час повернення боргу; `null` — не задано. Джерело нагадувань (core/notifications/DueReminderCoordinator). */
+    val isDeleted: Boolean = false, // soft delete for sync
+    val linkedUserId: String? = null,      // auth.uid() of the registered user found by phone/email
+    val mirrorCreditorId: String? = null,  // id of the mirrored row in the linkedUserId account
+    /** Expected debt repayment date+time; `null` — not set. Source for reminders (core/notifications/DueReminderCoordinator). */
     val dueDate: kotlin.time.Instant? = null,
-    /** Які додаткові нагадування-«за N днів» увімкнено (значення 1/2). Нагадування «того дня» — завжди, поки задано [dueDate]. */
+    /** Which extra "N days before" reminders are enabled (values 1/2). The "on the day" reminder is always on while [dueDate] is set. */
     val reminderLeadDays: Set<Int> = emptySet(),
 )
 
 data class DebtTransaction(
     val id: String,
     val debtorId: String,
-    val amount: BigDecimal,       // ЗІ ЗНАКОМ: додатне (+) = мені повернули (REPAY), від'ємне (−) = я дав у борг (LEND).
-    val type: TransactionType,    // денормалізовано для зручності запитів/індексів; type = if (amount.isPositive) REPAY else LEND
+    val amount: BigDecimal,       // SIGNED: positive (+) = repaid to me (REPAY), negative (−) = I lent (LEND).
+    val type: TransactionType,    // denormalized for query/index convenience; type = if (amount.isPositive) REPAY else LEND
     val method: PaymentMethod,
     val date: kotlin.time.Instant,
     val comment: String?,
@@ -36,21 +36,21 @@ data class DebtTransaction(
     val updatedAt: kotlin.time.Instant,
     val syncStatus: SyncStatus,
     val isDeleted: Boolean = false,
-    val mirrorTransactionId: String? = null, // заповнено лише якщо цей рядок сам є авто-дзеркалом транзакції з іншого акаунту
+    val mirrorTransactionId: String? = null, // filled in only if this row is itself an auto-mirror of a transaction from another account
 )
 
-/** balance = -Σ(amount): скільки боржник ще винен мені. */
+/** balance = -Σ(amount): how much the debtor still owes me. */
 fun List<DebtTransaction>.debtorBalance(): BigDecimal =
     this.filterNot { it.isDeleted }.fold(BigDecimal.ZERO) { acc, tx -> acc + tx.amount }.negate()
 
 fun BigDecimal.toDebtStatus(): DebtStatus =
     if (this <= BigDecimal.ZERO) DebtStatus.CLOSED else DebtStatus.ACTIVE
 
-/** type виводиться зі знаку суми: signum() > 0 → REPAY (мені повернули), інакше LEND (я дав). */
+/** type is derived from the amount's sign: signum() > 0 → REPAY (repaid to me), otherwise LEND (I lent). */
 fun BigDecimal.toDebtTransactionType(): TransactionType =
     if (this.signum() > 0) TransactionType.REPAY else TransactionType.LEND
 
-/** Проєкція для DebtorListScreen: боржник + обчислений баланс (спек §6, п.3). */
+/** Projection for DebtorListScreen: debtor + computed balance (spec §6, item 3). */
 data class DebtorWithBalance(
     val debtor: Debtor,
     val balance: BigDecimal

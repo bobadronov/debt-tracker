@@ -10,11 +10,11 @@ import org.bigblackowl.debttracker.theme.AppTheme
 import org.koin.compose.KoinApplicationPreview
 
 /**
- * Ізольований DI+тема контекст для @Preview-функцій екранів: власний
- * [KoinApplicationPreview] з [previewModule] (фейковий бекенд — жодних Room/Supabase
- * викликів) замість глобального Koin-контексту застосунку, і власний
- * [ViewModelStoreOwner], бо Preview-рендерер не завжди надає його через
- * [LocalViewModelStoreOwner] (потрібен для koinViewModel()).
+ * Isolated DI+theme context for screens' @Preview functions: its own
+ * [KoinApplicationPreview] with [previewModule] (a fake backend — no Room/Supabase
+ * calls) instead of the app's global Koin context, and its own
+ * [ViewModelStoreOwner], because the Preview renderer doesn't always provide one via
+ * [LocalViewModelStoreOwner] (needed for koinViewModel()).
  *
  * @param darkTheme forces [AppSettings.theme] to "dark"/"light" so Light/Dark @Preview variants
  *   render deterministically instead of following the IDE's own dark-mode setting. Null keeps the

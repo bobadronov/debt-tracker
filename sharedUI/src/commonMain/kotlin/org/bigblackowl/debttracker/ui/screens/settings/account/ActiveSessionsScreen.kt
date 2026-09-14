@@ -1,10 +1,8 @@
 package org.bigblackowl.debttracker.ui.screens.settings.account
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.PhoneAndroid
@@ -12,10 +10,8 @@ import androidx.compose.material.icons.filled.PhoneIphone
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,6 +35,8 @@ import org.bigblackowl.debttracker.ui.components.SettingsDetailScaffold
 import org.bigblackowl.debttracker.ui.components.SettingsRow
 import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
 import org.bigblackowl.debttracker.ui.components.SettingsSection
+import org.bigblackowl.debttracker.ui.components.button.TextButton
+import org.bigblackowl.debttracker.ui.components.card.SemanticOutlinedCard
 import org.koin.compose.viewmodel.koinViewModel
 
 /** Settings → Active devices: session management + remote logout, reached from [SettingsScreen]'s account section. */
@@ -67,7 +65,7 @@ fun ActiveSessionsScreen(
         snackbarHostState = snackbarHostState,
     ) {
         if (state.isLoading) {
-            CircularWavyProgressIndicator(modifier = Modifier.padding(Dimens.space16))
+            CircularWavyProgressIndicator(modifier = Modifier.padding(Dimens.Spacing.lg))
         } else {
             SettingsSection(strings.activeSessions.title) {
                 state.sessions.forEachIndexed { index, session ->
@@ -82,7 +80,7 @@ fun ActiveSessionsScreen(
                         trailing = if (!session.isCurrentDevice) {
                             {
                                 if (state.revokingId == session.id) {
-                                    CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
+                                    CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.IconSize.sm))
                                 } else {
                                     TextButton(onClick = { pendingRevoke = session }) {
                                         Text(strings.activeSessions.logOut, color = MaterialTheme.debtAccentColors.debt)
@@ -96,21 +94,19 @@ fun ActiveSessionsScreen(
             }
 
             if (state.sessions.count { !it.isCurrentDevice } > 0) {
-                OutlinedCard(
-                    shape = RoundedCornerShape(Dimens.space16),
-                    border = BorderStroke(Dimens.space2, color = MaterialTheme.colorScheme.primary),
+                SemanticOutlinedCard(borderColor = MaterialTheme.colorScheme.primary) {
+                    TextButton(
+                        onClick = { showRevokeAllConfirm = true },
+                        enabled = !state.isRevokingAll,
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
-                TextButton(
-                    onClick = { showRevokeAllConfirm = true },
-                    enabled = !state.isRevokingAll,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    if (state.isRevokingAll) {
-                        CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space20))
-                    } else {
-                        Text(strings.activeSessions.logOutAllOthers, color = MaterialTheme.debtAccentColors.debt)
+                        if (state.isRevokingAll) {
+                            CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.IconSize.sm))
+                        } else {
+                            Text(strings.activeSessions.logOutAllOthers, color = MaterialTheme.debtAccentColors.debt)
+                        }
                     }
-                }}
+                }
             }
         }
     }

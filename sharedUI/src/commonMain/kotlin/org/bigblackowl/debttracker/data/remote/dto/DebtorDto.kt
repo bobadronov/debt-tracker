@@ -30,9 +30,9 @@ data class DebtTransactionDto(
     val id: String,
     @SerialName("debtor_id") val debtorId: String,
     @SerialName("user_id") val userId: String,
-    // numeric(14,2) → Double (саме так PostgREST серіалізує numeric у JSON).
-    // Конвертація в/з BigDecimal — у мапері; для сум із 2 знаками після коми
-    // в межах numeric(14,2) Double не втрачає точності.
+    // numeric(14,2) → Double (this is how PostgREST serializes numeric into JSON).
+    // Conversion to/from BigDecimal happens in the mapper; for amounts with 2 decimal
+    // places within numeric(14,2), Double doesn't lose precision.
     val amount: Double,
     val method: String,
     @SerialName("transaction_date") val transactionDate: String,

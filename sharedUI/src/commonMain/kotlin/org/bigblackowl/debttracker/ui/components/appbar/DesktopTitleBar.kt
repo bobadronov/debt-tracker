@@ -5,6 +5,8 @@ import androidx.compose.runtime.Composable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.bigblackowl.debttracker.ui.components.appbar.DesktopTitleBar.claim
+import org.bigblackowl.debttracker.ui.components.appbar.DesktopTitleBar.claimed
 
 /**
  * Bridges a screen's `TopAppBar` content into the desktop app's native OS title bar. The desktop

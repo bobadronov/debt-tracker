@@ -31,7 +31,7 @@ data class AddEditContactState(
     val reminderLeadDays: Set<Int> = emptySet(),
     val fullNameError: String? = null,
     val amountError: String? = null,
-    /** Ненульове поки не знайдено збіг за email, не застосовано або не відхилено (§ProfileLookup autofill). */
+    /** Non-null until a match by email is found, applied, or dismissed (§ProfileLookup autofill). */
     val profileSuggestion: ProfileSuggestion? = null,
     val suggestedAvatarUrl: String? = null,
     /** Past debtors/creditors whose name matches [fullName] as it's typed — inline name-autocomplete. */

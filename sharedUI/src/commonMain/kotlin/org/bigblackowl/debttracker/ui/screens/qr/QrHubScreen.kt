@@ -17,13 +17,10 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -50,10 +47,15 @@ import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
+import org.bigblackowl.debttracker.ui.components.button.Button
+import org.bigblackowl.debttracker.ui.components.button.OutlinedButton
+import org.bigblackowl.debttracker.ui.components.button.TextButton
 import org.bigblackowl.debttracker.ui.components.contact.ScannedContactDialog
 import org.bigblackowl.debttracker.ui.components.form.PasteableOutlinedTextField
 import org.bigblackowl.debttracker.ui.components.form.UkrainianPhoneVisualTransformation
 import org.bigblackowl.debttracker.ui.components.form.rememberClipboardText
+import org.bigblackowl.debttracker.ui.components.text.BodyText
+import org.bigblackowl.debttracker.ui.components.text.CaptionText
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -125,7 +127,7 @@ private fun ShareContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(Dimens.space16),
+            .padding(Dimens.Spacing.lg),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -138,7 +140,7 @@ private fun ShareContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
             exit = fadeOut() + shrinkVertically(),
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(Dimens.space16),
+                verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.lg),
             ) {
                 state.qrPayload?.let { payload ->
                     val painter = rememberContactQrPainter(payload)
@@ -149,14 +151,14 @@ private fun ShareContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
                             modifier = Modifier.widthIn(max = Dimens.contentMaxWidth).fillMaxWidth().aspectRatio(1f),
                         )
 
-                        Text(strings.qr.hubDescription, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
+                        BodyText(strings.qr.hubDescription, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
                     }
-                } ?: Text(strings.qr.hubMyCardHint, style = MaterialTheme.typography.bodyMedium)
+                } ?: BodyText(strings.qr.hubMyCardHint, style = MaterialTheme.typography.bodyMedium)
             }
         }
 
         Column(
-            verticalArrangement = Arrangement.spacedBy(Dimens.space8),
+            verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm),
         ) {
 
             // Signed-in users' card comes straight from the account — nothing local to edit here.
@@ -175,7 +177,7 @@ private fun ShareContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
                 ) {
                     Column(
                         modifier = Modifier.widthIn(max = Dimens.contentMaxWidth).fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(Dimens.space12),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.md),
                     ) {
                         PasteableOutlinedTextField(
                             value = state.myName,
@@ -212,7 +214,7 @@ private fun ShareContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
                 exit = fadeOut() + shrinkVertically(),
             ) {
                 val canScanWithCamera = currentPlatform in QR_SCAN_CAPABLE_PLATFORMS
-                Column(verticalArrangement = Arrangement.spacedBy(Dimens.space8)) {
+                Column(verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm)) {
                     Button(
                         onClick = { if (canScanWithCamera) onIntent(QrHubIntent.SwitchToScan) else imagePicker.pick() },
                         modifier = Modifier.widthIn(max = Dimens.contentMaxWidth).fillMaxWidth(),
@@ -220,7 +222,7 @@ private fun ShareContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
 
                     if (!canScanWithCamera) {
                         imagePicker.errorMessage?.let {
-                            Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
+                            CaptionText(it, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
                         }
                     }
                 }
@@ -238,11 +240,11 @@ private fun ScanContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
 
     if (state.cameraPermissionDenied) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(Dimens.space16),
+            modifier = Modifier.fillMaxSize().padding(Dimens.Spacing.lg),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Text(strings.qr.hubCameraPermissionRationale, style = MaterialTheme.typography.bodyMedium)
+            BodyText(strings.qr.hubCameraPermissionRationale, style = MaterialTheme.typography.bodyMedium)
             TextButton(onClick = { onIntent(QrHubIntent.SwitchToScan) }) {
                 Text(strings.qr.hubCameraPermissionRetry)
             }

@@ -19,6 +19,6 @@ import org.bigblackowl.debttracker.theme.Dimens
 @Composable
 fun FullScreenLoadingIndicator(modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space60))
+        CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.IconSize.lg))
     }
 }

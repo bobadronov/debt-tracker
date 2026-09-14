@@ -18,7 +18,6 @@ import androidx.compose.material.icons.automirrored.filled.CallReceived
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -53,8 +52,9 @@ import org.bigblackowl.debttracker.domain.validation.isValidFullName
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.EntityAvatar
-import org.bigblackowl.debttracker.ui.components.LoadingButton
 import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
+import org.bigblackowl.debttracker.ui.components.button.IconButton
+import org.bigblackowl.debttracker.ui.components.button.LoadingButton
 import org.bigblackowl.debttracker.ui.components.form.CurrencyDropdownField
 import org.bigblackowl.debttracker.ui.components.form.DueReminderField
 import org.bigblackowl.debttracker.ui.components.form.PasteableOutlinedTextField
@@ -63,7 +63,7 @@ import org.bigblackowl.debttracker.ui.components.form.UkrainianPhoneVisualTransf
 import org.bigblackowl.debttracker.ui.components.form.rememberClipboardText
 
 /**
- * Create form used by the merged AddEditContactScreen (спек §4.1). Supplies the fields and layout;
+ * Create form used by the merged AddEditContactScreen (spec §4.1). Supplies the fields and layout;
  * the screen passes its own state values and intent-dispatching callbacks, and (optionally) a
  * [direction] toggle that decides whether Save creates a debtor or a creditor.
  */
@@ -141,14 +141,14 @@ fun AddEditContactForm(
                 .fillMaxSize()
                 .padding(padding)
                 .imePadding()
-                .padding(Dimens.space16)
+                .padding(Dimens.Spacing.lg)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Column(
                 modifier = Modifier.width(Dimens.contentMaxWidth),
-                verticalArrangement = Arrangement.spacedBy(Dimens.space12),
+                verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.md),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 if (direction != null) {
@@ -171,7 +171,7 @@ fun AddEditContactForm(
                     id = fullName.ifBlank { "?" },
                     name = fullName,
                     avatarUrl = avatarUrl,
-                    size = Dimens.space72,
+                    size = Dimens.IconSize.xl,
                 )
                 PasteableOutlinedTextField(
                     value = fullName,
@@ -223,7 +223,7 @@ fun AddEditContactForm(
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(Dimens.space5),
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.Spacing.xs),
                     ) {
                         PasteableOutlinedTextField(
                             value = initialAmountText,

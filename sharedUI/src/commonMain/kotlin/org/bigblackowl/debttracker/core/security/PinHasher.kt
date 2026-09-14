@@ -3,7 +3,7 @@ package org.bigblackowl.debttracker.core.security
 import kotlin.random.Random
 
 /**
- * Salts and stretches the desktop app-lock PIN (спек: PIN-фолбек лише на Desktop) before it
+ * Salts and stretches the desktop app-lock PIN (spec: PIN fallback only on Desktop) before it
  * touches persistent storage, so the raw PIN never sits in the settings store (Java
  * Preferences / Windows registry) in the clear. Iteration count is a plain repeated-SHA-256
  * stretch rather than PBKDF2/HMAC — the PIN's own search space (short digit strings) is the

@@ -10,9 +10,9 @@ interface BiometricAuthenticator {
 }
 
 /**
- * Фабрика замість expect-класу: Android потребує поточну [androidx.fragment.app.FragmentActivity]
- * (BiometricPrompt), яку можна отримати лише в Composable-контексті — тому саме @Composable
- * factory-функція є expect/actual, а не конструктор класу.
+ * A factory instead of an expect class: Android needs the current [androidx.fragment.app.FragmentActivity]
+ * (BiometricPrompt), which can only be obtained in a Composable context — that's why the @Composable
+ * factory function is the expect/actual, rather than a class constructor.
  */
 @Composable
 expect fun rememberBiometricAuthenticator(): BiometricAuthenticator

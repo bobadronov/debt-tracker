@@ -21,7 +21,6 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,15 +42,18 @@ import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
-import org.bigblackowl.debttracker.ui.components.LoadingButton
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
 import org.bigblackowl.debttracker.ui.components.SettingsRow
 import org.bigblackowl.debttracker.ui.components.SettingsSection
+import org.bigblackowl.debttracker.ui.components.button.LoadingButton
+import org.bigblackowl.debttracker.ui.components.button.TextButton
+import org.bigblackowl.debttracker.ui.components.text.BodyText
+import org.bigblackowl.debttracker.ui.components.text.TitleText
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 /**
- * ExportScreen: формат (PDF/CSV) + діапазон дат + напрямок (спек §6, п. 8). Selection state and the
+ * ExportScreen: format (PDF/CSV) + date range + direction (spec §6, item 8). Selection state and the
  * CSV/PDF pipeline live in [ExportViewModel] — this screen only owns the composition-scoped
  * [rememberFileExporter] object and Material3's own [rememberDateRangePickerState].
  */
@@ -70,7 +72,7 @@ fun ExportScreen(
     val dateRangePickerState = rememberDateRangePickerState()
     val strings = LocalStrings.current
 
-    // DateRangePickerState тримає межі в UTC-мілісекундах (стандарт M3) — конвертуємо в LocalDate тут один раз.
+    // DateRangePickerState holds bounds in UTC milliseconds (M3 standard) — converted to LocalDate here once.
     val fromDate = dateRangePickerState.selectedStartDateMillis?.let {
         kotlin.time.Instant.fromEpochMilliseconds(it).toLocalDateTime(TimeZone.UTC).date
     }
@@ -85,20 +87,19 @@ fun ExportScreen(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(Dimens.space12),
+                verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.md),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 if (viewModel.isScoped) {
-                    Text(
+                    TitleText(
                         state.scopedContactName ?: "…",
                         modifier = Modifier.fillMaxWidth(),
-                        style = MaterialTheme.typography.titleMedium,
                         textAlign = TextAlign.Center
                     )
                 }
 
                 SettingsSection(strings.export.format) {
-                    Column(modifier = Modifier.fillMaxWidth().padding(Dimens.space16)) {
+                    Column(modifier = Modifier.fillMaxWidth().padding(Dimens.Spacing.lg)) {
                         val formatOptions = listOf(
                             ExportFormat.CSV to strings.export.formatCsv,
                             ExportFormat.PDF to strings.export.formatPdf,
@@ -121,7 +122,7 @@ fun ExportScreen(
 
                 if (!viewModel.isScoped) {
                     SettingsSection(strings.export.direction) {
-                        Column(modifier = Modifier.fillMaxWidth().padding(Dimens.space16)) {
+                        Column(modifier = Modifier.fillMaxWidth().padding(Dimens.Spacing.lg)) {
                             val directionOptions = listOf(
                                 ExportDirection.DEBTORS to strings.export.directionDebtors,
                                 ExportDirection.CREDITORS to strings.export.directionCreditors,
@@ -164,18 +165,10 @@ fun ExportScreen(
                 }
 
                 state.error?.let {
-                    Text(
-                        it,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.debtAccentColors.debt
-                    )
+                    BodyText(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.debtAccentColors.debt)
                 }
                 if (state.success) {
-                    Text(
-                        strings.export.done,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.debtAccentColors.repay
-                    )
+                    BodyText(strings.export.done, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.debtAccentColors.repay)
                 }
             }
             LoadingButton(
@@ -186,7 +179,7 @@ fun ExportScreen(
                     Icon(
                         Icons.Filled.Download,
                         contentDescription = null,
-                        modifier = Modifier.padding(end = Dimens.space8)
+                        modifier = Modifier.padding(end = Dimens.Spacing.sm)
                     )
                 },
                 label = { Text(strings.export.submit) },

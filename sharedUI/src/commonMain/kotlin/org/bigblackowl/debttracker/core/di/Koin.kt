@@ -7,7 +7,7 @@ import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.dsl.KoinAppDeclaration
 
-/** Викликається з кожної платформної точки входу перед рендером [org.bigblackowl.debttracker.App]. */
+/** Called from each platform's entry point before rendering [org.bigblackowl.debttracker.App]. */
 fun initKoin(config: KoinAppDeclaration? = null): KoinApplication {
     // Only planted in debug builds (see BuildConfig.DEBUG) — Napier calls are no-ops otherwise,
     // so release builds never pay for or leak verbose logging.

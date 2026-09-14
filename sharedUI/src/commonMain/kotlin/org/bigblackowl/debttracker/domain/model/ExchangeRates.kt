@@ -1,13 +1,15 @@
 package org.bigblackowl.debttracker.domain.model
 
 import kotlinx.datetime.LocalDate
+import org.bigblackowl.debttracker.domain.model.FiatCurrencies.catalog
+import org.bigblackowl.debttracker.domain.model.FiatCurrencies.of
 import kotlin.time.Instant
 
 /**
- * Валюта на екрані курсів ([org.bigblackowl.debttracker.ui.screens.exchange.ExchangeRatesScreen]) —
- * окремий довідник, ширший за [Currency] (той — лише 4 валюти боргів застосунку). [code] — ISO-4217
- * літерний, [flagCc] — ISO-3166 alpha-2 для прапора з flagcdn.com (`null` для наднаціональних/
- * металевих кодів на кшталт XAU/XDR/XOF).
+ * A currency on the rates screen ([org.bigblackowl.debttracker.ui.screens.exchange.ExchangeRatesScreen]) —
+ * a separate reference list, wider than [Currency] (which is just the app's 4 debt currencies).
+ * [code] — ISO-4217 letter code, [flagCc] — ISO-3166 alpha-2 for the flag from flagcdn.com (`null` for
+ * supranational/metal codes like XAU/XDR/XOF).
  */
 data class FiatCurrency(
     val code: String,
@@ -15,14 +17,15 @@ data class FiatCurrency(
     val name: String,
     val flagCc: String?,
 ) {
-    /** PNG-прапор країни валюти (Coil кешує → після першого разу є й офлайн); `null` — показуємо запасну іконку. */
+    /** PNG flag of the currency's country (Coil caches it → available offline after the first time); `null` — show the fallback icon. */
     fun flagUrl(): String? = flagCc?.let { "https://flagcdn.com/w80/$it.png" }
 }
 
 /**
- * Довідник валют для показу. [catalog] — курований список поширених валют із назвою/символом/прапором;
- * [of] повертає його елемент або синтезує запис для будь-якого іншого ISO-коду, що прийшов з API
- * (назва = символ = сам код, прапор — за першими двома літерами коду, часто це і є код країни).
+ * Reference list of currencies to display. [catalog] — a curated list of common currencies with
+ * name/symbol/flag; [of] returns its entry or synthesizes one for any other ISO code coming from
+ * the API (name = symbol = the code itself, flag from the code's first two letters, which is often
+ * also the country code).
  */
 object FiatCurrencies {
 
@@ -77,18 +80,19 @@ object FiatCurrencies {
 
     private val byCode: Map<String, FiatCurrency> = catalog.associateBy { it.code }
 
-    /** Каталожна валюта, або синтезований запис для будь-якого іншого ISO-коду з відповіді API. */
+    /** A catalog currency, or a synthesized entry for any other ISO code from the API response. */
     fun of(code: String): FiatCurrency =
         byCode[code] ?: FiatCurrency(code, code, code, code.take(2).lowercase().takeIf { code.length >= 2 })
 }
 
 /**
- * Джерело курсів валют для [org.bigblackowl.debttracker.ui.screens.exchange.ExchangeRatesScreen].
- * [displayName] — власна назва (не перекладається). [baseCode]/[baseSymbol] — валюта, у якій джерело
- * котирує решту: банки — до своєї домашньої валюти (фіксовано), а [arbitraryBase]-джерела (ECB через
- * frankfurter, ExchangeRate-API) приймають будь-яку базу, обрану користувачем, — тоді [baseCode] лише
- * дефолт. Екран показує кожну валюту джерела окрім самої бази, виражену в базі. [domain] —
- * офіційний сайт: з нього тягнеться логотип для іконки в списку джерел.
+ * Source of exchange rates for [org.bigblackowl.debttracker.ui.screens.exchange.ExchangeRatesScreen].
+ * [displayName] — the source's own name (not translated). [baseCode]/[baseSymbol] — the currency the
+ * source quotes the rest in: banks quote against their own home currency (fixed), while
+ * [arbitraryBase] sources (ECB via frankfurter, ExchangeRate-API) accept any base chosen by the user —
+ * then [baseCode] is just the default. The screen shows every currency of the source except the base
+ * itself, expressed in the base. [domain] — the official website: its logo is fetched for the icon
+ * in the source list.
  */
 enum class RateSource(
     val displayName: String,
@@ -106,15 +110,16 @@ enum class RateSource(
     EXCHANGERATE_API("ExchangeRate-API", "USD", "$", "exchangerate-api.com", arbitraryBase = true),
     ;
 
-    /** Домашня валюта джерела як [FiatCurrency] — база для банків, дефолтна база для решти. */
+    /** The source's home currency as [FiatCurrency] — the base for banks, the default base for the rest. */
     val homeCurrency: FiatCurrency get() = FiatCurrencies.of(baseCode)
 }
 
 /**
- * Курс однієї валюти до бази зрізу. Банки дають два боки ([buy] / [sell]); центробанки та агрегатори —
- * один курс, тоді [buy] == [sell] і UI показує одне число ([isSingle]).
- * Значення — [Double], а не BigDecimal: це довідкові дані для показу, не грошові суми, які мусять
- * точно округлюватись (пор. коментар у `sumByCurrency`).
+ * The rate of one currency against the snapshot's base. Banks give two sides ([buy] / [sell]);
+ * central banks and aggregators give one rate, in which case [buy] == [sell] and the UI shows a
+ * single number ([isSingle]).
+ * The value is [Double], not BigDecimal: this is reference data for display, not monetary amounts
+ * that must round precisely (cf. the comment in `sumByCurrency`).
  */
 data class ExchangeRate(
     val currency: FiatCurrency,
@@ -124,12 +129,12 @@ data class ExchangeRate(
     val isSingle: Boolean get() = buy == sell
 }
 
-/** Один успішний зріз курсів: звідки, у якій базі, коли отримано та на яку дату його опублікувало джерело. */
+/** One successful rate snapshot: where from, in which base, when fetched, and the date the source published it for. */
 data class ExchangeRatesSnapshot(
     val source: RateSource,
     val base: FiatCurrency,
     val rates: List<ExchangeRate>,
-    /** Дата, на яку джерело опублікувало курс (НБУ `exchangedate`, ПБ `date`); `null` — якщо не віддає. */
+    /** The date the source published the rate for (NBU's `exchangedate`, PrivatBank's `date`); `null` if not provided. */
     val date: LocalDate?,
     val fetchedAt: Instant,
 )

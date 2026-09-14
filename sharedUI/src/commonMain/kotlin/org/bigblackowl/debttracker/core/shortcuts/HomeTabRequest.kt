@@ -3,6 +3,9 @@ package org.bigblackowl.debttracker.core.shortcuts
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.bigblackowl.debttracker.core.shortcuts.HomeTabRequest.consume
+import org.bigblackowl.debttracker.core.shortcuts.HomeTabRequest.pending
+import org.bigblackowl.debttracker.core.shortcuts.HomeTabRequest.request
 
 /**
  * Bridges an "open the app on a specific Home tab" request from *outside* Compose (the Android

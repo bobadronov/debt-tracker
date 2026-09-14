@@ -4,17 +4,17 @@ import org.bigblackowl.debttracker.domain.model.ExchangeRatesSnapshot
 import org.bigblackowl.debttracker.domain.model.RateSource
 
 /**
- * Курси валют для [org.bigblackowl.debttracker.ui.screens.exchange.ExchangeRatesScreen].
- * Онлайн-only (як і решта remote-репозиторіїв), але останній вдалий зріз кожної пари
- * (джерело, база) кешується локально, щоб екран щось показував і без мережі.
- * Для банків [baseCode] ігнорується (база фіксована), для [RateSource.arbitraryBase]-джерел
- * це обрана користувачем валюта котирування.
+ * Exchange rates for [org.bigblackowl.debttracker.ui.screens.exchange.ExchangeRatesScreen].
+ * Online-only (like the rest of the remote repositories), but the last successful snapshot of each
+ * (source, base) pair is cached locally so the screen shows something even without a network.
+ * For banks [baseCode] is ignored (the base is fixed); for [RateSource.arbitraryBase] sources
+ * it's the quoting currency chosen by the user.
  */
 interface ExchangeRatesRepository {
 
-    /** Останній збережений зріз для пари, якщо він колись вантажився на цьому пристрої. */
+    /** The last saved snapshot for the pair, if it was ever loaded on this device. */
     fun cached(source: RateSource, baseCode: String): ExchangeRatesSnapshot?
 
-    /** Тягне свіжі курси з мережі й оновлює кеш. Кидає при помилці мережі/розбору відповіді. */
+    /** Fetches fresh rates from the network and updates the cache. Throws on a network/parse error. */
     suspend fun refresh(source: RateSource, baseCode: String): ExchangeRatesSnapshot
 }

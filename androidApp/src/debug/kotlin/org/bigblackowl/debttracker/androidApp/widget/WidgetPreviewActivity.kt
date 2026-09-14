@@ -1,7 +1,7 @@
 package org.bigblackowl.debttracker.androidApp.widget
 
+import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.util.TypedValue
@@ -10,22 +10,24 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.RemoteViews
 import android.widget.TextView
+import androidx.core.graphics.toColorInt
 import org.bigblackowl.debttracker.androidApp.R
 
 /**
  * Debug-only host for [DebtSummaryWidgetReceiver]'s [RemoteViews]. Renders the real widget layout
- * (colours + localised labels come straight from the receiver's `buildViews`), then overrides the
+ * (colors + localized labels come straight from the receiver's `buildViews`), then overrides the
  * two amount views with sample multi-currency totals so the layout can be screenshotted without
  * placing the widget on a launcher home screen.
  */
 class WidgetPreviewActivity : Activity() {
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.parseColor("#FF9AA0A6"))
+            setBackgroundColor("#FF9AA0A6".toColorInt())
             setPadding(dp(16), dp(24), dp(16), dp(24))
         }
 

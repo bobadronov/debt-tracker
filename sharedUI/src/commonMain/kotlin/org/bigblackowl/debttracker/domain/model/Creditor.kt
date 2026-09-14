@@ -3,35 +3,35 @@ package org.bigblackowl.debttracker.domain.model
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
 
 /**
- * Кредитор: людина, якій я винен (дзеркало [Debtor], спек §4.1).
- * Окрема сутність навмисно — контакт живе рівно в одному з двох списків
- * одночасно, автоматичного взаємозаліку з [Debtor] немає.
+ * Creditor: a person I owe money to (mirror of [Debtor], spec §4.1).
+ * A separate entity by design — a contact lives in exactly one of the two lists
+ * at a time, there's no automatic netting against [Debtor].
  */
 data class Creditor(
     val id: String,
     val fullName: String,
     val phone: String?,
-    val email: String?,           // якщо збігається з профілем зареєстрованого користувача — джерело автозаповнення (§ProfileLookup)
+    val email: String?,           // if it matches a registered user's profile — source of autofill (§ProfileLookup)
     val avatarUrl: String?,
     val comment: String?,
     val createdAt: kotlin.time.Instant,
     val updatedAt: kotlin.time.Instant,
-    val status: DebtStatus,       // той самий enum ACTIVE/CLOSED, що й у Debtor
+    val status: DebtStatus,       // the same ACTIVE/CLOSED enum as in Debtor
     val syncStatus: SyncStatus,
     val currency: Currency = Currency.UAH,
     val isDeleted: Boolean = false,
-    val linkedUserId: String? = null,    // auth.uid() зареєстрованого користувача, знайденого за phone/email
-    val mirrorDebtorId: String? = null,  // id дзеркального рядка в акаунті linkedUserId
-    /** Очікувана дата+час виплати боргу; `null` — не задано. Джерело нагадувань (core/notifications/DueReminderCoordinator). */
+    val linkedUserId: String? = null,    // auth.uid() of the registered user found by phone/email
+    val mirrorDebtorId: String? = null,  // id of the mirrored row in the linkedUserId account
+    /** Expected debt repayment date+time; `null` — not set. Source for reminders (core/notifications/DueReminderCoordinator). */
     val dueDate: kotlin.time.Instant? = null,
-    /** Які додаткові нагадування-«за N днів» увімкнено (значення 1/2). Нагадування «того дня» — завжди, поки задано [dueDate]. */
+    /** Which extra "N days before" reminders are enabled (values 1/2). The "on the day" reminder is always on while [dueDate] is set. */
     val reminderLeadDays: Set<Int> = emptySet(),
 )
 
 data class CreditorTransaction(
     val id: String,
     val creditorId: String,
-    val amount: BigDecimal,       // ЗІ ЗНАКОМ: додатне (+) = я повернув (RETURN), від'ємне (−) = я взяв у борг (BORROW).
+    val amount: BigDecimal,       // SIGNED: positive (+) = I paid back (RETURN), negative (−) = I borrowed (BORROW).
     val type: MyDebtTransactionType, // type = if (amount.isPositive) RETURN else BORROW
     val method: PaymentMethod,
     val date: kotlin.time.Instant,
@@ -40,18 +40,18 @@ data class CreditorTransaction(
     val updatedAt: kotlin.time.Instant,
     val syncStatus: SyncStatus,
     val isDeleted: Boolean = false,
-    val mirrorTransactionId: String? = null, // заповнено лише якщо цей рядок сам є авто-дзеркалом транзакції з іншого акаунту
+    val mirrorTransactionId: String? = null, // filled in only if this row is itself an auto-mirror of a transaction from another account
 )
 
-/** balance = -Σ(amount): скільки я ще винен цій людині. Та сама формула, що й у [debtorBalance]. */
+/** balance = -Σ(amount): how much I still owe this person. The same formula as in [debtorBalance]. */
 fun List<CreditorTransaction>.creditorBalance(): BigDecimal =
     this.filterNot { it.isDeleted }.fold(BigDecimal.ZERO) { acc, tx -> acc + tx.amount }.negate()
 
-/** type виводиться зі знаку суми: signum() > 0 → RETURN (я повернув), інакше BORROW (я взяв у борг). */
+/** type is derived from the amount's sign: signum() > 0 → RETURN (I paid back), otherwise BORROW (I borrowed). */
 fun BigDecimal.toCreditorTransactionType(): MyDebtTransactionType =
     if (this.signum() > 0) MyDebtTransactionType.RETURN else MyDebtTransactionType.BORROW
 
-/** Проєкція для CreditorListScreen: кредитор + обчислений баланс (спек §4.1, §6, п.3). */
+/** Projection for CreditorListScreen: creditor + computed balance (spec §4.1, §6, item 3). */
 data class CreditorWithBalance(
     val creditor: Creditor,
     val balance: BigDecimal

@@ -20,7 +20,7 @@ import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorTransactio
 import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorsUseCase
 import kotlin.time.Clock
 
-/** StatsScreen: два окремих KPI, топ боржників/кредиторів, динаміка за місяць (спек §6, п.6). */
+/** StatsScreen: two separate KPIs, top debtors/creditors, monthly trend (spec §6, item 6). */
 class StatsViewModel(
     private val observeDebtors: ObserveDebtorsUseCase,
     private val observeCreditors: ObserveCreditorsUseCase,

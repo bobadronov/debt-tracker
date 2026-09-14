@@ -20,11 +20,11 @@ private const val CHANNEL_ID = "debt_sync"
 const val EXTRA_NOTIFICATION_DEEP_LINK = "org.bigblackowl.debttracker.extra.NOTIFICATION_DEEP_LINK"
 
 /**
- * Android: `NotificationManagerCompat` з одним каналом "debt_sync" (створюється лениво, один
- * раз). [requestPermission] лише ПЕРЕВІРЯЄ поточний стан дозволу (`POST_NOTIFICATIONS`,
- * Android 13+) — сам системний діалог показує [org.bigblackowl.debttracker.androidApp.AppActivity]
- * при запуску (потрібна Activity, якої тут немає — [NotificationsPoller] працює у фоновому
- * `CoroutineScope`).
+ * Android: `NotificationManagerCompat` with a single "debt_sync" channel (created lazily, once).
+ * [requestPermission] only CHECKS the current permission state (`POST_NOTIFICATIONS`,
+ * Android 13+) — the actual system dialog is shown by
+ * [org.bigblackowl.debttracker.androidApp.AppActivity] on launch (an Activity is required, and
+ * there is none here — [NotificationsPoller] runs on a background `CoroutineScope`).
  */
 internal class AndroidLocalNotifier(private val context: Context) : LocalNotifier {
     private val manager = NotificationManagerCompat.from(context)

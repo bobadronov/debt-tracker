@@ -26,15 +26,12 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -67,15 +64,20 @@ import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.AccountAvatar
-import org.bigblackowl.debttracker.ui.components.LoadingButton
 import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
+import org.bigblackowl.debttracker.ui.components.button.IconButton
+import org.bigblackowl.debttracker.ui.components.button.LoadingButton
+import org.bigblackowl.debttracker.ui.components.button.OutlinedButton
+import org.bigblackowl.debttracker.ui.components.button.TextButton
 import org.bigblackowl.debttracker.ui.components.form.PasteableOutlinedTextField
 import org.bigblackowl.debttracker.ui.components.form.UkrainianPhoneVisualTransformation
 import org.bigblackowl.debttracker.ui.components.form.rememberClipboardText
+import org.bigblackowl.debttracker.ui.components.text.BodyText
+import org.bigblackowl.debttracker.ui.components.text.CaptionText
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 
-/** Account+Sync (спек §1.1) — email/пароль через supabase-kt Auth; sign up also collects name/optional avatar+phone. */
+/** Account+Sync (spec §1.1) — email/password via supabase-kt Auth; sign up also collects name/optional avatar+phone. */
 @Composable
 fun AuthScreen(
     onBack: () -> Unit,
@@ -116,13 +118,13 @@ fun AuthScreen(
     ) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).imePadding()
-                .verticalScroll(rememberScrollState()).padding(Dimens.space16),
+                .verticalScroll(rememberScrollState()).padding(Dimens.Spacing.lg),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Column(
                 modifier = Modifier.width(Dimens.contentMaxWidth),
-                verticalArrangement = Arrangement.spacedBy(Dimens.space12),
+                verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.md),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
 
@@ -234,7 +236,7 @@ fun AuthScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(strings.authExtra.offerSignUpPrompt)
+                        BodyText(strings.authExtra.offerSignUpPrompt)
                         TextButton(onClick = { viewModel.onIntent(AuthIntent.SwitchToSignUp) }) {
                             Text(strings.authExtra.offerSignUpAction)
                         }
@@ -304,7 +306,7 @@ fun AuthScreen(
                     )
                 }
 
-                Spacer(Modifier.height(Dimens.space30))
+                Spacer(Modifier.height(Dimens.Spacing.xl))
                 LoadingButton(
                     onClick = { viewModel.onIntent(AuthIntent.Submit) },
                     isLoading = state.isLoading,
@@ -315,12 +317,12 @@ fun AuthScreen(
 
                 if (BuildConfig.GOOGLE_SIGN_IN_ENABLED) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(.8f).padding(vertical = Dimens.space8),
+                        modifier = Modifier.fillMaxWidth(.8f).padding(vertical = Dimens.Spacing.sm),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Dimens.space12),
+                        horizontalArrangement = Arrangement.spacedBy(Dimens.Spacing.md),
                     ) {
                         HorizontalDivider(modifier = Modifier.weight(1f))
-                        Text(strings.authExtra.divider)
+                        BodyText(strings.authExtra.divider)
                         HorizontalDivider(modifier = Modifier.weight(1f))
                     }
                     OutlinedButton(
@@ -330,26 +332,25 @@ fun AuthScreen(
                     ) {
                         if (state.isGoogleLoading) {
                             CircularWavyProgressIndicator(
-                                modifier = Modifier.size(Dimens.space20),
+                                modifier = Modifier.size(Dimens.IconSize.sm),
                             )
                         } else {
                             Image(
                                 painter = painterResource(Res.drawable.ic_google_logo),
                                 contentDescription = null,
-                                modifier = Modifier.size(Dimens.space20),
+                                modifier = Modifier.size(Dimens.IconSize.sm),
                             )
-                            Spacer(Modifier.width(Dimens.space12))
+                            Spacer(Modifier.width(Dimens.Spacing.md))
                             Text(strings.authExtra.continueWithGoogle)
                         }
                     }
 
                     val googleError = state.googleError
                     AnimatedVisibility(visible = googleError != null) {
-                        Text(
+                        CaptionText(
                             text = googleError.orEmpty(),
                             color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.fillMaxWidth(.8f).padding(top = Dimens.space8),
+                            modifier = Modifier.fillMaxWidth(.8f).padding(top = Dimens.Spacing.sm),
                         )
                     }
                 }
@@ -367,7 +368,7 @@ fun AuthScreen(
 private fun SignUpOnlyFields(visible: Boolean, content: @Composable ColumnScope.() -> Unit) {
     AnimatedVisibility(visible = visible) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(Dimens.space12),
+            verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.md),
             horizontalAlignment = Alignment.CenterHorizontally,
             content = content,
         )

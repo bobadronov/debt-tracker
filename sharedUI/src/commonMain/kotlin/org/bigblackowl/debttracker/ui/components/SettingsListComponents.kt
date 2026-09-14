@@ -36,26 +36,28 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
+import org.bigblackowl.debttracker.ui.components.text.CaptionText
+import org.bigblackowl.debttracker.ui.components.text.LabelText
+import org.bigblackowl.debttracker.ui.components.text.TitleText
 
 /**
  * Screen shell shared by AccountInfoScreen/EditAccountScreen/ActiveSessionsScreen: back-button
@@ -70,7 +72,7 @@ fun SettingsDetailScaffold(
     modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState? = null,
     useImePadding: Boolean = false,
-    verticalSpacing: Dp = Dimens.space16,
+    verticalSpacing: Dp = Dimens.Spacing.lg,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Scaffold(
@@ -85,7 +87,7 @@ fun SettingsDetailScaffold(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Column(
-                modifier = Modifier.width(Dimens.contentMaxWidth).padding(Dimens.space16),
+                modifier = Modifier.width(Dimens.contentMaxWidth).padding(Dimens.Spacing.lg),
                 verticalArrangement = Arrangement.spacedBy(verticalSpacing),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 content = content,
@@ -95,23 +97,23 @@ fun SettingsDetailScaffold(
 }
 
 /**
- * Заголовок групи налаштувань (Material You: підпис над tonal-карткою) + сама картка.
- * Спільний стиль для екранів на кшталт Settings/Export — список tonal-карток замість плаского Column.
+ * Settings group header (Material You: a caption above a tonal card) + the card itself.
+ * Shared style for screens like Settings/Export — a list of tonal cards instead of a flat Column.
  */
 @Composable
 fun SettingsSection(title: String?, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(Dimens.space8)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm)) {
         if (title != null) {
-            Text(
+            LabelText(
                 title,
-                style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(start = Dimens.space8),
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(start = Dimens.Spacing.sm),
             )
         }
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(Dimens.space20),
+            shape = RoundedCornerShape(Dimens.Radius.lg),
             color = MaterialTheme.colorScheme.surfaceContainer,
         ) {
             Column(content = content)
@@ -127,7 +129,7 @@ private fun Modifier.clickablePressScale(onClick: () -> Unit): Modifier = compos
     scale(pressScale).clickable(interactionSource = interactionSource, indication = LocalIndication.current, onClick = onClick)
 }
 
-/** Один рядок налаштувань: іконка в tonal-колі, заголовок (+опційний підзаголовок), опційний trailing-контрол. */
+/** One settings row: icon in a tonal circle, title (+optional subtitle), optional trailing control. */
 @Composable
 fun SettingsRow(
     icon: ImageVector,
@@ -148,34 +150,32 @@ fun SettingsRow(
             .let {
                 if (onClick != null) it.clickablePressScale(onClick) else it
             }
-            .padding(horizontal = Dimens.space16, vertical = Dimens.space12),
+            .padding(horizontal = Dimens.Spacing.lg, vertical = Dimens.Spacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            modifier = Modifier.size(Dimens.space40).clip(CircleShape).background(iconContainerColor),
+            modifier = Modifier.size(Dimens.IconSize.md).clip(CircleShape).background(iconContainerColor),
             contentAlignment = Alignment.Center,
         ) {
             if (leadingContent != null) {
                 leadingContent()
             } else {
-                Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(Dimens.space20))
+                Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(Dimens.IconSize.sm))
             }
         }
-        Spacer(Modifier.width(Dimens.space16))
+        Spacer(Modifier.width(Dimens.Spacing.lg))
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge, color = titleColor)
+            TitleText(title, style = MaterialTheme.typography.bodyLarge, color = titleColor)
             AnimatedVisibility(visible = subtitle != null, enter = fadeIn(), exit = fadeOut()) {
-                Text(
+                CaptionText(
                     subtitle.orEmpty(),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textDecoration = if (onSubtitleClick != null) TextDecoration.Underline else null,
                     modifier = if (onSubtitleClick != null) Modifier.clickable(onClick = onSubtitleClick) else Modifier,
                 )
             }
         }
         if (trailing != null) {
-            Spacer(Modifier.width(Dimens.space8))
+            Spacer(Modifier.width(Dimens.Spacing.sm))
             trailing()
         }
     }
@@ -208,7 +208,7 @@ fun SettingsSwitchRow(
 @Composable
 fun SettingsRowDivider() {
     HorizontalDivider(
-        modifier = Modifier.padding(start = Dimens.space72, end = Dimens.space16),
+        modifier = Modifier.padding(start = Dimens.IconSize.xl, end = Dimens.Spacing.lg),
         color = MaterialTheme.colorScheme.outlineVariant,
     )
 }
@@ -216,7 +216,7 @@ fun SettingsRowDivider() {
 @Composable
 private fun SettingsSectionSample() {
     var notificationsEnabled by remember { mutableStateOf(true) }
-    Column(modifier = Modifier.padding(Dimens.space16)) {
+    Column(modifier = Modifier.padding(Dimens.Spacing.lg)) {
         SettingsSection(title = "Preferences") {
             SettingsRow(
                 icon = Icons.Filled.Notifications,

@@ -2,21 +2,21 @@ package org.bigblackowl.debttracker.domain.repository
 
 import kotlinx.coroutines.flow.StateFlow
 
-/** Account+Sync (спек §1.1, §5) — Local-only режим просто не викликає ці методи. */
+/** Account+Sync (spec §1.1, §5) — Local-only mode simply never calls these methods. */
 interface AuthRepository {
     val isAuthenticated: StateFlow<Boolean>
     val currentUserId: String?
 
-    /** Email сесії (`auth.users.email`) — незмінний тут, зміна пошти потребує окремого потоку підтвердження. */
+    /** Session email (`auth.users.email`) — immutable here, changing the email requires a separate confirmation flow. */
     val email: StateFlow<String?>
 
-    /** `profiles.display_name` — null поки не авторизований або ім'я не задане. */
+    /** `profiles.display_name` — null until authenticated or the name isn't set. */
     val displayName: StateFlow<String?>
 
-    /** `profiles.phone` — null поки не авторизований або телефон не задано (на відміну від телефону контакту debtor/creditor). */
+    /** `profiles.phone` — null until authenticated or the phone isn't set (as opposed to a debtor/creditor contact's phone). */
     val phone: StateFlow<String?>
 
-    /** URL фото акаунта (`profiles.avatar_url`) — null поки не авторизований або фото не завантажене. */
+    /** Account photo URL (`profiles.avatar_url`) — null until authenticated or the photo isn't uploaded. */
     val avatarUrl: StateFlow<String?>
 
     suspend fun signUp(email: String, password: String): Result<Unit>
@@ -32,9 +32,9 @@ interface AuthRepository {
 
     suspend fun signOut()
 
-    /** Завантажує фото в Storage (`avatars/{userId}/avatar.{fileExtension}`) і зберігає URL у [avatarUrl]/`profiles.avatar_url`. */
+    /** Uploads the photo to Storage (`avatars/{userId}/avatar.{fileExtension}`) and stores the URL in [avatarUrl]/`profiles.avatar_url`. */
     suspend fun updateAvatar(bytes: ByteArray, fileExtension: String): Result<String>
 
-    /** Оновлює `profiles.display_name`/`profiles.phone` разом (Edit Account screen) — порожній phone зберігається як null. */
+    /** Updates `profiles.display_name`/`profiles.phone` together (Edit Account screen) — an empty phone is stored as null. */
     suspend fun updateProfile(displayName: String, phone: String?): Result<Unit>
 }

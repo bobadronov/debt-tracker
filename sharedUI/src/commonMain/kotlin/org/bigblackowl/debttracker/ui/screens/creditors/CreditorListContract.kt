@@ -1,8 +1,8 @@
 package org.bigblackowl.debttracker.ui.screens.creditors
 
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
-import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.CreditorWithBalance
+import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.sumByCurrency
 
 /** MVI contract for [CreditorListScreen] — searchable/sortable/filterable creditor list. */
@@ -18,7 +18,7 @@ data class CreditorListState(
     val statusFilter: CreditorStatusFilter = CreditorStatusFilter.ACTIVE,
     val creditors: List<CreditorWithBalance> = emptyList(),
 ) {
-    /** Немає курсів обміну — тотал рахується окремо на кожну валюту, що трапляється серед кредиторів. */
+    /** No exchange rates — the total is calculated separately for each currency found among creditors. */
     val totalsByCurrency: Map<Currency, BigDecimal>
         get() = creditors.sumByCurrency({ it.creditor.currency }, { it.balance })
 }

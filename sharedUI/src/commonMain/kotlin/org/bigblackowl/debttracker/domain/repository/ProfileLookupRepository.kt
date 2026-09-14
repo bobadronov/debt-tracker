@@ -2,8 +2,8 @@ package org.bigblackowl.debttracker.domain.repository
 
 import org.bigblackowl.debttracker.domain.model.ProfileSuggestion
 
-/** Пошук зареєстрованого користувача за email (AddEdit-форма боржника/кредитора → автозаповнення). */
+/** Looks up a registered user by email (AddEdit debtor/creditor form → autofill). */
 interface ProfileLookupRepository {
-    /** null якщо збігів немає, немає активної сесії (Local-only) або пошук не вдався — ніколи не кидає виняток. */
+    /** null if there's no match, no active session (Local-only), or the lookup fails — never throws. */
     suspend fun findProfileByEmail(email: String): ProfileSuggestion?
 }

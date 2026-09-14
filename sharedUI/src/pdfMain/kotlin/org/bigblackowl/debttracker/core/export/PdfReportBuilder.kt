@@ -10,7 +10,7 @@ import com.conamobile.pdfkmp.unit.dp
 import com.conamobile.pdfkmp.unit.sp
 import com.conamobile.pdfkmp.viewer.KmpPdfLauncher
 
-/** Shared across Android/Desktop/iOS (пре Web — pdfkmp-viewer isn't published there, see build.gradle.kts pdfMain). */
+/** Shared across Android/Desktop/iOS (except Web — pdfkmp-viewer isn't published there, see build.gradle.kts pdfMain). */
 internal fun buildReportDocument(
     title: String,
     description: String,

@@ -32,9 +32,10 @@ import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.AccountAvatar
-import org.bigblackowl.debttracker.ui.components.LoadingButton
 import org.bigblackowl.debttracker.ui.components.SettingsDetailScaffold
+import org.bigblackowl.debttracker.ui.components.button.LoadingButton
 import org.bigblackowl.debttracker.ui.components.form.UkrainianPhoneVisualTransformation
+import org.bigblackowl.debttracker.ui.components.text.CaptionText
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -69,9 +70,9 @@ fun EditAccountScreen(
         onBack = onBack,
         snackbarHostState = snackbarHostState,
         useImePadding = true,
-        verticalSpacing = Dimens.space12,
+        verticalSpacing = Dimens.Spacing.md,
     ) {
-        Spacer(Modifier.height(Dimens.space8))
+        Spacer(Modifier.height(Dimens.Spacing.sm))
         AccountAvatar(
             avatarUrl = state.avatarUrl,
             isUploading = state.isUploadingAvatar,
@@ -87,13 +88,12 @@ fun EditAccountScreen(
             enter = fadeIn(),
             exit = fadeOut()
         ) {
-            Text(
+            CaptionText(
                 state.avatarError.orEmpty(),
-                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.debtAccentColors.debt,
             )
         }
-        Spacer(Modifier.height(Dimens.space8))
+        Spacer(Modifier.height(Dimens.Spacing.sm))
 
         OutlinedTextField(
             value = state.fullName,
@@ -127,7 +127,7 @@ fun EditAccountScreen(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(Modifier.height(Dimens.space12))
+        Spacer(Modifier.height(Dimens.Spacing.md))
         LoadingButton(
             onClick = { viewModel.onIntent(EditAccountIntent.Save) },
             isLoading = state.isSaving,

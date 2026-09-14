@@ -32,9 +32,9 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * Settings → Сповіщення — виокремлено з колишнього єдиного SettingsScreen. Лише для залогінених
- * (сповіщення §7 стосуються дзеркальних боргів у Supabase — без входу в акаунт їх нема звідки
- * отримувати), тож ця сторінка недосяжна з хаба для local-only акаунтів.
+ * Settings → Notifications — split out from the former single SettingsScreen. Signed-in users only
+ * (notifications §7 are about mirrored debts in Supabase — with no account signed in, there's
+ * nowhere to receive them from), so this page is unreachable from the hub for local-only accounts.
  */
 @Composable
 fun SettingsNotificationsScreen(
@@ -54,7 +54,7 @@ fun SettingsNotificationsScreen(
         ) {
             Column(
                 modifier = Modifier.width(Dimens.contentMaxWidth),
-                verticalArrangement = Arrangement.spacedBy(Dimens.space24),
+                verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.xl),
             ) {
                 SettingsSection(strings.settings.notifications) {
                     SettingsSwitchRow(

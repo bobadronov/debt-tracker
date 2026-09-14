@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Sync
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -60,6 +59,7 @@ import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.rememberAppColorScheme
 import org.bigblackowl.debttracker.ui.components.appbar.AppOverflowMenu
 import org.bigblackowl.debttracker.ui.components.appbar.DesktopTitleBar
+import org.bigblackowl.debttracker.ui.components.button.IconButton
 import org.jetbrains.compose.resources.decodeToImageBitmap
 import org.koin.core.Koin
 
@@ -185,7 +185,7 @@ private fun startApp(koin: Koin, args: Array<String>) = nucleusApplication(args)
 
             MaterialTitleBar {
                 titleBar.back?.let { onBack ->
-                    IconButton(onClick = onBack, modifier = Modifier.align(Alignment.Start).padding(Dimens.space5)) {
+                    IconButton(onClick = onBack, modifier = Modifier.align(Alignment.Start).padding(Dimens.Spacing.xs)) {
                         BackChevron()
                     }
                 }
@@ -314,13 +314,13 @@ private fun TrayMenu(
 
 /**
  * Skia (Compose Desktop's renderer) decodes ICO/PNG directly but not macOS' .icns container,
- * тож на macOS іконка вікна не встановлюється тут — вона й так береться з бандла застосунку
- * при пакуванні (compose.desktop.application.nativeDistributions.macOS.iconFile у build.gradle.kts).
+ * so the window icon isn't set here on macOS — it's taken from the app bundle at packaging time
+ * instead (compose.desktop.application.nativeDistributions.macOS.iconFile in build.gradle.kts).
  *
- * Іконки лежать у src/main/resources/appIcons і читаються через classloader (а не File() з
- * відносним шляхом): відносний шлях залежить від робочої директорії процесу, яка в
- * запакованому (jpackage) застосунку інша, ніж під час `gradlew run` — через File() іконка
- * не знаходилась після встановлення.
+ * Icons live in src/main/resources/appIcons and are read via the classloader (not File() with a
+ * relative path): a relative path depends on the process' working directory, which differs
+ * between a packaged (jpackage) app and `gradlew run` — File() couldn't find the icon after
+ * installation.
  */
 private fun windowIcon(): Painter? {
     val os = System.getProperty("os.name").lowercase()

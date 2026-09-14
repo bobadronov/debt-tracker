@@ -26,7 +26,7 @@ import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
 @Serializable
 private data class LinkCreditorParams(@SerialName("p_creditor_id") val creditorId: String)
 
-/** Дзеркало [RoomDebtorRepository] для напрямку "Я винен" (спек §4.1, §5). */
+/** Mirror of [RoomDebtorRepository] for the "I owe" direction (spec §4.1, §5). */
 class RoomCreditorRepository(
     private val creditorDao: CreditorDao,
     private val transactionDao: CreditorTransactionDao,

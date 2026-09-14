@@ -5,6 +5,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Desktop / Web [ReminderScheduler]: a coroutine per pending reminder that [delay]s until its
@@ -34,7 +35,7 @@ class InProcessReminderScheduler(
         wanted.forEach { (key, reminder) ->
             if (key in next) return@forEach
             next[key] = scope.launch {
-                delay((reminder.atEpochMillis - Clock.System.now().toEpochMilliseconds()).coerceAtLeast(0))
+                delay((reminder.atEpochMillis - Clock.System.now().toEpochMilliseconds()).coerceAtLeast(0).milliseconds)
                 runCatching { notifier.notify(reminder.title, reminder.body, reminder.deepLink) }
             }
         }

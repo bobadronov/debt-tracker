@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +20,9 @@ import org.bigblackowl.debttracker.domain.validation.formatUkrainianPhone
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.EntityAvatar
+import org.bigblackowl.debttracker.ui.components.card.TonalCard
+import org.bigblackowl.debttracker.ui.components.text.CaptionText
+import org.bigblackowl.debttracker.ui.components.text.TitleText
 
 /**
  * Type-ahead list of previously entered debtors/creditors matching the name currently being typed
@@ -34,10 +35,10 @@ fun ContactSuggestionsList(
     modifier: Modifier = Modifier,
 ) {
     if (suggestions.isEmpty()) return
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Dimens.space16),
+    TonalCard(
+        modifier = modifier,
         color = MaterialTheme.colorScheme.secondaryContainer,
+        shape = RoundedCornerShape(Dimens.Radius.sm),
     ) {
         Column {
             suggestions.forEachIndexed { index, suggestion ->
@@ -45,21 +46,20 @@ fun ContactSuggestionsList(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { onSelect(suggestion) }
-                        .padding(horizontal = Dimens.space12, vertical = Dimens.space8),
+                        .padding(horizontal = Dimens.Spacing.md, vertical = Dimens.Spacing.sm),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    EntityAvatar(id = suggestion.fullName, name = suggestion.fullName, avatarUrl = suggestion.avatarUrl, size = Dimens.space28)
-                    Spacer(Modifier.width(Dimens.space12))
+                    EntityAvatar(id = suggestion.fullName, name = suggestion.fullName, avatarUrl = suggestion.avatarUrl, size = Dimens.IconSize.sm)
+                    Spacer(Modifier.width(Dimens.Spacing.md))
                     Column {
-                        Text(
+                        TitleText(
                             suggestion.fullName,
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
                         )
                         formatUkrainianPhone(suggestion.phone)?.let {
-                            Text(
+                            CaptionText(
                                 it,
-                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                             )
                         }

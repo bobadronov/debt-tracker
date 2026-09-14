@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
-// Version is defined once in /version.properties and shared by every target (спек: single source of truth).
+// Version is defined once in /version.properties and shared by every target (spec: single source of truth).
 private val versionProps = Properties().apply {
     rootProject.file("version.properties").inputStream().use { load(it) }
 }
@@ -14,8 +14,8 @@ private val versionProps = Properties().apply {
 // version.properties uses in VERSION_NAME (`1.0.$VERSION_CODE`) — the code is the single number to bump.
 private val appVersionCode: Int = versionProps.getProperty("VERSION_CODE").trim().toInt()
 private val appVersionName: String = versionProps.getProperty("VERSION_NAME").trim()
-    .replace("\${VERSION_CODE}", appVersionCode.toString())
-    .replace("\$VERSION_CODE", appVersionCode.toString())
+    .replace($$"${VERSION_CODE}", appVersionCode.toString())
+    .replace($$"$VERSION_CODE", appVersionCode.toString())
 
 // Release signing comes from env vars (CI secrets) — never hardcoded/committed.
 // Missing/blank env vars → release build stays unsigned locally, but fails fast in CI
@@ -34,7 +34,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        minSdk = 26 // Biometric API stability (спек §2 / spec §2)
+        minSdk = 26 // Biometric API stability (spec §2)
         targetSdk = 37
 
         applicationId = "org.bigblackowl.debttracker.androidApp"
@@ -107,8 +107,8 @@ dependencies {
     implementation(libs.androidx.fragment)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.koin.android)
-    debugImplementation(libs.compose.ui.tooling) // ComposeViewAdapter — потрібен рендереру Preview-панелі в IDE
-    implementation(libs.bignum) // DebtSummaryWidgetProvider рахує BigDecimal-суми (sumByCurrency) для віджета
+    debugImplementation(libs.compose.ui.tooling) // ComposeViewAdapter — needed by the IDE Preview panel renderer
+    implementation(libs.bignum) // DebtSummaryWidgetProvider computes BigDecimal sums (sumByCurrency) for the widget
     implementation(libs.qr.kit) // AppContext.set(...) in DebtTrackerApplication (QRKit setup requirement)
     implementation(libs.coil) // DebtTrackerApplication tunes the singleton Coil ImageLoader (memory-cache sizing)
 }

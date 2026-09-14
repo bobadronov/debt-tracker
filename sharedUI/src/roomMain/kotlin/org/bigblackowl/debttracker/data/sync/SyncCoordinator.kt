@@ -1,5 +1,6 @@
 package org.bigblackowl.debttracker.data.sync
 
+import io.github.aakira.napier.Napier
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseExperimental
 import io.github.jan.supabase.postgrest.from
@@ -31,17 +32,16 @@ import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * Offline-first sync (спек §5): push — цикл раз на 30с відправляє PENDING-рядки
- * у Supabase; pull — реактивна Realtime-підписка (selectAsFlow) на всі 4 таблиці,
- * відфільтрована по user_id. LWW за updatedAt застосовується до всіх 4 таблиць,
- * зокрема й до транзакцій — той самий id можна редагувати (UpdateDebtTransactionUseCase,
- * approve_transaction_correction), тож конфлікт цілком можливий.
+ * Offline-first sync (spec §5): push — a loop that sends PENDING rows to Supabase once every
+ * 30s; pull — a reactive Realtime subscription (selectAsFlow) on all 4 tables, filtered by
+ * user_id. LWW on updatedAt applies to all 4 tables, transactions included — the same id can be
+ * edited (UpdateDebtTransactionUseCase, approve_transaction_correction), so a conflict is entirely
+ * possible.
  *
- * Спрощення відносно оригінального опису (WorkManager на Android): єдиний
- * coroutine-цикл на всіх платформах замість платформо-специфічного планувальника
- * — функціонально еквівалентно для персонального застосунку, простіше й не
- * потребує окремого expect/actual шару. Легко замінити на WorkManager пізніше,
- * не чіпаючи домен/дані.
+ * Simplification relative to the original spec (WorkManager on Android): a single coroutine
+ * loop across all platforms instead of a platform-specific scheduler — functionally equivalent
+ * for a personal app, simpler, and doesn't need a separate expect/actual layer. Easy to swap
+ * for WorkManager later without touching domain/data.
  */
 @OptIn(SupabaseExperimental::class)
 class SyncCoordinator(
@@ -94,14 +94,26 @@ class SyncCoordinator(
         // local-only data gets backed up into the account being signed into, not discarded.
         val lastSyncedUserId = appSettings.lastSyncedUserId
         if (lastSyncedUserId != null && lastSyncedUserId != userId) {
-            debtTransactionDao.deleteAll()
-            debtorDao.deleteAll()
-            creditorTransactionDao.deleteAll()
-            creditorDao.deleteAll()
+            val wiped = runCatching {
+                debtTransactionDao.deleteAll()
+                debtorDao.deleteAll()
+                creditorTransactionDao.deleteAll()
+                creditorDao.deleteAll()
+            }
+            if (wiped.isFailure) {
+                // A partial wipe would let the previous account's leftover rows render mixed
+                // into this account's data or get pushed under this account's user_id — safer
+                // to abandon this sync session than push/pull against an inconsistent cache.
+                // The next auth-state transition (e.g. app restart) retries from a clean slate.
+                Napier.e(tag = "SyncCoordinator", throwable = wiped.exceptionOrNull()) {
+                    "runSyncSession: failed to wipe previous account's cache, aborting sync session"
+                }
+                return
+            }
         }
         appSettings.lastSyncedUserId = userId
         coroutineScope {
-            launch { pushLoop() }
+            launch { resilient { pushLoop() } }
             launch { resilient { pullDebtors(userId) } }
             launch { resilient { pullDebtTransactions(userId) } }
             launch { resilient { pullCreditors(userId) } }
@@ -110,13 +122,16 @@ class SyncCoordinator(
     }
 
     /**
-     * Realtime pull-функції теоретично мають висіти вічно (доки їх не скасують), але
-     * supabase-kt має відомий race: якщо вебсокет розірветься саме між перевіркою статусу
-     * каналу та відправкою LEAVE-повідомлення в unsubscribe(), кидається
-     * IllegalStateException("Websocket not yet initialized"). ApplicationScope — це
-     * SupervisorJob без CoroutineExceptionHandler, тож без цієї обгортки будь-яка
-     * необроблена помилка тут (ця гонка, розрив мережі тощо) валить увесь застосунок.
-     * Перепідписка через новий канал — найпростіший спосіб відновитись.
+     * The Realtime pull functions are meant to hang around forever (until cancelled), but
+     * supabase-kt has a known race: if the websocket drops right between the channel-status
+     * check and sending the LEAVE message in unsubscribe(), it throws
+     * IllegalStateException("Websocket not yet initialized"). ApplicationScope is a
+     * SupervisorJob with no CoroutineExceptionHandler, so without this wrapper any unhandled
+     * error here (this race, a network drop, etc.) takes down the whole app.
+     * Resubscribing via a new channel is the simplest way to recover.
+     *
+     * pushLoop() is wrapped the same way: getPending()/upsert() outside the per-row runCatching
+     * in pushPending() (e.g. the Room query itself) must not fail unhandled for the same reason.
      */
     private suspend fun resilient(block: suspend () -> Unit) {
         while (currentCoroutineContext().isActive) {
@@ -253,9 +268,9 @@ class SyncCoordinator(
     }
 
     private suspend fun mergeDebtTransactions(remoteRows: List<DebtTransactionDto>) {
-        // Транзакції МОЖУТЬ мерджитись (UpdateDebtTransactionUseCase / approve_transaction_correction
-        // редагують той самий id), тож потрібен той самий LWW-guard, що й для Debtor/Creditor —
-        // інакше безумовний upsert затирає ще не запушену локальну правку старою версією з сервера.
+        // Transactions CAN be merged (UpdateDebtTransactionUseCase / approve_transaction_correction
+        // edit the same id), so the same LWW guard as Debtor/Creditor is needed here —
+        // otherwise an unconditional upsert would overwrite a not-yet-pushed local edit with a stale server version.
         remoteRows.forEach { dto ->
             val local = debtTransactionDao.getById(dto.id)
             val remoteUpdatedAt = kotlin.time.Instant.parse(dto.updatedAt)

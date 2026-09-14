@@ -28,14 +28,10 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -52,7 +48,6 @@ import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.SubcomposeAsyncImage
-import kotlin.math.roundToLong
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.number
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
@@ -62,15 +57,25 @@ import org.bigblackowl.debttracker.domain.model.FiatCurrency
 import org.bigblackowl.debttracker.domain.model.RateSource
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.ui.components.FullScreenLoadingIndicator
 import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
+import org.bigblackowl.debttracker.ui.components.button.IconButton
+import org.bigblackowl.debttracker.ui.components.button.OutlinedButton
+import org.bigblackowl.debttracker.ui.components.button.TextButton
+import org.bigblackowl.debttracker.ui.components.card.TonalCard
+import org.bigblackowl.debttracker.ui.components.text.BodyText
+import org.bigblackowl.debttracker.ui.components.text.CaptionText
+import org.bigblackowl.debttracker.ui.components.text.LabelText
+import org.bigblackowl.debttracker.ui.components.text.TitleText
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.math.roundToLong
 
 /**
- * Курс валют (⋮ меню). Обираєш джерело (ПриватБанк за замовчуванням, НБУ, Monobank, NBP, ECB, ČNB,
- * ExchangeRate-API — з логотипом) та, для джерел із довільною базою, базову валюту. Показуються всі
- * валюти джерела до бази; поле суми множить курси, пошук фільтрує список, зірка закріплює валюту
- * зверху. Екран відкривається з локального кешу останнього зрізу, тоді тихо оновлюється; при помилці
- * мережі лишаються збережені дані.
+ * Exchange rates (⋮ menu). Pick a source (PrivatBank by default, NBU, Monobank, NBP, ECB, ČNB,
+ * ExchangeRate-API — with a logo) and, for sources with an arbitrary base, a base currency. Shows
+ * all of the source's currencies against the base; the amount field multiplies the rates, search
+ * filters the list, and the star pins a currency to the top. The screen opens from the local cache
+ * of the last snapshot, then silently refreshes; on a network error the saved data is kept.
  */
 @Composable
 fun ExchangeRatesScreen(
@@ -115,8 +120,8 @@ private fun ExchangeRatesContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Column(
-                    modifier = Modifier.fillMaxHeight().width(Dimens.contentMaxWidth).padding(Dimens.space16),
-                    verticalArrangement = Arrangement.spacedBy(Dimens.space16),
+                    modifier = Modifier.fillMaxHeight().width(Dimens.contentMaxWidth).padding(Dimens.Spacing.lg),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.lg),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     SelectorRow(strings.sourceLabel) {
@@ -130,40 +135,26 @@ private fun ExchangeRatesContent(
                         )
                     }
 
-                    Text(
-                        strings.quotedIn("${state.base.code} ${state.base.symbol}"),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    CaptionText(strings.quotedIn("${state.base.code} ${state.base.symbol}"))
 
                     when {
-                        state.isLoading -> Box(Modifier.fillMaxSize().padding(Dimens.space40), Alignment.Center) {
-                            CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space60))
-                        }
+                        state.isLoading -> FullScreenLoadingIndicator()
 
                         state.error -> Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(Dimens.space12, Alignment.CenterVertically),
-                            modifier = Modifier.fillMaxSize().padding(Dimens.space24),
+                            verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.md, Alignment.CenterVertically),
+                            modifier = Modifier.fillMaxSize().padding(Dimens.Spacing.xl),
                         ) {
-                            Text(strings.error, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.error)
+                            BodyText(strings.error, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.error)
                             TextButton(onClick = onRefresh) { Text(strings.refresh) }
                         }
 
                         else -> {
                             state.date?.let {
-                                Text(
-                                    strings.updated(it.format()),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
+                                CaptionText(strings.updated(it.format()))
                             }
                             if (state.stale) {
-                                Text(
-                                    strings.stale,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.tertiary,
-                                )
+                                CaptionText(strings.stale, color = MaterialTheme.colorScheme.tertiary)
                             }
 
                             OutlinedTextField(
@@ -193,11 +184,11 @@ private fun ExchangeRatesContent(
                             val rest = visible.filterNot { it.currency.code in state.pinned }
 
                             if (visible.isEmpty()) {
-                                Text(
+                                BodyText(
                                     strings.noResults,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(Dimens.space24),
+                                    modifier = Modifier.padding(Dimens.Spacing.xl),
                                 )
                             }
 
@@ -206,7 +197,7 @@ private fun ExchangeRatesContent(
                                 pinned.forEach { rate ->
                                     RateRow(rate, state.amountFactor, pinned = true) { onTogglePin(rate.currency.code) }
                                 }
-                                if (rest.isNotEmpty()) Spacer(Modifier.size(Dimens.space8))
+                                if (rest.isNotEmpty()) Spacer(Modifier.size(Dimens.Spacing.sm))
                             }
                             rest.forEach { rate ->
                                 RateRow(rate, state.amountFactor, pinned = false) { onTogglePin(rate.currency.code) }
@@ -226,14 +217,14 @@ private fun SelectorRow(label: String, control: @Composable () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium)
+        BodyText(label, style = MaterialTheme.typography.bodyMedium)
         control()
     }
 }
 
 @Composable
 private fun SectionLabel(text: String) {
-    Text(
+    LabelText(
         text,
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -246,8 +237,8 @@ private fun SourceSelector(selected: RateSource, onSelect: (RateSource) -> Unit)
     var expanded by remember { mutableStateOf(false) }
     Box {
         OutlinedButton(onClick = { expanded = true }) {
-            SourceIcon(selected, Modifier.size(Dimens.space20))
-            Spacer(Modifier.width(Dimens.space8))
+            SourceIcon(selected, Modifier.size(Dimens.IconSize.sm))
+            Spacer(Modifier.width(Dimens.Spacing.sm))
             Text(selected.displayName)
             Icon(Icons.Filled.ArrowDropDown, contentDescription = null)
         }
@@ -255,7 +246,7 @@ private fun SourceSelector(selected: RateSource, onSelect: (RateSource) -> Unit)
             RateSource.entries.forEach { source ->
                 DropdownMenuItem(
                     text = { Text(source.displayName) },
-                    leadingIcon = { SourceIcon(source, Modifier.size(Dimens.space24)) },
+                    leadingIcon = { SourceIcon(source, Modifier.size(Dimens.Spacing.xl)) },
                     trailingIcon = if (source == selected) {
                         { Icon(Icons.Filled.Check, contentDescription = null) }
                     } else null,
@@ -274,8 +265,8 @@ private fun BaseSelector(selected: FiatCurrency, enabled: Boolean, onSelect: (Fi
     var expanded by remember { mutableStateOf(false) }
     Box {
         OutlinedButton(onClick = { expanded = true }, enabled = enabled) {
-            CurrencyFlag(selected, Modifier.size(Dimens.space20))
-            Spacer(Modifier.width(Dimens.space8))
+            CurrencyFlag(selected, Modifier.size(Dimens.IconSize.sm))
+            Spacer(Modifier.width(Dimens.Spacing.sm))
             Text("${selected.code} ${selected.symbol}")
             if (enabled) Icon(Icons.Filled.ArrowDropDown, contentDescription = null)
         }
@@ -283,7 +274,7 @@ private fun BaseSelector(selected: FiatCurrency, enabled: Boolean, onSelect: (Fi
             FiatCurrencies.catalog.forEach { currency ->
                 DropdownMenuItem(
                     text = { Text("${currency.code} — ${currency.name}") },
-                    leadingIcon = { CurrencyFlag(currency, Modifier.size(Dimens.space24)) },
+                    leadingIcon = { CurrencyFlag(currency, Modifier.size(Dimens.Spacing.xl)) },
                     trailingIcon = if (currency.code == selected.code) {
                         { Icon(Icons.Filled.Check, contentDescription = null) }
                     } else null,
@@ -297,20 +288,20 @@ private fun BaseSelector(selected: FiatCurrency, enabled: Boolean, onSelect: (Fi
     }
 }
 
-/** Логотип банку — фавікон з його офіційного сайту (Coil кешує локально, тож після першого разу є й офлайн). */
+/** Bank logo — the favicon from its official website (Coil caches it locally, so it's available offline after the first time). */
 @Composable
 private fun SourceIcon(source: RateSource, modifier: Modifier = Modifier) {
     SubcomposeAsyncImage(
         model = "https://www.google.com/s2/favicons?sz=128&domain=${source.domain}",
         contentDescription = source.displayName,
         contentScale = ContentScale.Inside,
-        modifier = Modifier.size(Dimens.space30),
+        modifier = Modifier.size(Dimens.IconSize.md),
         loading = { CircularWavyProgressIndicator() },
         error = { Icon(Icons.Filled.AccountBalance, contentDescription = null, modifier = modifier) },
     )
 }
 
-/** Прапор країни валюти з flagcdn.com (Coil кешує → офлайн після першого разу); запасна — загальна іконка. */
+/** The currency's country flag from flagcdn.com (Coil caches it → offline after the first time); falls back to a generic icon. */
 @Composable
 private fun CurrencyFlag(currency: FiatCurrency, modifier: Modifier = Modifier) {
     val url = currency.flagUrl()
@@ -333,13 +324,9 @@ private fun CurrencyFlag(currency: FiatCurrency, modifier: Modifier = Modifier) 
 @Composable
 private fun RateRow(rate: ExchangeRate, factor: Double, pinned: Boolean, onTogglePin: () -> Unit) {
     val strings = LocalStrings.current.exchangeRates
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Dimens.space16),
-        color = MaterialTheme.colorScheme.surfaceContainer,
-    ) {
+    TonalCard(shape = RoundedCornerShape(Dimens.Radius.sm)) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(start = Dimens.space8, end = Dimens.space16, top = Dimens.space8, bottom = Dimens.space8),
+            modifier = Modifier.fillMaxWidth().padding(start = Dimens.Spacing.sm, end = Dimens.Spacing.lg, top = Dimens.Spacing.sm, bottom = Dimens.Spacing.sm),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -351,21 +338,17 @@ private fun RateRow(rate: ExchangeRate, factor: Double, pinned: Boolean, onToggl
                         tint = if (pinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                CurrencyFlag(rate.currency, Modifier.size(Dimens.space24))
-                Spacer(Modifier.width(Dimens.space12))
+                CurrencyFlag(rate.currency, Modifier.size(Dimens.Spacing.xl))
+                Spacer(Modifier.width(Dimens.Spacing.md))
                 Column {
-                    Text(rate.currency.code, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(
-                        "${rate.currency.name} · ${rate.currency.symbol}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    TitleText(rate.currency.code, fontWeight = FontWeight.Bold)
+                    CaptionText("${rate.currency.name} · ${rate.currency.symbol}")
                 }
             }
             if (rate.isSingle) {
                 RateColumn(strings.official, rate.sell * factor)
             } else {
-                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.space16)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Spacing.lg)) {
                     RateColumn(strings.buy, rate.buy * factor)
                     RateColumn(strings.sell, rate.sell * factor)
                 }
@@ -377,12 +360,12 @@ private fun RateRow(rate: ExchangeRate, factor: Double, pinned: Boolean, onToggl
 @Composable
 private fun RateColumn(label: String, value: Double) {
     Column(horizontalAlignment = Alignment.End) {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value.formatRate(), style = MaterialTheme.typography.titleMedium)
+        LabelText(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        TitleText(value.formatRate())
     }
 }
 
-/** Округлення до 4 знаків, обрізаємо хвостові нулі, але лишаємо щонайменше два (11.5 → "11.50"). */
+/** Round to 4 decimal places, trim trailing zeros, but keep at least two (11.5 → "11.50"). */
 private fun Double.formatRate(): String {
     val rounded = (this * 10_000).roundToLong() / 10_000.0
     val raw = rounded.toString()

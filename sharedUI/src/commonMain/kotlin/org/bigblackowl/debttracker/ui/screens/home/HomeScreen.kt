@@ -67,6 +67,7 @@ import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.appbar.AppOverflowMenu
 import org.bigblackowl.debttracker.ui.components.appbar.DesktopTitleBar
+import org.bigblackowl.debttracker.ui.components.text.LabelText
 import org.bigblackowl.debttracker.ui.screens.creditors.CreditorListScreen
 import org.bigblackowl.debttracker.ui.screens.debtors.DebtorListScreen
 import org.koin.compose.koinInject
@@ -74,9 +75,9 @@ import org.koin.compose.viewmodel.koinViewModel
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * HomeScreen: верхній TabRow "Мені винні" / "Я винен" (спек §6, п. 3, §4.1).
- * Кожна вкладка — окреме джерело даних (Debtor/Creditor), спільний лише UI-каркас.
- * Індикатор синхронізації (спек §5) — тільки для авторизованих користувачів.
+ * HomeScreen: top TabRow "Owes me" / "I owe" (spec §6, item 3, §4.1).
+ * Each tab is its own data source (Debtor/Creditor), only the UI shell is shared.
+ * The sync indicator (spec §5) is shown only for authenticated users.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -132,9 +133,9 @@ fun HomeScreen(
                 back = null,
                 actions = {
                     if (state.isAuthenticated) {
-                        Spacer(Modifier.width(Dimens.space8))
+                        Spacer(Modifier.width(Dimens.Spacing.sm))
                         SyncStatusBadge(status = state.syncStatus, strings = strings, modifier = Modifier.align(Alignment.CenterVertically))
-                        Spacer(Modifier.width(Dimens.space8))
+                        Spacer(Modifier.width(Dimens.Spacing.sm))
                     }
                 },
             )
@@ -150,7 +151,7 @@ fun HomeScreen(
                     Column(verticalArrangement = Arrangement.Center) {
                         Text(strings.appName)
                         if (state.isAuthenticated) {
-                            Spacer(Modifier.height(Dimens.space2))
+                            Spacer(Modifier.height(Dimens.Spacing.xs))
                             SyncStatusBadge(status = state.syncStatus, strings = strings)
                         }
                     }
@@ -168,10 +169,10 @@ fun HomeScreen(
                     selectedTabIndex = pagerState.currentPage,
                     modifier = Modifier.clip(
                         RoundedCornerShape(
-                            topStart = Dimens.space16,
-                            topEnd = Dimens.space16,
-                            bottomStart = Dimens.space0,
-                            bottomEnd = Dimens.space0
+                            topStart = Dimens.Radius.sm,
+                            topEnd = Dimens.Radius.sm,
+                            bottomStart = Dimens.Radius.none,
+                            bottomEnd = Dimens.Radius.none
                         )
                     ),
                     containerColor = TabRowDefaults.primaryContainerColor,
@@ -193,8 +194,8 @@ fun HomeScreen(
                         text = { Text(strings.home.tabCreditors) }
                     )
                 }
-                // Свайп між вкладками (HorizontalPager) замінює swipe-to-delete на рядках —
-                // горизонтальний жест тепер однозначно належить перемиканню Debtor/Creditor.
+                // Swiping between tabs (HorizontalPager) replaces swipe-to-delete on the rows —
+                // the horizontal gesture now unambiguously belongs to switching Debtor/Creditor.
                 HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
                     when (page) {
                         0 -> DebtorListScreen(onAddDebtor = onAddDebtor, onOpenDebtor = onOpenDebtor)
@@ -210,11 +211,11 @@ fun HomeScreen(
 }
 
 /**
- * Дії top bar (сповіщення/QR/статистика/налаштування), згорнуті в один overflow-меню (⋮) зі
- * значками й підписами замість окремих кнопок — бейдж непрочитаних сповіщень лишається видимим
- * прямо на кнопці меню, не чекаючи, поки список розгорнуть.
+ * Top bar actions (notifications/QR/stats/settings), collapsed into a single overflow menu (⋮)
+ * with icons and labels instead of separate buttons — the unread-notifications badge stays visible
+ * right on the menu button, without waiting for the list to be expanded.
  */
-/** Tonal-бейдж статусу синхронізації (спек §5): іконка, що обертається під час Syncing, + колір за станом. */
+/** Tonal sync-status badge (spec §5): an icon that spins while Syncing, plus a color by state. */
 @Composable
 private fun SyncStatusBadge(status: SyncUiStatus, strings: Strings, modifier: Modifier = Modifier) {
     var isBadgeVisible by remember { mutableStateOf(true) }
@@ -255,20 +256,20 @@ private fun SyncStatusBadge(status: SyncUiStatus, strings: Strings, modifier: Mo
         isBadgeVisible = false
     }
 
-    Surface(modifier = modifier.animateContentSize(animationSpec = tween(easing = LinearEasing)), shape = RoundedCornerShape(Dimens.space6), color = tint.copy(alpha = 0.14f)) {
+    Surface(modifier = modifier.animateContentSize(animationSpec = tween(easing = LinearEasing)), shape = RoundedCornerShape(Dimens.Radius.sm), color = tint.copy(alpha = 0.14f)) {
         Row(
-            modifier = Modifier.padding(horizontal = Dimens.space6, vertical = Dimens.space2),
+            modifier = Modifier.padding(horizontal = Dimens.Spacing.sm, vertical = Dimens.Spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(Dimens.space12).rotate(rotation))
+            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(Dimens.Spacing.md).rotate(rotation))
             AnimatedVisibility(
                 visible = isBadgeVisible,
                 enter = slideInHorizontally(animationSpec = tween(easing = LinearEasing)) { it },
                 exit = slideOutHorizontally(animationSpec = tween(easing = LinearEasing)) { -it },
             ) {
                 Row {
-                    Spacer(Modifier.width(Dimens.space4))
-                    Text(label, style = MaterialTheme.typography.labelSmall, color = tint)
+                    Spacer(Modifier.width(Dimens.Spacing.xs))
+                    LabelText(label, style = MaterialTheme.typography.labelSmall, color = tint)
                 }
             }
         }

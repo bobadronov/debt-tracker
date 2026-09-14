@@ -9,7 +9,7 @@ import org.bigblackowl.debttracker.domain.model.MyDebtTransactionType
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.domain.model.SyncStatus
 
-/** Дзеркало [DebtTransactionEntity] для напрямку "Я винен" (спек §4.1). */
+/** Mirror of [DebtTransactionEntity] for the "I owe" direction (spec §4.1). */
 @Entity(
     tableName = "creditor_transactions",
     foreignKeys = [

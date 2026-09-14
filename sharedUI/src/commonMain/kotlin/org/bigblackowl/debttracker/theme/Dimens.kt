@@ -3,33 +3,44 @@ package org.bigblackowl.debttracker.theme
 import androidx.compose.ui.unit.dp
 
 /**
- * Єдиний каталог відступів і розмірів для всього UI. Значення згруповані за
- * числом (не за призначенням), бо той самий dp часто повторно використовується
- * для різних цілей (padding, spacing, розмір іконки, радіус кута тощо) —
- * зміна значення тут одразу застосовується до всіх місць використання.
+ * The single catalog of spacings and sizes for the whole UI, organized by purpose (not by number):
+ * [Spacing] — padding/gap between elements, [Border] — outline thickness, [Radius] — corner radius,
+ * [IconSize] — icon/avatar sizes. Values within a category form a small fixed scale;
+ * a change here applies immediately everywhere it's used.
  */
 object Dimens {
-    val space0 = 0.dp
-    val space1 = 1.dp
-    val space2 = 2.dp
-    val space3 = 3.dp
-    val space4 = 4.dp
-    val space5 = 5.dp
-    val space6 = 6.dp
-    val space8 = 8.dp
-    val space12 = 12.dp
-    val space14 = 14.dp
-    val space16 = 16.dp
-    val space20 = 20.dp
-    val space24 = 24.dp
-    val space28 = 28.dp
-    val space30 = 30.dp
-    val space40 = 40.dp
-    val space56 = 56.dp
-    val space60 = 60.dp
-    val space72 = 72.dp
-    val space120 = 120.dp
+    /** Padding and gap between elements (`Arrangement.spacedBy`, `Spacer`). */
+    object Spacing {
+        val xs = 4.dp
+        val sm = 8.dp
+        val md = 12.dp
+        val lg = 16.dp
+        val xl = 24.dp
+        val xxl = 40.dp
+    }
 
-    /** Максимальна ширина основного контенту на великих екранах (desktop/tablet). */
+    /** Outline thickness (`BorderStroke`). */
+    object Border {
+        val thin = 1.dp
+        val thick = 2.dp
+    }
+
+    /** Corner rounding radius (`RoundedCornerShape`). */
+    object Radius {
+        val none = 0.dp
+        val sm = 16.dp
+        val lg = 20.dp
+    }
+
+    /** Icon and avatar sizes (`Modifier.size`). */
+    object IconSize {
+        val sm = 20.dp
+        val md = 40.dp
+        val lg = 60.dp
+        val xl = 72.dp
+        val xxl = 120.dp
+    }
+
+    /** Maximum width of the main content on large screens (desktop/tablet). */
     val contentMaxWidth = 500.dp
 }

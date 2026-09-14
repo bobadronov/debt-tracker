@@ -37,15 +37,15 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.ui.components.text.TitleText
 
 const val PIN_LENGTH = 4
 
 /**
- * 4-значний PIN-код у вигляді окремих квадратів [_][_][_][_] замість звичайного текстового поля.
+ * A 4-digit PIN code shown as separate boxes [_][_][_][_] instead of a plain text field.
  * Shared by [PinSetupDialog] and [org.bigblackowl.debttracker.ui.screens.authgate.AuthGateScreen] so every
  * PIN entry point in the app looks and behaves the same. [imeAction]/[keyboardActions] let each
  * caller wire up its own Enter/Done key behavior (e.g. advance to the next field, or submit).
@@ -73,14 +73,14 @@ fun PinCodeField(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.md)
     ) {
         Box(
             modifier = modifier,
             contentAlignment = Alignment.Center
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(Dimens.space16), verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(Dimens.Spacing.lg), verticalAlignment = Alignment.CenterVertically
             ) {
                 repeat(length) { index ->
                     PinDot(
@@ -110,7 +110,7 @@ fun PinCodeField(
                 pinVisible = !pinVisible
             }) {
             Text(
-                if (pinVisible) strings.authGate.hidePin else strings.authGate.showPin, modifier = Modifier.padding(end = Dimens.space3)
+                if (pinVisible) strings.authGate.hidePin else strings.authGate.showPin, modifier = Modifier.padding(end = Dimens.Spacing.xs)
             )
             Icon(
                 imageVector = if (pinVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null
@@ -121,9 +121,10 @@ fun PinCodeField(
 }
 
 /**
- * Індикатор одного розряду PIN — незаповнене коло-контур, заповнене суцільним кольором (Android-style lock dots).
- * [fillColor], [borderColor] і [selectedColor] розведені по окремих параметрах, щоб їх можна було
- * незалежно кастомізувати (border — контур у стані спокою, selectedColor — контур сфокусованого/наступного розряду).
+ * Indicator for a single PIN digit — an empty outlined circle, filled with a solid color when set
+ * (Android-style lock dots). [fillColor], [borderColor] and [selectedColor] are split into separate
+ * parameters so they can be customized independently (border — outline at rest, selectedColor —
+ * outline of the focused/next digit).
  */
 @Composable
 private fun PinDot(
@@ -145,13 +146,13 @@ private fun PinDot(
     )
 
     Box(
-        modifier = Modifier.size(Dimens.space40).clip(CircleShape).background(animatedFillColor).border(
-            width = if (highlighted) Dimens.space3 else Dimens.space1, color = animatedBorderColor, shape = CircleShape
-        ).padding(if (filled) Dimens.space3 else Dimens.space1),
+        modifier = Modifier.size(Dimens.IconSize.md).clip(CircleShape).background(animatedFillColor).border(
+            width = if (highlighted) Dimens.Border.thick else Dimens.Border.thin, color = animatedBorderColor, shape = CircleShape
+        ).padding(if (filled) Dimens.Border.thick else Dimens.Border.thin),
         contentAlignment = Alignment.Center,
     ) {
         if (visible && filled) {
-            Text(char.toString(), style = MaterialTheme.typography.titleMedium)
+            TitleText(char.toString())
         }
     }
 }

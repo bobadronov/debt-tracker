@@ -23,7 +23,7 @@ import kotlin.uuid.Uuid
 
 private const val USER_INFO_DEEP_LINK = "deepLink"
 
-/** iOS: `UNUserNotificationCenter` — миттєве локальне сповіщення (`trigger = null` — доставляється одразу). */
+/** iOS: `UNUserNotificationCenter` — an immediate local notification (`trigger = null` — delivered right away). */
 internal class IosLocalNotifier : LocalNotifier {
     private val center get() = UNUserNotificationCenter.currentNotificationCenter()
 

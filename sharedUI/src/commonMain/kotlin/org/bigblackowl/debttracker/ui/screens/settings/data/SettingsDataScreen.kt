@@ -18,7 +18,6 @@ import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,12 +39,13 @@ import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
 import org.bigblackowl.debttracker.ui.components.SettingsRow
 import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
 import org.bigblackowl.debttracker.ui.components.SettingsSection
+import org.bigblackowl.debttracker.ui.components.text.BodyText
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
- * Settings → Дані (експорт, очистка кешу, видалення всіх даних) — виокремлено з колишнього
- * єдиного SettingsScreen.
+ * Settings → Data (export, clear cache, delete all data) — split out from the former single
+ * SettingsScreen.
  */
 @Composable
 fun SettingsDataScreen(
@@ -69,7 +69,7 @@ fun SettingsDataScreen(
         ) {
             Column(
                 modifier = Modifier.width(Dimens.contentMaxWidth),
-                verticalArrangement = Arrangement.spacedBy(Dimens.space8),
+                verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm),
             ) {
                 SettingsSection(strings.settings.data) {
                     SettingsRow(
@@ -77,9 +77,10 @@ fun SettingsDataScreen(
                         title = strings.settings.exportData,
                         onClick = onExport,
                     )
-                    // Для local-only акаунтів локальний кеш — це єдина копія даних: очищення
-                    // без Supabase як джерела правди було б непомітним DeleteAllDataUseCase без
-                    // подвійного підтвердження, тож рядок ховаємо (див. ClearAppCacheUseCase).
+                    // For local-only accounts the local cache is the sole copy of the data: clearing
+                    // it without Supabase as a source of truth would be an inconspicuous
+                    // DeleteAllDataUseCase without double confirmation, so the row is hidden
+                    // (see ClearAppCacheUseCase).
                     if (isAuthenticated) {
                         SettingsRowDivider()
                         SettingsRow(
@@ -168,11 +169,11 @@ private fun ColumnScope.DataResultLine(visible: Boolean, text: String, color: Co
         enter = fadeIn() + expandVertically(),
         exit = fadeOut() + shrinkVertically(),
     ) {
-        Text(
+        BodyText(
             text,
             style = MaterialTheme.typography.bodyMedium,
             color = color,
-            modifier = Modifier.padding(start = Dimens.space8),
+            modifier = Modifier.padding(start = Dimens.Spacing.sm),
         )
     }
 }

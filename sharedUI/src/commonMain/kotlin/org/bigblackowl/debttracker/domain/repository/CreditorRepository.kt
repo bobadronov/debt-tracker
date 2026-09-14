@@ -5,7 +5,7 @@ import org.bigblackowl.debttracker.domain.model.Creditor
 import org.bigblackowl.debttracker.domain.model.CreditorTransaction
 import org.bigblackowl.debttracker.domain.model.CreditorWithBalance
 
-/** Дзеркало [DebtorRepository] для напрямку "Я винен" (спек §4.1). */
+/** Mirror of [DebtorRepository] for the "I owe" direction (spec §4.1). */
 interface CreditorRepository {
     fun observeCreditors(): Flow<List<CreditorWithBalance>>
     fun observeCreditor(id: String): Flow<Creditor?>
@@ -21,6 +21,6 @@ interface CreditorRepository {
     suspend fun deleteAllData()
     /** Wipes this device's local cache only, leaving Supabase data untouched — Room: clears Room; Web: no-op (no local cache). */
     suspend fun clearLocalCache()
-    /** Дзеркало [DebtorRepository.linkToRegisteredUser] — RPC `link_creditor_to_registered_user`. */
+    /** Mirror of [DebtorRepository.linkToRegisteredUser] — RPC `link_creditor_to_registered_user`. */
     suspend fun linkToRegisteredUser(creditorId: String): String?
 }

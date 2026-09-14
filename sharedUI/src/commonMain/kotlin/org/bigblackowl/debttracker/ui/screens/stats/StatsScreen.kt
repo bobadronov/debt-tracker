@@ -22,11 +22,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
-import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -45,12 +42,18 @@ import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.EntityAvatar
+import org.bigblackowl.debttracker.ui.components.FullScreenLoadingIndicator
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
 import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
 import org.bigblackowl.debttracker.ui.components.SettingsSection
+import org.bigblackowl.debttracker.ui.components.card.TonalCard
+import org.bigblackowl.debttracker.ui.components.text.BodyText
+import org.bigblackowl.debttracker.ui.components.text.HeadingText
+import org.bigblackowl.debttracker.ui.components.text.LabelText
+import org.bigblackowl.debttracker.ui.components.text.TitleText
 import org.koin.compose.viewmodel.koinViewModel
 
-/** StatsScreen: два окремих KPI (без взаємозаліку), топи, динаміка за місяць (спек §6, п.6). */
+/** StatsScreen: two separate KPIs (no netting), top lists, monthly trend (spec §6, item 6). */
 @Composable
 fun StatsScreen(
     onBack: () -> Unit,
@@ -63,7 +66,7 @@ fun StatsScreen(
 
     PlaceholderScreen(title = strings.stats.title, onBack = onBack) {
         if (state.isLoading) {
-            CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space60))
+            FullScreenLoadingIndicator()
             return@PlaceholderScreen
         }
         Column(
@@ -72,12 +75,12 @@ fun StatsScreen(
         ) {
             Column(
                 modifier = Modifier.width(Dimens.contentMaxWidth),
-                verticalArrangement = Arrangement.spacedBy(Dimens.space12),
+                verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.md),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.space12)
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.Spacing.md)
                 ) {
                     KpiCard(
                         icon = Icons.AutoMirrored.Filled.TrendingDown,
@@ -125,13 +128,13 @@ fun StatsScreen(
                 }
 
                 SettingsSection(strings.stats.monthlyDebtTrend) {
-                    MonthlyBars(state.monthlyDebtTrend, modifier = Modifier.padding(Dimens.space16))
+                    MonthlyBars(state.monthlyDebtTrend, modifier = Modifier.padding(Dimens.Spacing.lg))
                 }
 
                 SettingsSection(strings.stats.monthlyCreditorTrend) {
                     MonthlyBars(
                         state.monthlyCreditorTrend,
-                        modifier = Modifier.padding(Dimens.space16)
+                        modifier = Modifier.padding(Dimens.Spacing.lg)
                     )
                 }
             }
@@ -163,7 +166,7 @@ private fun StatsScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = tru
     StatsScreen(onBack = {}, onOpenDebtor = {}, onOpenCreditor = {})
 }
 
-/** Tonal-картка KPI з іконкою в колі — той самий візуальний словник, що й SettingsRow/SettingsSection. */
+/** Tonal KPI card with an icon in a circle — the same visual vocabulary as SettingsRow/SettingsSection. */
 @Composable
 private fun KpiCard(
     icon: ImageVector,
@@ -171,14 +174,10 @@ private fun KpiCard(
     value: Map<Currency, BigDecimal>,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(Dimens.space20),
-        color = MaterialTheme.colorScheme.surfaceContainer,
-    ) {
-        Column(modifier = Modifier.padding(Dimens.space16)) {
+    TonalCard(modifier = modifier, shape = RoundedCornerShape(Dimens.Radius.lg)) {
+        Column(modifier = Modifier.padding(Dimens.Spacing.lg)) {
             Box(
-                modifier = Modifier.size(Dimens.space40).clip(CircleShape)
+                modifier = Modifier.size(Dimens.IconSize.md).clip(CircleShape)
                     .background(MaterialTheme.debtAccentColors.debt.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center,
             ) {
@@ -186,31 +185,23 @@ private fun KpiCard(
                     icon,
                     contentDescription = null,
                     tint = MaterialTheme.debtAccentColors.debt,
-                    modifier = Modifier.size(Dimens.space20)
+                    modifier = Modifier.size(Dimens.IconSize.sm)
                 )
             }
-            Spacer(Modifier.height(Dimens.space12))
-            Text(
-                title,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                value.formatTotals(),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.debtAccentColors.debt,
-            )
+            Spacer(Modifier.height(Dimens.Spacing.md))
+            LabelText(title)
+            HeadingText(value.formatTotals(), color = MaterialTheme.debtAccentColors.debt)
         }
     }
 }
 
-/** Рядок топ-списку: аватарка контакту з бейджем місця поверх неї замість голого номера. */
+/** Top-list row: contact avatar with a rank badge overlaid on it instead of a bare number. */
 @Composable
 private fun TopRow(rank: Int, id: String, name: String, avatarUrl: String?, balance: BigDecimal, currency: Currency, onClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = Dimens.space16, vertical = Dimens.space12),
+            .padding(horizontal = Dimens.Spacing.lg, vertical = Dimens.Spacing.md),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -220,22 +211,22 @@ private fun TopRow(rank: Int, id: String, name: String, avatarUrl: String?, bala
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .size(Dimens.space16)
+                        .size(Dimens.Spacing.lg)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primaryContainer),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
+                    LabelText(
                         "$rank",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
-            Spacer(Modifier.width(Dimens.space12))
-            Text(name, style = MaterialTheme.typography.bodyLarge)
+            Spacer(Modifier.width(Dimens.Spacing.md))
+            TitleText(name, style = MaterialTheme.typography.bodyLarge)
         }
-        Text(balance.formatMoney(currency), color = MaterialTheme.debtAccentColors.debt)
+        BodyText(balance.formatMoney(currency), color = MaterialTheme.debtAccentColors.debt)
     }
 }
 
@@ -245,7 +236,7 @@ private fun MonthlyBars(points: List<MonthlyPoint>, modifier: Modifier = Modifie
     val strings = LocalStrings.current
     val maxAbs = points.maxOf { it.amount.abs().toStringExpanded().toDoubleOrNull() ?: 0.0 }
         .coerceAtLeast(1.0)
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(Dimens.space8)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm)) {
         points.forEach { point ->
             val amountDouble = point.amount.toStringExpanded().toDoubleOrNull() ?: 0.0
             val targetFraction = (kotlin.math.abs(amountDouble) / maxAbs).toFloat().coerceIn(0f, 1f)
@@ -261,28 +252,28 @@ private fun MonthlyBars(points: List<MonthlyPoint>, modifier: Modifier = Modifie
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
+                LabelText(
                     label,
-                    modifier = Modifier.width(Dimens.space56),
+                    modifier = Modifier.width(Dimens.IconSize.lg),
                     style = MaterialTheme.typography.labelSmall
                 )
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .height(Dimens.space14)
-                        .clip(RoundedCornerShape(Dimens.space8))
+                        .height(Dimens.Spacing.lg)
+                        .clip(RoundedCornerShape(Dimens.Radius.sm))
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                 ) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth(fraction)
                             .fillMaxHeight()
-                            .clip(RoundedCornerShape(Dimens.space8))
+                            .clip(RoundedCornerShape(Dimens.Radius.sm))
                             .background(color),
                     )
                 }
-                Spacer(Modifier.width(Dimens.space8))
-                Text(point.amount.toStringExpanded(), style = MaterialTheme.typography.labelSmall)
+                Spacer(Modifier.width(Dimens.Spacing.sm))
+                LabelText(point.amount.toStringExpanded(), style = MaterialTheme.typography.labelSmall)
             }
         }
     }

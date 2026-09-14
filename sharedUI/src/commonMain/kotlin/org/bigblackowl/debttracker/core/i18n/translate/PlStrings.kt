@@ -335,6 +335,7 @@ val PlStrings = Strings(
             notHappenedHint = "Proponuje usunięcie tej transakcji.",
             send = "Wyślij",
         ),
+        actionError = "Nie udało się wykonać akcji. Spróbuj ponownie.",
     ),
     notificationBody = NotificationBodyStrings(
         debtorLinked = { name, amount, currency -> "$name: jesteś winien/winna $amount $currency" },

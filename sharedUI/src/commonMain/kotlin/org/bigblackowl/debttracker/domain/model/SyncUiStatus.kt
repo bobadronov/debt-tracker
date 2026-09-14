@@ -1,6 +1,6 @@
 package org.bigblackowl.debttracker.domain.model
 
-/** Індикатор синхронізації (спек §5) — рендериться тільки для авторизованих користувачів. */
+/** Sync indicator (spec §5) — rendered only for authenticated users. */
 sealed interface SyncUiStatus {
     data object Synced : SyncUiStatus
     data object Syncing : SyncUiStatus

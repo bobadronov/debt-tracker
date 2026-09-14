@@ -1,3 +1,5 @@
+@file:Suppress("RedundantNullableReturnType", "unused")
+
 package org.bigblackowl.debttracker.core.notifications
 
 import kotlinx.browser.window
@@ -9,12 +11,13 @@ import kotlin.js.Promise
 import kotlin.js.js
 
 /**
- * Web: браузерний `Notification` API (Chrome/Edge/Firefox; Safari — обмежено). Той самий підхід
- * до js()/wasmJs()-interop, що й [org.bigblackowl.debttracker.core.qr.ContactQrFileDecoder.web.kt]
- * (`detectQrCodeBase64`) — один `js("""...""")`-сніпет, спільний для обох веб-таргетів.
+ * Web: the browser `Notification` API (Chrome/Edge/Firefox; Safari — limited). Same approach to
+ * js()/wasmJs() interop as [org.bigblackowl.debttracker.core.qr.ContactQrFileDecoder.web.kt]
+ * (`detectQrCodeBase64`) — a single `js("""...""")` snippet shared by both web targets.
  *
- * Тап по сповіщенню шле DOM-подію `debttracker:notification-click` (замість спроби передати
- * Kotlin-лямбду крізь `js()`), яку [WebLocalNotifier] слухає й пробрасує в [NotificationDeepLinks].
+ * Tapping a notification dispatches a `debttracker:notification-click` DOM event (rather than
+ * trying to pass a Kotlin lambda through `js()`), which [WebLocalNotifier] listens for and
+ * forwards to [NotificationDeepLinks].
  */
 @OptIn(ExperimentalWasmJsInterop::class)
 private fun requestNotificationPermissionJs(): Promise<JsString> = js(

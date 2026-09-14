@@ -1,6 +1,6 @@
 package org.bigblackowl.debttracker.core.sound
 
-/** ADD/DELETE/DIALOG_OPEN — короткі звукові ефекти (спек §7). */
+/** ADD/DELETE/DIALOG_OPEN — short sound effects (spec §7). */
 enum class SoundEffect { ADD, DELETE, DIALOG_OPEN }
 
 /** Path (relative to composeResources) of the generated short WAV asset for this effect — see `files/sounds/README.txt`. */

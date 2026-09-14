@@ -8,7 +8,6 @@ import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,6 +25,7 @@ import org.bigblackowl.debttracker.ui.components.SettingsDetailScaffold
 import org.bigblackowl.debttracker.ui.components.SettingsRow
 import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
 import org.bigblackowl.debttracker.ui.components.SettingsSection
+import org.bigblackowl.debttracker.ui.components.button.Button
 import org.koin.compose.koinInject
 
 /**
@@ -48,9 +48,9 @@ fun AccountInfoScreen(
     val phone by authRepository.phone.collectAsStateWithLifecycle()
 
     SettingsDetailScaffold(title = strings.settings.account, onBack = onBack) {
-        Spacer(Modifier.height(Dimens.space8))
+        Spacer(Modifier.height(Dimens.Spacing.sm))
         AccountAvatar(avatarUrl = avatarUrl, isUploading = false, onEditClick = onEdit)
-        Spacer(Modifier.height(Dimens.space8))
+        Spacer(Modifier.height(Dimens.Spacing.sm))
 
         SettingsSection(strings.settings.account) {
             SettingsRow(icon = Icons.Filled.Person, title = strings.fullName, subtitle = name?.takeIf { it.isNotBlank() })

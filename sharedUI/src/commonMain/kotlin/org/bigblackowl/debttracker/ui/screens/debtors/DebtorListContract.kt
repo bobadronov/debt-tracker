@@ -18,7 +18,7 @@ data class DebtorListState(
     val statusFilter: DebtorStatusFilter = DebtorStatusFilter.ACTIVE,
     val debtors: List<DebtorWithBalance> = emptyList(),
 ) {
-    /** Немає курсів обміну — тотал рахується окремо на кожну валюту, що трапляється серед боржників. */
+    /** No exchange rates — the total is calculated separately for each currency found among debtors. */
     val totalsByCurrency: Map<Currency, BigDecimal>
         get() = debtors.sumByCurrency({ it.debtor.currency }, { it.balance })
 }

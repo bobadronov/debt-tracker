@@ -6,10 +6,10 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 /**
- * Акцентні кольори для сум у боргових операціях (спек §7): один "тривожний"
- * колір для зростання боргу (LEND/BORROW), один "позитивний" для його
- * зменшення (REPAY/RETURN). Використовуються замість `error`/`primary` з
- * теми напряму, щоб колір суми не залежав від семантики помилки.
+ * Accent colors for amounts in debt operations (spec §7): one "alarm"
+ * color for a growing debt (LEND/BORROW), one "positive" color for it
+ * shrinking (REPAY/RETURN). Used instead of the theme's `error`/`primary`
+ * directly, so the amount's color doesn't depend on error semantics.
  */
 data class DebtAccentColors(
     val debt: Color,

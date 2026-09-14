@@ -2,6 +2,7 @@ package org.bigblackowl.debttracker.ui.screens.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,7 +13,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.time.Duration.Companion.minutes
 import org.bigblackowl.debttracker.core.auth.GoogleSignInLauncher
 import org.bigblackowl.debttracker.core.auth.GoogleSignInOutcome
 import org.bigblackowl.debttracker.core.i18n.resolveStrings
@@ -21,6 +21,7 @@ import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.RestoreCredentialGateway
 import org.bigblackowl.debttracker.domain.validation.isStrongEnoughPassword
 import org.bigblackowl.debttracker.domain.validation.isValidFullName
+import kotlin.time.Duration.Companion.minutes
 
 /** Reduces [AuthIntent]s into [AuthState], delegating sign up/in to [AuthRepository]. */
 class AuthViewModel(
@@ -116,9 +117,15 @@ class AuthViewModel(
                         // Independent writes against the profile just created by signUp() above — run
                         // concurrently rather than paying for two round trips back to back.
                         coroutineScope {
-                            launch { authRepository.updateProfile(current.fullName.trim(), current.phone) }
+                            launch {
+                                authRepository.updateProfile(current.fullName.trim(), current.phone)
+                                    .onFailure { Napier.w(tag = "AuthViewModel", throwable = it) { "submit: updateProfile failed after sign-up" } }
+                            }
                             current.avatarPicked?.let { picked ->
-                                launch { authRepository.updateAvatar(picked.bytes, picked.fileExtension) }
+                                launch {
+                                    authRepository.updateAvatar(picked.bytes, picked.fileExtension)
+                                        .onFailure { Napier.w(tag = "AuthViewModel", throwable = it) { "submit: updateAvatar failed after sign-up" } }
+                                }
                             }
                         }
                     }

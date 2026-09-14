@@ -4,10 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -19,11 +17,8 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
@@ -32,7 +27,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
@@ -42,11 +36,17 @@ import kotlinx.datetime.toLocalDateTime
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.formatDueDateTime
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.ui.components.button.IconButton
+import org.bigblackowl.debttracker.ui.components.button.TextButton
+import org.bigblackowl.debttracker.ui.components.card.ClickableOutlinedRow
+import org.bigblackowl.debttracker.ui.components.text.LabelText
+import org.bigblackowl.debttracker.ui.components.text.TitleText
+import kotlin.time.Instant
 
 /**
  * "Repayment reminder" field for the add/edit contact form: an optional due date+time plus chips
  * for extra lead-day reminders. The on-the-day reminder is implied whenever a date is set
- * ("сьогодні обовязково") — its chip is shown selected-and-disabled for clarity.
+ * ("today — mandatory") — its chip is shown selected-and-disabled for clarity.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -63,33 +63,28 @@ fun DueReminderField(
     var pendingDateMillis by remember { mutableStateOf<Long?>(null) }
 
     val r = strings.dueReminder
-    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Dimens.space8)) {
-        OutlinedCard(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(Dimens.space16),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(Icons.Filled.NotificationsActive, contentDescription = null)
-                Spacer(Modifier.width(Dimens.space12))
-                Column(Modifier.weight(1f)) {
-                    Text(r.label, style = MaterialTheme.typography.labelMedium)
-                    Text(
-                        text = dueDate?.formatDueDateTime() ?: r.notSet,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm)) {
+        ClickableOutlinedRow(onClick = { showDatePicker = true }) {
+            Icon(Icons.Filled.NotificationsActive, contentDescription = null)
+            Spacer(Modifier.width(Dimens.Spacing.md))
+            Column(Modifier.weight(1f)) {
+                LabelText(r.label)
+                TitleText(
+                    text = dueDate?.formatDueDateTime() ?: r.notSet,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            }
+            if (dueDate != null) {
+                IconButton(onClick = { onDueDateChange(null) }) {
+                    Icon(Icons.Filled.Close, contentDescription = r.clear)
                 }
-                if (dueDate != null) {
-                    IconButton(onClick = { onDueDateChange(null) }) {
-                        Icon(Icons.Filled.Close, contentDescription = r.clear)
-                    }
-                } else {
-                    Icon(Icons.Filled.EditCalendar, contentDescription = r.label)
-                }
+            } else {
+                Icon(Icons.Filled.EditCalendar, contentDescription = r.label)
             }
         }
 
         if (dueDate != null) {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(Dimens.space8)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm)) {
                 FilterChip(
                     selected = true,
                     enabled = false,
@@ -144,7 +139,7 @@ fun DueReminderField(
                     showTimePicker = false
                     if (dateMillis != null) {
                         // DatePicker keeps the picked calendar day as UTC-midnight millis (M3 default).
-                        val pickedDate = kotlin.time.Instant.fromEpochMilliseconds(dateMillis)
+                        val pickedDate = Instant.fromEpochMilliseconds(dateMillis)
                             .toLocalDateTime(TimeZone.UTC).date
                         val local = LocalDateTime(pickedDate, LocalTime(tpState.hour, tpState.minute))
                         onDueDateChange(local.toInstant(TimeZone.currentSystemDefault()))

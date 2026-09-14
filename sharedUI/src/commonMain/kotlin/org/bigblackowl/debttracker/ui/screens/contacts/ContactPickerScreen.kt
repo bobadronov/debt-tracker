@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -36,6 +35,10 @@ import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.EntityAvatar
 import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
+import org.bigblackowl.debttracker.ui.components.card.ClickableOutlinedRow
+import org.bigblackowl.debttracker.ui.components.text.BodyText
+import org.bigblackowl.debttracker.ui.components.text.CaptionText
+import org.bigblackowl.debttracker.ui.components.text.TitleText
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -60,8 +63,8 @@ fun ContactPickerScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Column(
-                modifier = Modifier.width(Dimens.contentMaxWidth).fillMaxHeight().padding(Dimens.space12),
-                verticalArrangement = Arrangement.spacedBy(Dimens.space12),
+                modifier = Modifier.width(Dimens.contentMaxWidth).fillMaxHeight().padding(Dimens.Spacing.md),
+                verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.md),
             ) {
                 OutlinedTextField(
                     value = state.query,
@@ -71,26 +74,21 @@ fun ContactPickerScreen(
                     placeholder = { Text(strings.contactPicker.searchPlaceholder) },
                 )
 
-                OutlinedCard(
+                ClickableOutlinedRow(
                     onClick = onNewContact,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(Dimens.space16),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(Icons.Filled.PersonAdd, contentDescription = null)
-                        Spacer(Modifier.width(Dimens.space12))
-                        Text(strings.contactPicker.newContact, style = MaterialTheme.typography.bodyLarge)
-                    }
+                    Icon(Icons.Filled.PersonAdd, contentDescription = null)
+                    Spacer(Modifier.width(Dimens.Spacing.md))
+                    TitleText(strings.contactPicker.newContact, style = MaterialTheme.typography.bodyLarge)
                 }
 
                 if (!state.hasAnyContacts) {
-                    Text(
+                    BodyText(
                         strings.contactPicker.empty,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = Dimens.space16),
+                        modifier = Modifier.padding(top = Dimens.Spacing.lg),
                     )
                 } else {
                     LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
@@ -113,21 +111,15 @@ private fun ContactPickerRow(contact: ContactSuggestion, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = Dimens.space12),
+            .padding(vertical = Dimens.Spacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         EntityAvatar(id = contact.fullName, name = contact.fullName, avatarUrl = contact.avatarUrl)
-        Spacer(Modifier.width(Dimens.space12))
+        Spacer(Modifier.width(Dimens.Spacing.md))
         Column {
-            Text(contact.fullName, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            TitleText(contact.fullName, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
             (formatUkrainianPhone(contact.phone) ?: contact.email?.takeIf(String::isNotBlank))?.let {
-                Text(
-                    it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                CaptionText(it, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }

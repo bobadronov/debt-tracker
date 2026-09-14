@@ -6,9 +6,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import org.bigblackowl.debttracker.core.notifications.LocalNotifier
+import org.bigblackowl.debttracker.core.platform.AppPlatform
 import org.bigblackowl.debttracker.core.sound.SoundEffect
 import org.bigblackowl.debttracker.core.sound.SoundPlayer
 import org.bigblackowl.debttracker.domain.model.AppNotification
@@ -20,9 +22,9 @@ import org.bigblackowl.debttracker.domain.model.DebtStatus
 import org.bigblackowl.debttracker.domain.model.DebtTransaction
 import org.bigblackowl.debttracker.domain.model.Debtor
 import org.bigblackowl.debttracker.domain.model.DebtorWithBalance
+import org.bigblackowl.debttracker.domain.model.DeviceSession
 import org.bigblackowl.debttracker.domain.model.MyDebtTransactionType
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
-import org.bigblackowl.debttracker.domain.model.DeviceSession
 import org.bigblackowl.debttracker.domain.model.ProfileSuggestion
 import org.bigblackowl.debttracker.domain.model.SyncStatus
 import org.bigblackowl.debttracker.domain.model.SyncUiStatus
@@ -38,14 +40,12 @@ import org.bigblackowl.debttracker.domain.repository.RestoreCredentialGateway
 import org.bigblackowl.debttracker.domain.repository.RestoreSessionResult
 import org.bigblackowl.debttracker.domain.repository.SessionRepository
 import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
-import org.bigblackowl.debttracker.core.platform.AppPlatform
-import kotlinx.coroutines.flow.emptyFlow
 import kotlin.time.Clock
 
 /**
- * ID-и, на які посилаються @Preview-функції екранів деталей/редагування —
- * мають існувати в [FakeDebtorRepository]/[FakeCreditorRepository] нижче,
- * інакше Preview покаже порожній стан.
+ * IDs referenced by the @Preview functions of detail/edit screens —
+ * they must exist in [FakeDebtorRepository]/[FakeCreditorRepository] below,
+ * otherwise the Preview shows an empty state.
  */
 object PreviewIds {
     const val DEBTOR = "preview-debtor-1"
@@ -260,7 +260,7 @@ private fun previewCreditorTransactions() = listOf(
     ),
 )
 
-/** In-memory реалізація [DebtorRepository] для @Preview — без Room/Supabase. */
+/** In-memory implementation of [DebtorRepository] for @Preview — no Room/Supabase. */
 class FakeDebtorRepository(
     seedDebtors: List<Debtor> = previewDebtors(),
     seedTransactions: List<DebtTransaction> = previewDebtorTransactions(),
@@ -319,7 +319,7 @@ class FakeDebtorRepository(
     override suspend fun linkToRegisteredUser(debtorId: String): String? = null
 }
 
-/** In-memory реалізація [CreditorRepository] для @Preview — без Room/Supabase. */
+/** In-memory implementation of [CreditorRepository] for @Preview — no Room/Supabase. */
 class FakeCreditorRepository(
     seedCreditors: List<Creditor> = previewCreditors(),
     seedTransactions: List<CreditorTransaction> = previewCreditorTransactions(),
@@ -378,7 +378,7 @@ class FakeCreditorRepository(
     override suspend fun linkToRegisteredUser(creditorId: String): String? = null
 }
 
-/** Local-only режим (не автентифікований) — без мережевих викликів до Supabase. */
+/** Local-only mode (not authenticated) — no network calls to Supabase. */
 class FakeAuthRepository : AuthRepository {
     override val isAuthenticated: StateFlow<Boolean> = MutableStateFlow(false)
     override val currentUserId: String? = null
@@ -428,12 +428,12 @@ class FakeSyncStatusProvider : SyncStatusProvider {
     override suspend fun refetchAll() {}
 }
 
-/** Ніколи не знаходить збіг — @Preview не робить мережевих викликів. */
+/** Never finds a match — @Preview makes no network calls. */
 class FakeProfileLookupRepository : ProfileLookupRepository {
     override suspend fun findProfileByEmail(email: String): ProfileSuggestion? = null
 }
 
-/** Порожня історія — @Preview не робить мережевих викликів до `notifications`. */
+/** Empty history — @Preview makes no network calls to `notifications`. */
 class FakeNotificationRepository : NotificationRepository {
     override suspend fun fetchSince(after: kotlin.time.Instant?): List<AppNotification> = emptyList()
     override suspend fun fetchAll(): List<AppNotification> = emptyList()
@@ -453,8 +453,8 @@ class FakeNotificationRepository : NotificationRepository {
 }
 
 /**
- * No-op [LocalNotifier] для @Preview — реальні реалізації чіпають платформні API сповіщень,
- * яких немає в пісочниці Android Studio Layoutlib.
+ * No-op [LocalNotifier] for @Preview — real implementations touch platform notification APIs,
+ * which aren't available in the Android Studio Layoutlib sandbox.
  */
 class NoOpLocalNotifier : LocalNotifier {
     override suspend fun requestPermission(): Boolean = true
@@ -462,8 +462,8 @@ class NoOpLocalNotifier : LocalNotifier {
 }
 
 /**
- * No-op [SoundPlayer] для @Preview — реальні реалізації (напр. Android [android.media.SoundPool])
- * чіпають платформні media API, яких немає в пісочниці Android Studio Layoutlib.
+ * No-op [SoundPlayer] for @Preview — real implementations (e.g. Android [android.media.SoundPool])
+ * touch platform media APIs, which aren't available in the Android Studio Layoutlib sandbox.
  */
 class NoOpSoundPlayer : SoundPlayer {
     override fun play(sound: SoundEffect) = Unit
@@ -481,7 +481,7 @@ class NoOpRestoreCredentialGateway : RestoreCredentialGateway {
     override suspend fun clear() = Unit
 }
 
-/** Статичний зріз курсів для @Preview [org.bigblackowl.debttracker.ui.screens.exchange.ExchangeRatesScreen] — без мережі. */
+/** Static rate snapshot for @Preview [org.bigblackowl.debttracker.ui.screens.exchange.ExchangeRatesScreen] — no network. */
 class FakeExchangeRatesRepository : org.bigblackowl.debttracker.domain.repository.ExchangeRatesRepository {
     private fun snapshot(source: org.bigblackowl.debttracker.domain.model.RateSource, baseCode: String) =
         org.bigblackowl.debttracker.domain.model.ExchangeRatesSnapshot(
@@ -513,7 +513,7 @@ class FakeExchangeRatesRepository : org.bigblackowl.debttracker.domain.repositor
         snapshot(source, baseCode)
 }
 
-/** [Settings] в оперативній пам'яті — щоб @Preview не чіпав реальний платформний сховище налаштувань. */
+/** In-memory [Settings] — so @Preview doesn't touch the real platform settings storage. */
 class InMemorySettings : Settings {
     private val values = mutableMapOf<String, Any>()
 

@@ -11,7 +11,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.CircularWavyProgressIndicator
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -25,10 +24,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import coil3.compose.AsyncImage
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.ui.components.button.FilledIconButton
 import org.jetbrains.compose.resources.decodeToImageBitmap
 
 /**
- * Кругле фото акаунта (ініціали-заглушка через [Icons.Default.Person] поки фото немає) з кнопкою редагування.
+ * Round account photo (placeholder initials via [Icons.Default.Person] while there's no photo yet) with an edit button.
  * [localImageBytes] renders a not-yet-uploaded picked image (sign-up, before an account/user id exists);
  * otherwise falls back to the already-uploaded [avatarUrl].
  */
@@ -39,10 +39,10 @@ fun AccountAvatar(
     isUploading: Boolean = false,
     onEditClick: () -> Unit,
 ) {
-    Box(modifier = Modifier.size(Dimens.space120)) {
+    Box(modifier = Modifier.size(Dimens.IconSize.xxl)) {
         Box(
             modifier = Modifier
-                .size(Dimens.space120)
+                .size(Dimens.IconSize.xxl)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center,
@@ -54,38 +54,38 @@ fun AccountAvatar(
                         bitmap = bitmap,
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.size(Dimens.space120).clip(CircleShape),
+                        modifier = Modifier.size(Dimens.IconSize.xxl).clip(CircleShape),
                     )
                 }
                 avatarUrl != null -> {
                     AsyncImage(
                         model = avatarUrl,
                         contentDescription = null,
-                        modifier = Modifier.size(Dimens.space120).clip(CircleShape),
+                        modifier = Modifier.size(Dimens.IconSize.xxl).clip(CircleShape),
                     )
                 }
                 else -> {
                     Icon(
                         Icons.Default.Person,
                         contentDescription = null,
-                        modifier = Modifier.size(Dimens.space60),
+                        modifier = Modifier.size(Dimens.IconSize.lg),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
             if (isUploading) {
-                CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.space72))
+                CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.IconSize.xl))
             }
         }
         FilledIconButton(
             onClick = onEditClick,
             enabled = !isUploading,
-            modifier = Modifier.align(Alignment.BottomEnd).size(Dimens.space28),
+            modifier = Modifier.align(Alignment.BottomEnd).size(Dimens.IconSize.md),
         ) {
             Icon(
                 Icons.Default.PhotoCamera,
                 contentDescription = null,
-                modifier = Modifier.size(Dimens.space16)
+                modifier = Modifier.size(Dimens.Spacing.lg)
             )
         }
     }
@@ -93,7 +93,7 @@ fun AccountAvatar(
 
 @Composable
 private fun AccountAvatarSample() {
-    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.space24)) {
+    Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Spacing.xl)) {
         AccountAvatar(onEditClick = {})
         AccountAvatar(isUploading = true, onEditClick = {})
     }

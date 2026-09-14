@@ -22,7 +22,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":sharedUI"))
-            implementation(libs.koin.core) // main.kt звертається до KoinApplication (initKoin())
+            implementation(libs.koin.core) // main.kt calls KoinApplication (initKoin())
         }
     }
 }

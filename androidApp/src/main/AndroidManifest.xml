@@ -5,16 +5,16 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.FLASHLIGHT" />
-    <!-- Показ системних сповіщень про дзеркальні борги (core/notifications) — потрібен runtime-запит на API 33+ -->
+    <!-- Shows system notifications for mirrored debts (core/notifications) — needs a runtime request on API 33+ -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <!-- Точні нагадування про повернення боргу в задану дату/час (core/notifications/AndroidReminderScheduler).
-         SCHEDULE_EXACT_ALARM: auto-grant на API 31-32, на 33+ юзер вмикає вручну в
-         "Спеціальний доступ → Будильники та нагадування" (canScheduleExactAlarms() це відображає).
-         USE_EXACT_ALARM навмисно не декларуємо — Play Console дозволяє його лише
-         будильникам/календарям і відхиляє інші застосунки; якщо дозвіл недоступний, планувальник
-         відкочується на неточний setAndAllowWhileIdle. -->
+    <!-- Exact reminders for a debt's due date/time (core/notifications/AndroidReminderScheduler).
+         SCHEDULE_EXACT_ALARM: auto-granted on API 31-32, on 33+ the user enables it manually in
+         "Special app access → Alarms & reminders" (reflected by canScheduleExactAlarms()).
+         USE_EXACT_ALARM is intentionally not declared — Play Console reserves it for
+         alarm/calendar apps and rejects others; when the permission is unavailable, the
+         scheduler falls back to the inexact setAndAllowWhileIdle. -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <!-- Перепланувати нагадування після перезавантаження (алярми не переживають reboot). -->
+    <!-- Reschedule reminders after reboot (alarms don't survive a reboot). -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <uses-feature android:name="android.hardware.camera" />

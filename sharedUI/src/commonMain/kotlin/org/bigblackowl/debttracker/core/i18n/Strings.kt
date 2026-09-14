@@ -291,18 +291,20 @@ data class NotificationsStrings(
     val bell: String,
     /** "Wrong amount?" reject flow on a *_TRANSACTION_ADDED row (0014). */
     val correction: CorrectionDialogStrings,
+    /** Shown when approve/reject a link request or a transaction correction fails (network/server). */
+    val actionError: String,
 )
 
-/** Діалог «відхилити операцію» на рядку *_TRANSACTION_ADDED (0014). */
+/** "Reject operation" dialog on a *_TRANSACTION_ADDED row (0014). */
 data class CorrectionDialogStrings(
-    /** Кнопка на рядку сповіщення, що відкриває діалог. */
+    /** Button on the notification row that opens the dialog. */
     val rowAction: String,
     val title: String,
     val reasonWrongAmount: String,
     val reasonNotHappened: String,
-    /** Label для поля нової суми. */
+    /** Label for the new-amount field. */
     val amountLabel: (currency: String) -> String,
-    /** Пояснення під «Операції не було». */
+    /** Explanation shown under "Operation didn't happen". */
     val notHappenedHint: String,
     val send: String,
 )
@@ -350,31 +352,31 @@ data class DueReminderStrings(
     val whenToday: (time: String) -> String,
 )
 
-/** [org.bigblackowl.debttracker.ui.screens.exchange.ExchangeRatesScreen] — назви джерел (ПриватБанк/НБУ/Monobank) не тут: це власні назви, спільні для всіх локалей ([org.bigblackowl.debttracker.domain.model.RateSource]). */
+/** [org.bigblackowl.debttracker.ui.screens.exchange.ExchangeRatesScreen] — source names (PrivatBank/NBU/Monobank) aren't here: they're proper names, shared across all locales ([org.bigblackowl.debttracker.domain.model.RateSource]). */
 data class ExchangeRatesStrings(
-    /** ⋮ меню + заголовок екрана. */
+    /** ⋮ menu + screen title. */
     val menuTitle: String,
     val sourceLabel: String,
-    /** Лейбл селектора базової валюти (активний лише для джерел із довільною базою). */
+    /** Label for the base-currency selector (only active for sources with an arbitrary base). */
     val baseLabel: String,
-    /** Лейбл поля суми-конвертера (кожен курс множиться на неї). */
+    /** Label for the converter amount field (each rate is multiplied by it). */
     val amountLabel: String,
-    /** Placeholder поля пошуку валюти. */
+    /** Placeholder for the currency search field. */
     val searchHint: String,
-    /** Заголовок секції закріплених валют + опис зірки. */
+    /** Header for the pinned-currencies section + the star's description. */
     val pinned: String,
-    /** Порожній результат пошуку. */
+    /** Empty search result. */
     val noResults: String,
-    /** Підзаголовок під джерелом: у якій валюті котирування ([base] — напр. "UAH ₴"). */
+    /** Subtitle under the source: which currency the quotes are in ([base] — e.g. "UAH ₴"). */
     val quotedIn: (base: String) -> String,
     val updated: (date: String) -> String,
     val buy: String,
     val sell: String,
-    /** Підпис єдиного курсу (НБУ — без купівлі/продажу). */
+    /** Caption for a single rate (NBU — no buy/sell). */
     val official: String,
     val refresh: String,
     val error: String,
-    /** Банер, коли оновлення впало, але лишився попередній зріз. */
+    /** Banner shown when the refresh failed but a previous snapshot remains. */
     val stale: String,
 )
 

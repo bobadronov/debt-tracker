@@ -5,10 +5,10 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
 /**
- * Місток між Desktop-хоткеєм Ctrl+F (спек §6, "Навігація") і полем пошуку на
- * поточному видимому списку — NavGraph не знає про FocusRequester конкретного
- * екрана, тому просто емітить подію, а DebtorListScreen/CreditorListScreen
- * підписуються й самі викликають requestFocus().
+ * Bridge between the Desktop Ctrl+F hotkey (spec §6, "Navigation") and the search field on
+ * the currently visible list — NavGraph doesn't know about a specific screen's FocusRequester,
+ * so it simply emits an event, and DebtorListScreen/CreditorListScreen
+ * subscribe and call requestFocus() themselves.
  */
 class SearchFocusRequests {
     private val _events = MutableSharedFlow<Unit>(extraBufferCapacity = 1)

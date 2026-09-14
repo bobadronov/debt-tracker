@@ -11,11 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -31,6 +28,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.ui.components.button.IconButton
+import org.bigblackowl.debttracker.ui.components.button.TextButton
+import org.bigblackowl.debttracker.ui.components.card.TonalCard
+import org.bigblackowl.debttracker.ui.components.text.CaptionText
+import org.bigblackowl.debttracker.ui.components.text.TitleText
 
 /**
  * Reads the system clipboard once per screen visit. Pass the result into every
@@ -73,33 +75,32 @@ fun ClipboardPasteHint(
     if (dismissed) return
 
     val strings = LocalStrings.current
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Dimens.space16),
+    TonalCard(
+        modifier = modifier,
         color = MaterialTheme.colorScheme.secondaryContainer,
         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-        shadowElevation = Dimens.space4,
+        shape = RoundedCornerShape(Dimens.Radius.sm),
+        shadowElevation = Dimens.Spacing.xs,
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(Dimens.space12),
+            modifier = Modifier.fillMaxWidth().padding(Dimens.Spacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 Icons.Default.ContentPaste,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.size(Dimens.space20),
+                modifier = Modifier.size(Dimens.IconSize.sm),
             )
             Column(
-                modifier = Modifier.weight(1f).padding(start = Dimens.space12),
-                verticalArrangement = Arrangement.spacedBy(Dimens.space2),
+                modifier = Modifier.weight(1f).padding(start = Dimens.Spacing.md),
+                verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.xs),
             ) {
-                Text(
+                CaptionText(
                     strings.clipboardPasteFound,
-                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                 )
-                Text(
+                TitleText(
                     clipboardText,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSecondaryContainer,

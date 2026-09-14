@@ -1,6 +1,5 @@
 package org.bigblackowl.debttracker.ui.components.contact
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,22 +13,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -57,6 +50,14 @@ import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.EntityAvatar
 import org.bigblackowl.debttracker.ui.components.FullScreenLoadingIndicator
 import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
+import org.bigblackowl.debttracker.ui.components.button.Button
+import org.bigblackowl.debttracker.ui.components.button.IconButton
+import org.bigblackowl.debttracker.ui.components.button.OutlinedButton
+import org.bigblackowl.debttracker.ui.components.card.ContentCard
+import org.bigblackowl.debttracker.ui.components.card.SemanticOutlinedCard
+import org.bigblackowl.debttracker.ui.components.text.BodyText
+import org.bigblackowl.debttracker.ui.components.text.HeadingText
+import org.bigblackowl.debttracker.ui.components.text.TitleText
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -123,35 +124,31 @@ fun ContactDetailScaffold(
         ) {
             Column(
                 modifier = Modifier.width(Dimens.contentMaxWidth),
-                verticalArrangement = Arrangement.spacedBy(Dimens.space12),
+                verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.md),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Card(modifier = Modifier.fillMaxWidth().padding(Dimens.space16)) {
-                    Row(modifier = Modifier.padding(Dimens.space16), verticalAlignment = Alignment.CenterVertically) {
-                        EntityAvatar(id = id, name = title, avatarUrl = avatarUrl, size = Dimens.space56)
-                        Spacer(Modifier.width(Dimens.space12))
+                ContentCard(modifier = Modifier.padding(Dimens.Spacing.lg)) {
+                    Row(modifier = Modifier.padding(Dimens.Spacing.lg), verticalAlignment = Alignment.CenterVertically) {
+                        EntityAvatar(id = id, name = title, avatarUrl = avatarUrl, size = Dimens.IconSize.lg)
+                        Spacer(Modifier.width(Dimens.Spacing.md))
                         Column {
-                            formatUkrainianPhone(phone)?.let { Text(it) }
-                            comment?.let { Text(it) }
-                            Spacer(Modifier.height(Dimens.space8))
-                            Text(
-                                balanceText,
-                                color = MaterialTheme.debtAccentColors.debt,
-                                style = MaterialTheme.typography.titleLarge,
-                            )
+                            formatUkrainianPhone(phone)?.let { BodyText(it, style = MaterialTheme.typography.bodyLarge) }
+                            comment?.let { BodyText(it, style = MaterialTheme.typography.bodyLarge) }
+                            Spacer(Modifier.height(Dimens.Spacing.sm))
+                            HeadingText(balanceText, color = MaterialTheme.debtAccentColors.debt)
                         }
                     }
                 }
 
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.space16),
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.space8),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.Spacing.lg),
+                    horizontalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm),
                 ) {
                     Button(onClick = onPrimary, modifier = Modifier.weight(1f)) { Text(primaryLabel) }
                     OutlinedButton(onClick = onSecondary, modifier = Modifier.weight(1f)) { Text(secondaryLabel) }
                 }
 
-                Spacer(Modifier.height(Dimens.space8))
+                Spacer(Modifier.height(Dimens.Spacing.sm))
 
                 PullToRefreshBox(
                     isRefreshing = isRefreshing,
@@ -159,8 +156,8 @@ fun ContactDetailScaffold(
                     modifier = Modifier.weight(1f),
                 ) {
                     LazyColumn(
-                        modifier = Modifier.fillMaxSize().padding(horizontal = Dimens.space16),
-                        verticalArrangement = Arrangement.spacedBy(Dimens.space8),
+                        modifier = Modifier.fillMaxSize().padding(horizontal = Dimens.Spacing.lg),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm),
                         content = transactions,
                     )
                 }
@@ -191,24 +188,22 @@ fun TransactionRow(
     val strings = LocalStrings.current
     var menuOpen by remember { mutableStateOf(false) }
 
-    OutlinedCard(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(Dimens.space16),
-        border = BorderStroke(Dimens.space2, color.copy(alpha = .4f)),
+    SemanticOutlinedCard(
+        borderColor = color.copy(alpha = .4f),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.Top,
         ) {
-            Column(modifier = Modifier.weight(1f).padding(Dimens.space20)) {
-                Text(amount.formatMoney(currency), color = color)
-                comment?.let { Text(it) }
+            Column(modifier = Modifier.weight(1f).padding(Dimens.Spacing.lg)) {
+                TitleText(amount.formatMoney(currency), color = color)
+                comment?.let { BodyText(it, style = MaterialTheme.typography.bodyLarge) }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    Text(method.name)
-                    Text(date.formatDueDate())
+                    BodyText(method.name, style = MaterialTheme.typography.bodyLarge)
+                    BodyText(date.formatDueDate(), style = MaterialTheme.typography.bodyLarge)
                 }
             }
             if (onEdit != null || onDelete != null) {

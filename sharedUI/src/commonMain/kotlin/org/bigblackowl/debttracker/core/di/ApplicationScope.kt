@@ -4,5 +4,5 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
-/** Живе стільки ж, скільки застосунок — для AuthRepository.isAuthenticated і SyncCoordinator. */
+/** Lives as long as the app itself — for AuthRepository.isAuthenticated and SyncCoordinator. */
 class ApplicationScope : CoroutineScope by CoroutineScope(SupervisorJob() + Dispatchers.Default)

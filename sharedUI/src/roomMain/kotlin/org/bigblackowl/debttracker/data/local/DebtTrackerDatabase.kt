@@ -37,7 +37,7 @@ abstract class DebtTrackerDatabase : RoomDatabase() {
     abstract fun creditorTransactionDao(): CreditorTransactionDao
 }
 
-/** v1 → v2: додано мультивалютність (спек — грн/долари/злоті/євро) — колонка `currency` на creditors/debtors, за замовчуванням UAH. */
+/** v1 → v2: added multi-currency support (spec — UAH/USD/PLN/EUR) — `currency` column on creditors/debtors, defaulting to UAH. */
 val MIGRATION_1_2: Migration = object : Migration(1, 2) {
     override fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE creditors ADD COLUMN currency TEXT NOT NULL DEFAULT 'UAH'")
@@ -45,7 +45,7 @@ val MIGRATION_1_2: Migration = object : Migration(1, 2) {
     }
 }
 
-/** v2 → v3: колонка `email` на creditors/debtors — використовується для пошуку профілю зареєстрованого користувача (автозаповнення). */
+/** v2 → v3: `email` column on creditors/debtors — used to look up a registered user's profile (autofill). */
 val MIGRATION_2_3: Migration = object : Migration(2, 3) {
     override fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE creditors ADD COLUMN email TEXT")
@@ -53,7 +53,7 @@ val MIGRATION_2_3: Migration = object : Migration(2, 3) {
     }
 }
 
-/** v3 → v4: колонки для двосторонньої синхронізації з дзеркальним акаунтом (linked_user_id/mirror_*_id) — спек §7, міграція 0007. */
+/** v3 → v4: columns for two-way sync with a mirrored account (linked_user_id/mirror_*_id) — spec §7, migration 0007. */
 val MIGRATION_3_4: Migration = object : Migration(3, 4) {
     override fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE debtors ADD COLUMN linkedUserId TEXT")
@@ -65,7 +65,7 @@ val MIGRATION_3_4: Migration = object : Migration(3, 4) {
     }
 }
 
-/** v4 → v5: видалено фічу "останні цифри картки" (cardLastDigits) — колонка більше не збирається/не показується. */
+/** v4 → v5: removed the "last card digits" feature (cardLastDigits) — the column is no longer collected/shown. */
 val MIGRATION_4_5: Migration = object : Migration(4, 5) {
     override fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE debt_transactions DROP COLUMN cardLastDigits")
@@ -73,7 +73,7 @@ val MIGRATION_4_5: Migration = object : Migration(4, 5) {
     }
 }
 
-/** v5 → v6: per-contact `dueDate` + `reminderLeadDays` (нагадування про повернення боргу) на creditors/debtors — міграція 0010. */
+/** v5 → v6: per-contact `dueDate` + `reminderLeadDays` (debt repayment reminders) on creditors/debtors — migration 0010. */
 val MIGRATION_5_6: Migration = object : Migration(5, 6) {
     override fun migrate(connection: SQLiteConnection) {
         connection.execSQL("ALTER TABLE debtors ADD COLUMN dueDate INTEGER")
@@ -83,8 +83,7 @@ val MIGRATION_5_6: Migration = object : Migration(5, 6) {
     }
 }
 
-/** Room KSP генерує `actual`-реалізацію на кожній платформі (android/jvm/iosArm64/iosSimulatorArm64). */
-@Suppress("KotlinNoActualForExpect")
+/** Room KSP generates the `actual` implementation on each platform (android/jvm/iosArm64/iosSimulatorArm64). */
 expect object DebtTrackerDatabaseConstructor : RoomDatabaseConstructor<DebtTrackerDatabase> {
     override fun initialize(): DebtTrackerDatabase
 }

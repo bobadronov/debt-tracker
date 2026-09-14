@@ -19,7 +19,7 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 
 /**
- * Web: Room has no wasmJs/js target (спек §1), so `DebtorRepository`/`CreditorRepository` are
+ * Web: Room has no wasmJs/js target (spec §1), so `DebtorRepository`/`CreditorRepository` are
  * online-only Supabase-backed implementations with no local cache, unlike Android/iOS/Desktop's
  * Room-backed offline-first ones. `SyncStatusProvider` is a stub always reporting
  * [SyncUiStatus.Synced] since there's no pending-sync queue to report on here.

@@ -81,7 +81,7 @@ fun LanguageScreen(onBack: () -> Unit) {
                                 painter = painterResource(res),
                                 contentDescription = null,
                                 contentScale = ContentScale.Inside,
-                                modifier = Modifier.size(Dimens.space40),
+                                modifier = Modifier.size(Dimens.IconSize.md),
                             )
                         }
                     },

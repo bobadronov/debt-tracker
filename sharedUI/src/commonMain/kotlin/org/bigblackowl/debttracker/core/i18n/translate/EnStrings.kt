@@ -335,6 +335,7 @@ val EnStrings = Strings(
             notHappenedHint = "Proposes removing this transaction.",
             send = "Send",
         ),
+        actionError = "Action failed. Try again.",
     ),
     notificationBody = NotificationBodyStrings(
         debtorLinked = { name, amount, currency -> "$name: you owe $amount $currency" },

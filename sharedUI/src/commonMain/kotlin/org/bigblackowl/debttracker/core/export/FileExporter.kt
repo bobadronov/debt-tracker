@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 
 /**
  * CSV: FileKit's native save dialog (Android/iOS/Desktop, `pdfMain` source set) or a browser
- * download (Web, `webMain`) — локальна генерація (спек §6, п.8).
+ * download (Web, `webMain`) — generated locally (spec §6, item 8).
  * PDF: built with the PdfKmp vector DSL ([org.bigblackowl.debttracker.core.export.buildReportDocument],
  * `pdfMain` source set) and opened in PdfKmp's own in-app viewer instead of an immediate share/save —
  * see [savePdf].

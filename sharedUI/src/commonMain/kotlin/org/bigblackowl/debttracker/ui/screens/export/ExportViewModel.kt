@@ -29,7 +29,7 @@ import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorsUseCase
 import kotlin.time.Clock
 
 /**
- * ExportScreen's format/direction/date-range selection + the CSV/PDF pipeline (спек §6, п.8) — the
+ * ExportScreen's format/direction/date-range selection + the CSV/PDF pipeline (spec §6, item 8) — the
  * screen only creates [FileExporter] (composition-scoped, needs a platform file-save launcher
  * registered during composition) and forwards the user's tap into [ExportIntent.Export].
  */

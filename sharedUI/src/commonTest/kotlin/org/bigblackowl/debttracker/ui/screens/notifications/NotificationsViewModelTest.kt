@@ -7,18 +7,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.bigblackowl.debttracker.core.notifications.NotificationsPoller
-import org.bigblackowl.debttracker.preview.NoOpLocalNotifier
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.domain.model.AppNotification
 import org.bigblackowl.debttracker.domain.model.CorrectionReason
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.NotificationRepository
+import org.bigblackowl.debttracker.preview.NoOpLocalNotifier
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -63,15 +64,16 @@ class NotificationsViewModelTest {
         override suspend fun markRead(id: String) {}
         override suspend fun markAllRead() {}
         override suspend fun delete(id: String) { deleted += id; rows.removeAll { it.id == id } }
-        override suspend fun approveLinkRequest(requestId: String) = true
-        override suspend fun rejectLinkRequest(requestId: String) = true
+        var succeed = true
+        override suspend fun approveLinkRequest(requestId: String) = succeed
+        override suspend fun rejectLinkRequest(requestId: String) = succeed
         override suspend fun proposeTransactionCorrection(
             notificationId: String,
             reason: CorrectionReason,
             amount: BigDecimal?,
-        ): Boolean { proposeArgs = Triple(notificationId, reason, amount); return true }
-        override suspend fun approveTransactionCorrection(correctionId: String): Boolean { approvedId = correctionId; return true }
-        override suspend fun rejectTransactionCorrection(correctionId: String): Boolean { rejectedId = correctionId; return true }
+        ): Boolean { proposeArgs = Triple(notificationId, reason, amount); return succeed }
+        override suspend fun approveTransactionCorrection(correctionId: String): Boolean { approvedId = correctionId; return succeed }
+        override suspend fun rejectTransactionCorrection(correctionId: String): Boolean { rejectedId = correctionId; return succeed }
     }
 
     private fun viewModel(repo: NotificationRepository): NotificationsViewModel {
@@ -82,7 +84,7 @@ class NotificationsViewModelTest {
             localNotifier = NoOpLocalNotifier(),
             appSettings = AppSettings(MapSettings()),
         )
-        return NotificationsViewModel(repo, poller)
+        return NotificationsViewModel(repo, poller, AppSettings(MapSettings()))
     }
 
     @Test
@@ -124,6 +126,22 @@ class NotificationsViewModelTest {
 
         assertEquals("c3", repo.rejectedId)
         assertTrue("n3" in repo.deleted)
+    }
+
+    @Test
+    fun `failed approve correction sends an error effect and keeps the notification`() = runTest(dispatcher) {
+        val repo = FakeNotificationRepository().apply { succeed = false }
+        val vm = viewModel(repo)
+
+        val effects = mutableListOf<NotificationsEffect>()
+        val job = launch { vm.effects.collect { effects += it } }
+
+        vm.onIntent(NotificationsIntent.ApproveCorrection("n2", "c2"))
+        advanceUntilIdle()
+
+        assertTrue(effects.any { it is NotificationsEffect.Error })
+        assertTrue("n2" !in repo.deleted)
+        job.cancel()
     }
 
     @Test

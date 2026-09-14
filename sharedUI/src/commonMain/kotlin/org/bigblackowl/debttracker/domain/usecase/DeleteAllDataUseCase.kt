@@ -3,7 +3,7 @@ package org.bigblackowl.debttracker.domain.usecase
 import org.bigblackowl.debttracker.domain.repository.CreditorRepository
 import org.bigblackowl.debttracker.domain.repository.DebtorRepository
 
-/** SettingsScreen "Видалити всі дані" — реальний DELETE, обидва напрямки (спек §9.2).
+/** SettingsScreen "Delete all data" — a real DELETE, both directions (spec §9.2).
  *
  * Not atomic across the two repositories (they may be backed by separate network calls on Web) —
  * if the debtor delete succeeds and the creditor delete then fails, the account is left partially

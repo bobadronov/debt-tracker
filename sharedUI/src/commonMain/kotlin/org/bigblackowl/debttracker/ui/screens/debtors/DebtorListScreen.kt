@@ -29,7 +29,7 @@ import org.bigblackowl.debttracker.ui.components.contact.MenuOption
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
-/** "Мені винні" tab: searchable/filterable/sortable list of debtors with an overflow-menu delete and a running total. */
+/** "Owed to me" tab: searchable/filterable/sortable list of debtors with an overflow-menu delete and a running total. */
 @Composable
 fun DebtorListScreen(
     onAddDebtor: () -> Unit,
