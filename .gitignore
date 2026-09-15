@@ -41,4 +41,5 @@ screenshots/
 /CLAUDE.md
 /docs/*
 !/docs/play-store-listing.md
+!/docs/sync-layer.md
 /url.txt
