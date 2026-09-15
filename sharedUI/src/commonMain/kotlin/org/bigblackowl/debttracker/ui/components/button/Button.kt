@@ -9,8 +9,7 @@ import androidx.compose.ui.Modifier
  * Task-based button taxonomy for the whole app — six kinds, each a re-click-guarded drop-in
  * replacement for its Material 3 counterpart (see [rememberOnceClick]):
  * [Button] (primary/filled CTA), [OutlinedButton] (secondary), [TextButton] (tertiary),
- * [DestructiveButton] (irreversible actions), [IconButton]/[FilledIconButton] (icon-only),
- * [FloatingActionButton] (FAB).
+ * [IconButton]/[FilledIconButton] (icon-only), [FloatingActionButton] (FAB).
  */
 @Composable
 fun Button(
