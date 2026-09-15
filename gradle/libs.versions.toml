@@ -38,6 +38,7 @@ qrose = "1.2.1" # https://github.com/alexzhirkevich/qrose — pure-Kotlin QR gen
 zxing = "3.5.4" # https://github.com/zxing/zxing — Desktop's local-file QR decode (no camera scanning there)
 room = "2.8.5" # https://developer.android.com/jetpack/androidx/releases/room
 sqlite = "2.7.1" # https://developer.android.com/jetpack/androidx/releases/sqlite
+sqlcipherAndroid = "4.9.0" # https://github.com/sqlcipher/sqlcipher-android — SPIKE for Room DB encryption (B3), Android only
 supabase = "3.8.0" # https://github.com/supabase-community/supabase-kt
 
 [libraries]
@@ -92,6 +93,7 @@ bignum = { module = "com.ionspin.kotlin:bignum", version.ref = "bignum" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
+sqlcipher-android = { module = "net.zetetic:sqlcipher-android", version.ref = "sqlcipherAndroid" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "androidx-biometric" }
 #noinspection LoginCredentials

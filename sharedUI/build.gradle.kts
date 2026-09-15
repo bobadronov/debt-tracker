@@ -165,6 +165,7 @@ kotlin {
             // Native "Sign in with Google" — GetGoogleIdOption for Credential Manager (see GoogleSignInLauncher.android.kt).
             implementation(libs.google.identity.googleid)
             implementation(libs.connectivity.device) // native ConnectivityManager-based monitoring
+            implementation(libs.sqlcipher.android) // SPIKE — Room DB encryption (B3), Android only
         }
 
         jvmMain.dependencies {
