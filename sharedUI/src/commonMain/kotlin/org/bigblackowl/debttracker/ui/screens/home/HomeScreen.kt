@@ -1,14 +1,15 @@
 package org.bigblackowl.debttracker.ui.screens.home
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntSize
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -252,11 +254,22 @@ private fun SyncStatusBadge(status: SyncUiStatus, strings: Strings, modifier: Mo
 
     LaunchedEffect(status) {
         isBadgeVisible = true
-        delay(2.seconds)
-        isBadgeVisible = false
+        // Stay visible the whole time there's something to report (Syncing / OfflinePending) —
+        // only auto-hide once it settles back to Synced.
+        if (status == SyncUiStatus.Synced) {
+            delay(2.seconds)
+            isBadgeVisible = false
+        }
     }
 
-    Surface(modifier = modifier.animateContentSize(animationSpec = tween(easing = LinearEasing)), shape = RoundedCornerShape(Dimens.Radius.sm), color = tint.copy(alpha = 0.14f)) {
+    // fadeIn/fadeOut + expand/shrinkHorizontally on the SAME AnimatedVisibility, rather than a
+    // separate slide animation on the text plus an independent animateContentSize on the Surface
+    // — two independently-timed animations used to fight over the badge's width. This way the
+    // text's fade and the badge's width collapse are one animation, driven by one clock.
+    val labelAnimationSpec = tween<Float>(durationMillis = 250, easing = LinearEasing)
+    val widthAnimationSpec = tween<IntSize>(durationMillis = 250, easing = LinearEasing)
+
+    Surface(modifier = modifier, shape = RoundedCornerShape(Dimens.Radius.sm), color = tint.copy(alpha = 0.14f)) {
         Row(
             modifier = Modifier.padding(horizontal = Dimens.Spacing.sm, vertical = Dimens.Spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
@@ -264,8 +277,8 @@ private fun SyncStatusBadge(status: SyncUiStatus, strings: Strings, modifier: Mo
             Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(Dimens.Spacing.md).rotate(rotation))
             AnimatedVisibility(
                 visible = isBadgeVisible,
-                enter = slideInHorizontally(animationSpec = tween(easing = LinearEasing)) { it },
-                exit = slideOutHorizontally(animationSpec = tween(easing = LinearEasing)) { -it },
+                enter = fadeIn(labelAnimationSpec) + expandHorizontally(widthAnimationSpec),
+                exit = fadeOut(labelAnimationSpec) + shrinkHorizontally(widthAnimationSpec),
             ) {
                 Row {
                     Spacer(Modifier.width(Dimens.Spacing.xs))
