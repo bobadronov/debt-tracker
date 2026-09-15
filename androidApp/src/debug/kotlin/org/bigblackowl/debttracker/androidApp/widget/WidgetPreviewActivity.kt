@@ -51,7 +51,7 @@ class WidgetPreviewActivity : Activity() {
         setContentView(root, ViewGroup.LayoutParams(MATCH, MATCH))
     }
 
-    /** Reflectively calls the receiver companion's private `buildViews(Context, Amounts?)` with null. */
+    /** Reflectively calls the receiver companion's private `buildViews(Context, Amounts?, Boolean)` with null/not-loading. */
     private fun buildWidgetViews(): RemoteViews {
         val receiver = Class.forName(
             "org.bigblackowl.debttracker.androidApp.widget.DebtSummaryWidgetReceiver",
@@ -59,7 +59,7 @@ class WidgetPreviewActivity : Activity() {
         val companion = receiver.getDeclaredField("Companion").apply { isAccessible = true }.get(null)
         val buildViews = companion.javaClass.declaredMethods.first { it.name == "buildViews" }
             .apply { isAccessible = true }
-        return buildViews.invoke(companion, applicationContext, null) as RemoteViews
+        return buildViews.invoke(companion, applicationContext, null, false) as RemoteViews
     }
 
     private fun sizedHost(views: RemoteViews, widthDp: Int, heightDp: Int): FrameLayout {

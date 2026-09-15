@@ -7,6 +7,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.view.View
 import android.widget.RemoteViews
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -60,11 +61,18 @@ class DebtSummaryWidgetReceiver : AppWidgetProvider() {
     /** Read balances off the main thread ([goAsync]) and push a fresh [RemoteViews] to every id. */
     private fun render(context: Context, manager: AppWidgetManager, ids: IntArray) {
         if (ids.isEmpty()) return
+        val appContext = context.applicationContext
+        // Immediate feedback (spec: loading indicator on refresh) — reuses the last amounts shown
+        // so numbers don't flash to "—" while the DB read is in flight, only the refresh icon does.
+        val loadingViews = buildViews(appContext, lastAmounts, isLoading = true)
+        ids.forEach { manager.updateAppWidget(it, loadingViews) }
+
         val pending = goAsync()
         scope.launch {
             try {
                 val amounts = withTimeoutOrNull(BROADCAST_BUDGET_MS.milliseconds) { loadAmounts() }
-                val views = buildViews(context.applicationContext, amounts)
+                if (amounts != null) lastAmounts = amounts
+                val views = buildViews(appContext, amounts ?: lastAmounts, isLoading = false)
                 ids.forEach { manager.updateAppWidget(it, views) }
             } finally {
                 pending.finish()
@@ -85,6 +93,11 @@ class DebtSummaryWidgetReceiver : AppWidgetProvider() {
         private const val BADGE_ALPHA = 48
 
         private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+        /** Last successfully loaded totals, kept so a fresh refresh can show a spinner without
+         *  blanking out the numbers already on screen; null until the first successful load. */
+        @Volatile
+        private var lastAmounts: Amounts? = null
 
         // Mirrors sharedUI theme/DebtAccentColors.kt + the surface/label tokens from theme/Color.kt
         // (both internal, out of reach across the module boundary) — the same accents as KpiCard on
@@ -135,7 +148,7 @@ class DebtSummaryWidgetReceiver : AppWidgetProvider() {
             }
 
         /** [amounts] is null only when the DB read timed out — labels still render, amounts show "—". */
-        private fun buildViews(context: Context, amounts: Amounts?): RemoteViews {
+        private fun buildViews(context: Context, amounts: Amounts?, isLoading: Boolean): RemoteViews {
             val settings = GlobalContext.get().get<AppSettings>()
             val strings = resolveStrings(settings.locale)
             val isDark = resolveIsDark(settings.theme, context)
@@ -182,6 +195,8 @@ class DebtSummaryWidgetReceiver : AppWidgetProvider() {
                 )
 
                 setInt(R.id.widget_refresh_icon, "setColorFilter", label)
+                setViewVisibility(R.id.widget_refresh_icon, if (isLoading) View.GONE else View.VISIBLE)
+                setViewVisibility(R.id.widget_refresh_progress, if (isLoading) View.VISIBLE else View.GONE)
                 setTextViewText(R.id.widget_refresh_label, strings.exchangeRates.refresh)
                 setTextColor(R.id.widget_refresh_label, label)
                 setContentDescription(R.id.widget_refresh, strings.exchangeRates.refresh)

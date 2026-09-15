@@ -175,6 +175,14 @@
             android:contentDescription="@null"
             android:src="@drawable/ic_widget_refresh" />
 
+        <ProgressBar
+            android:id="@+id/widget_refresh_progress"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="17dp"
+            android:layout_height="17dp"
+            android:visibility="gone"
+            android:indeterminate="true" />
+
         <TextView
             android:id="@+id/widget_refresh_label"
             android:layout_width="wrap_content"
