@@ -3,6 +3,8 @@ package org.bigblackowl.debttracker.ui.screens.creditors
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
+import io.github.aakira.napier.Napier
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -84,6 +86,8 @@ class CreditorDetailViewModel(
                     )
                 )
             }.onFailure {
+                if (it is CancellationException) throw it
+                Napier.e(tag = "CreditorDetailViewModel", throwable = it) { "editTransaction() failed to save transaction" }
                 effectsChannel.send(CreditorDetailEffect.Error(resolveStrings(appSettings.locale).saveError))
             }
         }
@@ -92,6 +96,8 @@ class CreditorDetailViewModel(
     private fun removeTransaction(id: String) {
         viewModelScope.launch {
             runCatching { deleteTransaction(id) }.onFailure {
+                if (it is CancellationException) throw it
+                Napier.e(tag = "CreditorDetailViewModel", throwable = it) { "removeTransaction() failed to delete transaction" }
                 effectsChannel.send(CreditorDetailEffect.Error(resolveStrings(appSettings.locale).deleteError))
             }
         }
@@ -125,6 +131,8 @@ class CreditorDetailViewModel(
                     )
                 )
             }.onFailure {
+                if (it is CancellationException) throw it
+                Napier.e(tag = "CreditorDetailViewModel", throwable = it) { "record() failed to save transaction" }
                 effectsChannel.send(CreditorDetailEffect.Error(resolveStrings(appSettings.locale).saveError))
             }
         }
