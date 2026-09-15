@@ -3,6 +3,10 @@ name: Release
 
 # Tag-triggered packaging: pushing a `v*` tag, or running this manually.
 #
+# Runs a `checks` job first (currently: kotlin-js-store/yarn.lock drift) so a
+# problem a 1-minute check would catch doesn't burn ~40 minutes of platform
+# builds before failing.
+#
 # Builds:
 #   - Android App Bundle (.aab, for Google Play)
 #   - Windows .msi
@@ -89,10 +93,43 @@ env:
 jobs:
 
   # ============================================================
+  # Pre-release checks — fail fast, before spending time on 5 platform
+  # builds (~40 min total), on problems a quick check catches in ~1 min.
+  # ============================================================
+  checks:
+    name: Pre-release checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # Same check as yarn-lock-check.yml, run again here so a release can't
+      # slip through between that workflow's triggers (push to main / weekly
+      # schedule) and the tag push. Fails with "Lock file was changed. Run the
+      # `kotlinUpgradeYarnLock` task to actualize lock file" if a fresh
+      # resolve no longer matches the committed lock. Only the wasmJs task
+      # exists — the plain js target was dropped, so kotlinStoreYarnLock is
+      # gone too.
+      - name: Check kotlin-js-store/yarn.lock is up to date
+        run: ./gradlew kotlinWasmStoreYarnLock --rerun-tasks --no-configuration-cache --stacktrace
+
+
+  # ============================================================
   # Android App Bundle (.aab) — for Google Play Console upload
   # ============================================================
   android-aab:
     name: Android AAB
+    needs: checks
     runs-on: ubuntu-latest
 
     env:
@@ -225,6 +262,7 @@ jobs:
   # ============================================================
   windows-msi:
     name: Windows MSI
+    needs: checks
     # Produces an UNSIGNED installer (SmartScreen shows "unknown publisher";
     # Smart App Control blocks it outright). Code signing is not wired up.
     runs-on: windows-latest
@@ -290,6 +328,7 @@ jobs:
   # ============================================================
   linux-deb:
     name: Linux DEB
+    needs: checks
     runs-on: ubuntu-latest
 
     steps:
@@ -356,6 +395,7 @@ jobs:
   # ============================================================
   macos-dmg:
     name: macOS DMG (${{ matrix.arch }})
+    needs: checks
 
     strategy:
       fail-fast: false
@@ -421,6 +461,7 @@ jobs:
   # ============================================================
   web:
     name: Web
+    needs: checks
     # wasm-opt/Binaryen currently crashes on the Ubuntu runner
     # for this project's wasmJs production optimization.
     #
