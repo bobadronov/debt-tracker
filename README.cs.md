@@ -87,8 +87,8 @@ Systémový · Українська · English · Deutsch · Español · França
 Nederlands · Polski · Português · Čeština — přepnutí okamžité, bez
 restartu.
 
-K tomu vyhledávání, řazení, filtry, přejetí pro smazání, příjemné zvuky a
-klávesové zkratky na počítači pro pokročilé.
+K tomu vyhledávání, řazení, filtry, přejetí pro smazání a klávesové zkratky
+na počítači pro pokročilé.
 
 ---
 

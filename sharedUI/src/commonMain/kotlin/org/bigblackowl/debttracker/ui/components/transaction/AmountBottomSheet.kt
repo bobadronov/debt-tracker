@@ -13,7 +13,6 @@ import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,8 +26,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.settings.AppSettings
-import org.bigblackowl.debttracker.core.sound.SoundEffect
-import org.bigblackowl.debttracker.core.sound.SoundPlayer
 import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.domain.validation.sanitizeAmountInput
@@ -61,14 +58,9 @@ fun AmountBottomSheet(
     var error by remember { mutableStateOf<String?>(null) }
     val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
     val appSettings = koinInject<AppSettings>()
-    val soundPlayer = koinInject<SoundPlayer>()
     val haptics = LocalHapticFeedback.current
     val strings = LocalStrings.current
     val clipboardText by rememberClipboardText()
-
-    LaunchedEffect(Unit) {
-        if (appSettings.soundEnabled) soundPlayer.play(SoundEffect.DIALOG_OPEN)
-    }
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(

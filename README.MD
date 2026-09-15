@@ -86,8 +86,8 @@ motivates you or terrifies you. Your call.
 System · Українська · English · Deutsch · Español · Français · Italiano ·
 Nederlands · Polski · Português · Čeština — instant switching, no restart.
 
-Plus search, sort, filters, swipe-to-delete, pleasant sounds, and keyboard
-shortcuts on Desktop for power users.
+Plus search, sort, filters, swipe-to-delete, and keyboard shortcuts on
+Desktop for power users.
 
 ---
 

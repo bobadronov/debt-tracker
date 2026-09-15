@@ -206,7 +206,6 @@ val PlStrings = Strings(
         preferences = "Preferencje",
         data = "Dane",
         protection = "Blokada aplikacji",
-        sound = "Dźwięk",
         haptic = "Wibracje",
         notifications = "Powiadomienia",
         notificationsBlocked = "Włącz je dla Debt Tracker w ustawieniach urządzenia",

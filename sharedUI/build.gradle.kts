@@ -260,7 +260,6 @@ buildConfig {
     buildConfigField("APP_VERSION", appVersionName)
     buildConfigField("APP_VERSION_CODE", appVersionCode)
     buildConfigField("APP_AUTHOR", "BigBlackOwl")
-    buildConfigField("SOUND_ENABLED", false)
     buildConfigField("DEBUG", isDebugBuild)
     // Restore Credentials (zero-tap sign-in). OFF until its backend prerequisites are met:
     //  1. Supabase dashboard → Auth → enable the Passkeys provider (beta) with a Relying Party ID

@@ -13,8 +13,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.i18n.resolveStrings
 import org.bigblackowl.debttracker.core.settings.AppSettings
-import org.bigblackowl.debttracker.core.sound.SoundEffect
-import org.bigblackowl.debttracker.core.sound.SoundPlayer
 import org.bigblackowl.debttracker.domain.model.DebtStatus
 import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
 import org.bigblackowl.debttracker.domain.usecase.debtor.DeleteDebtorUseCase
@@ -26,7 +24,6 @@ class DebtorListViewModel(
     private val deleteDebtor: DeleteDebtorUseCase,
     private val syncStatusProvider: SyncStatusProvider,
     private val appSettings: AppSettings,
-    private val soundPlayer: SoundPlayer,
 ) : ViewModel() {
 
 
@@ -79,7 +76,6 @@ class DebtorListViewModel(
             is DebtorListIntent.ChangeStatusFilter -> statusFilter.value = intent.filter
             is DebtorListIntent.Delete -> viewModelScope.launch {
                 runCatching { deleteDebtor(intent.debtorId) }
-                    .onSuccess { if (appSettings.soundEnabled) soundPlayer.play(SoundEffect.DELETE) }
                     .onFailure { effectsChannel.send(DebtorListEffect.Error(resolveStrings(appSettings.locale).deleteError)) }
             }
             DebtorListIntent.Refresh -> viewModelScope.launch {

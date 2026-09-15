@@ -207,7 +207,6 @@ val DeStrings = Strings(
         preferences = "Präferenzen",
         data = "Daten",
         protection = "App-Sperre",
-        sound = "Ton",
         haptic = "Haptisches Feedback",
         notifications = "Benachrichtigungen",
         notificationsBlocked = "In den Geräteeinstellungen für Debt Tracker aktivieren",

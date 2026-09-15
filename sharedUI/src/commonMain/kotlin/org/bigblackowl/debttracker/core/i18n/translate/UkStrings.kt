@@ -206,7 +206,6 @@ val UkStrings = Strings(
         preferences = "Параметри",
         data = "Дані",
         protection = "Блокування застосунку",
-        sound = "Звук",
         haptic = "Вібровідгук",
         notifications = "Сповіщення",
         notificationsBlocked = "Увімкніть їх для Debt Tracker у налаштуваннях пристрою",

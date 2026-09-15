@@ -90,8 +90,8 @@ Systemowy · Українська · English · Deutsch · Español · Français
 Nederlands · Polski · Português · Čeština — przełączanie natychmiastowe, bez
 restartu.
 
-Do tego wyszukiwanie, sortowanie, filtry, przesunięcie, by usunąć, przyjemne
-dźwięki i skróty klawiszowe na komputerze dla zaawansowanych.
+Do tego wyszukiwanie, sortowanie, filtry, przesunięcie, by usunąć i skróty
+klawiszowe na komputerze dla zaawansowanych.
 
 ---
 

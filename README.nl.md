@@ -90,8 +90,8 @@ Systeem · Українська · English · Deutsch · Español · Français �
 Nederlands · Polski · Português · Čeština — meteen wisselen, zonder
 herstarten.
 
-Plus zoeken, sorteren, filteren, vegen om te verwijderen, fijne kleine
-geluidjes en sneltoetsen op desktop voor de powergebruikers.
+Plus zoeken, sorteren, filteren, vegen om te verwijderen en sneltoetsen op
+desktop voor de powergebruikers.
 
 ---
 

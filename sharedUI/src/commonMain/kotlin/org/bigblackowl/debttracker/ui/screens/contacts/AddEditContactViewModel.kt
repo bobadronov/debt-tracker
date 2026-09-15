@@ -16,8 +16,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.i18n.resolveStrings
 import org.bigblackowl.debttracker.core.settings.AppSettings
-import org.bigblackowl.debttracker.core.sound.SoundEffect
-import org.bigblackowl.debttracker.core.sound.SoundPlayer
 import org.bigblackowl.debttracker.domain.model.ContactPrefill
 import org.bigblackowl.debttracker.domain.model.ContactSuggestion
 import org.bigblackowl.debttracker.domain.model.Creditor
@@ -88,7 +86,6 @@ class AddEditContactViewModel(
     private val debtorActions: DebtorActions,
     private val creditorActions: CreditorActions,
     private val appSettings: AppSettings,
-    private val soundPlayer: SoundPlayer,
     private val findProfileByEmail: FindProfileByEmailUseCase,
     private val observeContactSuggestions: ObserveContactSuggestionsUseCase,
     private val observeDebtor: ObserveDebtorUseCase,
@@ -453,7 +450,6 @@ class AddEditContactViewModel(
 
     private suspend fun finishSave() {
         _state.update { it.copy(isSaving = false) }
-        if (appSettings.soundEnabled) soundPlayer.play(SoundEffect.ADD)
         effectsChannel.send(AddEditContactEffect.Saved)
     }
 }

@@ -207,7 +207,6 @@ val CsStrings = Strings(
         preferences = "Předvolby",
         data = "Data",
         protection = "Zámek aplikace",
-        sound = "Zvuk",
         haptic = "Haptická odezva",
         notifications = "Oznámení",
         notificationsBlocked = "Zapněte je pro Debt Tracker v nastavení zařízení",

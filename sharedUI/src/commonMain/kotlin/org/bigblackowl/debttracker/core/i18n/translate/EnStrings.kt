@@ -206,7 +206,6 @@ val EnStrings = Strings(
         preferences = "Preferences",
         data = "Data",
         protection = "App lock",
-        sound = "Sound",
         haptic = "Haptic feedback",
         notifications = "Notifications",
         notificationsBlocked = "Turn them on for Debt Tracker in your device settings",

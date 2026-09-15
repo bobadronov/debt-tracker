@@ -89,8 +89,8 @@ Sistema · Українська · English · Deutsch · Español · Français �
 Nederlands · Polski · Português · Čeština — cambio istantaneo, senza
 riavvio.
 
-In più ricerca, ordinamento, filtri, scorri per eliminare, piccoli suoni
-piacevoli e scorciatoie da tastiera su desktop per i più esperti.
+In più ricerca, ordinamento, filtri, scorri per eliminare e scorciatoie da
+tastiera su desktop per i più esperti.
 
 ---
 

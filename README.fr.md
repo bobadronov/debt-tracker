@@ -92,9 +92,8 @@ Système · Українська · English · Deutsch · Español · Français 
 Nederlands · Polski · Português · Čeština — bascule instantanée, sans
 redémarrage.
 
-Plus la recherche, le tri, les filtres, le balayage pour supprimer, de
-petits sons agréables et des raccourcis clavier sur ordinateur pour les
-experts.
+Plus la recherche, le tri, les filtres, le balayage pour supprimer et des
+raccourcis clavier sur ordinateur pour les experts.
 
 ---
 

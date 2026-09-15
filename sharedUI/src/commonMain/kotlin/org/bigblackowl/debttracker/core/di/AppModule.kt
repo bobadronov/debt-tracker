@@ -8,15 +8,11 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
-import org.bigblackowl.debttracker.BuildConfig
 import org.bigblackowl.debttracker.core.notifications.DueReminderCoordinator
 import org.bigblackowl.debttracker.core.notifications.NotificationsPoller
 import org.bigblackowl.debttracker.core.remote.createAppSupabaseClient
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
-import org.bigblackowl.debttracker.core.sound.NoopSoundPlayer
-import org.bigblackowl.debttracker.core.sound.SoundPlayer
-import org.bigblackowl.debttracker.core.sound.createSoundPlayer
 import org.bigblackowl.debttracker.data.remote.HttpExchangeRatesRepository
 import org.bigblackowl.debttracker.data.remote.RestoreCredentialCoordinator
 import org.bigblackowl.debttracker.data.remote.SupabaseAuthRepository
@@ -93,7 +89,6 @@ import org.koin.dsl.module
  */
 val appModule = module {
     single { AppSettings(Settings()) }
-    single<SoundPlayer> { if (BuildConfig.SOUND_ENABLED) createSoundPlayer() else NoopSoundPlayer }
     single<CoroutineScope> { ApplicationScope() }
     single { SearchFocusRequests() }
     single<SupabaseClient> { createAppSupabaseClient(getOrNull()) }
@@ -149,7 +144,7 @@ val appModule = module {
     viewModel { (direction: DebtDirection, prefill: ContactPrefill?, editId: String?) ->
         AddEditContactViewModel(
             direction, prefill, editId,
-            get(), get(), get(), get(), get(), get(), get(), get(),
+            get(), get(), get(), get(), get(), get(), get(),
         )
     }
     viewModel { (debtorId: String) -> DebtorDetailViewModel(debtorId, get(), get(), get(), get(), get(), get(), get()) }

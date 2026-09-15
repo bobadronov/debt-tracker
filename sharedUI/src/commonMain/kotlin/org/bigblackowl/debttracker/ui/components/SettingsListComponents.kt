@@ -183,7 +183,7 @@ fun SettingsRow(
 
 /**
  * [SettingsRow] whose trailing control is a [Switch] — the shape every on/off preference
- * (protection, sound, haptic, run-in-background…) otherwise repeats inline.
+ * (protection, haptic, run-in-background…) otherwise repeats inline.
  */
 @Composable
 fun SettingsSwitchRow(

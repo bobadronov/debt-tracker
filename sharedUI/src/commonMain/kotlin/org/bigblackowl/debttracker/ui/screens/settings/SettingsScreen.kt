@@ -18,8 +18,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.automirrored.filled.VolumeOff
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.Computer
@@ -78,7 +76,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * SettingsScreen — a hub for Protection/Notifications/Data/About the app (separate screens), but
- * Preferences (theme/language/sound/haptics/background work) stay right here, on the main page —
+ * Preferences (theme/language/haptics/background work) stay right here, on the main page —
  * they're short enough not to justify yet another navigation hop.
  */
 @Composable
@@ -151,16 +149,6 @@ fun SettingsScreen(
                     )
                 }
                 SettingsSection(strings.settings.preferences) {
-                    if (BuildConfig.SOUND_ENABLED) {
-                        SettingsSwitchRow(
-                            icon = if (settings.soundEnabled) Icons.AutoMirrored.Filled.VolumeUp else Icons.AutoMirrored.Filled.VolumeOff,
-                            title = strings.settings.sound,
-                            checked = settings.soundEnabled,
-                            onCheckedChange = { settings.soundEnabled = it },
-                        )
-                        SettingsRowDivider()
-                    }
-
                     if (showHapticRow) {
                         SettingsSwitchRow(
                             icon = Icons.Filled.Vibration,

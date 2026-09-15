@@ -11,7 +11,7 @@ import kotlin.uuid.Uuid
 
 /**
  * User settings (spec §9.1 `profiles`, local counterpart). Fields that affect the UI
- * (protectionEnabled/biometricEnabled/soundEnabled/theme) are made Compose-reactive via
+ * (protectionEnabled/biometricEnabled/theme) are made Compose-reactive via
  * [mutableStateOf], so SettingsScreen can change them and the rest of the app (AppTheme,
  * AuthGate) sees the change immediately — without a separate DataStore/Flow layer.
  */
@@ -23,7 +23,6 @@ class AppSettings(private val settings: Settings) {
     var hasSeenProtectionOnboarding: Boolean by SettingsBooleanState(settings, KEY_PROTECTION_ONBOARDING_SEEN, false)
     /** Whether the first-launch "sign in for Account+Sync" onboarding screen has already been shown. */
     var hasSeenAccountOnboarding: Boolean by SettingsBooleanState(settings, KEY_ACCOUNT_ONBOARDING_SEEN, false)
-    var soundEnabled: Boolean by SettingsBooleanState(settings, KEY_SOUND_ENABLED, true)
     var hapticEnabled: Boolean by SettingsBooleanState(settings, KEY_HAPTIC_ENABLED, true)
     /** User's own on/off switch for system notifications from [org.bigblackowl.debttracker.core.notifications.NotificationsPoller] (Settings → Preferences) — independent of, and gated behind, the OS-level permission. On by default. */
     var notificationsEnabled: Boolean by SettingsBooleanState(settings, KEY_NOTIFICATIONS_ENABLED, true)
@@ -168,7 +167,6 @@ class AppSettings(private val settings: Settings) {
         const val KEY_PIN_CODE_LEGACY = "pin_code"
         const val KEY_PIN_SALT = "pin_salt"
         const val KEY_PIN_HASH = "pin_hash"
-        const val KEY_SOUND_ENABLED = "sound_enabled"
         const val KEY_HAPTIC_ENABLED = "haptic_enabled"
         const val KEY_NOTIFICATIONS_ENABLED = "notifications_enabled"
         const val KEY_HIDE_AMOUNTS_IN_NOTIFICATIONS = "hide_amounts_in_notifications"

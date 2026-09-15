@@ -207,7 +207,6 @@ val ItStrings = Strings(
         preferences = "Preferenze",
         data = "Dati",
         protection = "Blocco dell'app",
-        sound = "Suono",
         haptic = "Feedback aptico",
         notifications = "Notifiche",
         notificationsBlocked = "Attivale per Debt Tracker nelle impostazioni del dispositivo",

@@ -88,8 +88,8 @@ Sistema · Українська · English · Deutsch · Español · Français �
 Nederlands · Polski · Português · Čeština — cambio instantáneo, sin
 reiniciar.
 
-Además, búsqueda, orden, filtros, deslizar para borrar, pequeños sonidos
-agradables y atajos de teclado en el escritorio para los más avanzados.
+Además, búsqueda, orden, filtros, deslizar para borrar y atajos de teclado
+en el escritorio para los más avanzados.
 
 ---
 

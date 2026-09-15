@@ -207,7 +207,6 @@ val NlStrings = Strings(
         preferences = "Voorkeuren",
         data = "Gegevens",
         protection = "App-vergrendeling",
-        sound = "Geluid",
         haptic = "Haptische feedback",
         notifications = "Meldingen",
         notificationsBlocked = "Schakel ze in voor Debt Tracker in de apparaatinstellingen",

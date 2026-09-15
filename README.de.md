@@ -90,8 +90,8 @@ System · Українська · English · Deutsch · Español · Français ·
 Nederlands · Polski · Português · Čeština — sofort umschaltbar, ohne
 Neustart.
 
-Dazu Suche, Sortierung, Filter, Wischen zum Löschen, angenehme kleine
-Sounds und Tastenkürzel auf dem Desktop für die Profis.
+Dazu Suche, Sortierung, Filter, Wischen zum Löschen und Tastenkürzel auf
+dem Desktop für die Profis.
 
 ---
 

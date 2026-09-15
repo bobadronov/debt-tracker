@@ -207,7 +207,6 @@ val FrStrings = Strings(
         preferences = "Préférences",
         data = "Données",
         protection = "Verrouillage de l'app",
-        sound = "Son",
         haptic = "Retour haptique",
         notifications = "Notifications",
         notificationsBlocked = "Activez-les pour Debt Tracker dans les réglages de l'appareil",

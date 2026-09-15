@@ -176,7 +176,6 @@ data class SettingsStrings(
     val preferences: String,
     val data: String,
     val protection: String,
-    val sound: String,
     val haptic: String,
     val notifications: String,
     /** Subtitle shown under the Notifications row when the OS permission was denied. */

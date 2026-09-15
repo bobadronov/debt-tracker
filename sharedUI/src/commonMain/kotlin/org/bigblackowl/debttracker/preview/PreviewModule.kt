@@ -11,7 +11,6 @@ import org.bigblackowl.debttracker.core.notifications.NotificationsPoller
 import org.bigblackowl.debttracker.core.notifications.ReminderScheduler
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
-import org.bigblackowl.debttracker.core.sound.SoundPlayer
 import org.bigblackowl.debttracker.domain.model.ContactPrefill
 import org.bigblackowl.debttracker.domain.model.DebtDirection
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
@@ -91,7 +90,6 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
             locale = "uk"
         }
     }
-    single<SoundPlayer> { NoOpSoundPlayer() }
     single { SearchFocusRequests() }
     single<DebtorRepository> { FakeDebtorRepository() }
     single<CreditorRepository> { FakeCreditorRepository() }
@@ -144,7 +142,7 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     viewModel { (direction: DebtDirection, prefill: ContactPrefill?, editId: String?) ->
         AddEditContactViewModel(
             direction, prefill, editId,
-            get(), get(), get(), get(), get(), get(), get(), get(),
+            get(), get(), get(), get(), get(), get(), get(),
         )
     }
     viewModel { (debtorId: String) -> DebtorDetailViewModel(debtorId, get(), get(), get(), get(), get(), get(), get()) }

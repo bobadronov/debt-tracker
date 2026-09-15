@@ -88,8 +88,8 @@ Sistema · Українська · English · Deutsch · Español · Français �
 Nederlands · Polski · Português · Čeština — troca instantânea, sem
 reiniciar.
 
-Além disso, pesquisa, ordenação, filtros, deslizar para eliminar, pequenos
-sons agradáveis e atalhos de teclado no computador para os mais avançados.
+Além disso, pesquisa, ordenação, filtros, deslizar para eliminar e atalhos
+de teclado no computador para os mais avançados.
 
 ---
 

@@ -11,8 +11,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import org.bigblackowl.debttracker.core.notifications.LocalNotifier
 import org.bigblackowl.debttracker.core.platform.AppPlatform
-import org.bigblackowl.debttracker.core.sound.SoundEffect
-import org.bigblackowl.debttracker.core.sound.SoundPlayer
 import org.bigblackowl.debttracker.domain.model.AppNotification
 import org.bigblackowl.debttracker.domain.model.Creditor
 import org.bigblackowl.debttracker.domain.model.CreditorTransaction
@@ -459,14 +457,6 @@ class FakeNotificationRepository : NotificationRepository {
 class NoOpLocalNotifier : LocalNotifier {
     override suspend fun requestPermission(): Boolean = true
     override fun notify(title: String, body: String, deepLink: String?) = Unit
-}
-
-/**
- * No-op [SoundPlayer] for @Preview — real implementations (e.g. Android [android.media.SoundPool])
- * touch platform media APIs, which aren't available in the Android Studio Layoutlib sandbox.
- */
-class NoOpSoundPlayer : SoundPlayer {
-    override fun play(sound: SoundEffect) = Unit
 }
 
 /**
