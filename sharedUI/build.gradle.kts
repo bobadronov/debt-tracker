@@ -29,10 +29,9 @@ kotlin {
         compilerOptions { jvmTarget = JvmTarget.JVM_21 }
     }
 
-    js {
-        browser()
-        binaries.executable() // required for checkComposeUiTestConfigurationForJs (GuardedButtonsTest via runComposeUiTest)
-    }
+    // No js (non-WASM) target: webApp only ships wasmJs (see its build.gradle.kts), and nothing
+    // else consumes sharedUI's js artifact — keeping it just doubled compile/test time and memory
+    // for a target nothing exercises.
     wasmJs {
         browser()
         binaries.executable() // required for checkComposeUiTestConfigurationForWasmJs (GuardedButtonsTest via runComposeUiTest)
@@ -83,7 +82,6 @@ kotlin {
         getByName("iosSimulatorArm64Main") { dependsOn(iosMain) }
 
         val webMain = create("webMain") { dependsOn(commonMain) }
-        getByName("jsMain") { dependsOn(webMain) }
         getByName("wasmJsMain") { dependsOn(webMain) }
 
         pdfMain.dependencies {
@@ -243,7 +241,7 @@ private val appVersionName: String = versionProps.getProperty("VERSION_NAME").tr
 // invoke the default/"main" build type (packageMsi/packageDeb, no "Release" in the name).
 private val releaseTaskSuffixes = setOf(
     "packageMsi", "packageDeb", // desktopApp (release.yml's actual CI tasks)
-    "composeCompatibilityBrowserDistribution", // webApp
+    "wasmJsBrowserDistribution", // webApp
 )
 
 private val isDebugBuild = gradle.startParameter.taskNames.none { taskName ->

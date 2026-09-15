@@ -9,11 +9,9 @@ plugins {
 }
 
 kotlin {
-    js {
-        browser()
-        binaries.executable()
-    }
-
+    // WASM only — no js (non-WASM) fallback. WASM has been supported by every major browser
+    // since 2017; shipping both targets was doubling webApp's deploy size (~18MB extra) and CI
+    // build time/memory for a fallback path essentially nobody hits.
     wasmJs {
         browser()
         binaries.executable()

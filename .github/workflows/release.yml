@@ -448,17 +448,17 @@ jobs:
         # See https://discuss.kotlinlang.org/t/webpack-issues-on-a-gradle-kotlin-js-project/16470
         shell: bash
         run: |
-          ./gradlew :webApp:composeCompatibilityBrowserDistribution --stacktrace ||
-          ./gradlew :webApp:composeCompatibilityBrowserDistribution --stacktrace
+          ./gradlew :webApp:wasmJsBrowserDistribution --stacktrace ||
+          ./gradlew :webApp:wasmJsBrowserDistribution --stacktrace
 
       - name: Add legal pages (privacy policy, for Play Store etc.)
         shell: bash
-        run: cp legal/*.html webApp/build/dist/composeWebCompatibility/productionExecutable/
+        run: cp legal/*.html webApp/build/dist/wasmJs/productionExecutable/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: webApp/build/dist/composeWebCompatibility/productionExecutable
+          path: webApp/build/dist/wasmJs/productionExecutable
 
 
   # ============================================================

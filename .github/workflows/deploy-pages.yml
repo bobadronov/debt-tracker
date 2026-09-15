@@ -62,17 +62,17 @@ jobs:
         # second invocation in the same environment (modules now on disk) succeeds.
         shell: bash
         run: |
-          ./gradlew :webApp:composeCompatibilityBrowserDistribution --stacktrace ||
-          ./gradlew :webApp:composeCompatibilityBrowserDistribution --stacktrace
+          ./gradlew :webApp:wasmJsBrowserDistribution --stacktrace ||
+          ./gradlew :webApp:wasmJsBrowserDistribution --stacktrace
 
       - name: Add legal pages (privacy policy, feedback form, ...)
         shell: bash
-        run: cp legal/*.html webApp/build/dist/composeWebCompatibility/productionExecutable/
+        run: cp legal/*.html webApp/build/dist/wasmJs/productionExecutable/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: webApp/build/dist/composeWebCompatibility/productionExecutable
+          path: webApp/build/dist/wasmJs/productionExecutable
 
   deploy:
     needs: build
