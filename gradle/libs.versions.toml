@@ -12,6 +12,7 @@ bignum = "0.3.10" # https://github.com/ionspin/kotlin-multiplatform-bignum
 buildConfig = "6.0.10" # https://github.com/gmazzo/gradle-buildconfig-plugin
 coil = "3.6.2" # https://github.com/coil-kt/coil
 compose-multiplatform = "1.12.0" # https://github.com/JetBrains/compose-multiplatform
+connectivity = "2.5.2" # https://github.com/jordond/connectivity — network monitoring (device APIs on Android/iOS, HTTP polling on Desktop)
 composeNativeTray = "2.1.6" # https://github.com/NucleusFramework/ComposeNativeTray — HDPI-correct desktop tray with icon menus
 nucleus = "2.5.15" # https://github.com/NucleusFramework/Nucleus — native notifications + Tao windowing / MaterialDecoratedWindow (all dev.nucleusframework:nucleus.* modules)
 filekit = "0.16.0" # https://github.com/vinceglb/FileKit
@@ -57,6 +58,9 @@ nucleus-window-material3 = { module = "dev.nucleusframework:nucleus.decorated-wi
 androidx-activityCompose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
 material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 napier = { module = "io.github.aakira:napier", version.ref = "napier" }
+connectivity-core = { module = "dev.jordond.connectivity:connectivity-core", version.ref = "connectivity" }
+connectivity-device = { module = "dev.jordond.connectivity:connectivity-device", version.ref = "connectivity" }
+connectivity-http = { module = "dev.jordond.connectivity:connectivity-http", version.ref = "connectivity" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }

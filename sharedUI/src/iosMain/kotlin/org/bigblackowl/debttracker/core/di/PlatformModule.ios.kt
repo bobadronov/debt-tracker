@@ -2,6 +2,7 @@ package org.bigblackowl.debttracker.core.di
 
 import com.russhwolf.settings.ExperimentalSettingsImplementation
 import com.russhwolf.settings.KeychainSettings
+import dev.jordond.connectivity.Connectivity
 import io.github.jan.supabase.auth.SessionManager
 import io.github.jan.supabase.auth.SettingsSessionManager
 import org.bigblackowl.debttracker.core.auth.GoogleSignInLauncher
@@ -31,7 +32,8 @@ actual fun platformDataModule(): Module = module {
     single { get<DebtTrackerDatabase>().debtTransactionDao() }
     single { get<DebtTrackerDatabase>().creditorDao() }
     single { get<DebtTrackerDatabase>().creditorTransactionDao() }
-    single { SyncCoordinator(get(), get(), get(), get(), get(), get(), get(), get()) }
+    single<Connectivity> { Connectivity { autoStart = true } } // native NWPathMonitor-based monitoring
+    single { SyncCoordinator(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single<SyncStatusProvider> { get<SyncCoordinator>() }
     single<DebtorRepository> { RoomDebtorRepository(get(), get(), get(), get(), get()) }
     single<CreditorRepository> { RoomCreditorRepository(get(), get(), get(), get(), get()) }

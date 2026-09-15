@@ -92,6 +92,9 @@ kotlin {
         roomMain.dependencies {
             implementation(libs.room.runtime)
             implementation(libs.androidx.sqlite.bundled)
+            // Connectivity monitoring — core only here; the actual monitor (device APIs vs HTTP
+            // polling) is added per-platform below since connectivity-device has no JVM target.
+            implementation(libs.connectivity.core)
         }
 
         commonMain.dependencies {
@@ -157,6 +160,7 @@ kotlin {
             implementation(libs.androidx.credentials.play.services.auth)
             // Native "Sign in with Google" — GetGoogleIdOption for Credential Manager (see GoogleSignInLauncher.android.kt).
             implementation(libs.google.identity.googleid)
+            implementation(libs.connectivity.device) // native ConnectivityManager-based monitoring
         }
 
         jvmMain.dependencies {
@@ -166,6 +170,7 @@ kotlin {
             implementation(libs.zxing.core) // decodes a QR code from a locally-picked image file (Desktop has no camera scanner)
             implementation(libs.nucleus.notification) // native OS notifications; falls back to a Compose toast (LocalNotifier.jvm.kt)
             implementation(libs.java.keyring) // OS credential store for the Supabase session-encryption key (see DesktopSessionKeyCipher)
+            implementation(libs.connectivity.http) // connectivity-device has no JVM target — HTTP-poll monitoring instead
         }
 
         webMain.dependencies {
@@ -175,6 +180,7 @@ kotlin {
 
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+            implementation(libs.connectivity.device) // native NWPathMonitor-based monitoring
         }
 
     }

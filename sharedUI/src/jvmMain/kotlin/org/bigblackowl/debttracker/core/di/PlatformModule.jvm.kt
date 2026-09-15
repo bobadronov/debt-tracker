@@ -1,6 +1,7 @@
 package org.bigblackowl.debttracker.core.di
 
 import com.russhwolf.settings.Settings
+import dev.jordond.connectivity.Connectivity
 import io.github.jan.supabase.auth.SessionManager
 import io.github.jan.supabase.auth.SettingsSessionManager
 import org.bigblackowl.debttracker.core.auth.DesktopGoogleSignInLauncher
@@ -23,6 +24,7 @@ import org.bigblackowl.debttracker.domain.repository.DebtorRepository
 import org.bigblackowl.debttracker.domain.sync.SyncStatusProvider
 import org.koin.core.module.Module
 import org.koin.dsl.module
+import kotlin.time.Duration.Companion.seconds
 
 /** Desktop: Room-backed local storage + [SyncCoordinator] for Account+Sync — identical wiring to Android/iOS. */
 actual fun platformDataModule(): Module = module {
@@ -31,7 +33,16 @@ actual fun platformDataModule(): Module = module {
     single { get<DebtTrackerDatabase>().debtTransactionDao() }
     single { get<DebtTrackerDatabase>().creditorDao() }
     single { get<DebtTrackerDatabase>().creditorTransactionDao() }
-    single { SyncCoordinator(get(), get(), get(), get(), get(), get(), get(), get()) }
+    // connectivity-device has no JVM target — HTTP-poll monitoring instead. Polled well below
+    // the library's 5-minute default so a reconnect-triggered push (see SyncCoordinator) isn't
+    // slower to notice than pushLoop()'s own 30s retry cadence.
+    single<Connectivity> {
+        Connectivity {
+            autoStart = true
+            pollingIntervalMs = 15.seconds
+        }
+    }
+    single { SyncCoordinator(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     single<SyncStatusProvider> { get<SyncCoordinator>() }
     single<DebtorRepository> { RoomDebtorRepository(get(), get(), get(), get(), get()) }
     single<CreditorRepository> { RoomCreditorRepository(get(), get(), get(), get(), get()) }

@@ -1,5 +1,6 @@
 package org.bigblackowl.debttracker.data.sync
 
+import dev.jordond.connectivity.Connectivity
 import io.github.aakira.napier.Napier
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.annotations.SupabaseExperimental
@@ -53,6 +54,7 @@ class SyncCoordinator(
     private val creditorTransactionDao: CreditorTransactionDao,
     private val scope: CoroutineScope,
     private val appSettings: AppSettings,
+    private val connectivity: Connectivity,
 ) : SyncStatusProvider {
     private val _status = MutableStateFlow<SyncUiStatus>(SyncUiStatus.Synced)
     override val status: StateFlow<SyncUiStatus> = _status.asStateFlow()
@@ -118,6 +120,24 @@ class SyncCoordinator(
             launch { resilient { pullDebtTransactions(userId) } }
             launch { resilient { pullCreditors(userId) } }
             launch { resilient { pullCreditorTransactions(userId) } }
+            launch { resilient { pushOnReconnect() } }
+        }
+    }
+
+    /**
+     * pushLoop() already covers the steady state (retries every 30s), but on a real network
+     * drop that's up to 30s of a pending edit sitting unsynced after connectivity is already
+     * back. This pushes immediately on the Disconnected -> Connected edge instead of waiting
+     * for the next tick. The first emission after (re)subscribing is only a baseline — it must
+     * not itself trigger a push, since pushLoop() already pushes once at session start.
+     */
+    private suspend fun pushOnReconnect() {
+        var previous: Connectivity.Status? = null
+        connectivity.statusUpdates.collect { current ->
+            if (current is Connectivity.Status.Connected && previous is Connectivity.Status.Disconnected) {
+                pushPending()
+            }
+            previous = current
         }
     }
 
