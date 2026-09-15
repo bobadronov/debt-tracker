@@ -29,8 +29,14 @@ kotlin {
         compilerOptions { jvmTarget = JvmTarget.JVM_21 }
     }
 
-    js { browser() }
-    wasmJs { browser() }
+    js {
+        browser()
+        binaries.executable() // required for checkComposeUiTestConfigurationForJs (GuardedButtonsTest via runComposeUiTest)
+    }
+    wasmJs {
+        browser()
+        binaries.executable() // required for checkComposeUiTestConfigurationForWasmJs (GuardedButtonsTest via runComposeUiTest)
+    }
 
     iosArm64()
     iosSimulatorArm64()
