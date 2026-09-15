@@ -26,7 +26,7 @@ name: Release
 # Google Play publishing prerequisites (one-time, done by a human — the Play
 # Developer API cannot create an app or do its very first release):
 #   1. Manually create the app in Play Console and upload one .aab by hand
-#      (Internal testing track is fine) — see play-store-listing.md §5.
+#      (Internal testing track is fine) — see docs/play-store-listing.md §5.
 #   2. In Google Cloud Console, create a service account, enable the "Google
 #      Play Android Developer API", and download a JSON key for it.
 #   3. In Play Console → Users and permissions, invite that service account
@@ -168,7 +168,7 @@ jobs:
   # The upload step is skipped (via its own `if:`) until
   # GOOGLE_PLAY_SERVICE_ACCOUNT_JSON is configured as a repo secret. See the
   # prerequisites in the comment block at the top of this file and
-  # play-store-listing.md §5.
+  # docs/play-store-listing.md §5.
   #
   # Note: the `secrets` context isn't recognized inside ANY `if:` expression
   # (job- or step-level) — GitHub Actions rejects the whole workflow file if

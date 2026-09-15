@@ -11,7 +11,7 @@ captures
 .cxx
 local.properties
 secrets.properties
-test-accounts.local.md
+docs/test-accounts.local.md
 xcuserdata/
 Pods/
 *.jks
@@ -39,5 +39,6 @@ supabase/test-credentials*.md
 /androidApp/release/
 screenshots/
 /CLAUDE.md
-/docs/
+/docs/*
+!/docs/play-store-listing.md
 /url.txt
