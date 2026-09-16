@@ -45,8 +45,29 @@ fun SettingsNotificationsScreen(
     val notificationPermissionRequester = rememberNotificationPermissionRequester()
     val openNotificationSettings = rememberOpenNotificationSettings()
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val strings = LocalStrings.current
 
+    SettingsNotificationsContent(
+        state = state,
+        notificationsEnabled = settings.notificationsEnabled,
+        hideAmountsInNotifications = settings.hideAmountsInNotifications,
+        onBack = onBack,
+        onToggleNotifications = { viewModel.onIntent(SettingsNotificationsIntent.ToggleNotifications(it, notificationPermissionRequester)) },
+        onToggleHideAmounts = { settings.hideAmountsInNotifications = it },
+        onOpenNotificationSettings = openNotificationSettings,
+    )
+}
+
+@Composable
+private fun SettingsNotificationsContent(
+    state: SettingsNotificationsState,
+    notificationsEnabled: Boolean,
+    hideAmountsInNotifications: Boolean,
+    onBack: () -> Unit,
+    onToggleNotifications: (Boolean) -> Unit,
+    onToggleHideAmounts: (Boolean) -> Unit,
+    onOpenNotificationSettings: () -> Unit,
+) {
+    val strings = LocalStrings.current
     PlaceholderScreen(title = strings.settings.notifications, onBack = onBack) {
         Column(
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
@@ -58,20 +79,20 @@ fun SettingsNotificationsScreen(
             ) {
                 SettingsSection(strings.settings.notifications) {
                     SettingsSwitchRow(
-                        icon = if (settings.notificationsEnabled) Icons.Filled.Notifications else Icons.Filled.NotificationsOff,
+                        icon = if (notificationsEnabled) Icons.Filled.Notifications else Icons.Filled.NotificationsOff,
                         title = strings.settings.notifications,
-                        subtitle = if (settings.notificationsEnabled && state.notificationsPermissionBlocked) strings.settings.notificationsBlocked else null,
-                        onSubtitleClick = if (settings.notificationsEnabled && state.notificationsPermissionBlocked) openNotificationSettings else null,
-                        checked = settings.notificationsEnabled,
-                        onCheckedChange = { viewModel.onIntent(SettingsNotificationsIntent.ToggleNotifications(it, notificationPermissionRequester)) },
+                        subtitle = if (notificationsEnabled && state.notificationsPermissionBlocked) strings.settings.notificationsBlocked else null,
+                        onSubtitleClick = if (notificationsEnabled && state.notificationsPermissionBlocked) onOpenNotificationSettings else null,
+                        checked = notificationsEnabled,
+                        onCheckedChange = onToggleNotifications,
                     )
-                    if (settings.notificationsEnabled) {
+                    if (notificationsEnabled) {
                         SettingsRowDivider()
                         SettingsSwitchRow(
-                            icon = if (settings.hideAmountsInNotifications) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                            icon = if (hideAmountsInNotifications) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
                             title = strings.notificationBody.hideAmountsToggle,
-                            checked = settings.hideAmountsInNotifications,
-                            onCheckedChange = { settings.hideAmountsInNotifications = it },
+                            checked = hideAmountsInNotifications,
+                            onCheckedChange = onToggleHideAmounts,
                         )
                     }
                 }
@@ -80,26 +101,30 @@ fun SettingsNotificationsScreen(
     }
 }
 
-// The @Preview functions render this rather than SettingsNotificationsScreen directly: the extra hop
-// keeps the koinViewModel() call out of the previewed function's own body (matching SettingsScreen).
-// The screen renders through SettingsNotificationsViewModel, backed by the fakes in preview/PreviewModule.kt.
 @Composable
-private fun SettingsNotificationsScreenPreviewContent() {
-    SettingsNotificationsScreen(onBack = {})
-}
+private fun Preview(state: SettingsNotificationsState, notificationsEnabled: Boolean = true, hideAmountsInNotifications: Boolean = false) =
+    SettingsNotificationsContent(
+        state = state,
+        notificationsEnabled = notificationsEnabled,
+        hideAmountsInNotifications = hideAmountsInNotifications,
+        onBack = {},
+        onToggleNotifications = {},
+        onToggleHideAmounts = {},
+        onOpenNotificationSettings = {},
+    )
 
 @Preview
 @Composable
-private fun SettingsNotificationsScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { SettingsNotificationsScreenPreviewContent() }
+private fun SettingsNotificationsScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { Preview(SettingsNotificationsState()) }
 
 @Preview
 @Composable
-private fun SettingsNotificationsScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { SettingsNotificationsScreenPreviewContent() }
+private fun SettingsNotificationsScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { Preview(SettingsNotificationsState()) }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun SettingsNotificationsScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { SettingsNotificationsScreenPreviewContent() }
+private fun SettingsNotificationsScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { Preview(SettingsNotificationsState()) }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun SettingsNotificationsScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { SettingsNotificationsScreenPreviewContent() }
+private fun SettingsNotificationsScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { Preview(SettingsNotificationsState()) }

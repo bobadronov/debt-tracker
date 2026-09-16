@@ -41,8 +41,6 @@ fun EditContactCardScreen(
     viewModel: EditContactCardViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val strings = LocalStrings.current
-    val clipboardText by rememberClipboardText()
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -52,9 +50,31 @@ fun EditContactCardScreen(
         }
     }
 
+    EditContactCardContent(
+        state = state,
+        onBack = onBack,
+        onNameChange = { viewModel.onIntent(EditContactCardIntent.NameChanged(it)) },
+        onPhoneChange = { viewModel.onIntent(EditContactCardIntent.PhoneChanged(sanitizePhoneInput(it))) },
+        onEmailChange = { viewModel.onIntent(EditContactCardIntent.EmailChanged(it)) },
+        onSave = { viewModel.onIntent(EditContactCardIntent.Save) },
+    )
+}
+
+@Composable
+private fun EditContactCardContent(
+    state: EditContactCardState,
+    onBack: () -> Unit,
+    onNameChange: (String) -> Unit,
+    onPhoneChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
+    onSave: () -> Unit,
+) {
+    val strings = LocalStrings.current
+    val clipboardText by rememberClipboardText()
+
     UnsavedChangesGuard(
         hasUnsavedChanges = state.hasUnsavedChanges,
-        onSave = { viewModel.onIntent(EditContactCardIntent.Save) },
+        onSave = onSave,
         onDiscard = onBack,
     )
 
@@ -66,14 +86,14 @@ fun EditContactCardScreen(
     ) {
         PasteableOutlinedTextField(
             value = state.name,
-            onValueChange = { viewModel.onIntent(EditContactCardIntent.NameChanged(it)) },
+            onValueChange = onNameChange,
             label = strings.fullName,
             clipboardText = clipboardText,
             isPasteRelevant = ::isValidFullName,
         )
         PasteableOutlinedTextField(
             value = state.phone,
-            onValueChange = { viewModel.onIntent(EditContactCardIntent.PhoneChanged(sanitizePhoneInput(it))) },
+            onValueChange = onPhoneChange,
             label = strings.phone,
             clipboardText = clipboardText,
             isPasteRelevant = ::isPhonePasteRelevant,
@@ -82,40 +102,47 @@ fun EditContactCardScreen(
         )
         PasteableOutlinedTextField(
             value = state.email,
-            onValueChange = { viewModel.onIntent(EditContactCardIntent.EmailChanged(it)) },
+            onValueChange = onEmailChange,
             label = strings.email,
             clipboardText = clipboardText,
             isPasteRelevant = ::isValidEmail,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
         )
         Spacer(Modifier.height(Dimens.Spacing.sm))
-        Button(
-            onClick = { viewModel.onIntent(EditContactCardIntent.Save) },
-            modifier = Modifier.fillMaxWidth(),
-        ) { Text(strings.save) }
+        Button(onClick = onSave, modifier = Modifier.fillMaxWidth()) { Text(strings.save) }
     }
 }
+
+@Composable
+private fun Preview(state: EditContactCardState) = EditContactCardContent(
+    state = state,
+    onBack = {},
+    onNameChange = {},
+    onPhoneChange = {},
+    onEmailChange = {},
+    onSave = {},
+)
 
 @Preview
 @Composable
 private fun EditContactCardScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    EditContactCardScreen(onBack = {})
+    Preview(EditContactCardState(name = "Тарас Шевченко", phone = "0501234567", email = "taras@example.com"))
 }
 
 @Preview
 @Composable
 private fun EditContactCardScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    EditContactCardScreen(onBack = {})
+    Preview(EditContactCardState(name = "Тарас Шевченко", phone = "0501234567", email = "taras@example.com"))
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun EditContactCardScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    EditContactCardScreen(onBack = {})
+    Preview(EditContactCardState(name = "Тарас Шевченко", phone = "0501234567", email = "taras@example.com"))
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun EditContactCardScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    EditContactCardScreen(onBack = {})
+    Preview(EditContactCardState(name = "Тарас Шевченко", phone = "0501234567", email = "taras@example.com"))
 }

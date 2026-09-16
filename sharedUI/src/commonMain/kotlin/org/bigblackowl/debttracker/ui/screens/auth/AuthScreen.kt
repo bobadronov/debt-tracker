@@ -56,6 +56,7 @@ import debt_tracker.sharedui.generated.resources.Res
 import debt_tracker.sharedui.generated.resources.ic_google_logo
 import org.bigblackowl.debttracker.BuildConfig
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
+import org.bigblackowl.debttracker.core.media.PickedImage
 import org.bigblackowl.debttracker.core.media.rememberImagePicker
 import org.bigblackowl.debttracker.domain.validation.isPhonePasteRelevant
 import org.bigblackowl.debttracker.domain.validation.isValidEmail
@@ -86,6 +87,48 @@ fun AuthScreen(
     viewModel: AuthViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                AuthEffect.Success -> onAuthenticated()
+            }
+        }
+    }
+
+    AuthContent(
+        state = state,
+        onBack = onBack,
+        showBackButton = showBackButton,
+        onAvatarPicked = { viewModel.onIntent(AuthIntent.AvatarPicked(it)) },
+        onFullNameChange = { viewModel.onIntent(AuthIntent.FullNameChanged(it)) },
+        onEmailChange = { viewModel.onIntent(AuthIntent.EmailChanged(it)) },
+        onPasswordChange = { viewModel.onIntent(AuthIntent.PasswordChanged(it)) },
+        onConfirmPasswordChange = { viewModel.onIntent(AuthIntent.ConfirmPasswordChanged(it)) },
+        onPhoneChange = { viewModel.onIntent(AuthIntent.PhoneChanged(sanitizePhoneInput(it))) },
+        onSwitchToSignUp = { viewModel.onIntent(AuthIntent.SwitchToSignUp) },
+        onSubmit = { viewModel.onIntent(AuthIntent.Submit) },
+        onGoogleSignIn = { viewModel.onIntent(AuthIntent.GoogleSignIn) },
+        onToggleMode = { viewModel.onIntent(AuthIntent.ToggleMode) },
+    )
+}
+
+@Composable
+private fun AuthContent(
+    state: AuthState,
+    onBack: () -> Unit,
+    showBackButton: Boolean,
+    onAvatarPicked: (PickedImage) -> Unit,
+    onFullNameChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onConfirmPasswordChange: (String) -> Unit,
+    onPhoneChange: (String) -> Unit,
+    onSwitchToSignUp: () -> Unit,
+    onSubmit: () -> Unit,
+    onGoogleSignIn: () -> Unit,
+    onToggleMode: () -> Unit,
+) {
     val snackbarHostState = remember { SnackbarHostState() }
     val strings = LocalStrings.current
     var passwordVisible by remember { mutableStateOf(false) }
@@ -98,14 +141,6 @@ fun AuthScreen(
     val confirmPasswordFocusRequester = remember { FocusRequester() }
     val phoneFocusRequester = remember { FocusRequester() }
     val clipboardText by rememberClipboardText()
-
-    LaunchedEffect(Unit) {
-        viewModel.effects.collect { effect ->
-            when (effect) {
-                AuthEffect.Success -> onAuthenticated()
-            }
-        }
-    }
 
     Scaffold(
         topBar = {
@@ -134,14 +169,14 @@ fun AuthScreen(
                         onEditClick = {
                             imagePicker.pickImage { picked ->
                                 if (picked == null) return@pickImage
-                                viewModel.onIntent(AuthIntent.AvatarPicked(picked))
+                                onAvatarPicked(picked)
                             }
                         },
                     )
 
                     PasteableOutlinedTextField(
                         value = state.fullName,
-                        onValueChange = { viewModel.onIntent(AuthIntent.FullNameChanged(it)) },
+                        onValueChange = { onFullNameChange(it) },
                         label = strings.fullName,
                         clipboardText = clipboardText,
                         isPasteRelevant = ::isValidFullName,
@@ -157,7 +192,7 @@ fun AuthScreen(
                 PasteableOutlinedTextField(
                     value = state.email,
                     onValueChange = {
-                        viewModel.onIntent(AuthIntent.EmailChanged(it))
+                        onEmailChange(it)
                     },
                     label = strings.auth.email,
                     clipboardText = clipboardText,
@@ -177,7 +212,7 @@ fun AuthScreen(
                 OutlinedTextField(
                     value = state.password,
                     onValueChange = {
-                        viewModel.onIntent(AuthIntent.PasswordChanged(it))
+                        onPasswordChange(it)
                     },
                     label = { Text(strings.auth.password) },
                     singleLine = true,
@@ -194,7 +229,7 @@ fun AuthScreen(
                         onNext = { confirmPasswordFocusRequester.requestFocus() },
                         onDone = {
                             if (!state.isLoading) {
-                                viewModel.onIntent(AuthIntent.Submit)
+                                onSubmit()
                             }
                         },
                     ),
@@ -237,7 +272,7 @@ fun AuthScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         BodyText(strings.authExtra.offerSignUpPrompt)
-                        TextButton(onClick = { viewModel.onIntent(AuthIntent.SwitchToSignUp) }) {
+                        TextButton(onClick = { onSwitchToSignUp() }) {
                             Text(strings.authExtra.offerSignUpAction)
                         }
                     }
@@ -246,7 +281,7 @@ fun AuthScreen(
                 SignUpOnlyFields(visible = state.isSignUpMode) {
                     OutlinedTextField(
                         value = state.confirmPassword,
-                        onValueChange = { viewModel.onIntent(AuthIntent.ConfirmPasswordChanged(it)) },
+                        onValueChange = { onConfirmPasswordChange(it) },
                         label = { Text(strings.auth.confirmPassword) },
                         singleLine = true,
                         visualTransformation = if (confirmPasswordVisible) {
@@ -285,7 +320,7 @@ fun AuthScreen(
 
                     PasteableOutlinedTextField(
                         value = state.phone,
-                        onValueChange = { viewModel.onIntent(AuthIntent.PhoneChanged(sanitizePhoneInput(it))) },
+                        onValueChange = { onPhoneChange(it) },
                         label = strings.phone,
                         clipboardText = clipboardText,
                         isPasteRelevant = ::isPhonePasteRelevant,
@@ -298,7 +333,7 @@ fun AuthScreen(
                         keyboardActions = KeyboardActions(
                             onDone = {
                                 if (!state.isLoading) {
-                                    viewModel.onIntent(AuthIntent.Submit)
+                                    onSubmit()
                                 }
                             },
                         ),
@@ -308,7 +343,7 @@ fun AuthScreen(
 
                 Spacer(Modifier.height(Dimens.Spacing.xl))
                 LoadingButton(
-                    onClick = { viewModel.onIntent(AuthIntent.Submit) },
+                    onClick = { onSubmit() },
                     isLoading = state.isLoading,
                     enabled = !state.isGoogleLoading,
                     modifier = Modifier.fillMaxWidth(.8f),
@@ -326,7 +361,7 @@ fun AuthScreen(
                         HorizontalDivider(modifier = Modifier.weight(1f))
                     }
                     OutlinedButton(
-                        onClick = { viewModel.onIntent(AuthIntent.GoogleSignIn) },
+                        onClick = { onGoogleSignIn() },
                         enabled = !state.isLoading && !state.isGoogleLoading,
                         modifier = Modifier.fillMaxWidth(.8f),
                     ) {
@@ -355,7 +390,7 @@ fun AuthScreen(
                     }
                 }
 
-                TextButton(onClick = { viewModel.onIntent(AuthIntent.ToggleMode) }) {
+                TextButton(onClick = { onToggleMode() }) {
                     Text(if (state.isSignUpMode) strings.auth.toggleToSignIn else strings.auth.toggleToSignUp)
                 }
             }
@@ -375,26 +410,43 @@ private fun SignUpOnlyFields(visible: Boolean, content: @Composable ColumnScope.
     }
 }
 
+@Composable
+private fun Preview(state: AuthState) = AuthContent(
+    state = state,
+    onBack = {},
+    showBackButton = true,
+    onAvatarPicked = {},
+    onFullNameChange = {},
+    onEmailChange = {},
+    onPasswordChange = {},
+    onConfirmPasswordChange = {},
+    onPhoneChange = {},
+    onSwitchToSignUp = {},
+    onSubmit = {},
+    onGoogleSignIn = {},
+    onToggleMode = {},
+)
+
 @Preview
 @Composable
 private fun AuthScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    AuthScreen(onBack = {}, onAuthenticated = {})
+    Preview(AuthState())
 }
 
 @Preview
 @Composable
 private fun AuthScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    AuthScreen(onBack = {}, onAuthenticated = {})
+    Preview(AuthState(isSignUpMode = true))
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun AuthScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    AuthScreen(onBack = {}, onAuthenticated = {})
+    Preview(AuthState())
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun AuthScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    AuthScreen(onBack = {}, onAuthenticated = {})
+    Preview(AuthState(isSignUpMode = true))
 }

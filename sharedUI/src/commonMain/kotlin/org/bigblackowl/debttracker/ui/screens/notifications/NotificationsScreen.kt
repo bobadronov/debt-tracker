@@ -66,7 +66,6 @@ fun NotificationsScreen(
     viewModel: NotificationsViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val strings = LocalStrings.current
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -78,6 +77,41 @@ fun NotificationsScreen(
             }
         }
     }
+
+    NotificationsContent(
+        state = state,
+        snackbarHostState = snackbarHostState,
+        onBack = onBack,
+        onMarkAllRead = { viewModel.onIntent(NotificationsIntent.MarkAllRead) },
+        onOpen = { viewModel.onIntent(NotificationsIntent.Open(it)) },
+        onDelete = { viewModel.onIntent(NotificationsIntent.Delete(it)) },
+        onApproveLinkRequest = { id, requestId -> viewModel.onIntent(NotificationsIntent.ApproveLinkRequest(id, requestId)) },
+        onRejectLinkRequest = { id, requestId -> viewModel.onIntent(NotificationsIntent.RejectLinkRequest(id, requestId)) },
+        onApproveCorrection = { id, correctionId -> viewModel.onIntent(NotificationsIntent.ApproveCorrection(id, correctionId)) },
+        onRejectCorrection = { id, correctionId -> viewModel.onIntent(NotificationsIntent.RejectCorrection(id, correctionId)) },
+        onOpenCorrectionDialog = { viewModel.onIntent(NotificationsIntent.OpenCorrectionDialog(it)) },
+        onDismissCorrectionDialog = { viewModel.onIntent(NotificationsIntent.DismissCorrectionDialog) },
+        onSubmitCorrection = { id, reason, amount -> viewModel.onIntent(NotificationsIntent.SubmitCorrection(id, reason, amount)) },
+    )
+}
+
+@Composable
+private fun NotificationsContent(
+    state: NotificationsState,
+    snackbarHostState: SnackbarHostState,
+    onBack: () -> Unit,
+    onMarkAllRead: () -> Unit,
+    onOpen: (AppNotification) -> Unit,
+    onDelete: (String) -> Unit,
+    onApproveLinkRequest: (String, String) -> Unit,
+    onRejectLinkRequest: (String, String) -> Unit,
+    onApproveCorrection: (String, String) -> Unit,
+    onRejectCorrection: (String, String) -> Unit,
+    onOpenCorrectionDialog: (AppNotification) -> Unit,
+    onDismissCorrectionDialog: () -> Unit,
+    onSubmitCorrection: (String, CorrectionReason, BigDecimal?) -> Unit,
+) {
+    val strings = LocalStrings.current
 
     SettingsDetailScaffold(
         title = strings.notifications.title,
@@ -95,7 +129,7 @@ fun NotificationsScreen(
             else -> {
                 if (state.notifications.any { !it.isRead }) {
                     TextButton(
-                        onClick = { viewModel.onIntent(NotificationsIntent.MarkAllRead) },
+                        onClick = onMarkAllRead,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Icon(Icons.Filled.DoneAll, contentDescription = null, modifier = Modifier.padding(end = Dimens.Spacing.sm))
@@ -106,27 +140,27 @@ fun NotificationsScreen(
                     state.notifications.forEachIndexed { index, notification ->
                         NotificationRow(
                             notification = notification,
-                            onOpen = { viewModel.onIntent(NotificationsIntent.Open(notification)) },
-                            onDelete = { viewModel.onIntent(NotificationsIntent.Delete(notification.id)) },
+                            onOpen = { onOpen(notification) },
+                            onDelete = { onDelete(notification.id) },
                             onApprove = notification.relatedLinkRequestId?.let { requestId ->
-                                { viewModel.onIntent(NotificationsIntent.ApproveLinkRequest(notification.id, requestId)) }
+                                { onApproveLinkRequest(notification.id, requestId) }
                             },
                             onReject = notification.relatedLinkRequestId?.let { requestId ->
-                                { viewModel.onIntent(NotificationsIntent.RejectLinkRequest(notification.id, requestId)) }
+                                { onRejectLinkRequest(notification.id, requestId) }
                             },
                             onApproveCorrection = notification.relatedCorrectionId
                                 ?.takeIf { notification.type == NotificationType.TRANSACTION_CORRECTION }
                                 ?.let { correctionId ->
-                                    { viewModel.onIntent(NotificationsIntent.ApproveCorrection(notification.id, correctionId)) }
+                                    { onApproveCorrection(notification.id, correctionId) }
                                 },
                             onRejectCorrection = notification.relatedCorrectionId
                                 ?.takeIf { notification.type == NotificationType.TRANSACTION_CORRECTION }
                                 ?.let { correctionId ->
-                                    { viewModel.onIntent(NotificationsIntent.RejectCorrection(notification.id, correctionId)) }
+                                    { onRejectCorrection(notification.id, correctionId) }
                                 },
                             onProposeCorrection = notification.relatedTransactionId
                                 ?.takeIf { notification.type.isTransactionAdded() }
-                                ?.let { { viewModel.onIntent(NotificationsIntent.OpenCorrectionDialog(notification)) } },
+                                ?.let { { onOpenCorrectionDialog(notification) } },
                         )
                         if (index != state.notifications.lastIndex) SettingsRowDivider()
                     }
@@ -138,9 +172,9 @@ fun NotificationsScreen(
     state.correctionDialogFor?.let { notification ->
         CorrectionDialog(
             notification = notification,
-            onDismiss = { viewModel.onIntent(NotificationsIntent.DismissCorrectionDialog) },
+            onDismiss = onDismissCorrectionDialog,
             onSubmit = { reason, amount ->
-                viewModel.onIntent(NotificationsIntent.SubmitCorrection(notification.id, reason, amount))
+                onSubmitCorrection(notification.id, reason, amount)
             },
         )
     }
@@ -302,19 +336,56 @@ private fun NotificationType.icon(): ImageVector = when (this) {
         -> Icons.AutoMirrored.Filled.ReceiptLong
 }
 
+private val PREVIEW_NOW = kotlin.time.Instant.parse("2026-09-16T08:00:00Z")
+
+private val PREVIEW_NOTIFICATIONS = listOf(
+    AppNotification(
+        id = "n1", type = NotificationType.DEBT_TRANSACTION_ADDED, actorDisplayName = "Тарас Шевченко",
+        relatedDebtorId = "d1", relatedCreditorId = null, relatedLinkRequestId = null,
+        relatedTransactionId = "t1", relatedCorrectionId = null,
+        amount = BigDecimal.parseString("500"), currency = org.bigblackowl.debttracker.domain.model.Currency.UAH,
+        isRead = false, createdAt = PREVIEW_NOW,
+    ),
+    AppNotification(
+        id = "n2", type = NotificationType.LINK_REQUEST, actorDisplayName = "Леся Українка",
+        relatedDebtorId = null, relatedCreditorId = null, relatedLinkRequestId = "lr1",
+        relatedTransactionId = null, relatedCorrectionId = null,
+        amount = null, currency = null,
+        isRead = true, createdAt = PREVIEW_NOW,
+    ),
+)
+
 @Composable
-private fun NotificationsScreenPreviewContent() {
-    NotificationsScreen(onBack = {}, onNavigateToDebtor = {}, onNavigateToCreditor = {})
+private fun Preview(state: NotificationsState) = NotificationsContent(
+    state = state,
+    snackbarHostState = remember { SnackbarHostState() },
+    onBack = {},
+    onMarkAllRead = {},
+    onOpen = {},
+    onDelete = {},
+    onApproveLinkRequest = { _, _ -> },
+    onRejectLinkRequest = { _, _ -> },
+    onApproveCorrection = { _, _ -> },
+    onRejectCorrection = { _, _ -> },
+    onOpenCorrectionDialog = {},
+    onDismissCorrectionDialog = {},
+    onSubmitCorrection = { _, _, _ -> },
+)
+
+@Preview
+@Composable
+private fun NotificationsScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(NotificationsState(isLoading = false, notifications = PREVIEW_NOTIFICATIONS))
 }
 
 @Preview
 @Composable
-private fun NotificationsScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { NotificationsScreenPreviewContent() }
-
-@Preview
-@Composable
-private fun NotificationsScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { NotificationsScreenPreviewContent() }
+private fun NotificationsScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
+    Preview(NotificationsState(isLoading = false, notifications = PREVIEW_NOTIFICATIONS))
+}
 
 @Preview(device = DESKTOP)
 @Composable
-private fun NotificationsScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { NotificationsScreenPreviewContent() }
+private fun NotificationsScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(NotificationsState(isLoading = false, notifications = PREVIEW_NOTIFICATIONS))
+}

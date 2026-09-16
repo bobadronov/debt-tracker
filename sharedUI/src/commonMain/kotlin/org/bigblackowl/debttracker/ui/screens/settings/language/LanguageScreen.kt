@@ -56,6 +56,19 @@ import org.koin.compose.koinInject
 @Composable
 fun LanguageScreen(onBack: () -> Unit) {
     val settings = koinInject<AppSettings>()
+
+    LanguageContent(
+        selectedLocale = settings.locale,
+        onBack = onBack,
+        onSelectLocale = {
+            settings.locale = it
+            onBack()
+        },
+    )
+}
+
+@Composable
+private fun LanguageContent(selectedLocale: String, onBack: () -> Unit, onSelectLocale: (String) -> Unit) {
     val strings = LocalStrings.current
     val languageOptions = remember(strings) { languageOptions(strings) }
 
@@ -63,7 +76,7 @@ fun LanguageScreen(onBack: () -> Unit) {
         LazyColumn(modifier = Modifier.fillMaxHeight().width(Dimens.contentMaxWidth)) {
             itemsIndexed(languageOptions) { index, option ->
                 val (value, label, flag) = option
-                val selected = settings.locale == value
+                val selected = selectedLocale == value
                 val containerColor by animateColorAsState(
                     if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
                 )
@@ -94,10 +107,7 @@ fun LanguageScreen(onBack: () -> Unit) {
                             Icon(Icons.Filled.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         }
                     },
-                    onClick = {
-                        settings.locale = value
-                        onBack()
-                    },
+                    onClick = { onSelectLocale(value) },
                 )
                 if (index != languageOptions.lastIndex) SettingsRowDivider()
             }
@@ -126,23 +136,23 @@ internal fun languageOptions(strings: Strings) = listOf(
 @Preview
 @Composable
 private fun LanguageScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    LanguageScreen(onBack = {})
+    LanguageContent(selectedLocale = "uk", onBack = {}, onSelectLocale = {})
 }
 
 @Preview
 @Composable
 private fun LanguageScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    LanguageScreen(onBack = {})
+    LanguageContent(selectedLocale = "uk", onBack = {}, onSelectLocale = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun LanguageScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    LanguageScreen(onBack = {})
+    LanguageContent(selectedLocale = "system", onBack = {}, onSelectLocale = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun LanguageScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    LanguageScreen(onBack = {})
+    LanguageContent(selectedLocale = "system", onBack = {}, onSelectLocale = {})
 }

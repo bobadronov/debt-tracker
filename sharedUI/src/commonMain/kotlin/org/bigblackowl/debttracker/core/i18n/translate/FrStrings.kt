@@ -389,6 +389,9 @@ val FrStrings = Strings(
         refresh = "Actualiser",
         error = "Impossible de charger les taux de change",
         stale = "Affichage des données enregistrées",
+        sortByName = "Par nom",
+        swapDirection = "Inverser la direction",
+        copied = { value -> "Copié : $value" },
     ),
     transactionEdit = TransactionEditStrings(
         editTitle = "Modifier la transaction",

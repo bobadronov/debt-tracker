@@ -41,23 +41,45 @@ fun AccountInfoScreen(
     onOpenActiveSessions: () -> Unit,
     authRepository: AuthRepository = koinInject(),
 ) {
-    val strings = LocalStrings.current
     val avatarUrl by authRepository.avatarUrl.collectAsStateWithLifecycle()
     val name by authRepository.displayName.collectAsStateWithLifecycle()
     val email by authRepository.email.collectAsStateWithLifecycle()
     val phone by authRepository.phone.collectAsStateWithLifecycle()
 
+    AccountInfoContent(
+        state = AccountInfoState(avatarUrl = avatarUrl, name = name, email = email, phone = phone),
+        onBack = onBack,
+        onEdit = onEdit,
+        onOpenActiveSessions = onOpenActiveSessions,
+    )
+}
+
+data class AccountInfoState(
+    val avatarUrl: String? = null,
+    val name: String? = null,
+    val email: String? = null,
+    val phone: String? = null,
+)
+
+@Composable
+private fun AccountInfoContent(
+    state: AccountInfoState,
+    onBack: () -> Unit,
+    onEdit: () -> Unit,
+    onOpenActiveSessions: () -> Unit,
+) {
+    val strings = LocalStrings.current
     SettingsDetailScaffold(title = strings.settings.account, onBack = onBack) {
         Spacer(Modifier.height(Dimens.Spacing.sm))
-        AccountAvatar(avatarUrl = avatarUrl, isUploading = false, onEditClick = onEdit)
+        AccountAvatar(avatarUrl = state.avatarUrl, isUploading = false, onEditClick = onEdit)
         Spacer(Modifier.height(Dimens.Spacing.sm))
 
         SettingsSection(strings.settings.account) {
-            SettingsRow(icon = Icons.Filled.Person, title = strings.fullName, subtitle = name?.takeIf { it.isNotBlank() })
+            SettingsRow(icon = Icons.Filled.Person, title = strings.fullName, subtitle = state.name?.takeIf { it.isNotBlank() })
             SettingsRowDivider()
-            SettingsRow(icon = Icons.Filled.Email, title = strings.email, subtitle = email?.takeIf { it.isNotBlank() })
+            SettingsRow(icon = Icons.Filled.Email, title = strings.email, subtitle = state.email?.takeIf { it.isNotBlank() })
             SettingsRowDivider()
-            SettingsRow(icon = Icons.Filled.Phone, title = strings.phone, subtitle = formatUkrainianPhone(phone))
+            SettingsRow(icon = Icons.Filled.Phone, title = strings.phone, subtitle = formatUkrainianPhone(state.phone))
             SettingsRowDivider()
             SettingsRow(
                 icon = Icons.Filled.Devices,
@@ -72,26 +94,34 @@ fun AccountInfoScreen(
     }
 }
 
+@Composable
+private fun Preview(state: AccountInfoState) = AccountInfoContent(
+    state = state,
+    onBack = {},
+    onEdit = {},
+    onOpenActiveSessions = {},
+)
+
 @Preview
 @Composable
 private fun AccountInfoScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    AccountInfoScreen(onBack = {}, onEdit = {}, onOpenActiveSessions = {})
+    Preview(AccountInfoState(name = "Тарас Шевченко", email = "taras@example.com", phone = "+380501234567"))
 }
 
 @Preview
 @Composable
 private fun AccountInfoScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    AccountInfoScreen(onBack = {}, onEdit = {}, onOpenActiveSessions = {})
+    Preview(AccountInfoState(name = "Тарас Шевченко", email = "taras@example.com", phone = "+380501234567"))
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun AccountInfoScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    AccountInfoScreen(onBack = {}, onEdit = {}, onOpenActiveSessions = {})
+    Preview(AccountInfoState(name = "Тарас Шевченко", email = "taras@example.com", phone = "+380501234567"))
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun AccountInfoScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    AccountInfoScreen(onBack = {}, onEdit = {}, onOpenActiveSessions = {})
+    Preview(AccountInfoState(name = "Тарас Шевченко", email = "taras@example.com", phone = "+380501234567"))
 }

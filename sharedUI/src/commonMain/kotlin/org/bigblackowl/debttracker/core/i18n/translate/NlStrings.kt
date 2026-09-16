@@ -389,6 +389,9 @@ val NlStrings = Strings(
         refresh = "Vernieuwen",
         error = "Kan wisselkoersen niet laden",
         stale = "Opgeslagen gegevens worden weergegeven",
+        sortByName = "Op naam",
+        swapDirection = "Richting omkeren",
+        copied = { value -> "Gekopieerd: $value" },
     ),
     transactionEdit = TransactionEditStrings(
         editTitle = "Transactie bewerken",

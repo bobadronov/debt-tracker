@@ -49,7 +49,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -91,11 +90,77 @@ fun SettingsScreen(
     onOpenAbout: () -> Unit,
     viewModel: SettingsViewModel = koinViewModel(),
 ) {
-    val strings = LocalStrings.current
     val settings = koinInject<AppSettings>()
     val authRepository = koinInject<AuthRepository>()
     val uriHandler = LocalUriHandler.current
     val isAuthenticated by authRepository.isAuthenticated.collectAsStateWithLifecycle()
+    val avatarUrl by authRepository.avatarUrl.collectAsStateWithLifecycle()
+    val accountEmail by authRepository.email.collectAsStateWithLifecycle()
+    val accountName by authRepository.displayName.collectAsStateWithLifecycle()
+    val accountPhone by authRepository.phone.collectAsStateWithLifecycle()
+
+    SettingsContent(
+        state = SettingsScreenState(
+            isAuthenticated = isAuthenticated,
+            avatarUrl = avatarUrl,
+            accountEmail = accountEmail,
+            accountName = accountName,
+            accountPhone = accountPhone,
+            notificationsEnabled = settings.notificationsEnabled,
+            hapticEnabled = settings.hapticEnabled,
+            runInBackground = settings.runInBackground,
+            theme = settings.theme,
+            locale = settings.locale,
+        ),
+        onBack = onBack,
+        onOpenAuth = onOpenAuth,
+        onOpenAccountInfo = onOpenAccountInfo,
+        onOpenProtection = onOpenProtection,
+        onOpenNotifications = onOpenNotifications,
+        onOpenLanguage = onOpenLanguage,
+        onOpenData = onOpenData,
+        onOpenAbout = onOpenAbout,
+        onSignOut = { viewModel.onIntent(SettingsIntent.SignOut) },
+        onToggleHaptic = { settings.hapticEnabled = it },
+        onToggleRunInBackground = { settings.runInBackground = it },
+        onSetTheme = { settings.theme = it },
+        onOpenUrl = { uriHandler.openUri(it) },
+    )
+}
+
+/** UI-only bundling of the reactive values [SettingsContent] renders — not a real MVI state (this
+ * screen has no dedicated ViewModel state; [SettingsViewModel] only carries the SignOut intent). */
+private data class SettingsScreenState(
+    val isAuthenticated: Boolean,
+    val avatarUrl: String?,
+    val accountEmail: String?,
+    val accountName: String?,
+    val accountPhone: String?,
+    val notificationsEnabled: Boolean,
+    val hapticEnabled: Boolean,
+    val runInBackground: Boolean,
+    val theme: String,
+    val locale: String,
+)
+
+@Composable
+private fun SettingsContent(
+    state: SettingsScreenState,
+    onBack: () -> Unit,
+    onOpenAuth: () -> Unit,
+    onOpenAccountInfo: () -> Unit,
+    onOpenProtection: () -> Unit,
+    onOpenNotifications: () -> Unit,
+    onOpenLanguage: () -> Unit,
+    onOpenData: () -> Unit,
+    onOpenAbout: () -> Unit,
+    onSignOut: () -> Unit,
+    onToggleHaptic: (Boolean) -> Unit,
+    onToggleRunInBackground: (Boolean) -> Unit,
+    onSetTheme: (String) -> Unit,
+    onOpenUrl: (String) -> Unit,
+) {
+    val strings = LocalStrings.current
     var showSignOutConfirm by remember { mutableStateOf(false) }
 
     val showProtectionRow = currentPlatform != AppPlatform.WEB
@@ -113,7 +178,7 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.xl),
             ) {
                 AccountSection(
-                    authRepository = authRepository,
+                    state = state,
                     onOpenAuth = onOpenAuth,
                     onOpenAccountInfo = onOpenAccountInfo,
                     onSignOut = { showSignOutConfirm = true },
@@ -127,9 +192,9 @@ fun SettingsScreen(
                         )
                         SettingsRowDivider()
                     }
-                    if (isAuthenticated) {
+                    if (state.isAuthenticated) {
                         SettingsRow(
-                            icon = if (settings.notificationsEnabled) Icons.Filled.Notifications else Icons.Filled.NotificationsOff,
+                            icon = if (state.notificationsEnabled) Icons.Filled.Notifications else Icons.Filled.NotificationsOff,
                             title = strings.settings.notifications,
                             onClick = onOpenNotifications,
                         )
@@ -153,8 +218,8 @@ fun SettingsScreen(
                         SettingsSwitchRow(
                             icon = Icons.Filled.Vibration,
                             title = strings.settings.haptic,
-                            checked = settings.hapticEnabled,
-                            onCheckedChange = { settings.hapticEnabled = it },
+                            checked = state.hapticEnabled,
+                            onCheckedChange = onToggleHaptic,
                         )
                         SettingsRowDivider()
                     }
@@ -164,8 +229,8 @@ fun SettingsScreen(
                             icon = Icons.Filled.Sync,
                             title = strings.settings.runInBackground,
                             subtitle = strings.settings.runInBackgroundSubtitle,
-                            checked = settings.runInBackground,
-                            onCheckedChange = { settings.runInBackground = it },
+                            checked = state.runInBackground,
+                            onCheckedChange = onToggleRunInBackground,
                         )
                         SettingsRowDivider()
                     }
@@ -178,23 +243,23 @@ fun SettingsScreen(
                             "dark" to strings.settings.themeDark,
                         )
                     }
-                    val themeIndex = themeOptions.indexOfFirst { it.first == settings.theme }.coerceAtLeast(0)
+                    val themeIndex = themeOptions.indexOfFirst { it.first == state.theme }.coerceAtLeast(0)
                     SettingsRow(
-                        icon = when (settings.theme) {
+                        icon = when (state.theme) {
                             "light" -> Icons.Filled.LightMode
                             "dark" -> Icons.Filled.DarkMode
                             else -> Icons.Filled.BrightnessAuto
                         },
                         title = strings.settings.theme,
                         subtitle = themeOptions[themeIndex].second,
-                        onClick = { settings.theme = themeOptions[(themeIndex + 1) % themeOptions.size].first },
+                        onClick = { onSetTheme(themeOptions[(themeIndex + 1) % themeOptions.size].first) },
                     )
                     SettingsRowDivider()
 
                     // Full screen instead of a dropdown — the option list (system/uk/en, more to come)
                     // doesn't fit a small menu well long-term. See LanguageScreen.
                     val languageOptions = remember(strings) { languageOptions(strings) }
-                    val languageLabel = languageOptions.firstOrNull { it.value == settings.locale }?.label
+                    val languageLabel = languageOptions.firstOrNull { it.value == state.locale }?.label
                         ?: languageOptions.first().label
                     SettingsRow(
                         icon = Icons.Filled.Language,
@@ -203,7 +268,7 @@ fun SettingsScreen(
                         onClick = onOpenLanguage,
                     )
                 }
-                GetAppSection(uriHandler = uriHandler)
+                GetAppSection(onOpenUrl = onOpenUrl)
             }
         }
     }
@@ -215,7 +280,7 @@ fun SettingsScreen(
             confirmLabel = strings.settings.signOut,
             onConfirm = {
                 showSignOutConfirm = false
-                viewModel.onIntent(SettingsIntent.SignOut)
+                onSignOut()
             },
             onDismiss = { showSignOutConfirm = false },
         )
@@ -227,28 +292,23 @@ fun SettingsScreen(
 // Active devices); editing itself lives one step further, on EditAccountScreen.
 @Composable
 private fun AccountSection(
-    authRepository: AuthRepository,
+    state: SettingsScreenState,
     onOpenAuth: () -> Unit,
     onOpenAccountInfo: () -> Unit,
     onSignOut: () -> Unit,
 ) {
     val strings = LocalStrings.current
-    val isAuthenticated by authRepository.isAuthenticated.collectAsStateWithLifecycle()
-    val avatarUrl by authRepository.avatarUrl.collectAsStateWithLifecycle()
-    val accountEmail by authRepository.email.collectAsStateWithLifecycle()
-    val accountName by authRepository.displayName.collectAsStateWithLifecycle()
-    val accountPhone by authRepository.phone.collectAsStateWithLifecycle()
 
     SettingsSection(strings.settings.account) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .let { if (isAuthenticated) it.clickable(onClick = onOpenAccountInfo) else it }
+                .let { if (state.isAuthenticated) it.clickable(onClick = onOpenAccountInfo) else it }
                 .padding(Dimens.Spacing.lg),
             verticalAlignment = Alignment.CenterVertically
         ) {
             SubcomposeAsyncImage(
-                model = avatarUrl,
+                model = state.avatarUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Inside,
                 modifier = Modifier.size(Dimens.IconSize.xxl).clip(CircleShape),
@@ -265,17 +325,17 @@ private fun AccountSection(
             Spacer(Modifier.width(Dimens.Spacing.lg))
             Column(modifier = Modifier.weight(1f)) {
                 CaptionText(
-                    if (isAuthenticated) strings.settings.accountSynced(accountName ?: accountEmail.orEmpty()) else strings.settings.localOnly,
+                    if (state.isAuthenticated) strings.settings.accountSynced(state.accountName ?: state.accountEmail.orEmpty()) else strings.settings.localOnly,
                     style = MaterialTheme.typography.bodyMedium,
                 )
-                if (isAuthenticated) {
-                    accountEmail?.takeIf { it.isNotBlank() }?.let { ContactLine(Icons.Filled.Email, it) }
-                    formatUkrainianPhone(accountPhone)?.let { ContactLine(Icons.Filled.Phone, it) }
+                if (state.isAuthenticated) {
+                    state.accountEmail?.takeIf { it.isNotBlank() }?.let { ContactLine(Icons.Filled.Email, it) }
+                    formatUkrainianPhone(state.accountPhone)?.let { ContactLine(Icons.Filled.Phone, it) }
                 }
             }
         }
         SettingsRowDivider()
-        if (isAuthenticated) {
+        if (state.isAuthenticated) {
             SettingsRow(
                 icon = Icons.AutoMirrored.Filled.Logout,
                 title = strings.settings.signOut,
@@ -316,7 +376,7 @@ private const val PLAY_STORE_URL = "https://play.google.com/store/apps/details?i
 private const val RELEASES_URL = "https://github.com/bobadronov/debt-tracker/releases/latest"
 
 @Composable
-private fun GetAppSection(uriHandler: UriHandler) {
+private fun GetAppSection(onOpenUrl: (String) -> Unit) {
     val strings = LocalStrings.current
     SettingsSection(strings.settings.getAppTitle) {
         if (currentPlatform != AppPlatform.WEB) {
@@ -324,7 +384,7 @@ private fun GetAppSection(uriHandler: UriHandler) {
                 icon = Icons.Filled.Public,
                 title = strings.settings.getAppWebsite,
                 subtitle = WEBSITE_URL,
-                onClick = { uriHandler.openUri(WEBSITE_URL) },
+                onClick = { onOpenUrl(WEBSITE_URL) },
             )
             SettingsRowDivider()
         }
@@ -333,7 +393,7 @@ private fun GetAppSection(uriHandler: UriHandler) {
                 icon = Icons.Filled.Android,
                 title = strings.settings.getAppAndroid,
                 subtitle = "Google Play",
-                onClick = { uriHandler.openUri(PLAY_STORE_URL) },
+                onClick = { onOpenUrl(PLAY_STORE_URL) },
             )
         }
         if (currentPlatform != AppPlatform.DESKTOP) {
@@ -342,42 +402,68 @@ private fun GetAppSection(uriHandler: UriHandler) {
                 icon = Icons.Filled.Computer,
                 title = strings.settings.getAppDesktop,
                 subtitle = "Windows · macOS · Linux",
-                onClick = { uriHandler.openUri(RELEASES_URL) },
+                onClick = { onOpenUrl(RELEASES_URL) },
             )
         }
     }
 }
 
-// The @Preview functions render this rather than SettingsScreen directly: the extra hop keeps the
-// koinViewModel() call out of the previewed function's own body (the tooling only flags a ViewModel
-// one call deep), matching HomeScreen/NotificationsScreen/QrHubScreen. The screen still renders
-// through SettingsViewModel, backed by the fakes in preview/PreviewModule.kt — no real I/O.
 @Composable
-private fun SettingsScreenPreviewContent() {
-    SettingsScreen(
-        onBack = {},
-        onOpenAuth = {},
-        onOpenAccountInfo = {},
-        onOpenProtection = {},
-        onOpenNotifications = {},
-        onOpenLanguage = {},
-        onOpenData = {},
-        onOpenAbout = {},
-    )
-}
+private fun Preview(state: SettingsScreenState) = SettingsContent(
+    state = state,
+    onBack = {},
+    onOpenAuth = {},
+    onOpenAccountInfo = {},
+    onOpenProtection = {},
+    onOpenNotifications = {},
+    onOpenLanguage = {},
+    onOpenData = {},
+    onOpenAbout = {},
+    onSignOut = {},
+    onToggleHaptic = {},
+    onToggleRunInBackground = {},
+    onSetTheme = {},
+    onOpenUrl = {},
+)
+
+private val PREVIEW_STATE_SIGNED_IN = SettingsScreenState(
+    isAuthenticated = true,
+    avatarUrl = null,
+    accountEmail = "taras@example.com",
+    accountName = "Тарас Шевченко",
+    accountPhone = "0501234567",
+    notificationsEnabled = true,
+    hapticEnabled = true,
+    runInBackground = true,
+    theme = "system",
+    locale = "uk",
+)
+
+private val PREVIEW_STATE_SIGNED_OUT = SettingsScreenState(
+    isAuthenticated = false,
+    avatarUrl = null,
+    accountEmail = null,
+    accountName = null,
+    accountPhone = null,
+    notificationsEnabled = false,
+    hapticEnabled = true,
+    runInBackground = false,
+    theme = "system",
+    locale = "uk",
+)
 
 @Preview
 @Composable
-private fun SettingsScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { SettingsScreenPreviewContent() }
+private fun SettingsScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { Preview(PREVIEW_STATE_SIGNED_IN) }
 
 @Preview
 @Composable
-private fun SettingsScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { SettingsScreenPreviewContent() }
+private fun SettingsScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { Preview(PREVIEW_STATE_SIGNED_OUT) }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun SettingsScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { SettingsScreenPreviewContent() }
+private fun SettingsScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { Preview(PREVIEW_STATE_SIGNED_IN) }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun SettingsScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { SettingsScreenPreviewContent() }
+private fun SettingsScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { Preview(PREVIEW_STATE_SIGNED_OUT) }

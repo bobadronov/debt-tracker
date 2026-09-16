@@ -389,6 +389,9 @@ val CsStrings = Strings(
         refresh = "Obnovit",
         error = "Kurzy měn se nepodařilo načíst",
         stale = "Zobrazují se uložená data",
+        sortByName = "Podle názvu",
+        swapDirection = "Obrátit směr",
+        copied = { value -> "Zkopírováno: $value" },
     ),
     transactionEdit = TransactionEditStrings(
         editTitle = "Upravit transakci",

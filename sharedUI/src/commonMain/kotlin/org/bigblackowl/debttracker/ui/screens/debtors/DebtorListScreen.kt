@@ -39,11 +39,39 @@ fun DebtorListScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val searchFocusRequester = remember { FocusRequester() }
-    val strings = LocalStrings.current
 
     LaunchedEffect(Unit) {
         searchFocusRequests.events.collect { searchFocusRequester.requestFocus() }
     }
+
+    DebtorListContent(
+        state = state,
+        searchFocusRequester = searchFocusRequester,
+        onAddDebtor = onAddDebtor,
+        onOpenDebtor = onOpenDebtor,
+        onRefresh = { viewModel.onIntent(DebtorListIntent.Refresh) },
+        onSearch = { viewModel.onIntent(DebtorListIntent.Search(it)) },
+        onToggleSortDirection = { viewModel.onIntent(DebtorListIntent.ToggleSortDirection) },
+        onChangeSort = { viewModel.onIntent(DebtorListIntent.ChangeSort(it)) },
+        onChangeStatusFilter = { viewModel.onIntent(DebtorListIntent.ChangeStatusFilter(it)) },
+        onDelete = { viewModel.onIntent(DebtorListIntent.Delete(it)) },
+    )
+}
+
+@Composable
+private fun DebtorListContent(
+    state: DebtorListState,
+    searchFocusRequester: FocusRequester,
+    onAddDebtor: () -> Unit,
+    onOpenDebtor: (String) -> Unit,
+    onRefresh: () -> Unit,
+    onSearch: (String) -> Unit,
+    onToggleSortDirection: () -> Unit,
+    onChangeSort: (DebtorSortOrder) -> Unit,
+    onChangeStatusFilter: (DebtorStatusFilter) -> Unit,
+    onDelete: (String) -> Unit,
+) {
+    val strings = LocalStrings.current
 
     if (state.isLoading) {
         FullScreenLoadingIndicator()
@@ -54,11 +82,11 @@ fun DebtorListScreen(
         items = state.debtors,
         key = { it.debtor.id },
         isRefreshing = state.isRefreshing,
-        onRefresh = { viewModel.onIntent(DebtorListIntent.Refresh) },
+        onRefresh = onRefresh,
         searchBar = {
             ListSearchBar(
                 query = state.query,
-                onQueryChange = { viewModel.onIntent(DebtorListIntent.Search(it)) },
+                onQueryChange = onSearch,
                 searchPlaceholder = strings.debtorList.searchPlaceholder,
                 clearSearchDescription = strings.clearSearch,
                 searchFocusRequester = searchFocusRequester,
@@ -71,15 +99,15 @@ fun DebtorListScreen(
                 currentSort = state.sortOrder,
                 sortAscending = state.sortAscending,
                 sortReverseDescription = strings.debtorList.sortReverse,
-                onToggleSortDirection = { viewModel.onIntent(DebtorListIntent.ToggleSortDirection) },
-                onChangeSort = { viewModel.onIntent(DebtorListIntent.ChangeSort(it)) },
+                onToggleSortDirection = onToggleSortDirection,
+                onChangeSort = onChangeSort,
                 statusOptions = listOf(
                     MenuOption(DebtorStatusFilter.ACTIVE, strings.debtorList.filterActive, Icons.Filled.HourglassEmpty),
                     MenuOption(DebtorStatusFilter.CLOSED, strings.debtorList.filterClosed, Icons.Filled.CheckCircle),
                     MenuOption(DebtorStatusFilter.ALL, strings.debtorList.filterAll, Icons.AutoMirrored.Filled.List),
                 ),
                 currentStatus = state.statusFilter,
-                onChangeStatus = { viewModel.onIntent(DebtorListIntent.ChangeStatusFilter(it)) },
+                onChangeStatus = onChangeStatusFilter,
             )
         },
         totalBar = {
@@ -98,31 +126,70 @@ fun DebtorListScreen(
             balanceText = item.balance.formatMoney(item.debtor.currency),
             deleteLabel = strings.delete,
             onClick = { onOpenDebtor(item.debtor.id) },
-            onDelete = { viewModel.onIntent(DebtorListIntent.Delete(item.debtor.id)) },
+            onDelete = { onDelete(item.debtor.id) },
         )
     }
 }
 
+@Composable
+private fun Preview(state: DebtorListState) = DebtorListContent(
+    state = state,
+    searchFocusRequester = remember { FocusRequester() },
+    onAddDebtor = {},
+    onOpenDebtor = {},
+    onRefresh = {},
+    onSearch = {},
+    onToggleSortDirection = {},
+    onChangeSort = {},
+    onChangeStatusFilter = {},
+    onDelete = {},
+)
+
+private val PREVIEW_NOW = kotlin.time.Instant.parse("2026-08-15T00:00:00Z")
+
+private val PREVIEW_DEBTORS = listOf(
+    org.bigblackowl.debttracker.domain.model.DebtorWithBalance(
+        debtor = org.bigblackowl.debttracker.domain.model.Debtor(
+            id = "d1", fullName = "Тарас Шевченко", phone = "0501234567", email = null, avatarUrl = null,
+            comment = null, createdAt = PREVIEW_NOW, updatedAt = PREVIEW_NOW,
+            status = org.bigblackowl.debttracker.domain.model.DebtStatus.ACTIVE,
+            syncStatus = org.bigblackowl.debttracker.domain.model.SyncStatus.SYNCED,
+        ),
+        balance = com.ionspin.kotlin.bignum.decimal.BigDecimal.parseString("700"),
+    ),
+    org.bigblackowl.debttracker.domain.model.DebtorWithBalance(
+        debtor = org.bigblackowl.debttracker.domain.model.Debtor(
+            id = "d2", fullName = "Леся Українка", phone = null, email = "lesya@example.com", avatarUrl = null,
+            comment = null, createdAt = PREVIEW_NOW, updatedAt = PREVIEW_NOW,
+            status = org.bigblackowl.debttracker.domain.model.DebtStatus.ACTIVE,
+            syncStatus = org.bigblackowl.debttracker.domain.model.SyncStatus.PENDING,
+        ),
+        balance = com.ionspin.kotlin.bignum.decimal.BigDecimal.parseString("1200"),
+    ),
+)
+
+private val PREVIEW_STATE = DebtorListState(isLoading = false, debtors = PREVIEW_DEBTORS)
+
 @Preview
 @Composable
 private fun DebtorListScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    DebtorListScreen(onAddDebtor = {}, onOpenDebtor = {})
+    Preview(PREVIEW_STATE)
 }
 
 @Preview
 @Composable
 private fun DebtorListScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    DebtorListScreen(onAddDebtor = {}, onOpenDebtor = {})
+    Preview(PREVIEW_STATE)
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun DebtorListScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    DebtorListScreen(onAddDebtor = {}, onOpenDebtor = {})
+    Preview(PREVIEW_STATE)
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun DebtorListScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    DebtorListScreen(onAddDebtor = {}, onOpenDebtor = {})
+    Preview(PREVIEW_STATE)
 }

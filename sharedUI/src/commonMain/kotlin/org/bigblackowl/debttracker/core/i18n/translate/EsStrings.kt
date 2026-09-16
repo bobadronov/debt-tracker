@@ -389,6 +389,9 @@ val EsStrings = Strings(
         refresh = "Actualizar",
         error = "No se pudieron cargar los tipos de cambio",
         stale = "Mostrando datos guardados",
+        sortByName = "Por nombre",
+        swapDirection = "Invertir dirección",
+        copied = { value -> "Copiado: $value" },
     ),
     transactionEdit = TransactionEditStrings(
         editTitle = "Editar transacción",

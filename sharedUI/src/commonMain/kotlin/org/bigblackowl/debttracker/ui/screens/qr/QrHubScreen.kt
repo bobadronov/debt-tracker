@@ -59,7 +59,6 @@ fun QrHubScreen(
     viewModel: QrHubViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    var showScanner by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -69,6 +68,28 @@ fun QrHubScreen(
             }
         }
     }
+
+    QrHubContent(
+        state = state,
+        onBack = onBack,
+        onEditCard = onEditCard,
+        onDismissScannedContact = { viewModel.onIntent(QrHubIntent.DismissScannedContact) },
+        onConfirmScannedContact = { asDebtor -> viewModel.onIntent(QrHubIntent.ConfirmScannedContact(asDebtor = asDebtor)) },
+        onScanResult = { viewModel.onIntent(QrHubIntent.ScanResult(it)) },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun QrHubContent(
+    state: QrHubState,
+    onBack: () -> Unit,
+    onEditCard: () -> Unit,
+    onDismissScannedContact: () -> Unit,
+    onConfirmScannedContact: (Boolean) -> Unit,
+    onScanResult: (ScannedContact) -> Unit,
+) {
+    var showScanner by remember { mutableStateOf(false) }
 
     Scaffold(topBar = { BackTopAppBar(title = "", onBack = onBack) }) { padding ->
         ShareContent(
@@ -82,9 +103,9 @@ fun QrHubScreen(
     state.scannedContact?.let { contact ->
         ScannedContactDialog(
             contact = contact,
-            onDismiss = { viewModel.onIntent(QrHubIntent.DismissScannedContact) },
-            onAddAsDebtor = { viewModel.onIntent(QrHubIntent.ConfirmScannedContact(asDebtor = true)) },
-            onAddAsCreditor = { viewModel.onIntent(QrHubIntent.ConfirmScannedContact(asDebtor = false)) },
+            onDismiss = onDismissScannedContact,
+            onAddAsDebtor = { onConfirmScannedContact(true) },
+            onAddAsCreditor = { onConfirmScannedContact(false) },
         )
     }
 
@@ -92,7 +113,7 @@ fun QrHubScreen(
         ContactQrScanOverlay(
             onScanned = { contact ->
                 showScanner = false
-                viewModel.onIntent(QrHubIntent.ScanResult(contact))
+                onScanResult(contact)
             },
             onClose = { showScanner = false },
         )
@@ -146,70 +167,42 @@ private fun ShareContent(
 }
 
 @Composable
-private fun QrHubScreenPreviewContent() {
-    QrHubScreen(onBack = {}, onEditCard = {}, onNavigateToAddDebtor = {}, onNavigateToAddCreditor = {})
-}
-
-@Preview
-@Composable
-private fun QrHubScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { QrHubScreenPreviewContent() }
-
-@Preview
-@Composable
-private fun QrHubScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { QrHubScreenPreviewContent() }
-
-@Preview(device = DESKTOP)
-@Composable
-private fun QrHubScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { QrHubScreenPreviewContent() }
-
-@Preview(device = DESKTOP)
-@Composable
-private fun QrHubScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { QrHubScreenPreviewContent() }
-
-// --- Explicit-state previews below (bypass the ViewModel entirely so each QrHubState variant
-// renders deterministically) — the default previews above only ever show whatever state the
-// Koin-fake-backed QrHubViewModel happens to produce (preview/PreviewModule.kt). ---
+private fun Preview(state: QrHubState) = QrHubContent(
+    state = state,
+    onBack = {},
+    onEditCard = {},
+    onDismissScannedContact = {},
+    onConfirmScannedContact = {},
+    onScanResult = {},
+)
 
 private val PREVIEW_SCANNED_CONTACT = ScannedContact(fullName = "Olena Kovalenko", phone = "+380501234567", email = "olena@example.com")
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun QrHubSharePreviewContent(state: QrHubState) {
-    Scaffold(topBar = { BackTopAppBar(title = "", onBack = {}) }) { padding ->
-        ShareContent(state = state, onEditCard = {}, onScanClick = {}, modifier = Modifier.fillMaxSize().padding(padding))
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun QrHubScannedDialogPreviewContent() {
-    QrHubSharePreviewContent(PREVIEW_STATE_SCANNED_DIALOG)
-    PREVIEW_STATE_SCANNED_DIALOG.scannedContact?.let { contact ->
-        ScannedContactDialog(contact = contact, onDismiss = {}, onAddAsDebtor = {}, onAddAsCreditor = {})
-    }
-}
-
-/** Signed-in: card is auto-filled from the account, no fields to edit, QR always shown. */
+/** Signed-in: card is autofill from the account, no fields to edit, QR always shown. */
 private val PREVIEW_STATE_SIGNED_IN = QrHubState(isAuthenticated = true, qrPayload = ContactQrPayload.encode(PREVIEW_SCANNED_CONTACT))
 
 @Preview
 @Composable
-private fun QrHubShareSignedInLightPreview() = DebtTrackerPreview(darkTheme = false) { QrHubSharePreviewContent(PREVIEW_STATE_SIGNED_IN) }
+private fun QrHubScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { Preview(PREVIEW_STATE_SIGNED_IN) }
+
+@Preview
+@Composable
+private fun QrHubScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { Preview(PREVIEW_STATE_SIGNED_IN) }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun QrHubShareSignedInDarkPreview() = DebtTrackerPreview(darkTheme = true) { QrHubSharePreviewContent(PREVIEW_STATE_SIGNED_IN) }
+private fun QrHubShareSignedInDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { Preview(PREVIEW_STATE_SIGNED_IN) }
 
 /** Signed-out, nothing filled in yet: hint text instead of a QR code. */
 private val PREVIEW_STATE_SIGNED_OUT_EMPTY = QrHubState(isAuthenticated = false, qrPayload = null)
 
 @Preview
 @Composable
-private fun QrHubShareSignedOutEmptyLightPreview() = DebtTrackerPreview(darkTheme = false) { QrHubSharePreviewContent(PREVIEW_STATE_SIGNED_OUT_EMPTY) }
+private fun QrHubShareSignedOutEmptyLightPreview() = DebtTrackerPreview(darkTheme = false) { Preview(PREVIEW_STATE_SIGNED_OUT_EMPTY) }
 
 @Preview
 @Composable
-private fun QrHubShareSignedOutEmptyDarkPreview() = DebtTrackerPreview(darkTheme = true) { QrHubSharePreviewContent(PREVIEW_STATE_SIGNED_OUT_EMPTY) }
+private fun QrHubShareSignedOutEmptyDarkPreview() = DebtTrackerPreview(darkTheme = true) { Preview(PREVIEW_STATE_SIGNED_OUT_EMPTY) }
 
 /** Signed-out, card already filled in: QR code shown, Edit button available underneath. */
 private val PREVIEW_STATE_SIGNED_OUT_FILLED = QrHubState(
@@ -219,19 +212,19 @@ private val PREVIEW_STATE_SIGNED_OUT_FILLED = QrHubState(
 
 @Preview
 @Composable
-private fun QrHubShareSignedOutFilledLightPreview() = DebtTrackerPreview(darkTheme = false) { QrHubSharePreviewContent(PREVIEW_STATE_SIGNED_OUT_FILLED) }
+private fun QrHubShareSignedOutFilledLightPreview() = DebtTrackerPreview(darkTheme = false) { Preview(PREVIEW_STATE_SIGNED_OUT_FILLED) }
 
 @Preview
 @Composable
-private fun QrHubShareSignedOutFilledDarkPreview() = DebtTrackerPreview(darkTheme = true) { QrHubSharePreviewContent(PREVIEW_STATE_SIGNED_OUT_FILLED) }
+private fun QrHubShareSignedOutFilledDarkPreview() = DebtTrackerPreview(darkTheme = true) { Preview(PREVIEW_STATE_SIGNED_OUT_FILLED) }
 
 /** A completed scan: the "add as debtor or creditor?" chooser dialog on top of the share card. */
 private val PREVIEW_STATE_SCANNED_DIALOG = PREVIEW_STATE_SIGNED_IN.copy(scannedContact = PREVIEW_SCANNED_CONTACT)
 
 @Preview
 @Composable
-private fun QrHubScannedDialogLightPreview() = DebtTrackerPreview(darkTheme = false) { QrHubScannedDialogPreviewContent() }
+private fun QrHubScannedDialogLightPreview() = DebtTrackerPreview(darkTheme = false) { Preview(PREVIEW_STATE_SCANNED_DIALOG) }
 
 @Preview
 @Composable
-private fun QrHubScannedDialogDarkPreview() = DebtTrackerPreview(darkTheme = true) { QrHubScannedDialogPreviewContent() }
+private fun QrHubScannedDialogDarkPreview() = DebtTrackerPreview(darkTheme = true) { Preview(PREVIEW_STATE_SCANNED_DIALOG) }

@@ -53,10 +53,30 @@ fun SettingsDataScreen(
     onExport: () -> Unit,
     viewModel: SettingsDataViewModel = koinViewModel(),
 ) {
-    val strings = LocalStrings.current
     val authRepository = koinInject<AuthRepository>()
     val isAuthenticated by authRepository.isAuthenticated.collectAsStateWithLifecycle()
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    SettingsDataContent(
+        state = state,
+        isAuthenticated = isAuthenticated,
+        onBack = onBack,
+        onExport = onExport,
+        onClearAppCache = { viewModel.onIntent(SettingsDataIntent.ClearAppCache) },
+        onDeleteAllData = { viewModel.onIntent(SettingsDataIntent.DeleteAllData) },
+    )
+}
+
+@Composable
+private fun SettingsDataContent(
+    state: SettingsDataState,
+    isAuthenticated: Boolean,
+    onBack: () -> Unit,
+    onExport: () -> Unit,
+    onClearAppCache: () -> Unit,
+    onDeleteAllData: () -> Unit,
+) {
+    val strings = LocalStrings.current
 
     var showClearCacheConfirm by remember { mutableStateOf(false) }
     var showDeleteConfirm1 by remember { mutableStateOf(false) }
@@ -130,7 +150,7 @@ fun SettingsDataScreen(
             confirmLabel = strings.settings.clearCache.title,
             onConfirm = {
                 showClearCacheConfirm = false
-                viewModel.onIntent(SettingsDataIntent.ClearAppCache)
+                onClearAppCache()
             },
             onDismiss = { showClearCacheConfirm = false },
         )
@@ -155,7 +175,7 @@ fun SettingsDataScreen(
             confirmLabel = strings.deleteForever,
             onConfirm = {
                 showDeleteConfirm2 = false
-                viewModel.onIntent(SettingsDataIntent.DeleteAllData)
+                onDeleteAllData()
             },
             onDismiss = { showDeleteConfirm2 = false },
         )
@@ -178,26 +198,28 @@ private fun ColumnScope.DataResultLine(visible: Boolean, text: String, color: Co
     }
 }
 
-// The @Preview functions render this rather than SettingsDataScreen directly: the extra hop keeps
-// the koinViewModel() call out of the previewed function's own body (matching SettingsScreen). The
-// screen renders through SettingsDataViewModel, backed by the fakes in preview/PreviewModule.kt.
 @Composable
-private fun SettingsDataScreenPreviewContent() {
-    SettingsDataScreen(onBack = {}, onExport = {})
-}
+private fun Preview(state: SettingsDataState, isAuthenticated: Boolean = true) = SettingsDataContent(
+    state = state,
+    isAuthenticated = isAuthenticated,
+    onBack = {},
+    onExport = {},
+    onClearAppCache = {},
+    onDeleteAllData = {},
+)
 
 @Preview
 @Composable
-private fun SettingsDataScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { SettingsDataScreenPreviewContent() }
+private fun SettingsDataScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { Preview(SettingsDataState()) }
 
 @Preview
 @Composable
-private fun SettingsDataScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { SettingsDataScreenPreviewContent() }
+private fun SettingsDataScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { Preview(SettingsDataState()) }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun SettingsDataScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { SettingsDataScreenPreviewContent() }
+private fun SettingsDataScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { Preview(SettingsDataState()) }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun SettingsDataScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { SettingsDataScreenPreviewContent() }
+private fun SettingsDataScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { Preview(SettingsDataState()) }

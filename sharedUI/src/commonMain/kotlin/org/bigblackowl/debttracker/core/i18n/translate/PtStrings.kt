@@ -389,6 +389,9 @@ val PtStrings = Strings(
         refresh = "Atualizar",
         error = "Não foi possível carregar as taxas de câmbio",
         stale = "A mostrar dados guardados",
+        sortByName = "Por nome",
+        swapDirection = "Inverter direção",
+        copied = { value -> "Copiado: $value" },
     ),
     transactionEdit = TransactionEditStrings(
         editTitle = "Editar transação",

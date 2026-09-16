@@ -62,6 +62,22 @@ fun StatsScreen(
     viewModel: StatsViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    StatsContent(
+        state = state,
+        onBack = onBack,
+        onOpenDebtor = onOpenDebtor,
+        onOpenCreditor = onOpenCreditor,
+    )
+}
+
+@Composable
+private fun StatsContent(
+    state: StatsState,
+    onBack: () -> Unit,
+    onOpenDebtor: (String) -> Unit,
+    onOpenCreditor: (String) -> Unit,
+) {
     val strings = LocalStrings.current
 
     PlaceholderScreen(title = strings.stats.title, onBack = onBack) {
@@ -142,28 +158,44 @@ fun StatsScreen(
     }
 }
 
+@Composable
+private fun Preview(state: StatsState) = StatsContent(
+    state = state,
+    onBack = {},
+    onOpenDebtor = {},
+    onOpenCreditor = {},
+)
+
+private val PREVIEW_TREND = listOf(
+    MonthlyPoint(month = 4, year = 2026, amount = BigDecimal.parseString("1200")),
+    MonthlyPoint(month = 5, year = 2026, amount = BigDecimal.parseString("-800")),
+    MonthlyPoint(month = 6, year = 2026, amount = BigDecimal.parseString("400")),
+)
+
+private val PREVIEW_STATE = StatsState(isLoading = false, monthlyDebtTrend = PREVIEW_TREND, monthlyCreditorTrend = PREVIEW_TREND)
+
 @Preview
 @Composable
 private fun StatsScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    StatsScreen(onBack = {}, onOpenDebtor = {}, onOpenCreditor = {})
+    Preview(PREVIEW_STATE)
 }
 
 @Preview
 @Composable
 private fun StatsScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    StatsScreen(onBack = {}, onOpenDebtor = {}, onOpenCreditor = {})
+    Preview(PREVIEW_STATE)
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun StatsScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    StatsScreen(onBack = {}, onOpenDebtor = {}, onOpenCreditor = {})
+    Preview(PREVIEW_STATE)
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun StatsScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    StatsScreen(onBack = {}, onOpenDebtor = {}, onOpenCreditor = {})
+    Preview(PREVIEW_STATE)
 }
 
 /** Tonal KPI card with an icon in a circle — the same visual vocabulary as SettingsRow/SettingsSection. */

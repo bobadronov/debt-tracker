@@ -10,7 +10,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.ContactPrefill
+import org.bigblackowl.debttracker.domain.model.ContactSuggestion
+import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.DebtDirection
+import org.bigblackowl.debttracker.domain.model.PaymentMethod
+import org.bigblackowl.debttracker.domain.model.ScannedContact
 import org.bigblackowl.debttracker.domain.validation.sanitizeAmountInput
 import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
@@ -33,7 +37,6 @@ fun AddEditContactScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val strings = LocalStrings.current
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -44,9 +47,53 @@ fun AddEditContactScreen(
         }
     }
 
+    AddEditContactContent(
+        state = state,
+        snackbarHostState = snackbarHostState,
+        onDone = onDone,
+        onDirectionChange = { viewModel.onIntent(AddEditContactIntent.DirectionChanged(it)) },
+        onFullNameChange = { viewModel.onIntent(AddEditContactIntent.FullNameChanged(it)) },
+        onSelectNameSuggestion = { viewModel.onIntent(AddEditContactIntent.NameSuggestionSelected(it)) },
+        onPhoneChange = { viewModel.onIntent(AddEditContactIntent.PhoneChanged(sanitizePhoneInput(it))) },
+        onEmailChange = { viewModel.onIntent(AddEditContactIntent.EmailChanged(it)) },
+        onApplySuggestion = { viewModel.onIntent(AddEditContactIntent.ApplyProfileSuggestion) },
+        onDismissSuggestion = { viewModel.onIntent(AddEditContactIntent.DismissProfileSuggestion) },
+        onCommentChange = { viewModel.onIntent(AddEditContactIntent.CommentChanged(it)) },
+        onInitialAmountChange = { viewModel.onIntent(AddEditContactIntent.InitialAmountChanged(sanitizeAmountInput(it))) },
+        onCurrencyChange = { viewModel.onIntent(AddEditContactIntent.CurrencyChanged(it)) },
+        onMethodChange = { viewModel.onIntent(AddEditContactIntent.MethodChanged(it)) },
+        onDueDateChange = { viewModel.onIntent(AddEditContactIntent.DueDateChanged(it)) },
+        onToggleReminderLead = { viewModel.onIntent(AddEditContactIntent.ToggleReminderLead(it)) },
+        onSave = { viewModel.onIntent(AddEditContactIntent.Save) },
+        onScannedContact = { viewModel.onIntent(AddEditContactIntent.ApplyScannedContact(it)) },
+    )
+}
+
+@Composable
+private fun AddEditContactContent(
+    state: AddEditContactState,
+    snackbarHostState: SnackbarHostState,
+    onDone: () -> Unit,
+    onDirectionChange: (DebtDirection) -> Unit,
+    onFullNameChange: (String) -> Unit,
+    onSelectNameSuggestion: (ContactSuggestion) -> Unit,
+    onPhoneChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
+    onApplySuggestion: () -> Unit,
+    onDismissSuggestion: () -> Unit,
+    onCommentChange: (String) -> Unit,
+    onInitialAmountChange: (String) -> Unit,
+    onCurrencyChange: (Currency) -> Unit,
+    onMethodChange: (PaymentMethod) -> Unit,
+    onDueDateChange: (kotlin.time.Instant?) -> Unit,
+    onToggleReminderLead: (Int) -> Unit,
+    onSave: () -> Unit,
+    onScannedContact: (ScannedContact) -> Unit,
+) {
+    val strings = LocalStrings.current
     UnsavedChangesGuard(
         hasUnsavedChanges = state.hasUnsavedChanges,
-        onSave = { viewModel.onIntent(AddEditContactIntent.Save) },
+        onSave = onSave,
         onDiscard = onDone,
     )
 
@@ -68,62 +115,82 @@ fun AddEditContactScreen(
         isEditMode = state.isEditMode,
         // In edit mode a debtor stays a debtor — the direction toggle is hidden (null).
         direction = state.direction.takeUnless { state.isEditMode },
-        onDirectionChange = { viewModel.onIntent(AddEditContactIntent.DirectionChanged(it)) },
+        onDirectionChange = onDirectionChange,
         avatarUrl = state.suggestedAvatarUrl,
         fullName = state.fullName,
-        onFullNameChange = { viewModel.onIntent(AddEditContactIntent.FullNameChanged(it)) },
+        onFullNameChange = onFullNameChange,
         fullNameError = state.fullNameError,
         nameSuggestions = state.nameSuggestions,
-        onSelectNameSuggestion = { viewModel.onIntent(AddEditContactIntent.NameSuggestionSelected(it)) },
+        onSelectNameSuggestion = onSelectNameSuggestion,
         phone = state.phone,
-        onPhoneChange = { viewModel.onIntent(AddEditContactIntent.PhoneChanged(sanitizePhoneInput(it))) },
+        onPhoneChange = onPhoneChange,
         email = state.email,
-        onEmailChange = { viewModel.onIntent(AddEditContactIntent.EmailChanged(it)) },
+        onEmailChange = onEmailChange,
         profileSuggestion = state.profileSuggestion,
-        onApplySuggestion = { viewModel.onIntent(AddEditContactIntent.ApplyProfileSuggestion) },
-        onDismissSuggestion = { viewModel.onIntent(AddEditContactIntent.DismissProfileSuggestion) },
+        onApplySuggestion = onApplySuggestion,
+        onDismissSuggestion = onDismissSuggestion,
         comment = state.comment,
-        onCommentChange = { viewModel.onIntent(AddEditContactIntent.CommentChanged(it)) },
+        onCommentChange = onCommentChange,
         initialAmountLabel = initialAmountLabel,
         initialAmountText = state.initialAmountText,
-        onInitialAmountChange = { viewModel.onIntent(AddEditContactIntent.InitialAmountChanged(sanitizeAmountInput(it))) },
+        onInitialAmountChange = onInitialAmountChange,
         amountError = state.amountError,
         currency = state.currency,
-        onCurrencyChange = { viewModel.onIntent(AddEditContactIntent.CurrencyChanged(it)) },
+        onCurrencyChange = onCurrencyChange,
         method = state.method,
-        onMethodChange = { viewModel.onIntent(AddEditContactIntent.MethodChanged(it)) },
+        onMethodChange = onMethodChange,
         dueDate = state.dueDate,
-        onDueDateChange = { viewModel.onIntent(AddEditContactIntent.DueDateChanged(it)) },
+        onDueDateChange = onDueDateChange,
         reminderLeadDays = state.reminderLeadDays,
-        onToggleReminderLead = { viewModel.onIntent(AddEditContactIntent.ToggleReminderLead(it)) },
+        onToggleReminderLead = onToggleReminderLead,
         isSaving = state.isSaving,
-        onSave = { viewModel.onIntent(AddEditContactIntent.Save) },
-        onScannedContact = if (state.isEditMode) null else {
-            { contact -> viewModel.onIntent(AddEditContactIntent.ApplyScannedContact(contact)) }
-        },
+        onSave = onSave,
+        onScannedContact = if (state.isEditMode) null else onScannedContact,
     )
 }
+
+@Composable
+private fun Preview(state: AddEditContactState) = AddEditContactContent(
+    state = state,
+    snackbarHostState = remember { SnackbarHostState() },
+    onDone = {},
+    onDirectionChange = {},
+    onFullNameChange = {},
+    onSelectNameSuggestion = {},
+    onPhoneChange = {},
+    onEmailChange = {},
+    onApplySuggestion = {},
+    onDismissSuggestion = {},
+    onCommentChange = {},
+    onInitialAmountChange = {},
+    onCurrencyChange = {},
+    onMethodChange = {},
+    onDueDateChange = {},
+    onToggleReminderLead = {},
+    onSave = {},
+    onScannedContact = {},
+)
 
 @Preview
 @Composable
 private fun AddEditContactScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    AddEditContactScreen(direction = DebtDirection.DEBTOR, onDone = {})
+    Preview(AddEditContactState(direction = DebtDirection.DEBTOR))
 }
 
 @Preview
 @Composable
 private fun AddEditContactScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    AddEditContactScreen(direction = DebtDirection.CREDITOR, onDone = {})
+    Preview(AddEditContactState(direction = DebtDirection.CREDITOR))
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun AddEditContactScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    AddEditContactScreen(direction = DebtDirection.DEBTOR, onDone = {})
+    Preview(AddEditContactState(direction = DebtDirection.DEBTOR))
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun AddEditContactScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    AddEditContactScreen(direction = DebtDirection.CREDITOR, onDone = {})
+    Preview(AddEditContactState(direction = DebtDirection.CREDITOR))
 }

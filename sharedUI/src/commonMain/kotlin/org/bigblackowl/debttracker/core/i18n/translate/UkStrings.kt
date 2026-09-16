@@ -388,6 +388,9 @@ val UkStrings = Strings(
         refresh = "Оновити",
         error = "Не вдалося завантажити курси",
         stale = "Показано збережені дані",
+        sortByName = "За назвою",
+        swapDirection = "Обернути напрямок",
+        copied = { value -> "Скопійовано: $value" },
     ),
     transactionEdit = TransactionEditStrings(
         editTitle = "Редагувати операцію",

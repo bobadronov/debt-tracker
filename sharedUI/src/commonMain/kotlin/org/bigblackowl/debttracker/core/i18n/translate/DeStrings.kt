@@ -389,6 +389,9 @@ val DeStrings = Strings(
         refresh = "Aktualisieren",
         error = "Wechselkurse konnten nicht geladen werden",
         stale = "Gespeicherte Daten werden angezeigt",
+        sortByName = "Nach Name",
+        swapDirection = "Richtung umkehren",
+        copied = { value -> "Kopiert: $value" },
     ),
     transactionEdit = TransactionEditStrings(
         editTitle = "Transaktion bearbeiten",

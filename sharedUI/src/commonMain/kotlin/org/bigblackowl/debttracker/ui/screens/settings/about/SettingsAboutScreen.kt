@@ -30,6 +30,7 @@ import org.bigblackowl.debttracker.core.i18n.resolveFeedbackStrings
 import org.bigblackowl.debttracker.core.platform.AppPlatform
 import org.bigblackowl.debttracker.core.platform.currentPlatform
 import org.bigblackowl.debttracker.core.settings.AppSettings
+import org.bigblackowl.debttracker.core.update.AppUpdateInfo
 import org.bigblackowl.debttracker.core.update.InAppUpdateStatus
 import org.bigblackowl.debttracker.core.update.appUpdateSupported
 import org.bigblackowl.debttracker.core.update.inAppUpdateSupported
@@ -54,7 +55,6 @@ fun SettingsAboutScreen(
     onBack: () -> Unit,
     viewModel: SettingsAboutViewModel = koinViewModel(),
 ) {
-    val strings = LocalStrings.current
     val settings = koinInject<AppSettings>()
     val uriHandler = LocalUriHandler.current
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -62,6 +62,37 @@ fun SettingsAboutScreen(
     val inAppUpdateLauncher = rememberInAppUpdateLauncher()
     val inAppUpdateReady by inAppUpdateLauncher.updateReadyToInstall.collectAsStateWithLifecycle()
     val inAppUpdateStatus by inAppUpdateLauncher.updateStatus.collectAsStateWithLifecycle()
+
+    SettingsAboutContent(
+        state = state,
+        onBack = onBack,
+        locale = settings.locale,
+        theme = settings.theme,
+        inAppUpdateReady = inAppUpdateReady,
+        inAppUpdateStatus = inAppUpdateStatus,
+        onCompleteInAppUpdate = { inAppUpdateLauncher.completeUpdate() },
+        onCheckForInAppUpdate = { viewModel.onIntent(SettingsAboutIntent.CheckForInAppUpdate(inAppUpdateLauncher)) },
+        onCheckForUpdate = { viewModel.onIntent(SettingsAboutIntent.CheckForUpdate(updateChecker)) },
+        onDownloadUpdate = { info -> viewModel.onIntent(SettingsAboutIntent.DownloadUpdate(updateChecker, info)) },
+        onOpenFeedback = { uriHandler.openUri(it) },
+    )
+}
+
+@Composable
+private fun SettingsAboutContent(
+    state: SettingsAboutState,
+    onBack: () -> Unit,
+    locale: String,
+    theme: String,
+    inAppUpdateReady: Boolean,
+    inAppUpdateStatus: InAppUpdateStatus,
+    onCompleteInAppUpdate: () -> Unit,
+    onCheckForInAppUpdate: () -> Unit,
+    onCheckForUpdate: () -> Unit,
+    onDownloadUpdate: (AppUpdateInfo) -> Unit,
+    onOpenFeedback: (String) -> Unit,
+) {
+    val strings = LocalStrings.current
 
     PlaceholderScreen(title = strings.settings.about, onBack = onBack) {
         Column(
@@ -102,14 +133,14 @@ fun SettingsAboutScreen(
                         trailing = if (currentPlatform == AppPlatform.ANDROID && inAppUpdateSupported) {
                             {
                                 when {
-                                    inAppUpdateReady -> IconButton(onClick = { inAppUpdateLauncher.completeUpdate() }) {
+                                    inAppUpdateReady -> IconButton(onClick = onCompleteInAppUpdate) {
                                         Icon(Icons.Filled.Download, contentDescription = strings.updateRestartNow)
                                     }
 
                                     inAppUpdateStatus == InAppUpdateStatus.Checking || inAppUpdateStatus == InAppUpdateStatus.Downloading ->
                                         CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.IconSize.sm))
 
-                                    else -> IconButton(onClick = { viewModel.onIntent(SettingsAboutIntent.CheckForInAppUpdate(inAppUpdateLauncher)) }) {
+                                    else -> IconButton(onClick = onCheckForInAppUpdate) {
                                         Icon(Icons.Filled.Refresh, contentDescription = strings.settings.checkForUpdates)
                                     }
                                 }
@@ -120,15 +151,15 @@ fun SettingsAboutScreen(
                                     UpdateCheckState.Checking, is UpdateCheckState.Downloading ->
                                         CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.IconSize.sm))
 
-                                    is UpdateCheckState.Available -> IconButton(onClick = { viewModel.onIntent(SettingsAboutIntent.DownloadUpdate(updateChecker, s.info)) }) {
+                                    is UpdateCheckState.Available -> IconButton(onClick = { onDownloadUpdate(s.info) }) {
                                         Icon(Icons.Filled.Download, contentDescription = strings.update.downloadInstall)
                                     }
 
-                                    is UpdateCheckState.Failed -> IconButton(onClick = { viewModel.onIntent(SettingsAboutIntent.DownloadUpdate(updateChecker, s.info)) }) {
+                                    is UpdateCheckState.Failed -> IconButton(onClick = { onDownloadUpdate(s.info) }) {
                                         Icon(Icons.Filled.Refresh, contentDescription = strings.update.retry)
                                     }
 
-                                    UpdateCheckState.Idle, UpdateCheckState.UpToDate, UpdateCheckState.CheckFailed -> IconButton(onClick = { viewModel.onIntent(SettingsAboutIntent.CheckForUpdate(updateChecker)) }) {
+                                    UpdateCheckState.Idle, UpdateCheckState.UpToDate, UpdateCheckState.CheckFailed -> IconButton(onClick = onCheckForUpdate) {
                                         Icon(Icons.Filled.Refresh, contentDescription = strings.settings.checkForUpdates)
                                     }
                                 }
@@ -145,12 +176,12 @@ fun SettingsAboutScreen(
                     // Opens the web feedback form (legal/feedback.html on GitHub Pages) in a browser;
                     // it POSTs to the submit-feedback Edge Function, which emails the maintainer.
                     // Its label lives outside Strings — that constructor is at the JVM 255-param limit.
-                    val feedbackStrings = remember(settings.locale) { resolveFeedbackStrings(settings.locale) }
+                    val feedbackStrings = remember(locale) { resolveFeedbackStrings(locale) }
                     SettingsRow(
                         icon = Icons.Filled.Feedback,
                         title = feedbackStrings.title,
                         subtitle = feedbackStrings.subtitle,
-                        onClick = { uriHandler.openUri(feedbackUrl(settings.locale, settings.theme)) },
+                        onClick = { onOpenFeedback(feedbackUrl(locale, theme)) },
                     )
                 }
             }
@@ -174,26 +205,33 @@ private fun feedbackUrl(locale: String, theme: String): String = buildString {
     if (theme == "light" || theme == "dark") append("&theme=").append(theme)
 }
 
-// The @Preview functions render this rather than SettingsAboutScreen directly: the extra hop keeps
-// the koinViewModel() call out of the previewed function's own body (matching SettingsScreen). The
-// screen renders through SettingsAboutViewModel, backed by the fakes in preview/PreviewModule.kt.
 @Composable
-private fun SettingsAboutScreenPreviewContent() {
-    SettingsAboutScreen(onBack = {})
-}
+private fun Preview(state: SettingsAboutState) = SettingsAboutContent(
+    state = state,
+    onBack = {},
+    locale = "uk",
+    theme = "system",
+    inAppUpdateReady = false,
+    inAppUpdateStatus = InAppUpdateStatus.Idle,
+    onCompleteInAppUpdate = {},
+    onCheckForInAppUpdate = {},
+    onCheckForUpdate = {},
+    onDownloadUpdate = {},
+    onOpenFeedback = {},
+)
 
 @Preview
 @Composable
-private fun SettingsAboutScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { SettingsAboutScreenPreviewContent() }
+private fun SettingsAboutScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { Preview(SettingsAboutState()) }
 
 @Preview
 @Composable
-private fun SettingsAboutScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { SettingsAboutScreenPreviewContent() }
+private fun SettingsAboutScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { Preview(SettingsAboutState()) }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun SettingsAboutScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { SettingsAboutScreenPreviewContent() }
+private fun SettingsAboutScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { Preview(SettingsAboutState()) }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun SettingsAboutScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { SettingsAboutScreenPreviewContent() }
+private fun SettingsAboutScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { Preview(SettingsAboutState()) }

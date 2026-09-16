@@ -388,6 +388,9 @@ val EnStrings = Strings(
         refresh = "Refresh",
         error = "Couldn't load exchange rates",
         stale = "Showing saved data",
+        sortByName = "By name",
+        swapDirection = "Swap direction",
+        copied = { value -> "Copied: $value" },
     ),
     transactionEdit = TransactionEditStrings(
         editTitle = "Edit transaction",

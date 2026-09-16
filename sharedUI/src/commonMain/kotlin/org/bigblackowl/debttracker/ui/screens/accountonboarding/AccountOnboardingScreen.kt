@@ -37,8 +37,6 @@ fun AccountOnboardingScreen(
     onSkip: () -> Unit,
     viewModel: AccountOnboardingViewModel = koinViewModel(),
 ) {
-    val strings = LocalStrings.current
-
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
             when (effect) {
@@ -48,6 +46,15 @@ fun AccountOnboardingScreen(
         }
     }
 
+    AccountOnboardingContent(
+        onSignIn = { viewModel.onIntent(AccountOnboardingIntent.SignIn) },
+        onSkip = { viewModel.onIntent(AccountOnboardingIntent.Skip) },
+    )
+}
+
+@Composable
+private fun AccountOnboardingContent(onSignIn: () -> Unit, onSkip: () -> Unit) {
+    val strings = LocalStrings.current
     PlaceholderScreen(title = strings.onboardingAccountTitle) {
         Icon(
             Icons.AutoMirrored.Filled.Login,
@@ -59,32 +66,32 @@ fun AccountOnboardingScreen(
         BodyText(strings.onboardingAccountBody, textAlign = TextAlign.Center)
         Spacer(Modifier.height(Dimens.Spacing.xl))
 
-        Button(onClick = { viewModel.onIntent(AccountOnboardingIntent.SignIn) }) { Text(strings.settings.signIn) }
+        Button(onClick = onSignIn) { Text(strings.settings.signIn) }
         Spacer(Modifier.height(Dimens.Spacing.sm))
-        TextButton(onClick = { viewModel.onIntent(AccountOnboardingIntent.Skip) }) { Text(strings.onboardingProtection.skip) }
+        TextButton(onClick = onSkip) { Text(strings.onboardingProtection.skip) }
     }
 }
 
 @Preview
 @Composable
 private fun AccountOnboardingScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    AccountOnboardingScreen(onSignIn = {}, onSkip = {})
+    AccountOnboardingContent(onSignIn = {}, onSkip = {})
 }
 
 @Preview
 @Composable
 private fun AccountOnboardingScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    AccountOnboardingScreen(onSignIn = {}, onSkip = {})
+    AccountOnboardingContent(onSignIn = {}, onSkip = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun AccountOnboardingScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    AccountOnboardingScreen(onSignIn = {}, onSkip = {})
+    AccountOnboardingContent(onSignIn = {}, onSkip = {})
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun AccountOnboardingScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    AccountOnboardingScreen(onSignIn = {}, onSkip = {})
+    AccountOnboardingContent(onSignIn = {}, onSkip = {})
 }

@@ -33,6 +33,11 @@ fun SplashScreen(onFinished: (SplashDestination) -> Unit, viewModel: SplashViewM
             }
         }
     }
+    SplashContent()
+}
+
+@Composable
+private fun SplashContent() {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -49,23 +54,23 @@ fun SplashScreen(onFinished: (SplashDestination) -> Unit, viewModel: SplashViewM
 @Preview
 @Composable
 private fun SplashScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    SplashScreen(onFinished = {})
+    SplashContent()
 }
 
 @Preview
 @Composable
 private fun SplashScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    SplashScreen(onFinished = {})
+    SplashContent()
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun SplashScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    SplashScreen(onFinished = {})
+    SplashContent()
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun SplashScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    SplashScreen(onFinished = {})
+    SplashContent()
 }

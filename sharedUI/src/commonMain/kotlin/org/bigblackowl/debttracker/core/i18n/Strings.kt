@@ -382,6 +382,12 @@ data class ExchangeRatesStrings(
     val error: String,
     /** Banner shown when the refresh failed but a previous snapshot remains. */
     val stale: String,
+    /** Content description for the sort toggle (default order vs. alphabetical). */
+    val sortByName: String,
+    /** Content description for the button that swaps the conversion direction. */
+    val swapDirection: String,
+    /** Snackbar shown after tapping a rate to copy its converted value. */
+    val copied: (value: String) -> String,
 )
 
 /** [org.bigblackowl.debttracker.ui.screens.auth.AuthScreen] extras that don't fit [AuthStrings]. */

@@ -39,11 +39,39 @@ fun CreditorListScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val searchFocusRequester = remember { FocusRequester() }
-    val strings = LocalStrings.current
 
     LaunchedEffect(Unit) {
         searchFocusRequests.events.collect { searchFocusRequester.requestFocus() }
     }
+
+    CreditorListContent(
+        state = state,
+        searchFocusRequester = searchFocusRequester,
+        onAddCreditor = onAddCreditor,
+        onOpenCreditor = onOpenCreditor,
+        onRefresh = { viewModel.onIntent(CreditorListIntent.Refresh) },
+        onSearch = { viewModel.onIntent(CreditorListIntent.Search(it)) },
+        onToggleSortDirection = { viewModel.onIntent(CreditorListIntent.ToggleSortDirection) },
+        onChangeSort = { viewModel.onIntent(CreditorListIntent.ChangeSort(it)) },
+        onChangeStatusFilter = { viewModel.onIntent(CreditorListIntent.ChangeStatusFilter(it)) },
+        onDelete = { viewModel.onIntent(CreditorListIntent.Delete(it)) },
+    )
+}
+
+@Composable
+private fun CreditorListContent(
+    state: CreditorListState,
+    searchFocusRequester: FocusRequester,
+    onAddCreditor: () -> Unit,
+    onOpenCreditor: (String) -> Unit,
+    onRefresh: () -> Unit,
+    onSearch: (String) -> Unit,
+    onToggleSortDirection: () -> Unit,
+    onChangeSort: (CreditorSortOrder) -> Unit,
+    onChangeStatusFilter: (CreditorStatusFilter) -> Unit,
+    onDelete: (String) -> Unit,
+) {
+    val strings = LocalStrings.current
 
     if (state.isLoading) {
         FullScreenLoadingIndicator()
@@ -54,11 +82,11 @@ fun CreditorListScreen(
         items = state.creditors,
         key = { it.creditor.id },
         isRefreshing = state.isRefreshing,
-        onRefresh = { viewModel.onIntent(CreditorListIntent.Refresh) },
+        onRefresh = onRefresh,
         searchBar = {
             ListSearchBar(
                 query = state.query,
-                onQueryChange = { viewModel.onIntent(CreditorListIntent.Search(it)) },
+                onQueryChange = onSearch,
                 searchPlaceholder = strings.creditorList.searchPlaceholder,
                 clearSearchDescription = strings.clearSearch,
                 searchFocusRequester = searchFocusRequester,
@@ -71,15 +99,15 @@ fun CreditorListScreen(
                 currentSort = state.sortOrder,
                 sortAscending = state.sortAscending,
                 sortReverseDescription = strings.creditorList.sortReverse,
-                onToggleSortDirection = { viewModel.onIntent(CreditorListIntent.ToggleSortDirection) },
-                onChangeSort = { viewModel.onIntent(CreditorListIntent.ChangeSort(it)) },
+                onToggleSortDirection = onToggleSortDirection,
+                onChangeSort = onChangeSort,
                 statusOptions = listOf(
                     MenuOption(CreditorStatusFilter.ACTIVE, strings.creditorList.filterActive, Icons.Filled.HourglassEmpty),
                     MenuOption(CreditorStatusFilter.CLOSED, strings.creditorList.filterClosed, Icons.Filled.CheckCircle),
                     MenuOption(CreditorStatusFilter.ALL, strings.creditorList.filterAll, Icons.AutoMirrored.Filled.List),
                 ),
                 currentStatus = state.statusFilter,
-                onChangeStatus = { viewModel.onIntent(CreditorListIntent.ChangeStatusFilter(it)) },
+                onChangeStatus = onChangeStatusFilter,
             )
         },
         totalBar = {
@@ -98,31 +126,70 @@ fun CreditorListScreen(
             balanceText = item.balance.formatMoney(item.creditor.currency),
             deleteLabel = strings.delete,
             onClick = { onOpenCreditor(item.creditor.id) },
-            onDelete = { viewModel.onIntent(CreditorListIntent.Delete(item.creditor.id)) },
+            onDelete = { onDelete(item.creditor.id) },
         )
     }
 }
 
+@Composable
+private fun Preview(state: CreditorListState) = CreditorListContent(
+    state = state,
+    searchFocusRequester = remember { FocusRequester() },
+    onAddCreditor = {},
+    onOpenCreditor = {},
+    onRefresh = {},
+    onSearch = {},
+    onToggleSortDirection = {},
+    onChangeSort = {},
+    onChangeStatusFilter = {},
+    onDelete = {},
+)
+
+private val PREVIEW_NOW = kotlin.time.Instant.parse("2026-08-15T00:00:00Z")
+
+private val PREVIEW_CREDITORS = listOf(
+    org.bigblackowl.debttracker.domain.model.CreditorWithBalance(
+        creditor = org.bigblackowl.debttracker.domain.model.Creditor(
+            id = "c1", fullName = "Марія Шевченко", phone = "0671112233", email = null, avatarUrl = null,
+            comment = null, createdAt = PREVIEW_NOW, updatedAt = PREVIEW_NOW,
+            status = org.bigblackowl.debttracker.domain.model.DebtStatus.ACTIVE,
+            syncStatus = org.bigblackowl.debttracker.domain.model.SyncStatus.SYNCED,
+        ),
+        balance = com.ionspin.kotlin.bignum.decimal.BigDecimal.parseString("2000"),
+    ),
+    org.bigblackowl.debttracker.domain.model.CreditorWithBalance(
+        creditor = org.bigblackowl.debttracker.domain.model.Creditor(
+            id = "c2", fullName = "Андрій Мельник", phone = null, email = "andriy@example.com", avatarUrl = null,
+            comment = null, createdAt = PREVIEW_NOW, updatedAt = PREVIEW_NOW,
+            status = org.bigblackowl.debttracker.domain.model.DebtStatus.ACTIVE,
+            syncStatus = org.bigblackowl.debttracker.domain.model.SyncStatus.SYNCED,
+        ),
+        balance = com.ionspin.kotlin.bignum.decimal.BigDecimal.parseString("500"),
+    ),
+)
+
+private val PREVIEW_STATE = CreditorListState(isLoading = false, creditors = PREVIEW_CREDITORS)
+
 @Preview
 @Composable
 private fun CreditorListScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    CreditorListScreen(onAddCreditor = {}, onOpenCreditor = {})
+    Preview(PREVIEW_STATE)
 }
 
 @Preview
 @Composable
 private fun CreditorListScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    CreditorListScreen(onAddCreditor = {}, onOpenCreditor = {})
+    Preview(PREVIEW_STATE)
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun CreditorListScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    CreditorListScreen(onAddCreditor = {}, onOpenCreditor = {})
+    Preview(PREVIEW_STATE)
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun CreditorListScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    CreditorListScreen(onAddCreditor = {}, onOpenCreditor = {})
+    Preview(PREVIEW_STATE)
 }

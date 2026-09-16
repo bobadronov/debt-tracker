@@ -15,8 +15,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
+import org.bigblackowl.debttracker.domain.model.Creditor
 import org.bigblackowl.debttracker.domain.model.CreditorTransaction
 import org.bigblackowl.debttracker.domain.model.Currency
+import org.bigblackowl.debttracker.domain.model.DebtStatus
+import org.bigblackowl.debttracker.domain.model.MyDebtTransactionType
+import org.bigblackowl.debttracker.domain.model.PaymentMethod
+import org.bigblackowl.debttracker.domain.model.SyncStatus
 import org.bigblackowl.debttracker.domain.model.formatMoney
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.preview.PreviewIds
@@ -40,12 +45,6 @@ fun CreditorDetailScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    var showReturnSheet by remember { mutableStateOf(false) }
-    var showBorrowSheet by remember { mutableStateOf(false) }
-    var editingTransaction by remember { mutableStateOf<CreditorTransaction?>(null) }
-    var deletingTransaction by remember { mutableStateOf<CreditorTransaction?>(null) }
-    val strings = LocalStrings.current
-    val currency = state.creditor?.currency ?: Currency.UAH
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -54,6 +53,42 @@ fun CreditorDetailScreen(
             }
         }
     }
+
+    CreditorDetailContent(
+        creditorId = creditorId,
+        state = state,
+        snackbarHostState = snackbarHostState,
+        onBack = onBack,
+        onExport = onExport,
+        onEdit = onEdit,
+        onRefresh = { viewModel.onIntent(CreditorDetailIntent.Refresh) },
+        onEditTransaction = { id, amount, method, comment, date -> viewModel.onIntent(CreditorDetailIntent.EditTransaction(id, amount, method, comment, date)) },
+        onDeleteTransaction = { viewModel.onIntent(CreditorDetailIntent.DeleteTransaction(it)) },
+        onReturn = { amount, method -> viewModel.onIntent(CreditorDetailIntent.Return(amount, method)) },
+        onBorrowMore = { amount, method -> viewModel.onIntent(CreditorDetailIntent.BorrowMore(amount, method)) },
+    )
+}
+
+@Composable
+private fun CreditorDetailContent(
+    creditorId: String,
+    state: CreditorDetailState,
+    snackbarHostState: SnackbarHostState,
+    onBack: () -> Unit,
+    onExport: () -> Unit,
+    onEdit: () -> Unit,
+    onRefresh: () -> Unit,
+    onEditTransaction: (String, BigDecimal, PaymentMethod, String?, kotlin.time.Instant) -> Unit,
+    onDeleteTransaction: (String) -> Unit,
+    onReturn: (BigDecimal, PaymentMethod) -> Unit,
+    onBorrowMore: (BigDecimal, PaymentMethod) -> Unit,
+) {
+    var showReturnSheet by remember { mutableStateOf(false) }
+    var showBorrowSheet by remember { mutableStateOf(false) }
+    var editingTransaction by remember { mutableStateOf<CreditorTransaction?>(null) }
+    var deletingTransaction by remember { mutableStateOf<CreditorTransaction?>(null) }
+    val strings = LocalStrings.current
+    val currency = state.creditor?.currency ?: Currency.UAH
 
     ContactDetailScaffold(
         id = creditorId,
@@ -72,7 +107,7 @@ fun CreditorDetailScreen(
         secondaryLabel = strings.creditorDetail.borrowMore,
         onSecondary = { showBorrowSheet = true },
         isRefreshing = state.isRefreshing,
-        onRefresh = { viewModel.onIntent(CreditorDetailIntent.Refresh) },
+        onRefresh = onRefresh,
     ) {
         items(state.transactions, key = { it.id }) { transaction ->
             TransactionRow(
@@ -96,7 +131,7 @@ fun CreditorDetailScreen(
             currency = currency,
             onDismiss = { editingTransaction = null },
             onConfirm = { amount, method, comment, date ->
-                viewModel.onIntent(CreditorDetailIntent.EditTransaction(tx.id, amount, method, comment, date))
+                onEditTransaction(tx.id, amount, method, comment, date)
                 editingTransaction = null
             },
         )
@@ -109,7 +144,7 @@ fun CreditorDetailScreen(
             confirmLabel = strings.delete,
             confirmColor = MaterialTheme.colorScheme.error,
             onConfirm = {
-                viewModel.onIntent(CreditorDetailIntent.DeleteTransaction(tx.id))
+                onDeleteTransaction(tx.id)
                 deletingTransaction = null
             },
             onDismiss = { deletingTransaction = null },
@@ -123,7 +158,7 @@ fun CreditorDetailScreen(
             currency = currency,
             onDismiss = { showReturnSheet = false },
             onConfirm = { amount, method ->
-                viewModel.onIntent(CreditorDetailIntent.Return(amount, method))
+                onReturn(amount, method)
                 showReturnSheet = false
             },
         )
@@ -135,33 +170,92 @@ fun CreditorDetailScreen(
             currency = currency,
             onDismiss = { showBorrowSheet = false },
             onConfirm = { amount, method ->
-                viewModel.onIntent(CreditorDetailIntent.BorrowMore(amount, method))
+                onBorrowMore(amount, method)
                 showBorrowSheet = false
             },
         )
     }
 }
 
+private val PREVIEW_NOW = kotlin.time.Instant.parse("2026-08-15T00:00:00Z")
+
+private val PREVIEW_CREDITOR = Creditor(
+    id = PreviewIds.CREDITOR,
+    fullName = "Марія Шевченко",
+    phone = "0671112233",
+    email = null,
+    avatarUrl = null,
+    comment = null,
+    createdAt = PREVIEW_NOW,
+    updatedAt = PREVIEW_NOW,
+    status = DebtStatus.ACTIVE,
+    syncStatus = SyncStatus.SYNCED,
+)
+
+private val PREVIEW_TRANSACTIONS = listOf(
+    CreditorTransaction(
+        id = "tx1",
+        creditorId = PreviewIds.CREDITOR,
+        amount = BigDecimal.parseString("-3000"),
+        type = MyDebtTransactionType.BORROW,
+        method = PaymentMethod.CARD,
+        date = PREVIEW_NOW,
+        comment = "Позика на авто",
+        createdAt = PREVIEW_NOW,
+        updatedAt = PREVIEW_NOW,
+        syncStatus = SyncStatus.SYNCED,
+    ),
+    CreditorTransaction(
+        id = "tx2",
+        creditorId = PreviewIds.CREDITOR,
+        amount = BigDecimal.parseString("1000"),
+        type = MyDebtTransactionType.RETURN,
+        method = PaymentMethod.CASH,
+        date = PREVIEW_NOW,
+        comment = "Часткове повернення",
+        createdAt = PREVIEW_NOW,
+        updatedAt = PREVIEW_NOW,
+        syncStatus = SyncStatus.SYNCED,
+    ),
+)
+
+@Composable
+private fun Preview(state: CreditorDetailState) = CreditorDetailContent(
+    creditorId = PreviewIds.CREDITOR,
+    state = state,
+    snackbarHostState = remember { SnackbarHostState() },
+    onBack = {},
+    onExport = {},
+    onEdit = {},
+    onRefresh = {},
+    onEditTransaction = { _, _, _, _, _ -> },
+    onDeleteTransaction = {},
+    onReturn = { _, _ -> },
+    onBorrowMore = { _, _ -> },
+)
+
+private val PREVIEW_STATE = CreditorDetailState(isLoading = false, creditor = PREVIEW_CREDITOR, transactions = PREVIEW_TRANSACTIONS)
+
 @Preview
 @Composable
 private fun CreditorDetailScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    CreditorDetailScreen(creditorId = PreviewIds.CREDITOR, onBack = {}, onExport = {})
+    Preview(PREVIEW_STATE)
 }
 
 @Preview
 @Composable
 private fun CreditorDetailScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    CreditorDetailScreen(creditorId = PreviewIds.CREDITOR, onBack = {}, onExport = {})
+    Preview(PREVIEW_STATE)
 }
 
 @Preview(device = Devices.DESKTOP)
 @Composable
 private fun CreditorDetailScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    CreditorDetailScreen(creditorId = PreviewIds.CREDITOR, onBack = {}, onExport = {})
+    Preview(PREVIEW_STATE)
 }
 
 @Preview(device = Devices.DESKTOP)
 @Composable
 private fun CreditorDetailScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    CreditorDetailScreen(creditorId = PreviewIds.CREDITOR, onBack = {}, onExport = {})
+    Preview(PREVIEW_STATE)
 }

@@ -51,9 +51,7 @@ import kotlin.time.Duration.Companion.milliseconds
 fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinViewModel()) {
     val biometricAuthenticator = rememberBiometricAuthenticator()
     val settings = koinInject<AppSettings>()
-    val strings = LocalStrings.current
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val pinFocusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -69,6 +67,28 @@ fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinVi
     }
 
     if (currentPlatform == AppPlatform.WEB) return
+
+    AuthGateContent(
+        state = state,
+        hasPinCode = settings.hasPinCode,
+        biometricEnabled = settings.biometricEnabled,
+        onRetryBiometric = { viewModel.onIntent(AuthGateIntent.RetryBiometric(biometricAuthenticator)) },
+        onSwitchToPin = { viewModel.onIntent(AuthGateIntent.SwitchToPin) },
+        onPinChange = { viewModel.onIntent(AuthGateIntent.PinChanged(it)) },
+    )
+}
+
+@Composable
+private fun AuthGateContent(
+    state: AuthGateState,
+    hasPinCode: Boolean,
+    biometricEnabled: Boolean,
+    onRetryBiometric: () -> Unit,
+    onSwitchToPin: () -> Unit,
+    onPinChange: (String) -> Unit,
+) {
+    val strings = LocalStrings.current
+    val pinFocusRequester = remember { FocusRequester() }
 
     // Grab focus for the hidden PIN text field so its keyboard is ready immediately — the system
     // numeric keyboard on mobile, the physical keyboard on desktop. Keep retrying: the field isn't
@@ -97,11 +117,11 @@ fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinVi
                     tint = MaterialTheme.colorScheme.primary,
                 )
                 Spacer(Modifier.height(Dimens.Spacing.xl))
-                Button(onClick = { viewModel.onIntent(AuthGateIntent.RetryBiometric(biometricAuthenticator)) }) {
+                Button(onClick = onRetryBiometric) {
                     Text(strings.authGate.retry)
                 }
-                if (settings.hasPinCode) {
-                    TextButton(onClick = { viewModel.onIntent(AuthGateIntent.SwitchToPin) }) {
+                if (hasPinCode) {
+                    TextButton(onClick = onSwitchToPin) {
                         Text(strings.authGate.usePinCode)
                     }
                 }
@@ -114,7 +134,7 @@ fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinVi
         ) {
             PinCodeField(
                 value = state.pinInput,
-                onValueChange = { viewModel.onIntent(AuthGateIntent.PinChanged(it)) },
+                onValueChange = onPinChange,
                 focusRequester = pinFocusRequester,
             )
             AnimatedVisibility(
@@ -128,9 +148,9 @@ fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinVi
                     textAlign = TextAlign.Center,
                 )
             }
-            if (settings.biometricEnabled) {
+            if (biometricEnabled) {
                 Spacer(Modifier.height(Dimens.Spacing.sm))
-                TextButton(onClick = { viewModel.onIntent(AuthGateIntent.RetryBiometric(biometricAuthenticator)) }) {
+                TextButton(onClick = onRetryBiometric) {
                     Text(strings.authGate.useBiometric)
                 }
             }
@@ -138,26 +158,36 @@ fun AuthGateScreen(onUnlocked: () -> Unit, viewModel: AuthGateViewModel = koinVi
     }
 }
 
+@Composable
+private fun Preview(state: AuthGateState, hasPinCode: Boolean = true, biometricEnabled: Boolean = true) = AuthGateContent(
+    state = state,
+    hasPinCode = hasPinCode,
+    biometricEnabled = biometricEnabled,
+    onRetryBiometric = {},
+    onSwitchToPin = {},
+    onPinChange = {},
+)
+
 @Preview
 @Composable
 private fun AuthGateScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    AuthGateScreen(onUnlocked = {})
+    Preview(AuthGateState(mode = UnlockMode.BIOMETRIC))
 }
 
 @Preview
 @Composable
 private fun AuthGateScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    AuthGateScreen(onUnlocked = {})
+    Preview(AuthGateState(mode = UnlockMode.PIN, pinInput = "12"))
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun AuthGateScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    AuthGateScreen(onUnlocked = {})
+    Preview(AuthGateState(mode = UnlockMode.PIN))
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun AuthGateScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    AuthGateScreen(onUnlocked = {})
+    Preview(AuthGateState(mode = UnlockMode.BIOMETRIC))
 }

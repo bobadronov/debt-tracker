@@ -46,10 +46,7 @@ fun ActiveSessionsScreen(
     viewModel: ActiveSessionsViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val strings = LocalStrings.current
     val snackbarHostState = remember { SnackbarHostState() }
-    var pendingRevoke by remember { mutableStateOf<DeviceSession?>(null) }
-    var showRevokeAllConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -58,6 +55,27 @@ fun ActiveSessionsScreen(
             }
         }
     }
+
+    ActiveSessionsContent(
+        state = state,
+        snackbarHostState = snackbarHostState,
+        onBack = onBack,
+        onRevokeSession = { viewModel.onIntent(ActiveSessionsIntent.RevokeSession(it)) },
+        onRevokeAllOthers = { viewModel.onIntent(ActiveSessionsIntent.RevokeAllOthers) },
+    )
+}
+
+@Composable
+private fun ActiveSessionsContent(
+    state: ActiveSessionsState,
+    snackbarHostState: SnackbarHostState,
+    onBack: () -> Unit,
+    onRevokeSession: (String) -> Unit,
+    onRevokeAllOthers: () -> Unit,
+) {
+    val strings = LocalStrings.current
+    var pendingRevoke by remember { mutableStateOf<DeviceSession?>(null) }
+    var showRevokeAllConfirm by remember { mutableStateOf(false) }
 
     SettingsDetailScaffold(
         title = strings.activeSessions.title,
@@ -118,7 +136,7 @@ fun ActiveSessionsScreen(
             confirmLabel = strings.activeSessions.logOut,
             onConfirm = {
                 pendingRevoke = null
-                viewModel.onIntent(ActiveSessionsIntent.RevokeSession(session.id))
+                onRevokeSession(session.id)
             },
             onDismiss = { pendingRevoke = null },
         )
@@ -131,7 +149,7 @@ fun ActiveSessionsScreen(
             confirmLabel = strings.activeSessions.logOutAllOthers,
             onConfirm = {
                 showRevokeAllConfirm = false
-                viewModel.onIntent(ActiveSessionsIntent.RevokeAllOthers)
+                onRevokeAllOthers()
             },
             onDismiss = { showRevokeAllConfirm = false },
         )
@@ -145,26 +163,40 @@ private fun AppPlatform.icon(): ImageVector = when (this) {
     AppPlatform.WEB -> Icons.Filled.Public
 }
 
+private val PREVIEW_SESSIONS = listOf(
+    DeviceSession(id = "s1", deviceName = "Pixel 8", platform = AppPlatform.ANDROID, lastSeenAt = kotlin.time.Instant.parse("2026-09-16T08:00:00Z"), isCurrentDevice = true),
+    DeviceSession(id = "s2", deviceName = "MacBook Pro", platform = AppPlatform.DESKTOP, lastSeenAt = kotlin.time.Instant.parse("2026-09-15T20:00:00Z"), isCurrentDevice = false),
+)
+
+@Composable
+private fun Preview(state: ActiveSessionsState) = ActiveSessionsContent(
+    state = state,
+    snackbarHostState = remember { SnackbarHostState() },
+    onBack = {},
+    onRevokeSession = {},
+    onRevokeAllOthers = {},
+)
+
 @Preview
 @Composable
 private fun ActiveSessionsScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    ActiveSessionsScreen(onBack = {})
+    Preview(ActiveSessionsState(isLoading = false, sessions = PREVIEW_SESSIONS))
 }
 
 @Preview
 @Composable
 private fun ActiveSessionsScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    ActiveSessionsScreen(onBack = {})
+    Preview(ActiveSessionsState(isLoading = false, sessions = PREVIEW_SESSIONS))
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun ActiveSessionsScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    ActiveSessionsScreen(onBack = {})
+    Preview(ActiveSessionsState(isLoading = false, sessions = PREVIEW_SESSIONS))
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun ActiveSessionsScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    ActiveSessionsScreen(onBack = {})
+    Preview(ActiveSessionsState(isLoading = false, sessions = PREVIEW_SESSIONS))
 }

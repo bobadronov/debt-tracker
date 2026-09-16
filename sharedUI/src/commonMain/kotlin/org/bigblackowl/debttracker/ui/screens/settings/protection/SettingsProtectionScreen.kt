@@ -44,13 +44,36 @@ fun SettingsProtectionScreen(
     val settings = koinInject<AppSettings>()
     val biometricAuthenticator = rememberBiometricAuthenticator()
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val strings = LocalStrings.current
-
-    var showPinSetupDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.onIntent(SettingsProtectionIntent.CheckBiometricHardware(biometricAuthenticator))
     }
+
+    SettingsProtectionContent(
+        state = state,
+        protectionEnabled = settings.protectionEnabled,
+        hasPinCode = settings.hasPinCode,
+        onBack = onBack,
+        onTogglePinProtection = { viewModel.onIntent(SettingsProtectionIntent.TogglePinProtection(it)) },
+        onSetupPinAndEnableProtection = { viewModel.onIntent(SettingsProtectionIntent.SetupPinAndEnableProtection(it)) },
+        onEnableMobileProtection = { viewModel.onIntent(SettingsProtectionIntent.EnableMobileProtection(biometricAuthenticator)) },
+        onDisableMobileProtection = { viewModel.onIntent(SettingsProtectionIntent.DisableMobileProtection) },
+    )
+}
+
+@Composable
+private fun SettingsProtectionContent(
+    state: SettingsProtectionState,
+    protectionEnabled: Boolean,
+    hasPinCode: Boolean,
+    onBack: () -> Unit,
+    onTogglePinProtection: (Boolean) -> Unit,
+    onSetupPinAndEnableProtection: (String) -> Unit,
+    onEnableMobileProtection: () -> Unit,
+    onDisableMobileProtection: () -> Unit,
+) {
+    val strings = LocalStrings.current
+    var showPinSetupDialog by remember { mutableStateOf(false) }
 
     // Mobile platforms without biometric hardware (or with no biometrics enrolled — typical
     // for tablets) fall back to the same PIN mechanism as Desktop instead of hiding the toggle.
@@ -73,18 +96,18 @@ fun SettingsProtectionScreen(
                         subtitle = state.protectionConfirmError,
                         trailing = {
                             Switch(
-                                checked = settings.protectionEnabled,
+                                checked = protectionEnabled,
                                 onCheckedChange = { checked ->
                                     when {
-                                        usesPinProtection && checked && !settings.hasPinCode -> showPinSetupDialog = true
-                                        usesPinProtection -> viewModel.onIntent(SettingsProtectionIntent.TogglePinProtection(checked))
+                                        usesPinProtection && checked && !hasPinCode -> showPinSetupDialog = true
+                                        usesPinProtection -> onTogglePinProtection(checked)
 
                                         // Mobile platforms with biometrics: enabling protection requires
                                         // immediate fingerprint/face confirmation — otherwise the toggle
                                         // could be flipped with someone else's finger on the sensor,
                                         // making the protection itself a fiction.
-                                        checked -> viewModel.onIntent(SettingsProtectionIntent.EnableMobileProtection(biometricAuthenticator))
-                                        else -> viewModel.onIntent(SettingsProtectionIntent.DisableMobileProtection)
+                                        checked -> onEnableMobileProtection()
+                                        else -> onDisableMobileProtection()
                                     }
                                 },
                             )
@@ -100,32 +123,37 @@ fun SettingsProtectionScreen(
             onDismiss = { showPinSetupDialog = false },
             onConfirm = { pin ->
                 showPinSetupDialog = false
-                viewModel.onIntent(SettingsProtectionIntent.SetupPinAndEnableProtection(pin))
+                onSetupPinAndEnableProtection(pin)
             },
         )
     }
 }
 
-// The @Preview functions render this rather than SettingsProtectionScreen directly: the extra hop
-// keeps the koinViewModel() call out of the previewed function's own body (matching SettingsScreen).
-// The screen renders through SettingsProtectionViewModel, backed by the fakes in preview/PreviewModule.kt.
 @Composable
-private fun SettingsProtectionScreenPreviewContent() {
-    SettingsProtectionScreen(onBack = {})
-}
+private fun Preview(state: SettingsProtectionState, protectionEnabled: Boolean = false, hasPinCode: Boolean = false) =
+    SettingsProtectionContent(
+        state = state,
+        protectionEnabled = protectionEnabled,
+        hasPinCode = hasPinCode,
+        onBack = {},
+        onTogglePinProtection = {},
+        onSetupPinAndEnableProtection = {},
+        onEnableMobileProtection = {},
+        onDisableMobileProtection = {},
+    )
 
 @Preview
 @Composable
-private fun SettingsProtectionScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { SettingsProtectionScreenPreviewContent() }
+private fun SettingsProtectionScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { Preview(SettingsProtectionState()) }
 
 @Preview
 @Composable
-private fun SettingsProtectionScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { SettingsProtectionScreenPreviewContent() }
+private fun SettingsProtectionScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { Preview(SettingsProtectionState()) }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun SettingsProtectionScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { SettingsProtectionScreenPreviewContent() }
+private fun SettingsProtectionScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { Preview(SettingsProtectionState()) }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun SettingsProtectionScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { SettingsProtectionScreenPreviewContent() }
+private fun SettingsProtectionScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { Preview(SettingsProtectionState()) }

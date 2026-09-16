@@ -73,6 +73,15 @@ class ExchangeRatesViewModel(
         _state.value = _state.value.copy(amount = amount)
     }
 
+    fun toggleInvert() {
+        _state.value = _state.value.copy(invert = !_state.value.invert)
+    }
+
+    fun toggleSort() {
+        val next = if (_state.value.sort == ExchangeRatesSort.DEFAULT) ExchangeRatesSort.NAME else ExchangeRatesSort.DEFAULT
+        _state.value = _state.value.copy(sort = next)
+    }
+
     fun togglePin(code: String) {
         val next = _state.value.pinned.toMutableSet().apply { if (!add(code)) remove(code) }
         settings.exchangeRatesPinnedCsv = next.joinToString(",")
@@ -88,6 +97,7 @@ class ExchangeRatesViewModel(
             source = source,
             base = cached?.base ?: base,
             rates = cached?.rates.orEmpty(),
+            previousRates = emptyList(),
             date = cached?.date,
             isLoading = cached == null,
             isRefreshing = cached != null,
@@ -100,6 +110,7 @@ class ExchangeRatesViewModel(
                     _state.value = _state.value.copy(
                         base = snapshot.base,
                         rates = snapshot.rates,
+                        previousRates = cached?.rates.orEmpty(),
                         date = snapshot.date,
                         isLoading = false,
                         isRefreshing = false,

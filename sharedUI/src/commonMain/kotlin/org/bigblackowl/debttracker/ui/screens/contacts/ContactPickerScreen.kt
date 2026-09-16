@@ -53,6 +53,24 @@ fun ContactPickerScreen(
     viewModel: ContactPickerViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    ContactPickerContent(
+        state = state,
+        onBack = onBack,
+        onNewContact = onNewContact,
+        onPickContact = onPickContact,
+        onSearch = { viewModel.onIntent(ContactPickerIntent.Search(it)) },
+    )
+}
+
+@Composable
+private fun ContactPickerContent(
+    state: ContactPickerState,
+    onBack: () -> Unit,
+    onNewContact: () -> Unit,
+    onPickContact: (ContactSuggestion) -> Unit,
+    onSearch: (String) -> Unit,
+) {
     val strings = LocalStrings.current
 
     Scaffold(
@@ -68,7 +86,7 @@ fun ContactPickerScreen(
             ) {
                 OutlinedTextField(
                     value = state.query,
-                    onValueChange = { viewModel.onIntent(ContactPickerIntent.Search(it)) },
+                    onValueChange = onSearch,
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     placeholder = { Text(strings.contactPicker.searchPlaceholder) },
@@ -125,26 +143,40 @@ private fun ContactPickerRow(contact: ContactSuggestion, onClick: () -> Unit) {
     }
 }
 
+@Composable
+private fun Preview(state: ContactPickerState) = ContactPickerContent(
+    state = state,
+    onBack = {},
+    onNewContact = {},
+    onPickContact = {},
+    onSearch = {},
+)
+
+private val PREVIEW_CONTACTS = listOf(
+    ContactSuggestion(fullName = "Тарас Шевченко", phone = "0501234567", email = null, comment = null),
+    ContactSuggestion(fullName = "Леся Українка", phone = null, email = "lesya@example.com", comment = null),
+)
+
 @Preview
 @Composable
 private fun ContactPickerScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    ContactPickerScreen(onBack = {}, onNewContact = {}, onPickContact = {})
+    Preview(ContactPickerState(contacts = PREVIEW_CONTACTS, hasAnyContacts = true))
 }
 
 @Preview
 @Composable
 private fun ContactPickerScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    ContactPickerScreen(onBack = {}, onNewContact = {}, onPickContact = {})
+    Preview(ContactPickerState(contacts = PREVIEW_CONTACTS, hasAnyContacts = true))
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun ContactPickerScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    ContactPickerScreen(onBack = {}, onNewContact = {}, onPickContact = {})
+    Preview(ContactPickerState(contacts = PREVIEW_CONTACTS, hasAnyContacts = true))
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun ContactPickerScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    ContactPickerScreen(onBack = {}, onNewContact = {}, onPickContact = {})
+    Preview(ContactPickerState())
 }

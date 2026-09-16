@@ -16,7 +16,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.Currency
+import org.bigblackowl.debttracker.domain.model.Debtor
+import org.bigblackowl.debttracker.domain.model.DebtStatus
 import org.bigblackowl.debttracker.domain.model.DebtTransaction
+import org.bigblackowl.debttracker.domain.model.PaymentMethod
+import org.bigblackowl.debttracker.domain.model.SyncStatus
+import org.bigblackowl.debttracker.domain.model.TransactionType
 import org.bigblackowl.debttracker.domain.model.formatMoney
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.preview.PreviewIds
@@ -40,12 +45,6 @@ fun DebtorDetailScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    var showRepaySheet by remember { mutableStateOf(false) }
-    var showLendSheet by remember { mutableStateOf(false) }
-    var editingTransaction by remember { mutableStateOf<DebtTransaction?>(null) }
-    var deletingTransaction by remember { mutableStateOf<DebtTransaction?>(null) }
-    val strings = LocalStrings.current
-    val currency = state.debtor?.currency ?: Currency.UAH
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -54,6 +53,42 @@ fun DebtorDetailScreen(
             }
         }
     }
+
+    DebtorDetailContent(
+        debtorId = debtorId,
+        state = state,
+        snackbarHostState = snackbarHostState,
+        onBack = onBack,
+        onExport = onExport,
+        onEdit = onEdit,
+        onRefresh = { viewModel.onIntent(DebtorDetailIntent.Refresh) },
+        onEditTransaction = { id, amount, method, comment, date -> viewModel.onIntent(DebtorDetailIntent.EditTransaction(id, amount, method, comment, date)) },
+        onDeleteTransaction = { viewModel.onIntent(DebtorDetailIntent.DeleteTransaction(it)) },
+        onRepay = { amount, method -> viewModel.onIntent(DebtorDetailIntent.Repay(amount, method)) },
+        onLendMore = { amount, method -> viewModel.onIntent(DebtorDetailIntent.LendMore(amount, method)) },
+    )
+}
+
+@Composable
+private fun DebtorDetailContent(
+    debtorId: String,
+    state: DebtorDetailState,
+    snackbarHostState: SnackbarHostState,
+    onBack: () -> Unit,
+    onExport: () -> Unit,
+    onEdit: () -> Unit,
+    onRefresh: () -> Unit,
+    onEditTransaction: (String, BigDecimal, PaymentMethod, String?, kotlin.time.Instant) -> Unit,
+    onDeleteTransaction: (String) -> Unit,
+    onRepay: (BigDecimal, PaymentMethod) -> Unit,
+    onLendMore: (BigDecimal, PaymentMethod) -> Unit,
+) {
+    var showRepaySheet by remember { mutableStateOf(false) }
+    var showLendSheet by remember { mutableStateOf(false) }
+    var editingTransaction by remember { mutableStateOf<DebtTransaction?>(null) }
+    var deletingTransaction by remember { mutableStateOf<DebtTransaction?>(null) }
+    val strings = LocalStrings.current
+    val currency = state.debtor?.currency ?: Currency.UAH
 
     ContactDetailScaffold(
         id = debtorId,
@@ -72,7 +107,7 @@ fun DebtorDetailScreen(
         secondaryLabel = strings.debtorDetail.lendMore,
         onSecondary = { showLendSheet = true },
         isRefreshing = state.isRefreshing,
-        onRefresh = { viewModel.onIntent(DebtorDetailIntent.Refresh) },
+        onRefresh = onRefresh,
     ) {
         items(state.transactions, key = { it.id }) { transaction ->
             TransactionRow(
@@ -96,7 +131,7 @@ fun DebtorDetailScreen(
             currency = currency,
             onDismiss = { editingTransaction = null },
             onConfirm = { amount, method, comment, date ->
-                viewModel.onIntent(DebtorDetailIntent.EditTransaction(tx.id, amount, method, comment, date))
+                onEditTransaction(tx.id, amount, method, comment, date)
                 editingTransaction = null
             },
         )
@@ -109,7 +144,7 @@ fun DebtorDetailScreen(
             confirmLabel = strings.delete,
             confirmColor = MaterialTheme.colorScheme.error,
             onConfirm = {
-                viewModel.onIntent(DebtorDetailIntent.DeleteTransaction(tx.id))
+                onDeleteTransaction(tx.id)
                 deletingTransaction = null
             },
             onDismiss = { deletingTransaction = null },
@@ -123,7 +158,7 @@ fun DebtorDetailScreen(
             currency = currency,
             onDismiss = { showRepaySheet = false },
             onConfirm = { amount, method ->
-                viewModel.onIntent(DebtorDetailIntent.Repay(amount, method))
+                onRepay(amount, method)
                 showRepaySheet = false
             },
         )
@@ -135,33 +170,92 @@ fun DebtorDetailScreen(
             currency = currency,
             onDismiss = { showLendSheet = false },
             onConfirm = { amount, method ->
-                viewModel.onIntent(DebtorDetailIntent.LendMore(amount, method))
+                onLendMore(amount, method)
                 showLendSheet = false
             },
         )
     }
 }
 
+private val PREVIEW_NOW = kotlin.time.Instant.parse("2026-08-15T00:00:00Z")
+
+private val PREVIEW_DEBTOR = Debtor(
+    id = PreviewIds.DEBTOR,
+    fullName = "Тарас Шевченко",
+    phone = "0501234567",
+    email = null,
+    avatarUrl = null,
+    comment = null,
+    createdAt = PREVIEW_NOW,
+    updatedAt = PREVIEW_NOW,
+    status = DebtStatus.ACTIVE,
+    syncStatus = SyncStatus.SYNCED,
+)
+
+private val PREVIEW_TRANSACTIONS = listOf(
+    DebtTransaction(
+        id = "tx1",
+        debtorId = PreviewIds.DEBTOR,
+        amount = BigDecimal.parseString("-1000"),
+        type = TransactionType.LEND,
+        method = PaymentMethod.CASH,
+        date = PREVIEW_NOW,
+        comment = null,
+        createdAt = PREVIEW_NOW,
+        updatedAt = PREVIEW_NOW,
+        syncStatus = SyncStatus.SYNCED,
+    ),
+    DebtTransaction(
+        id = "tx2",
+        debtorId = PreviewIds.DEBTOR,
+        amount = BigDecimal.parseString("300"),
+        type = TransactionType.REPAY,
+        method = PaymentMethod.CARD,
+        date = PREVIEW_NOW,
+        comment = "Часткове погашення",
+        createdAt = PREVIEW_NOW,
+        updatedAt = PREVIEW_NOW,
+        syncStatus = SyncStatus.SYNCED,
+    ),
+)
+
+@Composable
+private fun Preview(state: DebtorDetailState) = DebtorDetailContent(
+    debtorId = PreviewIds.DEBTOR,
+    state = state,
+    snackbarHostState = remember { SnackbarHostState() },
+    onBack = {},
+    onExport = {},
+    onEdit = {},
+    onRefresh = {},
+    onEditTransaction = { _, _, _, _, _ -> },
+    onDeleteTransaction = {},
+    onRepay = { _, _ -> },
+    onLendMore = { _, _ -> },
+)
+
+private val PREVIEW_STATE = DebtorDetailState(isLoading = false, debtor = PREVIEW_DEBTOR, transactions = PREVIEW_TRANSACTIONS)
+
 @Preview
 @Composable
 private fun DebtorDetailScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    DebtorDetailScreen(debtorId = PreviewIds.DEBTOR, onBack = {}, onExport = {})
+    Preview(PREVIEW_STATE)
 }
 
 @Preview
 @Composable
 private fun DebtorDetailScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    DebtorDetailScreen(debtorId = PreviewIds.DEBTOR, onBack = {}, onExport = {})
+    Preview(PREVIEW_STATE)
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun DebtorDetailScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    DebtorDetailScreen(debtorId = PreviewIds.DEBTOR, onBack = {}, onExport = {})
+    Preview(PREVIEW_STATE)
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun DebtorDetailScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    DebtorDetailScreen(debtorId = PreviewIds.DEBTOR, onBack = {}, onExport = {})
+    Preview(PREVIEW_STATE)
 }

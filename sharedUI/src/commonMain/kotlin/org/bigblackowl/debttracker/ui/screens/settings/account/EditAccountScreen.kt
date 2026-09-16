@@ -51,7 +51,6 @@ fun EditAccountScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val strings = LocalStrings.current
     val imagePicker = rememberImagePicker()
 
     LaunchedEffect(Unit) {
@@ -66,9 +65,37 @@ fun EditAccountScreen(
         state.error?.let { snackbarHostState.showSnackbar(it) }
     }
 
+    EditAccountContent(
+        state = state,
+        snackbarHostState = snackbarHostState,
+        onBack = onBack,
+        onPickAvatar = {
+            imagePicker.pickImage { picked ->
+                if (picked == null) return@pickImage
+                viewModel.onIntent(EditAccountIntent.AvatarPicked(picked))
+            }
+        },
+        onFullNameChange = { viewModel.onIntent(EditAccountIntent.FullNameChanged(it)) },
+        onPhoneChange = { viewModel.onIntent(EditAccountIntent.PhoneChanged(sanitizePhoneInput(it))) },
+        onSave = { viewModel.onIntent(EditAccountIntent.Save) },
+    )
+}
+
+@Composable
+private fun EditAccountContent(
+    state: EditAccountState,
+    snackbarHostState: SnackbarHostState,
+    onBack: () -> Unit,
+    onPickAvatar: () -> Unit,
+    onFullNameChange: (String) -> Unit,
+    onPhoneChange: (String) -> Unit,
+    onSave: () -> Unit,
+) {
+    val strings = LocalStrings.current
+
     UnsavedChangesGuard(
         hasUnsavedChanges = state.hasUnsavedChanges,
-        onSave = { viewModel.onIntent(EditAccountIntent.Save) },
+        onSave = onSave,
         onDiscard = onBack,
     )
 
@@ -83,12 +110,7 @@ fun EditAccountScreen(
         AccountAvatar(
             avatarUrl = state.avatarUrl,
             isUploading = state.isUploadingAvatar,
-            onEditClick = {
-                imagePicker.pickImage { picked ->
-                    if (picked == null) return@pickImage
-                    viewModel.onIntent(EditAccountIntent.AvatarPicked(picked))
-                }
-            },
+            onEditClick = onPickAvatar,
         )
         AnimatedVisibility(
             visible = state.avatarError != null,
@@ -104,7 +126,7 @@ fun EditAccountScreen(
 
         OutlinedTextField(
             value = state.fullName,
-            onValueChange = { viewModel.onIntent(EditAccountIntent.FullNameChanged(it)) },
+            onValueChange = onFullNameChange,
             label = { Text(strings.fullName) },
             isError = state.fullNameError != null,
             supportingText = state.fullNameError?.let { { Text(it) } },
@@ -126,7 +148,7 @@ fun EditAccountScreen(
 
         OutlinedTextField(
             value = state.phone,
-            onValueChange = { viewModel.onIntent(EditAccountIntent.PhoneChanged(sanitizePhoneInput(it))) },
+            onValueChange = onPhoneChange,
             label = { Text(strings.phone) },
             leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
@@ -136,7 +158,7 @@ fun EditAccountScreen(
         )
         Spacer(Modifier.height(Dimens.Spacing.md))
         LoadingButton(
-            onClick = { viewModel.onIntent(EditAccountIntent.Save) },
+            onClick = onSave,
             isLoading = state.isSaving,
             modifier = Modifier.fillMaxWidth(),
             label = { Text(strings.save) },
@@ -144,26 +166,39 @@ fun EditAccountScreen(
     }
 }
 
+@Composable
+private fun Preview(state: EditAccountState) = EditAccountContent(
+    state = state,
+    snackbarHostState = remember { SnackbarHostState() },
+    onBack = {},
+    onPickAvatar = {},
+    onFullNameChange = {},
+    onPhoneChange = {},
+    onSave = {},
+)
+
+private val PREVIEW_STATE = EditAccountState(fullName = "Тарас Шевченко", email = "taras@example.com", phone = "0501234567")
+
 @Preview
 @Composable
 private fun EditAccountScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    EditAccountScreen(onBack = {})
+    Preview(PREVIEW_STATE)
 }
 
 @Preview
 @Composable
 private fun EditAccountScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    EditAccountScreen(onBack = {})
+    Preview(PREVIEW_STATE)
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun EditAccountScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    EditAccountScreen(onBack = {})
+    Preview(PREVIEW_STATE)
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun EditAccountScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    EditAccountScreen(onBack = {})
+    Preview(PREVIEW_STATE)
 }

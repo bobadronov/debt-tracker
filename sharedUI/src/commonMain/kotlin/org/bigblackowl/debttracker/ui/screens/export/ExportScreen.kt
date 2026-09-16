@@ -68,6 +68,26 @@ fun ExportScreen(
     val fileExporter = rememberFileExporter()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    ExportContent(
+        state = state,
+        isScoped = viewModel.isScoped,
+        onBack = onBack,
+        onSetFormat = { viewModel.onIntent(ExportIntent.SetFormat(it)) },
+        onSetDirection = { viewModel.onIntent(ExportIntent.SetDirection(it)) },
+        onExport = { from, to -> viewModel.onIntent(ExportIntent.Export(fileExporter, from, to)) },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ExportContent(
+    state: ExportState,
+    isScoped: Boolean,
+    onBack: () -> Unit,
+    onSetFormat: (ExportFormat) -> Unit,
+    onSetDirection: (ExportDirection) -> Unit,
+    onExport: (kotlinx.datetime.LocalDate?, kotlinx.datetime.LocalDate?) -> Unit,
+) {
     var showDateRangePicker by remember { mutableStateOf(false) }
     val dateRangePickerState = rememberDateRangePickerState()
     val strings = LocalStrings.current
@@ -90,7 +110,7 @@ fun ExportScreen(
                 verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.md),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                if (viewModel.isScoped) {
+                if (isScoped) {
                     TitleText(
                         state.scopedContactName ?: "…",
                         modifier = Modifier.fillMaxWidth(),
@@ -108,7 +128,7 @@ fun ExportScreen(
                             formatOptions.forEachIndexed { index, (value, label) ->
                                 SegmentedButton(
                                     selected = state.format == value,
-                                    onClick = { viewModel.onIntent(ExportIntent.SetFormat(value)) },
+                                    onClick = { onSetFormat(value) },
                                     shape = SegmentedButtonDefaults.itemShape(
                                         index = index,
                                         count = formatOptions.size
@@ -120,7 +140,7 @@ fun ExportScreen(
                     }
                 }
 
-                if (!viewModel.isScoped) {
+                if (!isScoped) {
                     SettingsSection(strings.export.direction) {
                         Column(modifier = Modifier.fillMaxWidth().padding(Dimens.Spacing.lg)) {
                             val directionOptions = listOf(
@@ -132,7 +152,7 @@ fun ExportScreen(
                                 directionOptions.forEachIndexed { index, (value, label) ->
                                     SegmentedButton(
                                         selected = state.direction == value,
-                                        onClick = { viewModel.onIntent(ExportIntent.SetDirection(value)) },
+                                        onClick = { onSetDirection(value) },
                                         shape = SegmentedButtonDefaults.itemShape(
                                             index = index,
                                             count = directionOptions.size
@@ -172,7 +192,7 @@ fun ExportScreen(
                 }
             }
             LoadingButton(
-                onClick = { viewModel.onIntent(ExportIntent.Export(fileExporter, fromDate, toDate)) },
+                onClick = { onExport(fromDate, toDate) },
                 isLoading = state.isExporting,
                 modifier = Modifier.fillMaxWidth(),
                 leadingIcon = {
@@ -206,26 +226,36 @@ fun ExportScreen(
     }
 }
 
+@Composable
+private fun Preview(state: ExportState, isScoped: Boolean = false) = ExportContent(
+    state = state,
+    isScoped = isScoped,
+    onBack = {},
+    onSetFormat = {},
+    onSetDirection = {},
+    onExport = { _, _ -> },
+)
+
 @Preview
 @Composable
 private fun ExportScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    ExportScreen(onBack = {})
+    Preview(ExportState())
 }
 
 @Preview
 @Composable
 private fun ExportScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    ExportScreen(onBack = {})
+    Preview(ExportState())
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun ExportScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    ExportScreen(onBack = {})
+    Preview(ExportState())
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun ExportScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    ExportScreen(onBack = {})
+    Preview(ExportState())
 }

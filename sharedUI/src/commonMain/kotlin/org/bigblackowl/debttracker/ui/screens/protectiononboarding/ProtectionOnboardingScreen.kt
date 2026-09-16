@@ -49,10 +49,7 @@ fun ProtectionOnboardingScreen(
     viewModel: ProtectionOnboardingViewModel = koinViewModel(),
 ) {
     val biometricAuthenticator = rememberBiometricAuthenticator()
-    val strings = LocalStrings.current
     val state by viewModel.state.collectAsStateWithLifecycle()
-
-    var showPinSetupDialog by remember { mutableStateOf(false) }
 
     val isMobile = currentPlatform == AppPlatform.ANDROID || currentPlatform == AppPlatform.IOS
 
@@ -69,6 +66,24 @@ fun ProtectionOnboardingScreen(
             }
         }
     }
+
+    ProtectionOnboardingContent(
+        state = state,
+        onEnableBiometric = { viewModel.onIntent(ProtectionOnboardingIntent.EnableBiometric(biometricAuthenticator)) },
+        onEnablePin = { viewModel.onIntent(ProtectionOnboardingIntent.EnablePin(it)) },
+        onSkip = { viewModel.onIntent(ProtectionOnboardingIntent.Skip) },
+    )
+}
+
+@Composable
+private fun ProtectionOnboardingContent(
+    state: ProtectionOnboardingState,
+    onEnableBiometric: () -> Unit,
+    onEnablePin: (String) -> Unit,
+    onSkip: () -> Unit,
+) {
+    val strings = LocalStrings.current
+    var showPinSetupDialog by remember { mutableStateOf(false) }
 
     UnlockScaffold(
         title = strings.onboardingProtection.title,
@@ -89,7 +104,7 @@ fun ProtectionOnboardingScreen(
         // Desktop has no biometric at all; mobile devices without biometric hardware/enrollment
         // (common on tablets) fall back to the same PIN setup instead of only offering Skip.
         if (state.biometricAvailable) {
-            Button(onClick = { viewModel.onIntent(ProtectionOnboardingIntent.EnableBiometric(biometricAuthenticator)) }) {
+            Button(onClick = onEnableBiometric) {
                 Text(strings.onboardingProtection.enableBiometric)
             }
         } else {
@@ -99,7 +114,7 @@ fun ProtectionOnboardingScreen(
         }
 
         Spacer(Modifier.height(Dimens.Spacing.sm))
-        TextButton(onClick = { viewModel.onIntent(ProtectionOnboardingIntent.Skip) }) { Text(strings.onboardingProtection.skip) }
+        TextButton(onClick = onSkip) { Text(strings.onboardingProtection.skip) }
     }
 
     if (showPinSetupDialog) {
@@ -107,32 +122,40 @@ fun ProtectionOnboardingScreen(
             onDismiss = { showPinSetupDialog = false },
             onConfirm = { pin ->
                 showPinSetupDialog = false
-                viewModel.onIntent(ProtectionOnboardingIntent.EnablePin(pin))
+                onEnablePin(pin)
             },
         )
     }
 }
 
+@Composable
+private fun Preview(state: ProtectionOnboardingState) = ProtectionOnboardingContent(
+    state = state,
+    onEnableBiometric = {},
+    onEnablePin = {},
+    onSkip = {},
+)
+
 @Preview
 @Composable
 private fun ProtectionOnboardingScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) {
-    ProtectionOnboardingScreen(onDone = {})
+    Preview(ProtectionOnboardingState(biometricAvailable = true))
 }
 
 @Preview
 @Composable
 private fun ProtectionOnboardingScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) {
-    ProtectionOnboardingScreen(onDone = {})
+    Preview(ProtectionOnboardingState())
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun ProtectionOnboardingScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
-    ProtectionOnboardingScreen(onDone = {})
+    Preview(ProtectionOnboardingState())
 }
 
 @Preview(device = DESKTOP)
 @Composable
 private fun ProtectionOnboardingScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
-    ProtectionOnboardingScreen(onDone = {})
+    Preview(ProtectionOnboardingState())
 }

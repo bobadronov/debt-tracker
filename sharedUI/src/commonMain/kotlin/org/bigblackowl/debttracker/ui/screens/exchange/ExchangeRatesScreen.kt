@@ -1,5 +1,6 @@
 package org.bigblackowl.debttracker.ui.screens.exchange
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,13 +17,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.filled.SortByAlpha
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -31,16 +37,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -48,6 +59,7 @@ import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.SubcomposeAsyncImage
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.number
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
@@ -55,8 +67,10 @@ import org.bigblackowl.debttracker.domain.model.ExchangeRate
 import org.bigblackowl.debttracker.domain.model.FiatCurrencies
 import org.bigblackowl.debttracker.domain.model.FiatCurrency
 import org.bigblackowl.debttracker.domain.model.RateSource
+import org.bigblackowl.debttracker.domain.validation.sanitizeAmountInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.FullScreenLoadingIndicator
 import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
 import org.bigblackowl.debttracker.ui.components.button.IconButton
@@ -83,6 +97,7 @@ fun ExchangeRatesScreen(
     viewModel: ExchangeRatesViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
     ExchangeRatesContent(
         state = state,
         onBack = onBack,
@@ -91,10 +106,14 @@ fun ExchangeRatesScreen(
         onQueryChange = viewModel::setQuery,
         onAmountChange = viewModel::setAmount,
         onTogglePin = viewModel::togglePin,
+        onToggleInvert = viewModel::toggleInvert,
+        onToggleSort = viewModel::toggleSort,
         onRefresh = viewModel::refresh,
     )
 }
 
+/** Still on deprecated [LocalClipboardManager] for the same reason as [org.bigblackowl.debttracker.ui.components.form.rememberClipboardText]: no public multiplatform way to build a [androidx.compose.ui.platform.ClipEntry] from plain text. */
+@Suppress("DEPRECATION")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ExchangeRatesContent(
@@ -105,11 +124,24 @@ private fun ExchangeRatesContent(
     onQueryChange: (String) -> Unit,
     onAmountChange: (String) -> Unit,
     onTogglePin: (String) -> Unit,
+    onToggleInvert: () -> Unit,
+    onToggleSort: () -> Unit,
     onRefresh: () -> Unit,
 ) {
     val strings = LocalStrings.current.exchangeRates
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+    val clipboardManager = LocalClipboardManager.current
+    val onCopy: (String) -> Unit = { value ->
+        clipboardManager.setText(AnnotatedString(value))
+        coroutineScope.launch { snackbarHostState.showSnackbar(strings.copied(value)) }
+    }
 
-    Scaffold(modifier = Modifier.fillMaxSize(), topBar = { BackTopAppBar(title = strings.menuTitle, onBack = onBack) }) { padding ->
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = { BackTopAppBar(title = strings.menuTitle, onBack = onBack) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+    ) { padding ->
         PullToRefreshBox(
             isRefreshing = state.isRefreshing,
             onRefresh = onRefresh,
@@ -157,50 +189,91 @@ private fun ExchangeRatesContent(
                                 CaptionText(strings.stale, color = MaterialTheme.colorScheme.tertiary)
                             }
 
-                            OutlinedTextField(
-                                value = state.amount,
-                                onValueChange = onAmountChange,
-                                label = { Text(strings.amountLabel) },
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm),
                                 modifier = Modifier.fillMaxWidth(),
-                            )
-                            OutlinedTextField(
-                                value = state.query,
-                                onValueChange = onQueryChange,
-                                label = { Text(strings.searchHint) },
-                                singleLine = true,
-                                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                            ) {
+                                OutlinedTextField(
+                                    value = state.amount,
+                                    onValueChange = { onAmountChange(sanitizeAmountInput(it)) },
+                                    label = { Text(strings.amountLabel) },
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                    modifier = Modifier.weight(1f),
+                                )
+                                IconButton(onClick = onToggleInvert) {
+                                    Icon(
+                                        Icons.Filled.SwapVert,
+                                        contentDescription = strings.swapDirection,
+                                        tint = if (state.invert) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm),
                                 modifier = Modifier.fillMaxWidth(),
-                            )
+                            ) {
+                                OutlinedTextField(
+                                    value = state.query,
+                                    onValueChange = onQueryChange,
+                                    label = { Text(strings.searchHint) },
+                                    singleLine = true,
+                                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                                    modifier = Modifier.weight(1f),
+                                )
+                                IconButton(onClick = onToggleSort) {
+                                    Icon(
+                                        Icons.Filled.SortByAlpha,
+                                        contentDescription = strings.sortByName,
+                                        tint = if (state.sort == ExchangeRatesSort.NAME) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
 
                             val q = state.query.trim()
-                            val visible = state.rates.filter { rate ->
+                            val previousByCode = state.previousRates.associateBy { it.currency.code }
+                            var visible = state.rates.filter { rate ->
                                 q.isEmpty() ||
                                         rate.currency.code.contains(q, ignoreCase = true) ||
                                         rate.currency.name.contains(q, ignoreCase = true)
+                            }
+                            if (state.sort == ExchangeRatesSort.NAME) {
+                                visible = visible.sortedBy { it.currency.code }
                             }
                             val pinned = visible.filter { it.currency.code in state.pinned }
                             val rest = visible.filterNot { it.currency.code in state.pinned }
 
                             if (visible.isEmpty()) {
-                                BodyText(
-                                    strings.noResults,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(Dimens.Spacing.xl),
-                                )
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm),
+                                    modifier = Modifier.fillMaxWidth().padding(Dimens.Spacing.xl),
+                                ) {
+                                    Icon(
+                                        Icons.Filled.SearchOff,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(Dimens.IconSize.md),
+                                    )
+                                    BodyText(
+                                        strings.noResults,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
                             }
 
                             if (pinned.isNotEmpty()) {
                                 SectionLabel(strings.pinned)
                                 pinned.forEach { rate ->
-                                    RateRow(rate, state.amountFactor, pinned = true) { onTogglePin(rate.currency.code) }
+                                    RateRow(rate, previousByCode[rate.currency.code], state::convert, pinned = true, onTogglePin = { onTogglePin(rate.currency.code) }, onCopy = onCopy)
                                 }
                                 if (rest.isNotEmpty()) Spacer(Modifier.size(Dimens.Spacing.sm))
                             }
                             rest.forEach { rate ->
-                                RateRow(rate, state.amountFactor, pinned = false) { onTogglePin(rate.currency.code) }
+                                RateRow(rate, previousByCode[rate.currency.code], state::convert, pinned = false, onTogglePin = { onTogglePin(rate.currency.code) }, onCopy = onCopy)
                             }
                         }
                     }
@@ -321,9 +394,21 @@ private fun CurrencyFlag(currency: FiatCurrency, modifier: Modifier = Modifier) 
     }
 }
 
+/** Trend arrow threshold: ignore float noise smaller than this when comparing to [kotlinx.datetime.previous]. */
+private const val TREND_EPSILON = 0.0005
+
 @Composable
-private fun RateRow(rate: ExchangeRate, factor: Double, pinned: Boolean, onTogglePin: () -> Unit) {
+private fun RateRow(
+    rate: ExchangeRate,
+    previous: ExchangeRate?,
+    convert: (Double) -> Double,
+    pinned: Boolean,
+    onTogglePin: () -> Unit,
+    onCopy: (String) -> Unit,
+) {
     val strings = LocalStrings.current.exchangeRates
+    val diff = previous?.let { rate.sell - it.sell }
+    val copyValue = convert(rate.sell).formatRate()
     TonalCard(shape = RoundedCornerShape(Dimens.Radius.sm)) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(start = Dimens.Spacing.sm, end = Dimens.Spacing.lg, top = Dimens.Spacing.sm, bottom = Dimens.Spacing.sm),
@@ -341,16 +426,36 @@ private fun RateRow(rate: ExchangeRate, factor: Double, pinned: Boolean, onToggl
                 CurrencyFlag(rate.currency, Modifier.size(Dimens.Spacing.xl))
                 Spacer(Modifier.width(Dimens.Spacing.md))
                 Column {
-                    TitleText(rate.currency.code, fontWeight = FontWeight.Bold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        TitleText(rate.currency.code, fontWeight = FontWeight.Bold)
+                        if (diff != null && diff > TREND_EPSILON) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.TrendingUp,
+                                contentDescription = null,
+                                tint = MaterialTheme.debtAccentColors.repay,
+                                modifier = Modifier.size(Dimens.IconSize.sm),
+                            )
+                        } else if (diff != null && diff < -TREND_EPSILON) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.TrendingDown,
+                                contentDescription = null,
+                                tint = MaterialTheme.debtAccentColors.debt,
+                                modifier = Modifier.size(Dimens.IconSize.sm),
+                            )
+                        }
+                    }
                     CaptionText("${rate.currency.name} · ${rate.currency.symbol}")
                 }
             }
-            if (rate.isSingle) {
-                RateColumn(strings.official, rate.sell * factor)
-            } else {
-                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.Spacing.lg)) {
-                    RateColumn(strings.buy, rate.buy * factor)
-                    RateColumn(strings.sell, rate.sell * factor)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Dimens.Spacing.lg),
+                modifier = Modifier.clickable { onCopy(copyValue) },
+            ) {
+                if (rate.isSingle) {
+                    RateColumn(strings.official, convert(rate.sell))
+                } else {
+                    RateColumn(strings.buy, convert(rate.buy))
+                    RateColumn(strings.sell, convert(rate.sell))
                 }
             }
         }
@@ -405,6 +510,8 @@ private fun Preview(state: ExchangeRatesState) = ExchangeRatesContent(
     onQueryChange = {},
     onAmountChange = {},
     onTogglePin = {},
+    onToggleInvert = {},
+    onToggleSort = {},
     onRefresh = {},
 )
 
@@ -457,6 +564,35 @@ private fun ExchangeRatesLoadedDesktopPreview() = DebtTrackerPreview(darkTheme =
             rates = PREVIEW_RATES,
             date = LocalDate(2026, 9, 1),
             stale = true,
+        ),
+    )
+}
+
+@Preview
+@Composable
+private fun ExchangeRatesTrendAndInvertPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(
+        ExchangeRatesState(
+            base = FiatCurrencies.of("UAH"),
+            rates = PREVIEW_RATES.map { it.copy(sell = it.sell + 0.1, buy = it.buy - 0.05) },
+            previousRates = PREVIEW_RATES,
+            pinned = setOf("GBP"),
+            sort = ExchangeRatesSort.NAME,
+            invert = true,
+            amount = "100",
+            date = LocalDate(2026, 9, 1),
+        ),
+    )
+}
+
+@Preview
+@Composable
+private fun ExchangeRatesEmptyPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(
+        ExchangeRatesState(
+            rates = PREVIEW_RATES,
+            query = "zzz",
+            date = LocalDate(2026, 9, 1),
         ),
     )
 }

@@ -388,6 +388,9 @@ val PlStrings = Strings(
         refresh = "Odśwież",
         error = "Nie udało się załadować kursów walut",
         stale = "Wyświetlanie zapisanych danych",
+        sortByName = "Według nazwy",
+        swapDirection = "Odwróć kierunek",
+        copied = { value -> "Skopiowano: $value" },
     ),
     transactionEdit = TransactionEditStrings(
         editTitle = "Edytuj transakcję",

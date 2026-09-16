@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -89,21 +88,7 @@ fun HomeScreen(
     onOpenCreditor: (String) -> Unit,
     viewModel: HomeViewModel = koinViewModel(),
 ) {
-    val pagerState = rememberPagerState(pageCount = { 2 })
-    val scope = rememberCoroutineScope()
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val strings = LocalStrings.current
-
-    // The Android home-screen widget's two rows deep-link to the matching tab (HomeTabRequest via
-    // AppActivity). No-op on other platforms — nothing ever emits there.
-    LaunchedEffect(Unit) {
-        HomeTabRequest.pending.collect { tab ->
-            if (tab != null) {
-                pagerState.scrollToPage(tab)
-                HomeTabRequest.consume()
-            }
-        }
-    }
 
     // Asked here, once — the first moment the user actually reaches the app (past onboarding/
     // auth-gate/sign-in) — rather than at raw process start (Android's OS "allow notifications?"
@@ -117,6 +102,39 @@ fun HomeScreen(
         if (!appSettings.notificationsPermissionRequested) {
             notificationPermissionRequester.request()
             appSettings.notificationsPermissionRequested = true
+        }
+    }
+
+    HomeContent(
+        state = state,
+        onAddDebtor = onAddDebtor,
+        onOpenDebtor = onOpenDebtor,
+        onAddCreditor = onAddCreditor,
+        onOpenCreditor = onOpenCreditor,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HomeContent(
+    state: HomeState,
+    onAddDebtor: () -> Unit,
+    onOpenDebtor: (String) -> Unit,
+    onAddCreditor: () -> Unit,
+    onOpenCreditor: (String) -> Unit,
+) {
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    val scope = rememberCoroutineScope()
+    val strings = LocalStrings.current
+
+    // The Android home-screen widget's two rows deep-link to the matching tab (HomeTabRequest via
+    // AppActivity). No-op on other platforms — nothing ever emits there.
+    LaunchedEffect(Unit) {
+        HomeTabRequest.pending.collect { tab ->
+            if (tab != null) {
+                pagerState.scrollToPage(tab)
+                HomeTabRequest.consume()
+            }
         }
     }
 
@@ -289,27 +307,28 @@ private fun SyncStatusBadge(status: SyncUiStatus, strings: Strings, modifier: Mo
 }
 
 @Composable
-private fun HomeScreenPreviewContent() {
-    HomeScreen(
-        onAddDebtor = {},
-        onOpenDebtor = {},
-        onAddCreditor = {},
-        onOpenCreditor = {},
-    )
-}
+private fun Preview(state: HomeState) = HomeContent(
+    state = state,
+    onAddDebtor = {},
+    onOpenDebtor = {},
+    onAddCreditor = {},
+    onOpenCreditor = {},
+)
+
+private val PREVIEW_STATE = HomeState(isAuthenticated = true, syncStatus = SyncUiStatus.Synced)
 
 @Preview
 @Composable
-private fun HomeScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { HomeScreenPreviewContent() }
+private fun HomeScreenLightPhonePreview() = DebtTrackerPreview(darkTheme = false) { Preview(PREVIEW_STATE) }
 
 @Preview
 @Composable
-private fun HomeScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { HomeScreenPreviewContent() }
+private fun HomeScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme = true) { Preview(PREVIEW_STATE) }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun HomeScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { HomeScreenPreviewContent() }
+private fun HomeScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) { Preview(PREVIEW_STATE) }
 
 @Preview(device = DESKTOP)
 @Composable
-private fun HomeScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { HomeScreenPreviewContent() }
+private fun HomeScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { Preview(PREVIEW_STATE) }
