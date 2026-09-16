@@ -48,17 +48,17 @@ fun AppOverflowMenu(
     val menu by AppMenu.state.collectAsState()
     val isAuthenticated by authRepository.isAuthenticated.collectAsState()
     val unread by poller.unreadCount.collectAsState()
+    var open by remember { mutableStateOf(false) }
 
-    AppOverflowMenuContent(strings = strings, menu = menu, isAuthenticated = isAuthenticated, unread = unread)
+    AppOverflowMenuContent(open = open, onOpenChanged = { open = it }, strings = strings, menu = menu, isAuthenticated = isAuthenticated, unread = unread)
 }
 
 @Composable
-private fun AppOverflowMenuContent(strings: Strings, menu: AppMenu.State, isAuthenticated: Boolean, unread: Int) {
+private fun AppOverflowMenuContent(open: Boolean, onOpenChanged: (Boolean) -> Unit, strings: Strings, menu: AppMenu.State, isAuthenticated: Boolean, unread: Int) {
     if (!menu.visible) return
 
-
     Box(modifier = Modifier.padding(Dimens.Spacing.xs)) {
-        IconButton(onClick = { open = true }) {
+        IconButton(onClick = { onOpenChanged(true) }) {
             if (isAuthenticated && unread > 0) {
                 BadgedBox(badge = { Badge { Text(unread.toString()) } }) {
                     Icon(Icons.Filled.MoreVert, contentDescription = strings.home.menu)
@@ -67,7 +67,7 @@ private fun AppOverflowMenuContent(strings: Strings, menu: AppMenu.State, isAuth
                 Icon(Icons.Filled.MoreVert, contentDescription = strings.home.menu)
             }
         }
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+        DropdownMenu(expanded = open, onDismissRequest = { onOpenChanged(false) }) {
             // Items for screens already on the back stack are hidden — see AppMenu.activeTargets.
             if (isAuthenticated && AppMenu.Target.Notifications !in menu.activeTargets) {
                 DropdownMenuItem(
@@ -76,35 +76,35 @@ private fun AppOverflowMenuContent(strings: Strings, menu: AppMenu.State, isAuth
                     trailingIcon = if (unread > 0) {
                         { Badge { Text(unread.toString()) } }
                     } else null,
-                    onClick = { open = false; menu.openNotifications() },
+                    onClick = { onOpenChanged(false); menu.openNotifications() },
                 )
             }
             if (AppMenu.Target.Qr !in menu.activeTargets) {
                 DropdownMenuItem(
                     text = { Text(strings.qr.home) },
                     leadingIcon = { Icon(Icons.Filled.QrCode, contentDescription = null) },
-                    onClick = { open = false; menu.openQr() },
+                    onClick = { onOpenChanged(false); menu.openQr() },
                 )
             }
             if (AppMenu.Target.Stats !in menu.activeTargets) {
                 DropdownMenuItem(
                     text = { Text(strings.home.stats) },
                     leadingIcon = { Icon(Icons.Filled.QueryStats, contentDescription = null) },
-                    onClick = { open = false; menu.openStats() },
+                    onClick = { onOpenChanged(false); menu.openStats() },
                 )
             }
             if (AppMenu.Target.ExchangeRates !in menu.activeTargets) {
                 DropdownMenuItem(
                     text = { Text(strings.exchangeRates.menuTitle) },
                     leadingIcon = { Icon(Icons.Filled.CurrencyExchange, contentDescription = null) },
-                    onClick = { open = false; menu.openExchangeRates() },
+                    onClick = { onOpenChanged(false); menu.openExchangeRates() },
                 )
             }
             if (AppMenu.Target.Settings !in menu.activeTargets) {
                 DropdownMenuItem(
                     text = { Text(strings.home.settings) },
                     leadingIcon = { Icon(Icons.Filled.Settings, contentDescription = null) },
-                    onClick = { open = false; menu.openSettings() },
+                    onClick = { onOpenChanged(false); menu.openSettings() },
                 )
             }
         }
@@ -116,35 +116,68 @@ private val PREVIEW_MENU_STATE = AppMenu.State(visible = true)
 @Preview
 @Composable
 private fun AppOverflowMenuUnauthenticatedPreview() = DebtTrackerPreview(darkTheme = false) {
-    AppOverflowMenuContent(strings = LocalStrings.current, menu = PREVIEW_MENU_STATE, isAuthenticated = false, unread = 0)
+    AppOverflowMenuContent(
+        open = true,
+        onOpenChanged = {},
+        strings = LocalStrings.current,
+        menu = PREVIEW_MENU_STATE,
+        isAuthenticated = false,
+        unread = 0
+    )
 }
 
 @Preview
 @Composable
 private fun AppOverflowMenuAuthenticatedPreview() = DebtTrackerPreview(darkTheme = false) {
-    AppOverflowMenuContent(strings = LocalStrings.current, menu = PREVIEW_MENU_STATE, isAuthenticated = true, unread = 0)
+    AppOverflowMenuContent(
+        strings = LocalStrings.current,
+        menu = PREVIEW_MENU_STATE,
+        isAuthenticated = true,
+        unread = 0,
+        open = true,
+        onOpenChanged = {}
+    )
 }
 
 @Preview
 @Composable
 private fun AppOverflowMenuUnreadBadgePreview() = DebtTrackerPreview(darkTheme = false) {
-    AppOverflowMenuContent(strings = LocalStrings.current, menu = PREVIEW_MENU_STATE, isAuthenticated = true, unread = 3)
+    AppOverflowMenuContent(
+        open = true,
+        onOpenChanged = {},
+        strings = LocalStrings.current,
+        menu = PREVIEW_MENU_STATE,
+        isAuthenticated = true,
+        unread = 3
+    )
 }
 
 @Preview
 @Composable
 private fun AppOverflowMenuDarkPreview() = DebtTrackerPreview(darkTheme = true) {
-    AppOverflowMenuContent(strings = LocalStrings.current, menu = PREVIEW_MENU_STATE, isAuthenticated = true, unread = 3)
+    AppOverflowMenuContent(
+        open = true,
+        onOpenChanged = {},
+        strings = LocalStrings.current,
+        menu = PREVIEW_MENU_STATE,
+        isAuthenticated = true,
+        unread = 3
+    )
 }
 
 @Preview
 @Composable
 private fun AppOverflowMenuOnNotificationsScreenPreview() = DebtTrackerPreview(darkTheme = false) {
-    // Notifications is already on the back stack — its row is hidden (see AppMenu.activeTargets).
+    // Notifications are already on the back stack — its row is hidden (see AppMenu.activeTargets).
     AppOverflowMenuContent(
         strings = LocalStrings.current,
-        menu = AppMenu.State(visible = true, activeTargets = setOf(AppMenu.Target.Notifications)),
+        menu = AppMenu.State(
+            visible = true,
+            activeTargets = setOf(AppMenu.Target.Notifications)
+        ),
         isAuthenticated = true,
         unread = 3,
+        open = true,
+        onOpenChanged = {}
     )
 }
