@@ -22,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Devices.PHONE
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
@@ -112,8 +113,13 @@ private fun AppOverflowMenuContent(open: Boolean, onOpenChanged: (Boolean) -> Un
 }
 
 private val PREVIEW_MENU_STATE = AppMenu.State(visible = true)
-
-@Preview
+private const val PREVIEW_WIDTH = 300
+private const val PREVIEW_HEIGHT = 500
+@Preview(
+    device = PHONE,
+    widthDp = PREVIEW_WIDTH,
+    heightDp = PREVIEW_HEIGHT
+)
 @Composable
 private fun AppOverflowMenuUnauthenticatedPreview() = DebtTrackerPreview(darkTheme = false) {
     AppOverflowMenuContent(
@@ -121,12 +127,16 @@ private fun AppOverflowMenuUnauthenticatedPreview() = DebtTrackerPreview(darkThe
         onOpenChanged = {},
         strings = LocalStrings.current,
         menu = PREVIEW_MENU_STATE,
-        isAuthenticated = false,
+        isAuthenticated = true,
         unread = 0
     )
 }
 
-@Preview
+@Preview(
+    device = PHONE,
+    widthDp = PREVIEW_WIDTH,
+    heightDp = PREVIEW_HEIGHT
+)
 @Composable
 private fun AppOverflowMenuAuthenticatedPreview() = DebtTrackerPreview(darkTheme = false) {
     AppOverflowMenuContent(
@@ -139,7 +149,11 @@ private fun AppOverflowMenuAuthenticatedPreview() = DebtTrackerPreview(darkTheme
     )
 }
 
-@Preview
+@Preview(
+    device = PHONE,
+    widthDp = PREVIEW_WIDTH,
+    heightDp = PREVIEW_HEIGHT
+)
 @Composable
 private fun AppOverflowMenuUnreadBadgePreview() = DebtTrackerPreview(darkTheme = false) {
     AppOverflowMenuContent(
@@ -152,7 +166,11 @@ private fun AppOverflowMenuUnreadBadgePreview() = DebtTrackerPreview(darkTheme =
     )
 }
 
-@Preview
+@Preview(
+    device = PHONE,
+    widthDp = PREVIEW_WIDTH,
+    heightDp = PREVIEW_HEIGHT
+)
 @Composable
 private fun AppOverflowMenuDarkPreview() = DebtTrackerPreview(darkTheme = true) {
     AppOverflowMenuContent(
@@ -165,7 +183,28 @@ private fun AppOverflowMenuDarkPreview() = DebtTrackerPreview(darkTheme = true) 
     )
 }
 
-@Preview
+@Preview(
+    device = PHONE,
+    widthDp = PREVIEW_WIDTH,
+    heightDp = PREVIEW_HEIGHT
+)
+@Composable
+private fun AppOverflowMenuClosedPreview() = DebtTrackerPreview(darkTheme = false) {
+    AppOverflowMenuContent(
+        open = false,
+        onOpenChanged = {},
+        strings = LocalStrings.current,
+        menu = PREVIEW_MENU_STATE,
+        isAuthenticated = true,
+        unread = 3
+    )
+}
+
+@Preview(
+    device = PHONE,
+    widthDp = PREVIEW_WIDTH,
+    heightDp = PREVIEW_HEIGHT
+)
 @Composable
 private fun AppOverflowMenuOnNotificationsScreenPreview() = DebtTrackerPreview(darkTheme = false) {
     // Notifications are already on the back stack — its row is hidden (see AppMenu.activeTargets).
