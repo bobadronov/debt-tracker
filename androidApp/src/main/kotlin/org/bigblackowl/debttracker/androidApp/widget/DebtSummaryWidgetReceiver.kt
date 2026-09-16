@@ -14,9 +14,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.TimeSource
 import org.bigblackowl.debttracker.androidApp.AppActivity
 import org.bigblackowl.debttracker.androidApp.R
 import org.bigblackowl.debttracker.core.i18n.resolveStrings
@@ -70,8 +72,16 @@ class DebtSummaryWidgetReceiver : AppWidgetProvider() {
         val pending = goAsync()
         scope.launch {
             try {
+                val loadStart = TimeSource.Monotonic.markNow()
                 val amounts = withTimeoutOrNull(BROADCAST_BUDGET_MS.milliseconds) { loadAmounts() }
                 if (amounts != null) lastAmounts = amounts
+                // Local Room reads usually finish in single-digit ms — without this, the loading
+                // spinner pushed above and the final view below land close enough together that
+                // the host visually coalesces them, so tapping refresh looks like it did nothing.
+                // Clamps to a minimum visible duration instead of a flat delay, so a genuinely slow
+                // read (already spending its BROADCAST_BUDGET_MS timeout budget) isn't held up further.
+                val remaining = MIN_LOADING_DURATION_MS.milliseconds - loadStart.elapsedNow()
+                if (remaining.isPositive()) delay(remaining)
                 val views = buildViews(appContext, amounts ?: lastAmounts, isLoading = false)
                 ids.forEach { manager.updateAppWidget(it, views) }
             } finally {
@@ -88,6 +98,9 @@ class DebtSummaryWidgetReceiver : AppWidgetProvider() {
 
         /** goAsync() grants ~10s; stay inside it so a slow DB never ANRs the broadcast. */
         private const val BROADCAST_BUDGET_MS = 8_000L
+
+        /** Minimum time the spinner stays up before the final view replaces it — see [render]. */
+        private const val MIN_LOADING_DURATION_MS = 550L
 
         /** Soft tonal fill for the icon circle — accent knocked back to ~19 % (0..255). */
         private const val BADGE_ALPHA = 48
