@@ -6,3 +6,7 @@ import platform.UIKit.UIDevice
 // user-assigned one unless the app holds the paired device-name entitlement — acceptable here,
 // this is only used to tell devices apart in a list, not to identify the user.
 actual fun deviceDisplayName(): String = UIDevice.currentDevice.name
+
+actual fun systemInfo(): String = UIDevice.currentDevice.let {
+    "${it.systemName} ${it.systemVersion}; ${it.model}"
+}

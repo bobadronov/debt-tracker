@@ -5,6 +5,7 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.handleDeeplinks
 import org.bigblackowl.debttracker.App
 import org.bigblackowl.debttracker.core.di.initKoin
+import org.bigblackowl.debttracker.core.errorreporting.installGlobalErrorReporting
 import org.bigblackowl.debttracker.core.notifications.DueReminderCoordinator
 import org.bigblackowl.debttracker.core.notifications.NotificationsPoller
 import org.bigblackowl.debttracker.data.sync.SyncCoordinator
@@ -22,6 +23,7 @@ private var koinInitialized = false
 fun MainViewController(): UIViewController {
     if (!koinInitialized) {
         val koinApp = initKoin()
+        installGlobalErrorReporting()
         koinApp.koin.get<SyncCoordinator>().start()
         koinApp.koin.get<NotificationsPoller>().start()
         koinApp.koin.get<DueReminderCoordinator>().start()

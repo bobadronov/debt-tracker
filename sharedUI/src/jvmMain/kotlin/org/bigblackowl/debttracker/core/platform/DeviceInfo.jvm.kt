@@ -13,3 +13,6 @@ actual fun deviceDisplayName(): String =
         ?: runCatching { InetAddress.getLocalHost().hostName }.getOrNull()?.takeIf { it.isNotBlank() }
         ?: System.getProperty("os.name")
         ?: "Desktop"
+
+actual fun systemInfo(): String =
+    "${System.getProperty("os.name")} ${System.getProperty("os.version")}; ${System.getProperty("os.arch")}; JVM ${System.getProperty("java.version")}"

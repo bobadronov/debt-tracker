@@ -16,12 +16,14 @@ import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
 import org.bigblackowl.debttracker.data.remote.HttpExchangeRatesRepository
 import org.bigblackowl.debttracker.data.remote.RestoreCredentialCoordinator
 import org.bigblackowl.debttracker.data.remote.SupabaseAuthRepository
+import org.bigblackowl.debttracker.data.remote.SupabaseErrorReportRepository
 import org.bigblackowl.debttracker.data.remote.SupabaseNotificationRepository
 import org.bigblackowl.debttracker.data.remote.SupabaseProfileLookupRepository
 import org.bigblackowl.debttracker.data.remote.SupabaseSessionRepository
 import org.bigblackowl.debttracker.domain.model.ContactPrefill
 import org.bigblackowl.debttracker.domain.model.DebtDirection
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
+import org.bigblackowl.debttracker.domain.repository.ErrorReportRepository
 import org.bigblackowl.debttracker.domain.repository.ExchangeRatesRepository
 import org.bigblackowl.debttracker.domain.repository.NotificationRepository
 import org.bigblackowl.debttracker.domain.repository.ProfileLookupRepository
@@ -101,6 +103,7 @@ val appModule = module {
         }
     }
     single<AuthRepository> { SupabaseAuthRepository(get(), get()) }
+    single<ErrorReportRepository> { SupabaseErrorReportRepository(get(), get()) }
     single<ExchangeRatesRepository> { HttpExchangeRatesRepository(get(), get()) }
     single<RestoreCredentialGateway> { RestoreCredentialCoordinator(get(), get(), get()) }
     single<ProfileLookupRepository> { SupabaseProfileLookupRepository(get(), get()) }

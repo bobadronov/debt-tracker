@@ -43,6 +43,7 @@ import io.github.vinceglb.filekit.FileKit
 import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.App
 import org.bigblackowl.debttracker.core.di.initKoin
+import org.bigblackowl.debttracker.core.errorreporting.installGlobalErrorReporting
 import org.bigblackowl.debttracker.core.i18n.Strings
 import org.bigblackowl.debttracker.core.i18n.resolveStrings
 import org.bigblackowl.debttracker.core.notifications.DesktopNotificationWindow
@@ -81,6 +82,7 @@ fun main(args: Array<String>) {
     DesktopTitleBar.claim() // screens route their TopAppBar into the native title bar from here on
     FileKit.init(appId = APP_ID) // required for FileKit's Save-As dialogs and cache/files dirs on JVM
     val koinApp = initKoin()
+    installGlobalErrorReporting()
     koinApp.koin.get<SyncCoordinator>().start()
     koinApp.koin.get<NotificationsPoller>().start()
     koinApp.koin.get<org.bigblackowl.debttracker.core.notifications.DueReminderCoordinator>().start()
