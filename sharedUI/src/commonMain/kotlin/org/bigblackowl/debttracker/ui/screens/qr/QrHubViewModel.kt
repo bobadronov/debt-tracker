@@ -1,13 +1,16 @@
 package org.bigblackowl.debttracker.ui.screens.qr
 
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.domain.model.ContactQrPayload
@@ -15,79 +18,66 @@ import org.bigblackowl.debttracker.domain.model.ScannedContact
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 
+private data class Card(val name: String, val phone: String, val email: String)
+private data class Account(val isAuthenticated: Boolean, val name: String?, val phone: String?, val email: String?)
+
 /**
- * Share: "my card" (name/phone/email) defaults to [AppSettings.myCard]* if already saved, else
+ * Share: "my card" (name/phone/email) defaults to [AppSettings.myCardName]* if already saved, else
  * the signed-in [AuthRepository] profile if any. Signed-in users never see the fields — the card
- * comes straight from the account, nothing local to edit; signed-out users get an Edit button
- * ([QrHubState.fieldsExpanded]) that reveals them, and every edit persists immediately (same
- * instant-persist UX as other [AppSettings] fields).
- * Scan: camera on Android/iOS, a local-file picker on Desktop/Web (see [QrHubScreen],
- * QR_SCAN_CAPABLE_PLATFORMS) — either way it lands here as the same raw [QrHubIntent.ScanResult].
- * [ContactQrPayload.decode] rejects anything that isn't a Debt Tracker contact card silently
- * (foreign QR codes are simply not recognized, no error shown); a valid decode pops the
+ * comes straight from the account, nothing local to edit; signed-out users edit them on the
+ * separate [EditContactCardScreen]. [AppSettings]' `myCard*` properties are Compose-reactive
+ * (`mutableStateOf`-backed), so [snapshotFlow] here is what makes an edit made there show up back
+ * on this screen without any explicit "reload" call — no ViewModel-to-ViewModel wiring needed.
+ * Scan: lands here as the same [QrHubIntent.ScanResult] regardless of whether it came from the
+ * camera or a picked gallery image (see [org.bigblackowl.debttracker.ui.components.contact.ContactQrScanOverlay],
+ * which already decodes the raw payload before calling back). A valid scan pops the
  * debtor/creditor chooser via [QrHubState.scannedContact].
  */
 class QrHubViewModel(
-    private val appSettings: AppSettings,
-    private val authRepository: AuthRepository,
+    appSettings: AppSettings,
+    authRepository: AuthRepository,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(QrHubState())
-    val state: StateFlow<QrHubState> = _state.asStateFlow()
+    private val cardFlow: Flow<Card> = combine(
+        snapshotFlow { appSettings.myCardName },
+        snapshotFlow { appSettings.myCardPhone },
+        snapshotFlow { appSettings.myCardEmail },
+    ) { name, phone, email -> Card(name, phone, email) }
+
+    private val accountFlow: Flow<Account> = combine(
+        authRepository.isAuthenticated,
+        authRepository.displayName,
+        authRepository.phone,
+        authRepository.email,
+    ) { isAuthenticated, name, phone, email -> Account(isAuthenticated, name, phone, email) }
 
     private val effectsChannel = Channel<QrHubEffect>()
     val effects = effectsChannel.receiveAsFlow()
 
-    init {
-        val isAuthenticated = authRepository.isAuthenticated.value
-        val name = appSettings.myCardName.ifBlank { authRepository.displayName.value.orEmpty() }
-        val phone = sanitizePhoneInput(appSettings.myCardPhone.ifBlank { authRepository.phone.value.orEmpty() })
-        val email = appSettings.myCardEmail.ifBlank { authRepository.email.value.orEmpty() }
-        _state.update {
-            it.copy(
-                isAuthenticated = isAuthenticated,
-                myName = name,
-                myPhone = phone,
-                myEmail = email,
-                qrPayload = payloadFor(name, phone, email),
-            )
-        }
-    }
+    private val _scannedContact = MutableStateFlow<ScannedContact?>(null)
+
+    val state: StateFlow<QrHubState> = combine(cardFlow, accountFlow, _scannedContact) { card, account, scanned ->
+        val name = card.name.ifBlank { account.name.orEmpty() }
+        val phone = sanitizePhoneInput(card.phone.ifBlank { account.phone.orEmpty() })
+        val email = card.email.ifBlank { account.email.orEmpty() }
+        QrHubState(
+            isAuthenticated = account.isAuthenticated,
+            qrPayload = payloadFor(name, phone, email),
+            scannedContact = scanned,
+        )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, QrHubState())
 
     fun onIntent(intent: QrHubIntent) {
         when (intent) {
-            QrHubIntent.SwitchToScan -> _state.update { it.copy(mode = QrHubMode.SCAN, cameraPermissionDenied = false) }
-            QrHubIntent.SwitchToShare -> _state.update { it.copy(mode = QrHubMode.SHARE, cameraPermissionDenied = false) }
-            QrHubIntent.EditClicked -> _state.update { it.copy(fieldsExpanded = !it.fieldsExpanded) }
-            is QrHubIntent.MyNameChanged -> updateMyCard(name = intent.value)
-            is QrHubIntent.MyPhoneChanged -> updateMyCard(phone = intent.value)
-            is QrHubIntent.MyEmailChanged -> updateMyCard(email = intent.value)
-            is QrHubIntent.ScanResult -> onScanResult(intent.rawPayload)
-            QrHubIntent.CameraPermissionDenied -> _state.update { it.copy(cameraPermissionDenied = true) }
+            is QrHubIntent.ScanResult -> _scannedContact.value = intent.contact
             is QrHubIntent.ConfirmScannedContact -> confirmScannedContact(intent.asDebtor)
-            QrHubIntent.DismissScannedContact -> _state.update { it.copy(scannedContact = null) }
+            QrHubIntent.DismissScannedContact -> _scannedContact.value = null
         }
     }
 
-    private fun updateMyCard(
-        name: String = _state.value.myName,
-        phone: String = _state.value.myPhone,
-        email: String = _state.value.myEmail,
-    ) {
-        appSettings.myCardName = name
-        appSettings.myCardPhone = phone
-        appSettings.myCardEmail = email
-        _state.update { it.copy(myName = name, myPhone = phone, myEmail = email, qrPayload = payloadFor(name, phone, email)) }
-    }
-
-    private fun onScanResult(rawPayload: String) {
-        val contact = ContactQrPayload.decode(rawPayload) ?: return
-        _state.update { it.copy(scannedContact = contact) }
-    }
-
     private fun confirmScannedContact(asDebtor: Boolean) {
-        val contact = _state.value.scannedContact ?: return
-        _state.update { it.copy(scannedContact = null) }
+        val contact = _scannedContact.value ?: return
+        _scannedContact.value = null
         viewModelScope.launch {
             effectsChannel.send(
                 if (asDebtor) QrHubEffect.NavigateToAddDebtor(contact) else QrHubEffect.NavigateToAddCreditor(contact)

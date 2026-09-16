@@ -87,6 +87,9 @@ sealed interface Screen {
     data object QrHub : Screen
 
     @Serializable
+    data object EditContactCard : Screen
+
+    @Serializable
     data object Notifications : Screen
 
     @Serializable

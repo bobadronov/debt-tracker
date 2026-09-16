@@ -68,6 +68,7 @@ import org.bigblackowl.debttracker.ui.screens.export.ExportScreen
 import org.bigblackowl.debttracker.ui.screens.home.HomeScreen
 import org.bigblackowl.debttracker.ui.screens.notifications.NotificationsScreen
 import org.bigblackowl.debttracker.ui.screens.protectiononboarding.ProtectionOnboardingScreen
+import org.bigblackowl.debttracker.ui.screens.qr.EditContactCardScreen
 import org.bigblackowl.debttracker.ui.screens.qr.QrHubScreen
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsScreen
 import org.bigblackowl.debttracker.ui.screens.settings.about.SettingsAboutScreen
@@ -208,7 +209,7 @@ fun DebtTrackerNavGraph(
     // The currently-open menu destination is hidden from the menu (you're already there).
     val activeMenuTargets: Set<AppMenu.Target> = when (topScreen) {
         Screen.Notifications -> setOf(AppMenu.Target.Notifications)
-        Screen.QrHub -> setOf(AppMenu.Target.Qr)
+        Screen.QrHub, Screen.EditContactCard -> setOf(AppMenu.Target.Qr)
         Screen.Stats -> setOf(AppMenu.Target.Stats)
         Screen.ExchangeRates -> setOf(AppMenu.Target.ExchangeRates)
         Screen.Settings -> setOf(AppMenu.Target.Settings)
@@ -492,6 +493,7 @@ fun DebtTrackerNavGraph(
             entry<Screen.QrHub> {
                 QrHubScreen(
                     onBack = { back() },
+                    onEditCard = { navigate(Screen.EditContactCard) },
                     onNavigateToAddDebtor = { contact ->
                         navigate(Screen.AddEditContact(DebtDirection.DEBTOR, contact.toPrefill()))
                     },
@@ -499,6 +501,9 @@ fun DebtTrackerNavGraph(
                         navigate(Screen.AddEditContact(DebtDirection.CREDITOR, contact.toPrefill()))
                     },
                 )
+            }
+            entry<Screen.EditContactCard> {
+                EditContactCardScreen(onBack = { back() })
             }
             entry<Screen.Auth> { screen ->
                 AuthScreen(

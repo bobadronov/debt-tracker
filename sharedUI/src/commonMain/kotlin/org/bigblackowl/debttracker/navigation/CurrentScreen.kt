@@ -50,6 +50,7 @@ fun Screen.windowTitle(strings: Strings): String = when (this) {
     Screen.EditAccount -> strings.editAccountTitle
     Screen.ActiveSessions -> strings.activeSessions.title
     Screen.QrHub -> strings.qr.home
+    Screen.EditContactCard -> strings.accountInfoEdit
     Screen.Notifications -> strings.notifications.title
     is Screen.Export -> strings.export.title
 }

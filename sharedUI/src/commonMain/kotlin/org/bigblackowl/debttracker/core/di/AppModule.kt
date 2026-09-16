@@ -69,6 +69,7 @@ import org.bigblackowl.debttracker.ui.screens.export.ExportViewModel
 import org.bigblackowl.debttracker.ui.screens.home.HomeViewModel
 import org.bigblackowl.debttracker.ui.screens.notifications.NotificationsViewModel
 import org.bigblackowl.debttracker.ui.screens.protectiononboarding.ProtectionOnboardingViewModel
+import org.bigblackowl.debttracker.ui.screens.qr.EditContactCardViewModel
 import org.bigblackowl.debttracker.ui.screens.qr.QrHubViewModel
 import org.bigblackowl.debttracker.ui.screens.settings.SettingsViewModel
 import org.bigblackowl.debttracker.ui.screens.settings.about.SettingsAboutViewModel
@@ -168,6 +169,7 @@ val appModule = module {
     viewModelOf(::SettingsDataViewModel)
     viewModelOf(::SettingsAboutViewModel)
     viewModelOf(::QrHubViewModel)
+    viewModelOf(::EditContactCardViewModel)
     viewModelOf(::NotificationsViewModel)
     viewModel { (debtorId: String?, creditorId: String?) ->
         ExportViewModel(debtorId, creditorId, get(), get(), get(), get(), get(), get(), get(), get())

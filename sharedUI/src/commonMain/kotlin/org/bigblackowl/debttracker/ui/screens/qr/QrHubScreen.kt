@@ -1,14 +1,7 @@
 package org.bigblackowl.debttracker.ui.screens.qr
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -25,60 +17,49 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
-import org.bigblackowl.debttracker.core.platform.currentPlatform
-import org.bigblackowl.debttracker.core.qr.ContactQrScanner
-import org.bigblackowl.debttracker.core.qr.QR_SCAN_CAPABLE_PLATFORMS
-import org.bigblackowl.debttracker.core.qr.ScanOverlayActionButton
-import org.bigblackowl.debttracker.core.qr.rememberContactQrImagePicker
 import org.bigblackowl.debttracker.core.qr.rememberContactQrPainter
 import org.bigblackowl.debttracker.domain.model.ContactQrPayload
 import org.bigblackowl.debttracker.domain.model.ScannedContact
-import org.bigblackowl.debttracker.domain.validation.isPhonePasteRelevant
-import org.bigblackowl.debttracker.domain.validation.isValidEmail
-import org.bigblackowl.debttracker.domain.validation.isValidFullName
-import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
 import org.bigblackowl.debttracker.ui.components.button.Button
 import org.bigblackowl.debttracker.ui.components.button.OutlinedButton
-import org.bigblackowl.debttracker.ui.components.button.TextButton
+import org.bigblackowl.debttracker.ui.components.contact.ContactQrScanOverlay
 import org.bigblackowl.debttracker.ui.components.contact.ScannedContactDialog
-import org.bigblackowl.debttracker.ui.components.form.PasteableOutlinedTextField
-import org.bigblackowl.debttracker.ui.components.form.UkrainianPhoneVisualTransformation
-import org.bigblackowl.debttracker.ui.components.form.rememberClipboardText
 import org.bigblackowl.debttracker.ui.components.text.BodyText
-import org.bigblackowl.debttracker.ui.components.text.CaptionText
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * QR contact-exchange hub (Home top bar → QR icon). Shows your own contact card as a QR code —
- * autofill from your account once signed in (no fields to edit here), or a locally-saved card
- * you fill in via Edit while signed out. A single scan-entry button adapts to the platform (see
- * [QR_SCAN_CAPABLE_PLATFORMS]): on Android/iOS it switches the same screen into scan mode for the
- * live camera — with a "select image" fallback underneath, for a code the camera can't get a clean
- * shot of; on Desktop/Web — no camera there — it opens the OS file picker directly. A valid
- * scan asks whether to add the person as a debtor or creditor before navigating to the matching
- * pre-filled form.
+ * autofill from your account once signed in (no fields to edit here), or a locally-saved card you
+ * fill in on the separate [EditContactCardScreen] while signed out. Scanning someone else's code
+ * opens [ContactQrScanOverlay] (the same full-screen camera/file-pick component used from
+ * AddEditContactForm) as an in-place overlay rather than another nav destination — nothing here
+ * needs to survive a process/back-stack round trip once it's done. A valid scan asks whether to add
+ * the person as a debtor or creditor before navigating to the matching pre-filled form.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QrHubScreen(
     onBack: () -> Unit,
+    onEditCard: () -> Unit,
     onNavigateToAddDebtor: (ScannedContact) -> Unit,
     onNavigateToAddCreditor: (ScannedContact) -> Unit,
     viewModel: QrHubViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    var showScanner by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -89,23 +70,13 @@ fun QrHubScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            BackTopAppBar(
-                title = "",
-                // In Scan mode, back returns to the QR card instead of popping the screen.
-                onBack = { if (state.mode == QrHubMode.SCAN) viewModel.onIntent(QrHubIntent.SwitchToShare) else onBack() },
-            )
-        }
-    ) { padding ->
-        Crossfade(state.mode) {
-            Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-                when (it) {
-                    QrHubMode.SHARE -> ShareContent(state = state, onIntent = viewModel::onIntent)
-                    QrHubMode.SCAN -> ScanContent(state = state, onIntent = viewModel::onIntent)
-                }
-            }
-        }
+    Scaffold(topBar = { BackTopAppBar(title = "", onBack = onBack) }) { padding ->
+        ShareContent(
+            state = state,
+            onEditCard = onEditCard,
+            onScanClick = { showScanner = true },
+            modifier = Modifier.fillMaxSize().padding(padding),
+        )
     }
 
     state.scannedContact?.let { contact ->
@@ -116,167 +87,67 @@ fun QrHubScreen(
             onAddAsCreditor = { viewModel.onIntent(QrHubIntent.ConfirmScannedContact(asDebtor = false)) },
         )
     }
+
+    if (showScanner) {
+        ContactQrScanOverlay(
+            onScanned = { contact ->
+                showScanner = false
+                viewModel.onIntent(QrHubIntent.ScanResult(contact))
+            },
+            onClose = { showScanner = false },
+        )
+    }
 }
 
 @Composable
-private fun ShareContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
+private fun ShareContent(
+    state: QrHubState,
+    onEditCard: () -> Unit,
+    onScanClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val strings = LocalStrings.current
-    val clipboardText by rememberClipboardText()
-    // Desktop/Web have no camera (QR_SCAN_CAPABLE_PLATFORMS) — the single scan-entry button below
-    // opens the OS file picker directly there instead of switching to SCAN mode.
-    val imagePicker = rememberContactQrImagePicker(onResult = { onIntent(QrHubIntent.ScanResult(it)) })
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = modifier
             .verticalScroll(rememberScrollState())
             .padding(Dimens.Spacing.lg),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        // The QR code and the edit fields are mutually exclusive — editing invalidates whatever's
-        // currently encoded on screen as you type, so showing both at once is just confusing.
-        // AnimatedVisibility crossfades between them in place instead of a hard cut.
-        AnimatedVisibility(
-            visible = !state.fieldsExpanded,
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically(),
-        ) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.lg),
-            ) {
-                state.qrPayload?.let { payload ->
-                    val painter = rememberContactQrPainter(payload)
-                    painter?.let {
-                        Image(
-                            painter = it,
-                            contentDescription = null,
-                            modifier = Modifier.widthIn(max = Dimens.contentMaxWidth).fillMaxWidth().aspectRatio(1f),
-                        )
-
-                        BodyText(strings.qr.hubDescription, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
-                    }
-                } ?: BodyText(strings.qr.hubMyCardHint, style = MaterialTheme.typography.bodyMedium)
-            }
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.lg)) {
+            state.qrPayload?.let { payload ->
+                val painter = rememberContactQrPainter(payload)
+                painter?.let {
+                    Image(
+                        painter = it,
+                        contentDescription = null,
+                        modifier = Modifier.widthIn(max = Dimens.contentMaxWidth).fillMaxWidth().aspectRatio(1f),
+                    )
+                    BodyText(strings.qr.hubDescription, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
+                }
+            } ?: BodyText(strings.qr.hubMyCardHint, style = MaterialTheme.typography.bodyMedium)
         }
 
-        Column(
-            verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm),
-        ) {
-
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm)) {
             // Signed-in users' card comes straight from the account — nothing local to edit here.
             if (!state.isAuthenticated) {
-                // Always visible (not just while expanded) — this is the only entry point into
-                // the fields, and its label doubles as Save once they're open.
                 OutlinedButton(
-                    onClick = { onIntent(QrHubIntent.EditClicked) },
+                    onClick = onEditCard,
                     modifier = Modifier.widthIn(max = Dimens.contentMaxWidth).fillMaxWidth(),
-                ) { Text(if (state.fieldsExpanded) strings.save else strings.accountInfoEdit) }
-
-                AnimatedVisibility(
-                    visible = state.fieldsExpanded,
-                    enter = fadeIn() + expandVertically(),
-                    exit = fadeOut() + shrinkVertically(),
-                ) {
-                    Column(
-                        modifier = Modifier.widthIn(max = Dimens.contentMaxWidth).fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.md),
-                    ) {
-                        PasteableOutlinedTextField(
-                            value = state.myName,
-                            onValueChange = { onIntent(QrHubIntent.MyNameChanged(it)) },
-                            label = strings.fullName,
-                            clipboardText = clipboardText,
-                            isPasteRelevant = ::isValidFullName,
-                        )
-                        PasteableOutlinedTextField(
-                            value = state.myPhone,
-                            onValueChange = { onIntent(QrHubIntent.MyPhoneChanged(sanitizePhoneInput(it))) },
-                            label = strings.phone,
-                            clipboardText = clipboardText,
-                            isPasteRelevant = ::isPhonePasteRelevant,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                            visualTransformation = remember { UkrainianPhoneVisualTransformation() },
-                        )
-                        PasteableOutlinedTextField(
-                            value = state.myEmail,
-                            onValueChange = { onIntent(QrHubIntent.MyEmailChanged(it)) },
-                            label = strings.email,
-                            clipboardText = clipboardText,
-                            isPasteRelevant = ::isValidEmail,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        )
-                    }
-                }
+                ) { Text(strings.accountInfoEdit) }
             }
-            // Scan hides while entering your own data (SHARE/SCAN don't make sense at once) —
-            // it comes back once fields collapse, whether by Save or by data already present.
-            AnimatedVisibility(
-                visible = !state.fieldsExpanded,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically(),
-            ) {
-                val canScanWithCamera = currentPlatform in QR_SCAN_CAPABLE_PLATFORMS
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Button(
-                        onClick = { if (canScanWithCamera) onIntent(QrHubIntent.SwitchToScan) else imagePicker.pick() },
-                        modifier = Modifier.widthIn(max = Dimens.contentMaxWidth).fillMaxWidth(),
-                    ) { Text(if (canScanWithCamera) strings.qr.hubScanTab else strings.qr.hubSelectImageTab) }
-
-                    if (!canScanWithCamera) {
-                        imagePicker.errorMessage?.let {
-                            CaptionText(it, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// Only reachable via SwitchToScan, which ShareContent's button sends solely on
-// QR_SCAN_CAPABLE_PLATFORMS (Desktop/Web open the file picker directly instead) — so this is
-// always the camera path, with a "select image" fallback underneath for a code the camera can't
-// easily point at (e.g. shown on another screen, or already sitting in the gallery).
-@Composable
-private fun ScanContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
-    val strings = LocalStrings.current
-    val imagePicker = rememberContactQrImagePicker(onResult = { onIntent(QrHubIntent.ScanResult(it)) })
-
-    if (state.cameraPermissionDenied) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(Dimens.Spacing.lg),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            BodyText(strings.qr.hubCameraPermissionRationale, style = MaterialTheme.typography.bodyMedium)
-            TextButton(onClick = { onIntent(QrHubIntent.SwitchToScan) }) {
-                Text(strings.qr.hubCameraPermissionRetry)
-            }
-        }
-    } else {
-        Box(modifier = Modifier.fillMaxSize()) {
-            ContactQrScanner(
-                description = "",
-                modifier = Modifier.fillMaxSize(),
-                flashlightOn = false,
-                onResult = { payload -> onIntent(QrHubIntent.ScanResult(payload)) },
-                onImageDecodeFailure = {},
-                permissionDeniedContent = {
-                    LaunchedEffect(Unit) { onIntent(QrHubIntent.CameraPermissionDenied) }
-                },
-            )
-            ScanOverlayActionButton(strings.qr.hubSelectImageTab, errorText = imagePicker.errorMessage, onClick = imagePicker.pick)
+            Button(
+                onClick = onScanClick,
+                modifier = Modifier.widthIn(max = Dimens.contentMaxWidth).fillMaxWidth(),
+            ) { Text(strings.qr.hubScanTab) }
         }
     }
 }
 
 @Composable
 private fun QrHubScreenPreviewContent() {
-    QrHubScreen(onBack = {}, onNavigateToAddDebtor = {}, onNavigateToAddCreditor = {})
+    QrHubScreen(onBack = {}, onEditCard = {}, onNavigateToAddDebtor = {}, onNavigateToAddCreditor = {})
 }
 
 @Preview
@@ -305,19 +176,7 @@ private val PREVIEW_SCANNED_CONTACT = ScannedContact(fullName = "Olena Kovalenko
 @Composable
 private fun QrHubSharePreviewContent(state: QrHubState) {
     Scaffold(topBar = { BackTopAppBar(title = "", onBack = {}) }) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            ShareContent(state = state, onIntent = {})
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun QrHubScanPreviewContent() {
-    Scaffold(topBar = { BackTopAppBar(title = "", onBack = {}) }) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            ScanContent(state = PREVIEW_STATE_SCAN_DENIED, onIntent = {})
-        }
+        ShareContent(state = state, onEditCard = {}, onScanClick = {}, modifier = Modifier.fillMaxSize().padding(padding))
     }
 }
 
@@ -331,7 +190,7 @@ private fun QrHubScannedDialogPreviewContent() {
 }
 
 /** Signed-in: card is auto-filled from the account, no fields to edit, QR always shown. */
-private val PREVIEW_STATE_SIGNED_IN = QrHubState(isAuthenticated = true, myName = "Olena Kovalenko", qrPayload = ContactQrPayload.encode(PREVIEW_SCANNED_CONTACT))
+private val PREVIEW_STATE_SIGNED_IN = QrHubState(isAuthenticated = true, qrPayload = ContactQrPayload.encode(PREVIEW_SCANNED_CONTACT))
 
 @Preview
 @Composable
@@ -341,8 +200,8 @@ private fun QrHubShareSignedInLightPreview() = DebtTrackerPreview(darkTheme = fa
 @Composable
 private fun QrHubShareSignedInDarkPreview() = DebtTrackerPreview(darkTheme = true) { QrHubSharePreviewContent(PREVIEW_STATE_SIGNED_IN) }
 
-/** Signed-out, nothing filled in yet: hint text instead of a QR code, Edit button collapsed. */
-private val PREVIEW_STATE_SIGNED_OUT_EMPTY = QrHubState(isAuthenticated = false, fieldsExpanded = false, qrPayload = null)
+/** Signed-out, nothing filled in yet: hint text instead of a QR code. */
+private val PREVIEW_STATE_SIGNED_OUT_EMPTY = QrHubState(isAuthenticated = false, qrPayload = null)
 
 @Preview
 @Composable
@@ -352,35 +211,19 @@ private fun QrHubShareSignedOutEmptyLightPreview() = DebtTrackerPreview(darkThem
 @Composable
 private fun QrHubShareSignedOutEmptyDarkPreview() = DebtTrackerPreview(darkTheme = true) { QrHubSharePreviewContent(PREVIEW_STATE_SIGNED_OUT_EMPTY) }
 
-/** Signed-out, Edit expanded and filled in: QR code hidden, editable name/phone/email fields
- * shown instead — the Edit button reads "Save" in this state; tapping it flips back. */
-private val PREVIEW_STATE_SIGNED_OUT_EXPANDED = QrHubState(
+/** Signed-out, card already filled in: QR code shown, Edit button available underneath. */
+private val PREVIEW_STATE_SIGNED_OUT_FILLED = QrHubState(
     isAuthenticated = false,
-    fieldsExpanded = true,
-    myName = "Olena Kovalenko",
-    myPhone = "+380501234567",
-    myEmail = "olena@example.com",
     qrPayload = ContactQrPayload.encode(PREVIEW_SCANNED_CONTACT),
 )
 
 @Preview
 @Composable
-private fun QrHubShareSignedOutExpandedLightPreview() = DebtTrackerPreview(darkTheme = false) { QrHubSharePreviewContent(PREVIEW_STATE_SIGNED_OUT_EXPANDED) }
+private fun QrHubShareSignedOutFilledLightPreview() = DebtTrackerPreview(darkTheme = false) { QrHubSharePreviewContent(PREVIEW_STATE_SIGNED_OUT_FILLED) }
 
 @Preview
 @Composable
-private fun QrHubShareSignedOutExpandedDarkPreview() = DebtTrackerPreview(darkTheme = true) { QrHubSharePreviewContent(PREVIEW_STATE_SIGNED_OUT_EXPANDED) }
-
-/** Scan mode, camera permission denied: rationale text + retry. */
-private val PREVIEW_STATE_SCAN_DENIED = QrHubState(mode = QrHubMode.SCAN, cameraPermissionDenied = true)
-
-@Preview
-@Composable
-private fun QrHubScanPermissionDeniedLightPreview() = DebtTrackerPreview(darkTheme = false) { QrHubScanPreviewContent() }
-
-@Preview
-@Composable
-private fun QrHubScanPermissionDeniedDarkPreview() = DebtTrackerPreview(darkTheme = true) { QrHubScanPreviewContent() }
+private fun QrHubShareSignedOutFilledDarkPreview() = DebtTrackerPreview(darkTheme = true) { QrHubSharePreviewContent(PREVIEW_STATE_SIGNED_OUT_FILLED) }
 
 /** A completed scan: the "add as debtor or creditor?" chooser dialog on top of the share card. */
 private val PREVIEW_STATE_SCANNED_DIALOG = PREVIEW_STATE_SIGNED_IN.copy(scannedContact = PREVIEW_SCANNED_CONTACT)
