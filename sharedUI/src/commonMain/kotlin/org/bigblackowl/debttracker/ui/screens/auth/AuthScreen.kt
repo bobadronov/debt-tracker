@@ -450,3 +450,28 @@ private fun AuthScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = fal
 private fun AuthScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     Preview(AuthState(isSignUpMode = true))
 }
+
+@Preview
+@Composable
+private fun AuthScreenErrorPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(AuthState(email = "test@example.com", error = "Невірний email або пароль", offerRegistration = true))
+}
+
+@Preview
+@Composable
+private fun AuthScreenLoadingPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(AuthState(email = "test@example.com", isLoading = true))
+}
+
+@Preview
+@Composable
+private fun AuthScreenSignUpErrorsPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(
+        AuthState(
+            isSignUpMode = true,
+            fullNameError = "Введіть ім'я",
+            passwordError = "Пароль закороткий",
+            confirmPasswordError = "Паролі не збігаються",
+        ),
+    )
+}

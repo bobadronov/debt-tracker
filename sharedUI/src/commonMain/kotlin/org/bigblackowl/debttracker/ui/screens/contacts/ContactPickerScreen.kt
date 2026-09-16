@@ -178,5 +178,17 @@ private fun ContactPickerScreenLightDesktopPreview() = DebtTrackerPreview(darkTh
 @Preview(device = DESKTOP)
 @Composable
 private fun ContactPickerScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
+    Preview(ContactPickerState(contacts = PREVIEW_CONTACTS, hasAnyContacts = true))
+}
+
+@Preview
+@Composable
+private fun ContactPickerScreenEmptyPreview() = DebtTrackerPreview(darkTheme = false) {
     Preview(ContactPickerState())
+}
+
+@Preview
+@Composable
+private fun ContactPickerScreenNoResultsPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(ContactPickerState(query = "zzz", contacts = emptyList(), hasAnyContacts = true))
 }

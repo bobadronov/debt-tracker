@@ -1,15 +1,11 @@
 package org.bigblackowl.debttracker.ui.screens.creditors
 
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -25,11 +21,7 @@ import org.bigblackowl.debttracker.domain.model.SyncStatus
 import org.bigblackowl.debttracker.domain.model.formatMoney
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.preview.PreviewIds
-import org.bigblackowl.debttracker.ui.components.ConfirmDialog
-import org.bigblackowl.debttracker.ui.components.contact.ContactDetailScaffold
-import org.bigblackowl.debttracker.ui.components.contact.TransactionRow
-import org.bigblackowl.debttracker.ui.components.transaction.AmountBottomSheet
-import org.bigblackowl.debttracker.ui.components.transaction.TransactionEditSheet
+import org.bigblackowl.debttracker.ui.components.contact.ContactDetailContent
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -83,98 +75,40 @@ private fun CreditorDetailContent(
     onReturn: (BigDecimal, PaymentMethod) -> Unit,
     onBorrowMore: (BigDecimal, PaymentMethod) -> Unit,
 ) {
-    var showReturnSheet by remember { mutableStateOf(false) }
-    var showBorrowSheet by remember { mutableStateOf(false) }
-    var editingTransaction by remember { mutableStateOf<CreditorTransaction?>(null) }
-    var deletingTransaction by remember { mutableStateOf<CreditorTransaction?>(null) }
     val strings = LocalStrings.current
     val currency = state.creditor?.currency ?: Currency.UAH
 
-    ContactDetailScaffold(
+    ContactDetailContent(
         id = creditorId,
         title = state.creditor?.fullName ?: strings.creditorDetail.titleFallback,
         avatarUrl = state.creditor?.avatarUrl,
+        phone = state.creditor?.phone,
+        comment = state.creditor?.comment,
+        isLoading = state.isLoading,
+        isRefreshing = state.isRefreshing,
+        snackbarHostState = snackbarHostState,
+        balanceText = strings.creditorDetail.balance(state.balance.formatMoney(currency)),
+        currency = currency,
+        primaryLabel = strings.creditorDetail.returnLabel,
+        primarySheetTitle = strings.creditorDetail.returnSheetTitle,
+        primaryPrefillAmount = if (state.balance > BigDecimal.ZERO) state.balance.toStringExpanded() else "",
+        secondaryLabel = strings.creditorDetail.borrowMore,
+        secondarySheetTitle = strings.creditorDetail.borrowSheetTitle,
+        transactions = state.transactions,
+        transactionKey = { it.id },
+        transactionAmount = { it.amount },
+        transactionMethod = { it.method },
+        transactionComment = { it.comment },
+        transactionDate = { it.date },
         onBack = onBack,
         onExport = onExport,
         onEdit = onEdit,
-        isLoading = state.isLoading,
-        snackbarHostState = snackbarHostState,
-        phone = state.creditor?.phone,
-        comment = state.creditor?.comment,
-        balanceText = strings.creditorDetail.balance(state.balance.formatMoney(currency)),
-        primaryLabel = strings.creditorDetail.returnLabel,
-        onPrimary = { showReturnSheet = true },
-        secondaryLabel = strings.creditorDetail.borrowMore,
-        onSecondary = { showBorrowSheet = true },
-        isRefreshing = state.isRefreshing,
         onRefresh = onRefresh,
-    ) {
-        items(state.transactions, key = { it.id }) { transaction ->
-            TransactionRow(
-                amount = transaction.amount,
-                method = transaction.method,
-                comment = transaction.comment,
-                date = transaction.date,
-                currency = currency,
-                onEdit = { editingTransaction = transaction },
-                onDelete = { deletingTransaction = transaction },
-            )
-        }
-    }
-
-    editingTransaction?.let { tx ->
-        TransactionEditSheet(
-            initialAmount = tx.amount,
-            initialMethod = tx.method,
-            initialComment = tx.comment,
-            initialDate = tx.date,
-            currency = currency,
-            onDismiss = { editingTransaction = null },
-            onConfirm = { amount, method, comment, date ->
-                onEditTransaction(tx.id, amount, method, comment, date)
-                editingTransaction = null
-            },
-        )
-    }
-
-    deletingTransaction?.let { tx ->
-        ConfirmDialog(
-            title = strings.transactionEdit.deleteConfirmTitle,
-            text = strings.transactionEdit.deleteConfirmText,
-            confirmLabel = strings.delete,
-            confirmColor = MaterialTheme.colorScheme.error,
-            onConfirm = {
-                onDeleteTransaction(tx.id)
-                deletingTransaction = null
-            },
-            onDismiss = { deletingTransaction = null },
-        )
-    }
-
-    if (showReturnSheet) {
-        AmountBottomSheet(
-            title = strings.creditorDetail.returnSheetTitle,
-            prefillAmount = if (state.balance > BigDecimal.ZERO) state.balance.toStringExpanded() else "",
-            currency = currency,
-            onDismiss = { showReturnSheet = false },
-            onConfirm = { amount, method ->
-                onReturn(amount, method)
-                showReturnSheet = false
-            },
-        )
-    }
-
-    if (showBorrowSheet) {
-        AmountBottomSheet(
-            title = strings.creditorDetail.borrowSheetTitle,
-            currency = currency,
-            onDismiss = { showBorrowSheet = false },
-            onConfirm = { amount, method ->
-                onBorrowMore(amount, method)
-                showBorrowSheet = false
-            },
-        )
-    }
+        onEditTransaction = { tx, amount, method, comment, date -> onEditTransaction(tx.id, amount, method, comment, date) },
+        onDeleteTransaction = { onDeleteTransaction(it.id) },
+        onPrimaryConfirm = onReturn,
+        onSecondaryConfirm = onBorrowMore,
+    )
 }
 
 private val PREVIEW_NOW = kotlin.time.Instant.parse("2026-08-15T00:00:00Z")
@@ -258,4 +192,22 @@ private fun CreditorDetailScreenLightDesktopPreview() = DebtTrackerPreview(darkT
 @Composable
 private fun CreditorDetailScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     Preview(PREVIEW_STATE)
+}
+
+@Preview
+@Composable
+private fun CreditorDetailScreenLoadingPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(CreditorDetailState(isLoading = true))
+}
+
+@Preview
+@Composable
+private fun CreditorDetailScreenNoTransactionsPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(CreditorDetailState(isLoading = false, creditor = PREVIEW_CREDITOR, transactions = emptyList()))
+}
+
+@Preview
+@Composable
+private fun CreditorDetailScreenRefreshingPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(PREVIEW_STATE.copy(isRefreshing = true))
 }

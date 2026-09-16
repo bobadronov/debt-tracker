@@ -44,9 +44,9 @@ import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.EntityAvatar
 import org.bigblackowl.debttracker.ui.components.FullScreenLoadingIndicator
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
-import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
-import org.bigblackowl.debttracker.ui.components.SettingsSection
 import org.bigblackowl.debttracker.ui.components.card.TonalCard
+import org.bigblackowl.debttracker.ui.components.settings.SettingsRowDivider
+import org.bigblackowl.debttracker.ui.components.settings.SettingsSection
 import org.bigblackowl.debttracker.ui.components.text.BodyText
 import org.bigblackowl.debttracker.ui.components.text.HeadingText
 import org.bigblackowl.debttracker.ui.components.text.LabelText
@@ -172,7 +172,48 @@ private val PREVIEW_TREND = listOf(
     MonthlyPoint(month = 6, year = 2026, amount = BigDecimal.parseString("400")),
 )
 
-private val PREVIEW_STATE = StatsState(isLoading = false, monthlyDebtTrend = PREVIEW_TREND, monthlyCreditorTrend = PREVIEW_TREND)
+private val PREVIEW_NOW = kotlin.time.Instant.parse("2026-08-15T00:00:00Z")
+
+private val PREVIEW_DEBTORS = listOf(
+    org.bigblackowl.debttracker.domain.model.DebtorWithBalance(
+        debtor = org.bigblackowl.debttracker.domain.model.Debtor(
+            id = "d1", fullName = "Тарас Шевченко", phone = "0501234567", email = null, avatarUrl = null,
+            comment = null, createdAt = PREVIEW_NOW, updatedAt = PREVIEW_NOW,
+            status = org.bigblackowl.debttracker.domain.model.DebtStatus.ACTIVE,
+            syncStatus = org.bigblackowl.debttracker.domain.model.SyncStatus.SYNCED,
+        ),
+        balance = BigDecimal.parseString("1500"),
+    ),
+    org.bigblackowl.debttracker.domain.model.DebtorWithBalance(
+        debtor = org.bigblackowl.debttracker.domain.model.Debtor(
+            id = "d2", fullName = "Леся Українка", phone = null, email = "lesya@example.com", avatarUrl = null,
+            comment = null, createdAt = PREVIEW_NOW, updatedAt = PREVIEW_NOW,
+            status = org.bigblackowl.debttracker.domain.model.DebtStatus.ACTIVE,
+            syncStatus = org.bigblackowl.debttracker.domain.model.SyncStatus.SYNCED,
+        ),
+        balance = BigDecimal.parseString("700"),
+    ),
+)
+
+private val PREVIEW_CREDITORS = listOf(
+    org.bigblackowl.debttracker.domain.model.CreditorWithBalance(
+        creditor = org.bigblackowl.debttracker.domain.model.Creditor(
+            id = "c1", fullName = "Марія Шевченко", phone = "0671112233", email = null, avatarUrl = null,
+            comment = null, createdAt = PREVIEW_NOW, updatedAt = PREVIEW_NOW,
+            status = org.bigblackowl.debttracker.domain.model.DebtStatus.ACTIVE,
+            syncStatus = org.bigblackowl.debttracker.domain.model.SyncStatus.SYNCED,
+        ),
+        balance = BigDecimal.parseString("2000"),
+    ),
+)
+
+private val PREVIEW_STATE = StatsState(
+    isLoading = false,
+    debtors = PREVIEW_DEBTORS,
+    creditors = PREVIEW_CREDITORS,
+    monthlyDebtTrend = PREVIEW_TREND,
+    monthlyCreditorTrend = PREVIEW_TREND,
+)
 
 @Preview
 @Composable
@@ -196,6 +237,18 @@ private fun StatsScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = fa
 @Composable
 private fun StatsScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     Preview(PREVIEW_STATE)
+}
+
+@Preview
+@Composable
+private fun StatsScreenLoadingPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(StatsState(isLoading = true))
+}
+
+@Preview
+@Composable
+private fun StatsScreenEmptyPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(StatsState(isLoading = false))
 }
 
 /** Tonal KPI card with an icon in a circle — the same visual vocabulary as SettingsRow/SettingsSection. */

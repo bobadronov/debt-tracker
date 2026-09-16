@@ -64,10 +64,10 @@ import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.ConfirmDialog
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
-import org.bigblackowl.debttracker.ui.components.SettingsRow
-import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
-import org.bigblackowl.debttracker.ui.components.SettingsSection
-import org.bigblackowl.debttracker.ui.components.SettingsSwitchRow
+import org.bigblackowl.debttracker.ui.components.settings.SettingsRow
+import org.bigblackowl.debttracker.ui.components.settings.SettingsRowDivider
+import org.bigblackowl.debttracker.ui.components.settings.SettingsSection
+import org.bigblackowl.debttracker.ui.components.settings.SettingsSwitchRow
 import org.bigblackowl.debttracker.ui.components.text.CaptionText
 import org.bigblackowl.debttracker.ui.screens.settings.language.languageOptions
 import org.koin.compose.koinInject

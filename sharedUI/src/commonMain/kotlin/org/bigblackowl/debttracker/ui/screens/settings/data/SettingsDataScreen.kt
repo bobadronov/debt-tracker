@@ -36,9 +36,9 @@ import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.ConfirmDialog
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
-import org.bigblackowl.debttracker.ui.components.SettingsRow
-import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
-import org.bigblackowl.debttracker.ui.components.SettingsSection
+import org.bigblackowl.debttracker.ui.components.settings.SettingsRow
+import org.bigblackowl.debttracker.ui.components.settings.SettingsRowDivider
+import org.bigblackowl.debttracker.ui.components.settings.SettingsSection
 import org.bigblackowl.debttracker.ui.components.text.BodyText
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -223,3 +223,21 @@ private fun SettingsDataScreenLightDesktopPreview() = DebtTrackerPreview(darkThe
 @Preview(device = DESKTOP)
 @Composable
 private fun SettingsDataScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { Preview(SettingsDataState()) }
+
+@Preview
+@Composable
+private fun SettingsDataScreenLocalOnlyPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(SettingsDataState(), isAuthenticated = false)
+}
+
+@Preview
+@Composable
+private fun SettingsDataScreenCacheClearedPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(SettingsDataState(cacheCleared = true))
+}
+
+@Preview
+@Composable
+private fun SettingsDataScreenDeleteErrorPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(SettingsDataState(deleteError = true))
+}

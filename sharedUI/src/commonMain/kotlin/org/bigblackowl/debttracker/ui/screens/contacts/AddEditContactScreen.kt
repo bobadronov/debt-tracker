@@ -194,3 +194,27 @@ private fun AddEditContactScreenLightDesktopPreview() = DebtTrackerPreview(darkT
 private fun AddEditContactScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     Preview(AddEditContactState(direction = DebtDirection.CREDITOR))
 }
+
+@Preview
+@Composable
+private fun AddEditContactScreenEditModePreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(AddEditContactState(direction = DebtDirection.DEBTOR, isEditMode = true, fullName = "Тарас Шевченко", phone = "0501234567"))
+}
+
+@Preview
+@Composable
+private fun AddEditContactScreenErrorsPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(
+        AddEditContactState(
+            direction = DebtDirection.DEBTOR,
+            fullNameError = "Введіть ім'я",
+            amountError = "Некоректна сума",
+        ),
+    )
+}
+
+@Preview
+@Composable
+private fun AddEditContactScreenSavingPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(AddEditContactState(direction = DebtDirection.DEBTOR, fullName = "Тарас Шевченко", isSaving = true))
+}

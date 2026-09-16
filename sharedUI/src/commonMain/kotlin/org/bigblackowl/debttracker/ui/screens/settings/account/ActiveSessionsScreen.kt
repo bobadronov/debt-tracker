@@ -31,12 +31,12 @@ import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.ConfirmDialog
-import org.bigblackowl.debttracker.ui.components.SettingsDetailScaffold
-import org.bigblackowl.debttracker.ui.components.SettingsRow
-import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
-import org.bigblackowl.debttracker.ui.components.SettingsSection
 import org.bigblackowl.debttracker.ui.components.button.TextButton
 import org.bigblackowl.debttracker.ui.components.card.SemanticOutlinedCard
+import org.bigblackowl.debttracker.ui.components.settings.SettingsDetailScaffold
+import org.bigblackowl.debttracker.ui.components.settings.SettingsRow
+import org.bigblackowl.debttracker.ui.components.settings.SettingsRowDivider
+import org.bigblackowl.debttracker.ui.components.settings.SettingsSection
 import org.koin.compose.viewmodel.koinViewModel
 
 /** Settings → Active devices: session management + remote logout, reached from [SettingsScreen]'s account section. */
@@ -199,4 +199,22 @@ private fun ActiveSessionsScreenLightDesktopPreview() = DebtTrackerPreview(darkT
 @Composable
 private fun ActiveSessionsScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     Preview(ActiveSessionsState(isLoading = false, sessions = PREVIEW_SESSIONS))
+}
+
+@Preview
+@Composable
+private fun ActiveSessionsScreenLoadingPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(ActiveSessionsState(isLoading = true))
+}
+
+@Preview
+@Composable
+private fun ActiveSessionsScreenSingleDevicePreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(ActiveSessionsState(isLoading = false, sessions = PREVIEW_SESSIONS.take(1)))
+}
+
+@Preview
+@Composable
+private fun ActiveSessionsScreenRevokingPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(ActiveSessionsState(isLoading = false, sessions = PREVIEW_SESSIONS, revokingId = "s2"))
 }

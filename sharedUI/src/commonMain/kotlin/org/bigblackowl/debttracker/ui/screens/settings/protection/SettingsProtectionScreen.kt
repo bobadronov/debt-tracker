@@ -29,8 +29,8 @@ import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
-import org.bigblackowl.debttracker.ui.components.SettingsRow
-import org.bigblackowl.debttracker.ui.components.SettingsSection
+import org.bigblackowl.debttracker.ui.components.settings.SettingsRow
+import org.bigblackowl.debttracker.ui.components.settings.SettingsSection
 import org.bigblackowl.debttracker.ui.components.unlock.PinSetupDialog
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -157,3 +157,21 @@ private fun SettingsProtectionScreenLightDesktopPreview() = DebtTrackerPreview(d
 @Preview(device = DESKTOP)
 @Composable
 private fun SettingsProtectionScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { Preview(SettingsProtectionState()) }
+
+@Preview
+@Composable
+private fun SettingsProtectionScreenBiometricOnPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(SettingsProtectionState(biometricHardwareAvailable = true), protectionEnabled = true)
+}
+
+@Preview
+@Composable
+private fun SettingsProtectionScreenPinOnPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(SettingsProtectionState(), protectionEnabled = true, hasPinCode = true)
+}
+
+@Preview
+@Composable
+private fun SettingsProtectionScreenErrorPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(SettingsProtectionState(protectionConfirmError = "Не вдалося підтвердити"), protectionEnabled = true)
+}

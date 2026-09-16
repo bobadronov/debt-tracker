@@ -21,11 +21,11 @@ import org.bigblackowl.debttracker.domain.validation.formatUkrainianPhone
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.AccountAvatar
-import org.bigblackowl.debttracker.ui.components.SettingsDetailScaffold
-import org.bigblackowl.debttracker.ui.components.SettingsRow
-import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
-import org.bigblackowl.debttracker.ui.components.SettingsSection
 import org.bigblackowl.debttracker.ui.components.button.Button
+import org.bigblackowl.debttracker.ui.components.settings.SettingsDetailScaffold
+import org.bigblackowl.debttracker.ui.components.settings.SettingsRow
+import org.bigblackowl.debttracker.ui.components.settings.SettingsRowDivider
+import org.bigblackowl.debttracker.ui.components.settings.SettingsSection
 import org.koin.compose.koinInject
 
 /**
@@ -124,4 +124,10 @@ private fun AccountInfoScreenLightDesktopPreview() = DebtTrackerPreview(darkThem
 @Composable
 private fun AccountInfoScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     Preview(AccountInfoState(name = "Тарас Шевченко", email = "taras@example.com", phone = "+380501234567"))
+}
+
+@Preview
+@Composable
+private fun AccountInfoScreenEmptyPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(AccountInfoState())
 }

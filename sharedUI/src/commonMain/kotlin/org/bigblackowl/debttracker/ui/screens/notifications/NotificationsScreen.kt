@@ -45,14 +45,14 @@ import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.FullScreenLoadingIndicator
-import org.bigblackowl.debttracker.ui.components.SettingsDetailScaffold
-import org.bigblackowl.debttracker.ui.components.SettingsRow
-import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
-import org.bigblackowl.debttracker.ui.components.SettingsSection
 import org.bigblackowl.debttracker.ui.components.button.IconButton
 import org.bigblackowl.debttracker.ui.components.button.TextButton
 import org.bigblackowl.debttracker.ui.components.form.PasteableOutlinedTextField
 import org.bigblackowl.debttracker.ui.components.form.rememberClipboardText
+import org.bigblackowl.debttracker.ui.components.settings.SettingsDetailScaffold
+import org.bigblackowl.debttracker.ui.components.settings.SettingsRow
+import org.bigblackowl.debttracker.ui.components.settings.SettingsRowDivider
+import org.bigblackowl.debttracker.ui.components.settings.SettingsSection
 import org.bigblackowl.debttracker.ui.components.text.BodyText
 import org.bigblackowl.debttracker.ui.components.text.CaptionText
 import org.koin.compose.viewmodel.koinViewModel
@@ -388,4 +388,22 @@ private fun NotificationsScreenDarkPhonePreview() = DebtTrackerPreview(darkTheme
 @Composable
 private fun NotificationsScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = false) {
     Preview(NotificationsState(isLoading = false, notifications = PREVIEW_NOTIFICATIONS))
+}
+
+@Preview
+@Composable
+private fun NotificationsScreenLoadingPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(NotificationsState(isLoading = true))
+}
+
+@Preview
+@Composable
+private fun NotificationsScreenEmptyPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(NotificationsState(isLoading = false, notifications = emptyList()))
+}
+
+@Preview
+@Composable
+private fun NotificationsScreenCorrectionDialogPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(NotificationsState(isLoading = false, notifications = PREVIEW_NOTIFICATIONS, correctionDialogFor = PREVIEW_NOTIFICATIONS.first()))
 }

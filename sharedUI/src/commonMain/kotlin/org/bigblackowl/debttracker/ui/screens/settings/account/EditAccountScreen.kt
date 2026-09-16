@@ -32,10 +32,10 @@ import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.AccountAvatar
-import org.bigblackowl.debttracker.ui.components.SettingsDetailScaffold
 import org.bigblackowl.debttracker.ui.components.UnsavedChangesGuard
 import org.bigblackowl.debttracker.ui.components.button.LoadingButton
 import org.bigblackowl.debttracker.ui.components.form.UkrainianPhoneVisualTransformation
+import org.bigblackowl.debttracker.ui.components.settings.SettingsDetailScaffold
 import org.bigblackowl.debttracker.ui.components.text.CaptionText
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -201,4 +201,22 @@ private fun EditAccountScreenLightDesktopPreview() = DebtTrackerPreview(darkThem
 @Composable
 private fun EditAccountScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     Preview(PREVIEW_STATE)
+}
+
+@Preview
+@Composable
+private fun EditAccountScreenSavingPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(PREVIEW_STATE.copy(isSaving = true))
+}
+
+@Preview
+@Composable
+private fun EditAccountScreenUploadingAvatarPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(PREVIEW_STATE.copy(isUploadingAvatar = true))
+}
+
+@Preview
+@Composable
+private fun EditAccountScreenErrorPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(PREVIEW_STATE.copy(fullNameError = "Введіть ім'я", avatarError = "Не вдалося завантажити фото"))
 }

@@ -25,9 +25,9 @@ import org.bigblackowl.debttracker.core.settings.AppSettings
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
-import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
-import org.bigblackowl.debttracker.ui.components.SettingsSection
-import org.bigblackowl.debttracker.ui.components.SettingsSwitchRow
+import org.bigblackowl.debttracker.ui.components.settings.SettingsRowDivider
+import org.bigblackowl.debttracker.ui.components.settings.SettingsSection
+import org.bigblackowl.debttracker.ui.components.settings.SettingsSwitchRow
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -128,3 +128,21 @@ private fun SettingsNotificationsScreenLightDesktopPreview() = DebtTrackerPrevie
 @Preview(device = DESKTOP)
 @Composable
 private fun SettingsNotificationsScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { Preview(SettingsNotificationsState()) }
+
+@Preview
+@Composable
+private fun SettingsNotificationsScreenDisabledPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(SettingsNotificationsState(), notificationsEnabled = false)
+}
+
+@Preview
+@Composable
+private fun SettingsNotificationsScreenBlockedPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(SettingsNotificationsState(notificationsPermissionBlocked = true))
+}
+
+@Preview
+@Composable
+private fun SettingsNotificationsScreenHideAmountsPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(SettingsNotificationsState(), hideAmountsInNotifications = true)
+}

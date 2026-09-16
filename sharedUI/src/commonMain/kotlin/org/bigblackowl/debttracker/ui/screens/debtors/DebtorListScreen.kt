@@ -20,11 +20,7 @@ import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
 import org.bigblackowl.debttracker.domain.model.formatMoney
 import org.bigblackowl.debttracker.domain.model.formatTotals
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
-import org.bigblackowl.debttracker.ui.components.FullScreenLoadingIndicator
-import org.bigblackowl.debttracker.ui.components.contact.ContactListScaffold
-import org.bigblackowl.debttracker.ui.components.contact.ContactRow
-import org.bigblackowl.debttracker.ui.components.contact.ListSearchBar
-import org.bigblackowl.debttracker.ui.components.contact.ListTotalBar
+import org.bigblackowl.debttracker.ui.components.contact.ContactListContent
 import org.bigblackowl.debttracker.ui.components.contact.MenuOption
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -73,62 +69,47 @@ private fun DebtorListContent(
 ) {
     val strings = LocalStrings.current
 
-    if (state.isLoading) {
-        FullScreenLoadingIndicator()
-        return
-    }
-
-    ContactListScaffold(
+    ContactListContent(
+        isLoading = state.isLoading,
         items = state.debtors,
-        key = { it.debtor.id },
+        itemKey = { it.debtor.id },
         isRefreshing = state.isRefreshing,
         onRefresh = onRefresh,
-        searchBar = {
-            ListSearchBar(
-                query = state.query,
-                onQueryChange = onSearch,
-                searchPlaceholder = strings.debtorList.searchPlaceholder,
-                clearSearchDescription = strings.clearSearch,
-                searchFocusRequester = searchFocusRequester,
-                filterDescription = strings.debtorList.sort,
-                sortOptions = listOf(
-                    MenuOption(DebtorSortOrder.NAME_ASC, strings.debtorList.sortByName, Icons.Filled.SortByAlpha),
-                    MenuOption(DebtorSortOrder.BALANCE_DESC, strings.debtorList.sortByBalance, Icons.Filled.Payments),
-                    MenuOption(DebtorSortOrder.RECENT, strings.debtorList.sortRecent, Icons.Filled.History),
-                ),
-                currentSort = state.sortOrder,
-                sortAscending = state.sortAscending,
-                sortReverseDescription = strings.debtorList.sortReverse,
-                onToggleSortDirection = onToggleSortDirection,
-                onChangeSort = onChangeSort,
-                statusOptions = listOf(
-                    MenuOption(DebtorStatusFilter.ACTIVE, strings.debtorList.filterActive, Icons.Filled.HourglassEmpty),
-                    MenuOption(DebtorStatusFilter.CLOSED, strings.debtorList.filterClosed, Icons.Filled.CheckCircle),
-                    MenuOption(DebtorStatusFilter.ALL, strings.debtorList.filterAll, Icons.AutoMirrored.Filled.List),
-                ),
-                currentStatus = state.statusFilter,
-                onChangeStatus = onChangeStatusFilter,
-            )
-        },
-        totalBar = {
-            ListTotalBar(
-                label = strings.debtorList.total,
-                totalText = state.totalsByCurrency.formatTotals(),
-                onAdd = onAddDebtor,
-            )
-        },
-    ) { item ->
-        ContactRow(
-            id = item.debtor.id,
-            name = item.debtor.fullName,
-            phone = item.debtor.phone,
-            avatarUrl = item.debtor.avatarUrl,
-            balanceText = item.balance.formatMoney(item.debtor.currency),
-            deleteLabel = strings.delete,
-            onClick = { onOpenDebtor(item.debtor.id) },
-            onDelete = { onDelete(item.debtor.id) },
-        )
-    }
+        query = state.query,
+        onQueryChange = onSearch,
+        searchPlaceholder = strings.debtorList.searchPlaceholder,
+        clearSearchDescription = strings.clearSearch,
+        searchFocusRequester = searchFocusRequester,
+        filterDescription = strings.debtorList.sort,
+        sortOptions = listOf(
+            MenuOption(DebtorSortOrder.NAME_ASC, strings.debtorList.sortByName, Icons.Filled.SortByAlpha),
+            MenuOption(DebtorSortOrder.BALANCE_DESC, strings.debtorList.sortByBalance, Icons.Filled.Payments),
+            MenuOption(DebtorSortOrder.RECENT, strings.debtorList.sortRecent, Icons.Filled.History),
+        ),
+        currentSort = state.sortOrder,
+        sortAscending = state.sortAscending,
+        sortReverseDescription = strings.debtorList.sortReverse,
+        onToggleSortDirection = onToggleSortDirection,
+        onChangeSort = onChangeSort,
+        statusOptions = listOf(
+            MenuOption(DebtorStatusFilter.ACTIVE, strings.debtorList.filterActive, Icons.Filled.HourglassEmpty),
+            MenuOption(DebtorStatusFilter.CLOSED, strings.debtorList.filterClosed, Icons.Filled.CheckCircle),
+            MenuOption(DebtorStatusFilter.ALL, strings.debtorList.filterAll, Icons.AutoMirrored.Filled.List),
+        ),
+        currentStatus = state.statusFilter,
+        onChangeStatus = onChangeStatusFilter,
+        totalLabel = strings.debtorList.total,
+        totalText = state.totalsByCurrency.formatTotals(),
+        onAdd = onAddDebtor,
+        deleteLabel = strings.delete,
+        itemId = { it.debtor.id },
+        itemName = { it.debtor.fullName },
+        itemPhone = { it.debtor.phone },
+        itemAvatarUrl = { it.debtor.avatarUrl },
+        itemBalanceText = { it.balance.formatMoney(it.debtor.currency) },
+        onItemClick = { onOpenDebtor(it.debtor.id) },
+        onItemDelete = { onDelete(it.debtor.id) },
+    )
 }
 
 @Composable
@@ -192,4 +173,22 @@ private fun DebtorListScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme
 @Composable
 private fun DebtorListScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     Preview(PREVIEW_STATE)
+}
+
+@Preview
+@Composable
+private fun DebtorListScreenLoadingPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(DebtorListState(isLoading = true))
+}
+
+@Preview
+@Composable
+private fun DebtorListScreenEmptyPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(DebtorListState(isLoading = false, debtors = emptyList()))
+}
+
+@Preview
+@Composable
+private fun DebtorListScreenRefreshingPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(PREVIEW_STATE.copy(isRefreshing = true))
 }

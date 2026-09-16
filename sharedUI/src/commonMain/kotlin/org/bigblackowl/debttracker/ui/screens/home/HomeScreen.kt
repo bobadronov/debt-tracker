@@ -272,7 +272,7 @@ private fun SyncStatusBadge(status: SyncUiStatus, strings: Strings, modifier: Mo
     LaunchedEffect(status) {
         isBadgeVisible = true
         // Stay visible the whole time there's something to report (Syncing / OfflinePending) —
-        // only auto-hide once it settles back to Synced.
+        // only auto-hide once it settles back to SyncUiStatus.Synced.
         if (status == SyncUiStatus.Synced) {
             delay(2.seconds)
             isBadgeVisible = false
@@ -332,3 +332,21 @@ private fun HomeScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = fal
 @Preview(device = DESKTOP)
 @Composable
 private fun HomeScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { Preview(PREVIEW_STATE) }
+
+@Preview
+@Composable
+private fun HomeScreenSignedOutPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(HomeState(isAuthenticated = false, syncStatus = SyncUiStatus.Synced))
+}
+
+@Preview
+@Composable
+private fun HomeScreenSyncingPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(HomeState(isAuthenticated = true, syncStatus = SyncUiStatus.Syncing))
+}
+
+@Preview
+@Composable
+private fun HomeScreenOfflinePendingPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(HomeState(isAuthenticated = true, syncStatus = SyncUiStatus.OfflinePending(3)))
+}

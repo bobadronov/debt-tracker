@@ -191,3 +191,21 @@ private fun AuthGateScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme =
 private fun AuthGateScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     Preview(AuthGateState(mode = UnlockMode.BIOMETRIC))
 }
+
+@Preview
+@Composable
+private fun AuthGateScreenBiometricRunningPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(AuthGateState(mode = UnlockMode.BIOMETRIC, biometricRunning = true))
+}
+
+@Preview
+@Composable
+private fun AuthGateScreenBiometricFailedPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(AuthGateState(mode = UnlockMode.BIOMETRIC, biometricDismissed = true))
+}
+
+@Preview
+@Composable
+private fun AuthGateScreenPinErrorPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(AuthGateState(mode = UnlockMode.PIN, pinInput = "1234", error = "Невірний PIN-код"))
+}

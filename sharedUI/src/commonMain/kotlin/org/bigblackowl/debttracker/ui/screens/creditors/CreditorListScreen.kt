@@ -20,11 +20,7 @@ import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
 import org.bigblackowl.debttracker.domain.model.formatMoney
 import org.bigblackowl.debttracker.domain.model.formatTotals
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
-import org.bigblackowl.debttracker.ui.components.FullScreenLoadingIndicator
-import org.bigblackowl.debttracker.ui.components.contact.ContactListScaffold
-import org.bigblackowl.debttracker.ui.components.contact.ContactRow
-import org.bigblackowl.debttracker.ui.components.contact.ListSearchBar
-import org.bigblackowl.debttracker.ui.components.contact.ListTotalBar
+import org.bigblackowl.debttracker.ui.components.contact.ContactListContent
 import org.bigblackowl.debttracker.ui.components.contact.MenuOption
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -73,62 +69,47 @@ private fun CreditorListContent(
 ) {
     val strings = LocalStrings.current
 
-    if (state.isLoading) {
-        FullScreenLoadingIndicator()
-        return
-    }
-
-    ContactListScaffold(
+    ContactListContent(
+        isLoading = state.isLoading,
         items = state.creditors,
-        key = { it.creditor.id },
+        itemKey = { it.creditor.id },
         isRefreshing = state.isRefreshing,
         onRefresh = onRefresh,
-        searchBar = {
-            ListSearchBar(
-                query = state.query,
-                onQueryChange = onSearch,
-                searchPlaceholder = strings.creditorList.searchPlaceholder,
-                clearSearchDescription = strings.clearSearch,
-                searchFocusRequester = searchFocusRequester,
-                filterDescription = strings.creditorList.sort,
-                sortOptions = listOf(
-                    MenuOption(CreditorSortOrder.NAME_ASC, strings.creditorList.sortByName, Icons.Filled.SortByAlpha),
-                    MenuOption(CreditorSortOrder.BALANCE_DESC, strings.creditorList.sortByBalance, Icons.Filled.Payments),
-                    MenuOption(CreditorSortOrder.RECENT, strings.creditorList.sortRecent, Icons.Filled.History),
-                ),
-                currentSort = state.sortOrder,
-                sortAscending = state.sortAscending,
-                sortReverseDescription = strings.creditorList.sortReverse,
-                onToggleSortDirection = onToggleSortDirection,
-                onChangeSort = onChangeSort,
-                statusOptions = listOf(
-                    MenuOption(CreditorStatusFilter.ACTIVE, strings.creditorList.filterActive, Icons.Filled.HourglassEmpty),
-                    MenuOption(CreditorStatusFilter.CLOSED, strings.creditorList.filterClosed, Icons.Filled.CheckCircle),
-                    MenuOption(CreditorStatusFilter.ALL, strings.creditorList.filterAll, Icons.AutoMirrored.Filled.List),
-                ),
-                currentStatus = state.statusFilter,
-                onChangeStatus = onChangeStatusFilter,
-            )
-        },
-        totalBar = {
-            ListTotalBar(
-                label = strings.creditorList.total,
-                totalText = state.totalsByCurrency.formatTotals(),
-                onAdd = onAddCreditor,
-            )
-        },
-    ) { item ->
-        ContactRow(
-            id = item.creditor.id,
-            name = item.creditor.fullName,
-            phone = item.creditor.phone,
-            avatarUrl = item.creditor.avatarUrl,
-            balanceText = item.balance.formatMoney(item.creditor.currency),
-            deleteLabel = strings.delete,
-            onClick = { onOpenCreditor(item.creditor.id) },
-            onDelete = { onDelete(item.creditor.id) },
-        )
-    }
+        query = state.query,
+        onQueryChange = onSearch,
+        searchPlaceholder = strings.creditorList.searchPlaceholder,
+        clearSearchDescription = strings.clearSearch,
+        searchFocusRequester = searchFocusRequester,
+        filterDescription = strings.creditorList.sort,
+        sortOptions = listOf(
+            MenuOption(CreditorSortOrder.NAME_ASC, strings.creditorList.sortByName, Icons.Filled.SortByAlpha),
+            MenuOption(CreditorSortOrder.BALANCE_DESC, strings.creditorList.sortByBalance, Icons.Filled.Payments),
+            MenuOption(CreditorSortOrder.RECENT, strings.creditorList.sortRecent, Icons.Filled.History),
+        ),
+        currentSort = state.sortOrder,
+        sortAscending = state.sortAscending,
+        sortReverseDescription = strings.creditorList.sortReverse,
+        onToggleSortDirection = onToggleSortDirection,
+        onChangeSort = onChangeSort,
+        statusOptions = listOf(
+            MenuOption(CreditorStatusFilter.ACTIVE, strings.creditorList.filterActive, Icons.Filled.HourglassEmpty),
+            MenuOption(CreditorStatusFilter.CLOSED, strings.creditorList.filterClosed, Icons.Filled.CheckCircle),
+            MenuOption(CreditorStatusFilter.ALL, strings.creditorList.filterAll, Icons.AutoMirrored.Filled.List),
+        ),
+        currentStatus = state.statusFilter,
+        onChangeStatus = onChangeStatusFilter,
+        totalLabel = strings.creditorList.total,
+        totalText = state.totalsByCurrency.formatTotals(),
+        onAdd = onAddCreditor,
+        deleteLabel = strings.delete,
+        itemId = { it.creditor.id },
+        itemName = { it.creditor.fullName },
+        itemPhone = { it.creditor.phone },
+        itemAvatarUrl = { it.creditor.avatarUrl },
+        itemBalanceText = { it.balance.formatMoney(it.creditor.currency) },
+        onItemClick = { onOpenCreditor(it.creditor.id) },
+        onItemDelete = { onDelete(it.creditor.id) },
+    )
 }
 
 @Composable
@@ -192,4 +173,22 @@ private fun CreditorListScreenLightDesktopPreview() = DebtTrackerPreview(darkThe
 @Composable
 private fun CreditorListScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     Preview(PREVIEW_STATE)
+}
+
+@Preview
+@Composable
+private fun CreditorListScreenLoadingPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(CreditorListState(isLoading = true))
+}
+
+@Preview
+@Composable
+private fun CreditorListScreenEmptyPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(CreditorListState(isLoading = false, creditors = emptyList()))
+}
+
+@Preview
+@Composable
+private fun CreditorListScreenRefreshingPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(PREVIEW_STATE.copy(isRefreshing = true))
 }

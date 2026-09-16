@@ -43,10 +43,10 @@ import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
-import org.bigblackowl.debttracker.ui.components.SettingsRow
-import org.bigblackowl.debttracker.ui.components.SettingsSection
 import org.bigblackowl.debttracker.ui.components.button.LoadingButton
 import org.bigblackowl.debttracker.ui.components.button.TextButton
+import org.bigblackowl.debttracker.ui.components.settings.SettingsRow
+import org.bigblackowl.debttracker.ui.components.settings.SettingsSection
 import org.bigblackowl.debttracker.ui.components.text.BodyText
 import org.bigblackowl.debttracker.ui.components.text.TitleText
 import org.koin.compose.viewmodel.koinViewModel
@@ -258,4 +258,28 @@ private fun ExportScreenLightDesktopPreview() = DebtTrackerPreview(darkTheme = f
 @Composable
 private fun ExportScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     Preview(ExportState())
+}
+
+@Preview
+@Composable
+private fun ExportScreenScopedPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(ExportState(scopedContactName = "Тарас Шевченко"), isScoped = true)
+}
+
+@Preview
+@Composable
+private fun ExportScreenExportingPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(ExportState(isExporting = true))
+}
+
+@Preview
+@Composable
+private fun ExportScreenSuccessPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(ExportState(success = true))
+}
+
+@Preview
+@Composable
+private fun ExportScreenErrorPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(ExportState(error = "Не вдалося експортувати дані"))
 }

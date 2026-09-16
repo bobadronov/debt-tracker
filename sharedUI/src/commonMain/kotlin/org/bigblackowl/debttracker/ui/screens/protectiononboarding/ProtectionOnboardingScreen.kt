@@ -159,3 +159,9 @@ private fun ProtectionOnboardingScreenLightDesktopPreview() = DebtTrackerPreview
 private fun ProtectionOnboardingScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     Preview(ProtectionOnboardingState())
 }
+
+@Preview
+@Composable
+private fun ProtectionOnboardingScreenErrorPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(ProtectionOnboardingState(biometricAvailable = true, error = "Не вдалося підтвердити біометрію"))
+}

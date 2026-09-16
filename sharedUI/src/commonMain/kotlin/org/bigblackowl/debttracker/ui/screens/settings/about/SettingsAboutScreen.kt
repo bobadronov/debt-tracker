@@ -39,10 +39,10 @@ import org.bigblackowl.debttracker.core.update.rememberInAppUpdateLauncher
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.PlaceholderScreen
-import org.bigblackowl.debttracker.ui.components.SettingsRow
-import org.bigblackowl.debttracker.ui.components.SettingsRowDivider
-import org.bigblackowl.debttracker.ui.components.SettingsSection
 import org.bigblackowl.debttracker.ui.components.button.IconButton
+import org.bigblackowl.debttracker.ui.components.settings.SettingsRow
+import org.bigblackowl.debttracker.ui.components.settings.SettingsRowDivider
+import org.bigblackowl.debttracker.ui.components.settings.SettingsSection
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -206,13 +206,13 @@ private fun feedbackUrl(locale: String, theme: String): String = buildString {
 }
 
 @Composable
-private fun Preview(state: SettingsAboutState) = SettingsAboutContent(
+private fun Preview(state: SettingsAboutState, inAppUpdateReady: Boolean = false, inAppUpdateStatus: InAppUpdateStatus = InAppUpdateStatus.Idle) = SettingsAboutContent(
     state = state,
     onBack = {},
     locale = "uk",
     theme = "system",
-    inAppUpdateReady = false,
-    inAppUpdateStatus = InAppUpdateStatus.Idle,
+    inAppUpdateReady = inAppUpdateReady,
+    inAppUpdateStatus = inAppUpdateStatus,
     onCompleteInAppUpdate = {},
     onCheckForInAppUpdate = {},
     onCheckForUpdate = {},
@@ -235,3 +235,23 @@ private fun SettingsAboutScreenLightDesktopPreview() = DebtTrackerPreview(darkTh
 @Preview(device = DESKTOP)
 @Composable
 private fun SettingsAboutScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) { Preview(SettingsAboutState()) }
+
+private val PREVIEW_UPDATE_INFO = AppUpdateInfo(version = "1.0.66", downloadUrl = "", releaseUrl = "")
+
+@Preview
+@Composable
+private fun SettingsAboutScreenCheckingPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(SettingsAboutState(updateState = UpdateCheckState.Checking))
+}
+
+@Preview
+@Composable
+private fun SettingsAboutScreenAvailablePreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(SettingsAboutState(updateState = UpdateCheckState.Available(PREVIEW_UPDATE_INFO)))
+}
+
+@Preview
+@Composable
+private fun SettingsAboutScreenInAppReadyPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(SettingsAboutState(), inAppUpdateReady = true)
+}

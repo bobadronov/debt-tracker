@@ -21,12 +21,12 @@ import org.bigblackowl.debttracker.domain.validation.isValidFullName
 import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
-import org.bigblackowl.debttracker.ui.components.SettingsDetailScaffold
 import org.bigblackowl.debttracker.ui.components.UnsavedChangesGuard
 import org.bigblackowl.debttracker.ui.components.button.Button
 import org.bigblackowl.debttracker.ui.components.form.PasteableOutlinedTextField
 import org.bigblackowl.debttracker.ui.components.form.UkrainianPhoneVisualTransformation
 import org.bigblackowl.debttracker.ui.components.form.rememberClipboardText
+import org.bigblackowl.debttracker.ui.components.settings.SettingsDetailScaffold
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
@@ -145,4 +145,10 @@ private fun EditContactCardScreenLightDesktopPreview() = DebtTrackerPreview(dark
 @Composable
 private fun EditContactCardScreenDarkDesktopPreview() = DebtTrackerPreview(darkTheme = true) {
     Preview(EditContactCardState(name = "Тарас Шевченко", phone = "0501234567", email = "taras@example.com"))
+}
+
+@Preview
+@Composable
+private fun EditContactCardScreenEmptyPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(EditContactCardState())
 }
