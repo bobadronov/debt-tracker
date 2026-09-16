@@ -127,7 +127,7 @@ private fun AppOverflowMenuUnauthenticatedPreview() = DebtTrackerPreview(darkThe
         onOpenChanged = {},
         strings = LocalStrings.current,
         menu = PREVIEW_MENU_STATE,
-        isAuthenticated = true,
+        isAuthenticated = false,
         unread = 0
     )
 }
