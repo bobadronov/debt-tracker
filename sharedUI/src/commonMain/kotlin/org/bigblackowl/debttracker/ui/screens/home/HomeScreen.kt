@@ -10,7 +10,6 @@ import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -150,10 +149,10 @@ fun HomeScreen(
             if (inDesktopTitleBar) return@Scaffold
             TopAppBar(
                 title = {
-                    Column(verticalArrangement = Arrangement.Center) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(strings.appName)
                         if (state.isAuthenticated) {
-                            Spacer(Modifier.height(Dimens.Spacing.xs))
+                            Spacer(Modifier.width(Dimens.Spacing.xs))
                             SyncStatusBadge(status = state.syncStatus, strings = strings)
                         }
                     }

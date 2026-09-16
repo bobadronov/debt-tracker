@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -25,6 +26,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -62,7 +64,7 @@ import org.bigblackowl.debttracker.ui.components.button.LoadingButton
 fun PasteableOutlinedTextField(
     value: String,
     onValueChange: (String) -> Unit,
-    label: String,
+    label: String? = null,
     clipboardText: String?,
     isPasteRelevant: (String) -> Boolean,
     modifier: Modifier = Modifier,
@@ -85,8 +87,8 @@ fun PasteableOutlinedTextField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            label = { Text(label) },
-            placeholder = placeholder?.let { { Text(it) } },
+            label = { label?.let { Text(it) } },
+            placeholder = placeholder?.let { { Text(it, style = MaterialTheme.typography.bodySmall) } },
             isError = isError,
             supportingText = supportingText?.let { { Text(it) } },
             singleLine = singleLine,
@@ -136,7 +138,7 @@ fun PasteableOutlinedTextField(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CurrencyDropdownField(
-    selected: Currency,
+    selectedCurrency: Currency,
     onSelect: (Currency) -> Unit,
     label: String,
     modifier: Modifier = Modifier,
@@ -148,7 +150,7 @@ fun CurrencyDropdownField(
         modifier = modifier,
     ) {
         OutlinedTextField(
-            value = selected.label,
+            value = selectedCurrency.label,
             onValueChange = {},
             readOnly = true,
             label = { Text(label) },
@@ -169,7 +171,7 @@ fun CurrencyDropdownField(
     }
 }
 
-/** Cash/Card [FilterChip] pair shared by the Add/Edit forms and [AmountBottomSheet]. */
+/** Cash/Card [FilterChip] pair shared by the Add/Edit forms and [org.bigblackowl.debttracker.ui.components.transaction.AmountBottomSheet]. */
 @Composable
 fun PaymentMethodChipRow(
     selected: PaymentMethod,
@@ -210,19 +212,31 @@ private fun FormFieldsSample() {
     var saving by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier.padding(Dimens.Spacing.lg),
+        modifier = Modifier.width(Dimens.contentMaxWidth),
         verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.md),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        PasteableOutlinedTextField(
-            value = text,
-            onValueChange = { text = it },
-            label = "Full name",
-            clipboardText = "sddfsdfsdfsadf",
-            isPasteRelevant = { it.isNotBlank() },
-        )
-        CurrencyDropdownField(selected = currency, onSelect = { currency = it }, label = "Currency")
-        PaymentMethodChipRow(selected = method, onSelect = { method = it })
-        LoadingButton(onClick = { saving = !saving }, isLoading = saving, label = { Text("Save") })
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.Spacing.xs),
+        ) {
+            PasteableOutlinedTextField(
+                value = text,
+                onValueChange = { text = it },
+                label = null,
+                clipboardText = null,
+                isPasteRelevant = { it.isNotBlank() },
+                modifier = Modifier.weight(1f),
+            )
+            CurrencyDropdownField(selectedCurrency = currency, onSelect = { currency = it }, label = "Currency", modifier = Modifier.weight(.6f))
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.Spacing.xs),
+        ) {
+            PaymentMethodChipRow(selected = method, onSelect = { method = it })
+            LoadingButton(onClick = { saving = !saving }, isLoading = saving, label = { Text("Save") })
+        }
     }
 }
 

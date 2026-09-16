@@ -238,7 +238,7 @@ fun AddEditContactForm(
                             onPaste = onInitialAmountChange,
                         )
                         CurrencyDropdownField(
-                            selected = currency,
+                            selectedCurrency = currency,
                             onSelect = onCurrencyChange,
                             label = strings.currency,
                             modifier = Modifier.weight(.6f),
