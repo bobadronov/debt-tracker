@@ -55,27 +55,18 @@ kotlin {
         // so the PDF-building DSL code lives here once instead of copy-pasted per platform.
         val pdfMain = create("pdfMain") { dependsOn(commonMain) }
 
-        // QRKit (qr-kit) publishes Android/JVM/iOS artifacts plus a wasmJs one whose QrScanner
-        // (camera) actual is an empty no-op stub — scanning never fires there, so the feature is
-        // kept out of webMain entirely rather than half-supporting it. Same android/jvm/ios
-        // membership as roomMain/pdfMain above.
-        val qrMain = create("qrMain") { dependsOn(commonMain) }
-
         val androidMain = getByName("androidMain") {
             dependsOn(roomMain)
             dependsOn(pdfMain)
-            dependsOn(qrMain)
         }
         val jvmMain = getByName("jvmMain") {
             dependsOn(roomMain)
             dependsOn(pdfMain)
-            dependsOn(qrMain)
         }
 
         val iosMain = create("iosMain") {
             dependsOn(roomMain)
             dependsOn(pdfMain)
-            dependsOn(qrMain)
         }
 
         getByName("iosArm64Main") { dependsOn(iosMain) }
@@ -87,10 +78,6 @@ kotlin {
         pdfMain.dependencies {
             implementation(libs.pdfkmp) // PDF export (spec §6, item 8) — vector DSL
             implementation(libs.pdfkmp.viewer) // in-app viewer screen (search/share/download)
-        }
-
-        qrMain.dependencies {
-            implementation(libs.qr.kit) // contact-card QR generate/scan
         }
 
         roomMain.dependencies {
@@ -131,7 +118,12 @@ kotlin {
             implementation(libs.bignum)
             api(libs.filekit.dialogs.compose) // cross-platform file pick/save (avatar picker, CSV/PDF export); api so desktopApp's main() can call FileKit.init()
             implementation(libs.kcsv) // CSV generation (spec §6, item 8)
-            implementation(libs.qrose) // contact-card QR display — pure Kotlin, unlike qr-kit publishes a real js/wasmJs target, so this needs no expect/actual
+            // QRKit (qr-kit) — contact-card QR generate/scan. Only the pure-Kotlin `qrkitpainter`
+            // generator (ContactQrImage.kt) is used from commonMain; the camera scanner
+            // (ContactQrScanner) still needs its own expect/actual (android/jvm/iosMain), since
+            // qr-kit's wasmJs QrScanner actual is an empty no-op stub — declared here anyway so the
+            // generator, which IS a working pure-Compose implementation on every target, reaches Web.
+            implementation(libs.qr.kit)
             // room-runtime is NOT here: Room has no js/wasmJs target (spec §1 — Web has no local DB).
 
             implementation(project.dependencies.platform(libs.supabase.bom))
@@ -166,6 +158,7 @@ kotlin {
             implementation(libs.google.identity.googleid)
             implementation(libs.connectivity.device) // native ConnectivityManager-based monitoring
             implementation(libs.sqlcipher.android) // SPIKE — Room DB encryption (B3), Android only
+            implementation(libs.zxing.core) // decodes a QR code from a locally-picked image file (see ContactQrFileDecoder.android.kt)
         }
 
         jvmMain.dependencies {

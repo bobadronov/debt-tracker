@@ -33,9 +33,8 @@ napier = "2.7.1" # https://github.com/AAkira/Napier
 nav3-browser = "1.1.0" # https://github.com/terrakok/navigation3-browser
 pdfkmp = "1.3.0" # https://github.com/ConamobileDev/PdfKMP
 playAppUpdate = "2.1.0" # https://developer.android.com/guide/playcore#in-app-updates
-qrKit = "3.1.3" # https://github.com/Chaintech-Network/QRKitComposeMultiplatform
-qrose = "1.2.1" # https://github.com/alexzhirkevich/qrose — pure-Kotlin QR generator, unlike qr-kit it actually publishes a working js/wasmJs target
-zxing = "3.5.4" # https://github.com/zxing/zxing — Desktop's local-file QR decode (no camera scanning there)
+qrKit = "3.1.3" # https://github.com/Chaintech-Network/QRKitComposeMultiplatform — camera scanner + qrkitpainter QR generator, both used from ContactQr*
+zxing = "3.5.4" # https://github.com/zxing/zxing — local-file QR decode on Desktop/Android (no camera scanning there / as a gallery-pick fallback)
 room = "2.8.5" # https://developer.android.com/jetpack/androidx/releases/room
 sqlite = "2.7.1" # https://developer.android.com/jetpack/androidx/releases/sqlite
 sqlcipherAndroid = "4.9.0" # https://github.com/sqlcipher/sqlcipher-android — SPIKE for Room DB encryption (B3), Android only
@@ -112,7 +111,6 @@ supabase-storage = { module = "io.github.jan-tennert.supabase:storage-kt" }
 pdfkmp = { module = "io.github.conamobiledev:pdfkmp", version.ref = "pdfkmp" }
 pdfkmp-viewer = { module = "io.github.conamobiledev:pdfkmp-viewer", version.ref = "pdfkmp" }
 qr-kit = { module = "network.chaintech:qr-kit", version.ref = "qrKit" }
-qrose = { module = "io.github.alexzhirkevich:qrose", version.ref = "qrose" }
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 play-app-update-ktx = { module = "com.google.android.play:app-update-ktx", version.ref = "playAppUpdate" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "androidx-core-splashscreen" }

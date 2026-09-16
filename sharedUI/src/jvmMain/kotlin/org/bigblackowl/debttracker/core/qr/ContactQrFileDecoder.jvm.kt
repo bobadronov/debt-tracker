@@ -1,6 +1,8 @@
 package org.bigblackowl.debttracker.core.qr
 
+import com.google.zxing.BarcodeFormat
 import com.google.zxing.BinaryBitmap
+import com.google.zxing.DecodeHintType
 import com.google.zxing.LuminanceSource
 import com.google.zxing.MultiFormatReader
 import com.google.zxing.common.HybridBinarizer
@@ -38,11 +40,19 @@ private class BufferedImageLuminanceSource(image: BufferedImage) : LuminanceSour
     }
 }
 
+/** See the Android actual for why [DecodeHintType.TRY_HARDER] is needed: this app's own QR codes
+ * use rounded/separated pixel shapes that ZXing's default single-pass grid sampling often misreads
+ * as noise without it. */
+private val HINTS = mapOf(
+    DecodeHintType.TRY_HARDER to true,
+    DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE),
+)
+
 actual suspend fun decodeQrFromImage(bytes: ByteArray): QrDecodeResult = withContext(Dispatchers.Default) {
     val image = runCatching { ImageIO.read(ByteArrayInputStream(bytes)) }.getOrNull()
         ?: return@withContext QrDecodeResult.NotFound
     val bitmap = BinaryBitmap(HybridBinarizer(BufferedImageLuminanceSource(image)))
-    runCatching { MultiFormatReader().decode(bitmap) }.getOrNull()
+    runCatching { MultiFormatReader().decode(bitmap, HINTS) }.getOrNull()
         ?.let { QrDecodeResult.Success(it.text) }
         ?: QrDecodeResult.NotFound
 }

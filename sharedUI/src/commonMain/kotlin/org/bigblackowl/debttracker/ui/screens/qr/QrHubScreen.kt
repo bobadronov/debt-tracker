@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,6 +37,7 @@ import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.platform.currentPlatform
 import org.bigblackowl.debttracker.core.qr.ContactQrScanner
 import org.bigblackowl.debttracker.core.qr.QR_SCAN_CAPABLE_PLATFORMS
+import org.bigblackowl.debttracker.core.qr.ScanOverlayActionButton
 import org.bigblackowl.debttracker.core.qr.rememberContactQrImagePicker
 import org.bigblackowl.debttracker.core.qr.rememberContactQrPainter
 import org.bigblackowl.debttracker.domain.model.ContactQrPayload
@@ -63,7 +65,8 @@ import org.koin.compose.viewmodel.koinViewModel
  * autofill from your account once signed in (no fields to edit here), or a locally-saved card
  * you fill in via Edit while signed out. A single scan-entry button adapts to the platform (see
  * [QR_SCAN_CAPABLE_PLATFORMS]): on Android/iOS it switches the same screen into scan mode for the
- * live camera; on Desktop/Web — no camera there — it opens the OS file picker directly. A valid
+ * live camera — with a "select image" fallback underneath, for a code the camera can't get a clean
+ * shot of; on Desktop/Web — no camera there — it opens the OS file picker directly. A valid
  * scan asks whether to add the person as a debtor or creditor before navigating to the matching
  * pre-filled form.
  */
@@ -214,7 +217,10 @@ private fun ShareContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
                 exit = fadeOut() + shrinkVertically(),
             ) {
                 val canScanWithCamera = currentPlatform in QR_SCAN_CAPABLE_PLATFORMS
-                Column(verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm)) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Button(
                         onClick = { if (canScanWithCamera) onIntent(QrHubIntent.SwitchToScan) else imagePicker.pick() },
                         modifier = Modifier.widthIn(max = Dimens.contentMaxWidth).fillMaxWidth(),
@@ -233,10 +239,12 @@ private fun ShareContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
 
 // Only reachable via SwitchToScan, which ShareContent's button sends solely on
 // QR_SCAN_CAPABLE_PLATFORMS (Desktop/Web open the file picker directly instead) — so this is
-// always the camera path.
+// always the camera path, with a "select image" fallback underneath for a code the camera can't
+// easily point at (e.g. shown on another screen, or already sitting in the gallery).
 @Composable
 private fun ScanContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
     val strings = LocalStrings.current
+    val imagePicker = rememberContactQrImagePicker(onResult = { onIntent(QrHubIntent.ScanResult(it)) })
 
     if (state.cameraPermissionDenied) {
         Column(
@@ -250,16 +258,19 @@ private fun ScanContent(state: QrHubState, onIntent: (QrHubIntent) -> Unit) {
             }
         }
     } else {
-        ContactQrScanner(
-            description = "",
-            modifier = Modifier.fillMaxSize(),
-            flashlightOn = false,
-            onResult = { payload -> onIntent(QrHubIntent.ScanResult(payload)) },
-            onImageDecodeFailure = {},
-            permissionDeniedContent = {
-                LaunchedEffect(Unit) { onIntent(QrHubIntent.CameraPermissionDenied) }
-            },
-        )
+        Box(modifier = Modifier.fillMaxSize()) {
+            ContactQrScanner(
+                description = "",
+                modifier = Modifier.fillMaxSize(),
+                flashlightOn = false,
+                onResult = { payload -> onIntent(QrHubIntent.ScanResult(payload)) },
+                onImageDecodeFailure = {},
+                permissionDeniedContent = {
+                    LaunchedEffect(Unit) { onIntent(QrHubIntent.CameraPermissionDenied) }
+                },
+            )
+            ScanOverlayActionButton(strings.qr.hubSelectImageTab, errorText = imagePicker.errorMessage, onClick = imagePicker.pick)
+        }
     }
 }
 
