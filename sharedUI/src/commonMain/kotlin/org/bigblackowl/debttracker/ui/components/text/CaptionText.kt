@@ -10,6 +10,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 
 /** Defaults to [androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant] — the de-emphasized color nearly every call site paired with `bodySmall` manually. */
 @Composable
@@ -36,3 +38,11 @@ fun CaptionText(
         overflow = overflow
     )
 }
+
+@Preview
+@Composable
+private fun CaptionTextLightPreview() = DebtTrackerPreview(darkTheme = false) { CaptionText("Caption text") }
+
+@Preview
+@Composable
+private fun CaptionTextDarkPreview() = DebtTrackerPreview(darkTheme = true) { CaptionText("Caption text") }

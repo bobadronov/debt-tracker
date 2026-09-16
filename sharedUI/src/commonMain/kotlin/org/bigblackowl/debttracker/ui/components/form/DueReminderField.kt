@@ -28,6 +28,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
@@ -35,13 +37,13 @@ import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.formatDueDateTime
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.button.IconButton
 import org.bigblackowl.debttracker.ui.components.button.TextButton
 import org.bigblackowl.debttracker.ui.components.card.ClickableOutlinedRow
 import org.bigblackowl.debttracker.ui.components.text.LabelText
 import org.bigblackowl.debttracker.ui.components.text.TitleText
-import kotlin.time.Instant
 
 /**
  * "Repayment reminder" field for the add/edit contact form: an optional due date+time plus chips
@@ -152,4 +154,32 @@ fun DueReminderField(
             text = { TimePicker(state = tpState) },
         )
     }
+}
+
+@Preview
+@Composable
+private fun DueReminderFieldNotSetPreview() = DebtTrackerPreview(darkTheme = false) {
+    DueReminderField(dueDate = null, onDueDateChange = {}, reminderLeadDays = emptySet(), onToggleReminderLead = {})
+}
+
+@Preview
+@Composable
+private fun DueReminderFieldSetPreview() = DebtTrackerPreview(darkTheme = false) {
+    DueReminderField(
+        dueDate = kotlin.time.Instant.parse("2026-09-20T18:00:00Z"),
+        onDueDateChange = {},
+        reminderLeadDays = setOf(1),
+        onToggleReminderLead = {},
+    )
+}
+
+@Preview
+@Composable
+private fun DueReminderFieldDarkPreview() = DebtTrackerPreview(darkTheme = true) {
+    DueReminderField(
+        dueDate = kotlin.time.Instant.parse("2026-09-20T18:00:00Z"),
+        onDueDateChange = {},
+        reminderLeadDays = setOf(1, 2),
+        onToggleReminderLead = {},
+    )
 }

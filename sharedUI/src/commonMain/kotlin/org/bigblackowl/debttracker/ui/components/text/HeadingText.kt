@@ -10,6 +10,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 
 /**
  * The app's text taxonomy — five semantic roles instead of ad hoc `Text(style = ...)` calls, so
@@ -49,3 +51,11 @@ fun HeadingText(
         overflow = overflow
     )
 }
+
+@Preview
+@Composable
+private fun HeadingTextLightPreview() = DebtTrackerPreview(darkTheme = false) { HeadingText("Heading text") }
+
+@Preview
+@Composable
+private fun HeadingTextDarkPreview() = DebtTrackerPreview(darkTheme = true) { HeadingText("Heading text") }

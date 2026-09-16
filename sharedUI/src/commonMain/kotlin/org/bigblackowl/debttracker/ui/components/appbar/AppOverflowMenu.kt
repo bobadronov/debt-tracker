@@ -22,11 +22,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.i18n.Strings
 import org.bigblackowl.debttracker.core.notifications.NotificationsPoller
 import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.navigation.AppMenu
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.button.IconButton
 import org.koin.compose.koinInject
@@ -44,11 +46,16 @@ fun AppOverflowMenu(
     authRepository: AuthRepository = koinInject(),
 ) {
     val menu by AppMenu.state.collectAsState()
-    if (!menu.visible) return
-
     val isAuthenticated by authRepository.isAuthenticated.collectAsState()
     val unread by poller.unreadCount.collectAsState()
-    var open by remember { mutableStateOf(false) }
+
+    AppOverflowMenuContent(strings = strings, menu = menu, isAuthenticated = isAuthenticated, unread = unread)
+}
+
+@Composable
+private fun AppOverflowMenuContent(strings: Strings, menu: AppMenu.State, isAuthenticated: Boolean, unread: Int) {
+    if (!menu.visible) return
+
 
     Box(modifier = Modifier.padding(Dimens.Spacing.xs)) {
         IconButton(onClick = { open = true }) {
@@ -102,4 +109,42 @@ fun AppOverflowMenu(
             }
         }
     }
+}
+
+private val PREVIEW_MENU_STATE = AppMenu.State(visible = true)
+
+@Preview
+@Composable
+private fun AppOverflowMenuUnauthenticatedPreview() = DebtTrackerPreview(darkTheme = false) {
+    AppOverflowMenuContent(strings = LocalStrings.current, menu = PREVIEW_MENU_STATE, isAuthenticated = false, unread = 0)
+}
+
+@Preview
+@Composable
+private fun AppOverflowMenuAuthenticatedPreview() = DebtTrackerPreview(darkTheme = false) {
+    AppOverflowMenuContent(strings = LocalStrings.current, menu = PREVIEW_MENU_STATE, isAuthenticated = true, unread = 0)
+}
+
+@Preview
+@Composable
+private fun AppOverflowMenuUnreadBadgePreview() = DebtTrackerPreview(darkTheme = false) {
+    AppOverflowMenuContent(strings = LocalStrings.current, menu = PREVIEW_MENU_STATE, isAuthenticated = true, unread = 3)
+}
+
+@Preview
+@Composable
+private fun AppOverflowMenuDarkPreview() = DebtTrackerPreview(darkTheme = true) {
+    AppOverflowMenuContent(strings = LocalStrings.current, menu = PREVIEW_MENU_STATE, isAuthenticated = true, unread = 3)
+}
+
+@Preview
+@Composable
+private fun AppOverflowMenuOnNotificationsScreenPreview() = DebtTrackerPreview(darkTheme = false) {
+    // Notifications is already on the back stack — its row is hidden (see AppMenu.activeTargets).
+    AppOverflowMenuContent(
+        strings = LocalStrings.current,
+        menu = AppMenu.State(visible = true, activeTargets = setOf(AppMenu.Target.Notifications)),
+        isAuthenticated = true,
+        unread = 3,
+    )
 }

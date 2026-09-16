@@ -10,6 +10,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 
 @Composable
 fun TitleText(
@@ -35,3 +37,11 @@ fun TitleText(
         overflow = overflow
     )
 }
+
+@Preview
+@Composable
+private fun TitleTextLightPreview() = DebtTrackerPreview(darkTheme = false) { TitleText("Title text") }
+
+@Preview
+@Composable
+private fun TitleTextDarkPreview() = DebtTrackerPreview(darkTheme = true) { TitleText("Title text") }
