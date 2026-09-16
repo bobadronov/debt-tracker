@@ -55,6 +55,7 @@ import org.bigblackowl.debttracker.domain.repository.AuthRepository
 import org.bigblackowl.debttracker.domain.repository.NotificationRepository
 import org.bigblackowl.debttracker.domain.repository.SessionRepository
 import org.bigblackowl.debttracker.domain.usecase.ForceSignOutUseCase
+import org.bigblackowl.debttracker.ui.components.BackInterceptor
 import org.bigblackowl.debttracker.ui.components.contact.ScannedContactDialog
 import org.bigblackowl.debttracker.ui.screens.accountonboarding.AccountOnboardingScreen
 import org.bigblackowl.debttracker.ui.screens.auth.AuthScreen
@@ -188,13 +189,21 @@ fun DebtTrackerNavGraph(
         backStack.add(screen)
     }
 
+    // Every exit path (the in-app back arrow, system back/gesture, NavDisplay's own predictive
+    // back below) calls this one function, so it's the single place an UnsavedChangesGuard needs
+    // to hook to guard a screen against ANY of them — see BackInterceptor's doc.
     fun back() {
+        if (BackInterceptor.tryIntercept()) return
         if (backStack.size > 1) backStack.removeLastOrNull()
     }
 
     /** Pops entries until [target] is on top — used after saving a record to skip past the
-     * contact-picker step that led to the form. Falls back to a single [back] if not found. */
+     * contact-picker step that led to the form, but also reachable directly from a "done" button
+     * that doubles as a plain back arrow (new-entry AddEditContactForm) — so it needs the same
+     * guard check as [back]: a post-save call always proceeds (the screen's own hasUnsavedChanges
+     * already went false once its save committed), only a genuine unsaved exit gets intercepted. */
     fun popTo(target: Screen) {
+        if (BackInterceptor.tryIntercept()) return
         if (backStack.none { it == target }) {
             back()
             return

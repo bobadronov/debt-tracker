@@ -33,6 +33,7 @@ import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.theme.debtAccentColors
 import org.bigblackowl.debttracker.ui.components.AccountAvatar
 import org.bigblackowl.debttracker.ui.components.SettingsDetailScaffold
+import org.bigblackowl.debttracker.ui.components.UnsavedChangesGuard
 import org.bigblackowl.debttracker.ui.components.button.LoadingButton
 import org.bigblackowl.debttracker.ui.components.form.UkrainianPhoneVisualTransformation
 import org.bigblackowl.debttracker.ui.components.text.CaptionText
@@ -64,6 +65,12 @@ fun EditAccountScreen(
     LaunchedEffect(state.error) {
         state.error?.let { snackbarHostState.showSnackbar(it) }
     }
+
+    UnsavedChangesGuard(
+        hasUnsavedChanges = state.hasUnsavedChanges,
+        onSave = { viewModel.onIntent(EditAccountIntent.Save) },
+        onDiscard = onBack,
+    )
 
     SettingsDetailScaffold(
         title = strings.editAccountTitle,

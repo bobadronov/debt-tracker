@@ -21,11 +21,14 @@ class EditAccountViewModel(
     private val appSettings: AppSettings,
 ) : ViewModel() {
 
+    private val initialFullName = authRepository.displayName.value.orEmpty()
+    private val initialPhone = sanitizePhoneInput(authRepository.phone.value.orEmpty())
+
     private val _state = MutableStateFlow(
         EditAccountState(
             email = authRepository.email.value.orEmpty(),
-            fullName = authRepository.displayName.value.orEmpty(),
-            phone = sanitizePhoneInput(authRepository.phone.value.orEmpty()),
+            fullName = initialFullName,
+            phone = initialPhone,
             avatarUrl = authRepository.avatarUrl.value,
         )
     )
@@ -36,10 +39,26 @@ class EditAccountViewModel(
 
     fun onIntent(intent: EditAccountIntent) {
         when (intent) {
-            is EditAccountIntent.FullNameChanged -> _state.update { it.copy(fullName = intent.value, fullNameError = null) }
-            is EditAccountIntent.PhoneChanged -> _state.update { it.copy(phone = intent.value) }
+            is EditAccountIntent.FullNameChanged -> update(fullName = intent.value)
+            is EditAccountIntent.PhoneChanged -> update(phone = intent.value)
             is EditAccountIntent.AvatarPicked -> uploadAvatar(intent.picked.bytes, intent.picked.fileExtension)
             EditAccountIntent.Save -> save()
+        }
+    }
+
+    // Avatar upload is its own instant action (not gated by Save), so it's deliberately excluded
+    // from this dirty check — only fullName/phone are what a pending Save would actually write.
+    private fun update(
+        fullName: String = _state.value.fullName,
+        phone: String = _state.value.phone,
+    ) {
+        _state.update {
+            it.copy(
+                fullName = fullName,
+                fullNameError = null,
+                phone = phone,
+                hasUnsavedChanges = fullName != initialFullName || phone != initialPhone,
+            )
         }
     }
 
@@ -68,7 +87,7 @@ class EditAccountViewModel(
             _state.update { it.copy(isSaving = true, error = null) }
             authRepository.updateProfile(current.fullName.trim(), current.phone)
                 .onSuccess {
-                    _state.update { it.copy(isSaving = false) }
+                    _state.update { it.copy(isSaving = false, hasUnsavedChanges = false) }
                     effectsChannel.send(EditAccountEffect.Saved)
                 }
                 .onFailure {

@@ -13,6 +13,8 @@ data class EditAccountState(
     val fullNameError: String? = null,
     val avatarError: String? = null,
     val error: String? = null,
+    /** True once fullName/phone differ from what was loaded — drives [org.bigblackowl.debttracker.ui.components.UnsavedChangesGuard]. */
+    val hasUnsavedChanges: Boolean = false,
 )
 
 sealed interface EditAccountIntent {

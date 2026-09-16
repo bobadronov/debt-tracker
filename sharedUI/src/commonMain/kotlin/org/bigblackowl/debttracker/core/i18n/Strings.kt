@@ -438,6 +438,11 @@ data class Strings(
     val clipboardPasteFound: String,
     val clipboardPasteUse: String,
     val clearSearch: String,
+    /** [org.bigblackowl.debttracker.ui.components.UnsavedChangesGuard] — shown when leaving a
+     * data-entry screen with a pending edit. */
+    val unsavedChangesTitle: String,
+    val unsavedChangesMessage: String,
+    val discardChanges: String,
 
     // app
     val appName: String,

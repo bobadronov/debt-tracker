@@ -7,11 +7,14 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.i18n.resolveStrings
@@ -20,11 +23,13 @@ import org.bigblackowl.debttracker.domain.model.ContactPrefill
 import org.bigblackowl.debttracker.domain.model.ContactSuggestion
 import org.bigblackowl.debttracker.domain.model.Creditor
 import org.bigblackowl.debttracker.domain.model.CreditorTransaction
+import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.DebtDirection
 import org.bigblackowl.debttracker.domain.model.DebtStatus
 import org.bigblackowl.debttracker.domain.model.DebtTransaction
 import org.bigblackowl.debttracker.domain.model.Debtor
 import org.bigblackowl.debttracker.domain.model.MyDebtTransactionType
+import org.bigblackowl.debttracker.domain.model.PaymentMethod
 import org.bigblackowl.debttracker.domain.model.ScannedContact
 import org.bigblackowl.debttracker.domain.model.SyncStatus
 import org.bigblackowl.debttracker.domain.model.TransactionType
@@ -50,6 +55,32 @@ import kotlin.uuid.Uuid
 
 private const val EMAIL_LOOKUP_DEBOUNCE_MS = 500L
 private const val NAME_SUGGESTIONS_LIMIT = 5
+
+/** The subset of [AddEditContactState] a Save would actually persist — everything else (errors,
+ * suggestions, isSaving, direction) doesn't count toward [AddEditContactState.hasUnsavedChanges]. */
+private data class EditableSnapshot(
+    val fullName: String,
+    val phone: String,
+    val email: String,
+    val comment: String,
+    val initialAmountText: String,
+    val currency: Currency,
+    val method: PaymentMethod,
+    val dueDate: kotlin.time.Instant?,
+    val reminderLeadDays: Set<Int>,
+)
+
+private fun editableSnapshotOf(state: AddEditContactState) = EditableSnapshot(
+    fullName = state.fullName,
+    phone = state.phone,
+    email = state.email,
+    comment = state.comment,
+    initialAmountText = state.initialAmountText,
+    currency = state.currency,
+    method = state.method,
+    dueDate = state.dueDate,
+    reminderLeadDays = state.reminderLeadDays,
+)
 
 /**
  * Validates the merged "Add record" form and saves a new debtor or creditor (plus its opening
@@ -109,7 +140,14 @@ class AddEditContactViewModel(
             comment = prefill?.comment.orEmpty(),
         )
     )
-    val state: StateFlow<AddEditContactState> = _state.asStateFlow()
+    // What the form started with — a prefill in new-entry mode (so a picked/scanned contact's
+    // own data isn't itself flagged as an "unsaved change"), or the loaded record once
+    // loadForEdit() populates it. Compared against on every emission to derive hasUnsavedChanges.
+    private var initialSnapshot = editableSnapshotOf(_state.value)
+
+    val state: StateFlow<AddEditContactState> = _state
+        .map { it.copy(hasUnsavedChanges = editableSnapshotOf(it) != initialSnapshot) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, _state.value)
 
     private val effectsChannel = Channel<AddEditContactEffect>()
     val effects = effectsChannel.receiveAsFlow()
@@ -161,6 +199,7 @@ class AddEditContactViewModel(
                     }
                 }
             }
+            initialSnapshot = editableSnapshotOf(_state.value)
         }
     }
 
@@ -449,6 +488,7 @@ class AddEditContactViewModel(
     }
 
     private suspend fun finishSave() {
+        initialSnapshot = editableSnapshotOf(_state.value)
         _state.update { it.copy(isSaving = false) }
         effectsChannel.send(AddEditContactEffect.Saved)
     }

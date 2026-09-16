@@ -36,6 +36,9 @@ data class AddEditContactState(
     val suggestedAvatarUrl: String? = null,
     /** Past debtors/creditors whose name matches [fullName] as it's typed — inline name-autocomplete. */
     val nameSuggestions: List<ContactSuggestion> = emptyList(),
+    /** True once any editable field differs from what the form started with (loaded record in edit
+     * mode, any prefill in new-entry mode) — drives [org.bigblackowl.debttracker.ui.components.UnsavedChangesGuard]. */
+    val hasUnsavedChanges: Boolean = false,
 )
 
 sealed interface AddEditContactIntent {
