@@ -63,12 +63,15 @@ private data class SessionDto(
 /**
  * No defaults (unlike [SessionDto]) so kotlinx.serialization always emits every field — needed
  * because supabase-kt's Postgrest Json drops default-valued fields, which would otherwise mean
- * every register/touch upsert silently skips bumping `last_seen_at`. `revoked_at` is included
- * (always `null`) so a fresh sign-in reclaims a previously-revoked row for this device — without
- * it, a device kicked once via "Active devices" could never sign in again, since [registerOrTouchSession]
- * only ever runs right after a successful auth transition (see [revokedElsewhere]), never as a
- * periodic heartbeat while already signed in. `created_at` is still intentionally absent, so upsert
- * never resets it.
+ * every claim/touch upsert silently skips bumping `last_seen_at`. `revoked_at` is always sent as
+ * `null` here — this DTO is only ever used by [SupabaseSessionRepository.claimSession], which runs
+ * on a genuine new sign-in ([io.github.jan.supabase.auth.status.SessionStatus.Authenticated.isNew]),
+ * so it's correct to let a fresh sign-in reclaim a previously-revoked row for this device (otherwise
+ * a device kicked once via "Active devices" could never sign in again). A resumed/refreshed session
+ * (app cold start, silent token refresh) must NOT go through this DTO — see
+ * [SupabaseSessionRepository.touchSession]: clearing `revoked_at` there would silently undo an
+ * admin's "kick this device" the next time the app happens to be reopened. `created_at` is still
+ * intentionally absent, so upsert never resets it.
  */
 @Serializable
 private data class SessionUpsertDto(
@@ -134,12 +137,19 @@ class SupabaseSessionRepository(
         client.auth.sessionStatus
             .distinctUntilChangedBy { (it as? SessionStatus.Authenticated)?.session?.user?.id }
             .flatMapLatest { status ->
-                val userId = (status as? SessionStatus.Authenticated)?.session?.user?.id
-                if (userId == null) {
+                val authenticated = status as? SessionStatus.Authenticated
+                val userId = authenticated?.session?.user?.id
+                if (authenticated == null || userId == null) {
                     emptyFlow()
                 } else {
                     flow {
-                        registerOrTouchSession(userId)
+                        // isNew is true only for SessionSource.SignIn/SignUp/External — i.e. this
+                        // device just proved its credentials again, so it's fine to reclaim a
+                        // revoked row. On a plain cold start / silent refresh (Storage, Refresh, ...)
+                        // this is a *resumed* session: touchSession() must run instead, or a revoke
+                        // issued while this device's app was closed would be wiped the moment it's
+                        // reopened, before it ever had a chance to observe it.
+                        if (authenticated.isNew) claimSession(userId) else touchSession(userId)
                         emitAll(
                             client.from(TABLE).selectSingleValueAsFlow(SessionDto::id) {
                                 eq("id", currentSessionId)
@@ -149,7 +159,7 @@ class SupabaseSessionRepository(
                 }
             }.filter { it.revokedAt != null }.map { }
 
-    private suspend fun registerOrTouchSession(userId: String) {
+    private suspend fun claimSession(userId: String) {
         client.from(TABLE).upsert(
             SessionUpsertDto(
                 id = currentSessionId,
@@ -161,5 +171,24 @@ class SupabaseSessionRepository(
                 revokedAt = null,
             )
         )
+    }
+
+    /**
+     * Bumps `last_seen_at`/device metadata for a resumed session — an `update`, not
+     * [claimSession]'s upsert, so it never touches `revoked_at`. Falls back to [claimSession] only
+     * when the row doesn't exist at all (fresh install, or a prior admin action deleted the row
+     * outright instead of revoking it) — there's nothing to preserve in that case.
+     */
+    private suspend fun touchSession(userId: String) {
+        val touched = client.from(TABLE).update({
+            set("device_name", deviceDisplayName())
+            set("platform", currentPlatform.name)
+            set("app_version", BuildConfig.APP_VERSION)
+            set("last_seen_at", Clock.System.now().toString())
+        }) {
+            select()
+            filter { eq("id", currentSessionId) }
+        }.decodeList<SessionDto>()
+        if (touched.isEmpty()) claimSession(userId)
     }
 }
