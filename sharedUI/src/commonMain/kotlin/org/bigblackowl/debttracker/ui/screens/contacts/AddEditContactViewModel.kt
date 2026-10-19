@@ -146,7 +146,10 @@ class AddEditContactViewModel(
     private var initialSnapshot = editableSnapshotOf(_state.value)
 
     val state: StateFlow<AddEditContactState> = _state
-        .map { it.copy(hasUnsavedChanges = editableSnapshotOf(it) != initialSnapshot) }
+        // isSaving excluded: once a save is in flight there's nothing left to prompt "unsaved
+        // changes" about, and leaving it true let the UnsavedChangesGuard's back-intercept dialog
+        // pop up mid-save, whose own Save button re-ran save() and created a second debtor/creditor.
+        .map { it.copy(hasUnsavedChanges = !it.isSaving && editableSnapshotOf(it) != initialSnapshot) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, _state.value)
 
     private val effectsChannel = Channel<AddEditContactEffect>()
@@ -303,6 +306,7 @@ class AddEditContactViewModel(
 
     private fun save() {
         val current = _state.value
+        if (current.isSaving) return
         val strings = resolveStrings(appSettings.locale)
 
         if (!isValidFullName(current.fullName)) {

@@ -76,6 +76,7 @@ class EditAccountViewModel(
 
     private fun save() {
         val current = _state.value
+        if (current.isSaving) return
         val strings = resolveStrings(appSettings.locale)
 
         if (!isValidFullName(current.fullName)) {
@@ -84,14 +85,17 @@ class EditAccountViewModel(
         }
 
         viewModelScope.launch {
-            _state.update { it.copy(isSaving = true, error = null) }
+            // hasUnsavedChanges cleared here too (not just on success): while it's true,
+            // UnsavedChangesGuard's back-intercept dialog can pop up mid-save, and its own Save
+            // button would re-run save() — a second concurrent updateProfile call.
+            _state.update { it.copy(isSaving = true, error = null, hasUnsavedChanges = false) }
             authRepository.updateProfile(current.fullName.trim(), current.phone)
                 .onSuccess {
                     _state.update { it.copy(isSaving = false, hasUnsavedChanges = false) }
                     effectsChannel.send(EditAccountEffect.Saved)
                 }
                 .onFailure {
-                    _state.update { it.copy(isSaving = false, error = strings.saveError) }
+                    _state.update { it.copy(isSaving = false, error = strings.saveError, hasUnsavedChanges = true) }
                 }
         }
     }
