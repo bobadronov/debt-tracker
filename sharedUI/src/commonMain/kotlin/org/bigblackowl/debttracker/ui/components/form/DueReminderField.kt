@@ -28,6 +28,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDateTime
@@ -66,7 +67,7 @@ fun DueReminderField(
 
     val r = strings.dueReminder
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm)) {
-        ClickableOutlinedRow(onClick = { showDatePicker = true }) {
+        ClickableOutlinedRow(onClick = { showDatePicker = true }, modifier = Modifier.testTag("dueReminderField_row")) {
             Icon(Icons.Filled.NotificationsActive, contentDescription = null)
             Spacer(Modifier.width(Dimens.Spacing.md))
             Column(Modifier.weight(1f)) {
@@ -77,7 +78,7 @@ fun DueReminderField(
                 )
             }
             if (dueDate != null) {
-                IconButton(onClick = { onDueDateChange(null) }) {
+                IconButton(onClick = { onDueDateChange(null) }, modifier = Modifier.testTag("dueReminderField_clearButton")) {
                     Icon(Icons.Filled.Close, contentDescription = r.clear)
                 }
             } else {
@@ -97,11 +98,13 @@ fun DueReminderField(
                     selected = 1 in reminderLeadDays,
                     onClick = { onToggleReminderLead(1) },
                     label = { Text(r.lead1Day) },
+                    modifier = Modifier.testTag("dueReminderField_lead1DayChip"),
                 )
                 FilterChip(
                     selected = 2 in reminderLeadDays,
                     onClick = { onToggleReminderLead(2) },
                     label = { Text(r.lead2Days) },
+                    modifier = Modifier.testTag("dueReminderField_lead2DaysChip"),
                 )
             }
         }
@@ -112,14 +115,20 @@ fun DueReminderField(
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
-                TextButton(onClick = {
-                    pendingDateMillis = dpState.selectedDateMillis
-                    showDatePicker = false
-                    if (pendingDateMillis != null) showTimePicker = true
-                }) { Text(strings.confirm) }
+                TextButton(
+                    onClick = {
+                        pendingDateMillis = dpState.selectedDateMillis
+                        showDatePicker = false
+                        if (pendingDateMillis != null) showTimePicker = true
+                    },
+                    modifier = Modifier.testTag("dueReminderField_datePickerConfirmButton"),
+                ) { Text(strings.confirm) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text(strings.cancel) }
+                TextButton(
+                    onClick = { showDatePicker = false },
+                    modifier = Modifier.testTag("dueReminderField_datePickerCancelButton"),
+                ) { Text(strings.cancel) }
             },
         ) {
             DatePicker(state = dpState)
@@ -136,20 +145,26 @@ fun DueReminderField(
         AlertDialog(
             onDismissRequest = { showTimePicker = false },
             confirmButton = {
-                TextButton(onClick = {
-                    val dateMillis = pendingDateMillis
-                    showTimePicker = false
-                    if (dateMillis != null) {
-                        // DatePicker keeps the picked calendar day as UTC-midnight millis (M3 default).
-                        val pickedDate = Instant.fromEpochMilliseconds(dateMillis)
-                            .toLocalDateTime(TimeZone.UTC).date
-                        val local = LocalDateTime(pickedDate, LocalTime(tpState.hour, tpState.minute))
-                        onDueDateChange(local.toInstant(TimeZone.currentSystemDefault()))
-                    }
-                }) { Text(strings.confirm) }
+                TextButton(
+                    onClick = {
+                        val dateMillis = pendingDateMillis
+                        showTimePicker = false
+                        if (dateMillis != null) {
+                            // DatePicker keeps the picked calendar day as UTC-midnight millis (M3 default).
+                            val pickedDate = Instant.fromEpochMilliseconds(dateMillis)
+                                .toLocalDateTime(TimeZone.UTC).date
+                            val local = LocalDateTime(pickedDate, LocalTime(tpState.hour, tpState.minute))
+                            onDueDateChange(local.toInstant(TimeZone.currentSystemDefault()))
+                        }
+                    },
+                    modifier = Modifier.testTag("dueReminderField_timePickerConfirmButton"),
+                ) { Text(strings.confirm) }
             },
             dismissButton = {
-                TextButton(onClick = { showTimePicker = false }) { Text(strings.cancel) }
+                TextButton(
+                    onClick = { showTimePicker = false },
+                    modifier = Modifier.testTag("dueReminderField_timePickerCancelButton"),
+                ) { Text(strings.cancel) }
             },
             text = { TimePicker(state = tpState) },
         )

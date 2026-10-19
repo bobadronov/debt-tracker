@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
@@ -68,12 +69,12 @@ fun <S, F> ListSearchBar(
         OutlinedTextField(
             value = query,
             onValueChange = onQueryChange,
-            modifier = Modifier.weight(1f).focusRequester(searchFocusRequester),
+            modifier = Modifier.weight(1f).focusRequester(searchFocusRequester).testTag("contactList_searchField"),
             singleLine = true,
             placeholder = { Text(searchPlaceholder) },
             trailingIcon = if (query.isNotEmpty()) {
                 {
-                    IconButton(onClick = { onQueryChange("") }) {
+                    IconButton(onClick = { onQueryChange("") }, modifier = Modifier.testTag("contactList_clearSearchButton")) {
                         Icon(Icons.Filled.Close, clearSearchDescription)
                     }
                 }
@@ -82,7 +83,7 @@ fun <S, F> ListSearchBar(
 
         var filterMenuOpen by remember { mutableStateOf(false) }
         Box {
-            IconButton(onClick = { filterMenuOpen = true }) {
+            IconButton(onClick = { filterMenuOpen = true }, modifier = Modifier.testTag("contactList_filterButton")) {
                 Icon(Icons.Filled.FilterList, filterDescription)
             }
             DropdownMenu(

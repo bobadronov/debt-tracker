@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
@@ -62,7 +63,9 @@ fun ContactRow(
     SemanticOutlinedCard(
         borderColor = MaterialTheme.colorScheme.primary,
         onClick = onClick,
-        modifier = Modifier.padding(horizontal = Dimens.Spacing.md, vertical = Dimens.Spacing.xs),
+        modifier = Modifier
+            .padding(horizontal = Dimens.Spacing.md, vertical = Dimens.Spacing.xs)
+            .testTag("contactRow_$id"),
         borderWidth = Dimens.Border.thin,
     ) {
         Row(
@@ -81,7 +84,7 @@ fun ContactRow(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TitleText(balanceText, color = MaterialTheme.debtAccentColors.debt, style = MaterialTheme.typography.bodyLarge)
                 Box {
-                    IconButton(onClick = { menuOpen = true }) {
+                    IconButton(onClick = { menuOpen = true }, modifier = Modifier.testTag("contactRow_overflowButton_$id")) {
                         Icon(Icons.Default.MoreVert, contentDescription = null)
                     }
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
@@ -92,6 +95,7 @@ fun ContactRow(
                                 menuOpen = false
                                 confirmDelete = true
                             },
+                            modifier = Modifier.testTag("contactRow_deleteMenuItem_$id"),
                         )
                     }
                 }

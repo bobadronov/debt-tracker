@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -189,6 +190,7 @@ private fun SettingsContent(
                             icon = Icons.Filled.Lock,
                             title = strings.settings.protection,
                             onClick = onOpenProtection,
+                            modifier = Modifier.testTag("settings_protectionRow"),
                         )
                         SettingsRowDivider()
                     }
@@ -197,6 +199,7 @@ private fun SettingsContent(
                             icon = if (state.notificationsEnabled) Icons.Filled.Notifications else Icons.Filled.NotificationsOff,
                             title = strings.settings.notifications,
                             onClick = onOpenNotifications,
+                            modifier = Modifier.testTag("settings_notificationsRow"),
                         )
                         SettingsRowDivider()
                     }
@@ -204,6 +207,7 @@ private fun SettingsContent(
                         icon = Icons.Filled.Storage,
                         title = strings.settings.data,
                         onClick = onOpenData,
+                        modifier = Modifier.testTag("settings_dataRow"),
                     )
                     SettingsRowDivider()
                     SettingsRow(
@@ -211,6 +215,7 @@ private fun SettingsContent(
                         title = strings.settings.about,
                         subtitle = BuildConfig.APP_VERSION,
                         onClick = onOpenAbout,
+                        modifier = Modifier.testTag("settings_aboutRow"),
                     )
                 }
                 SettingsSection(strings.settings.preferences) {
@@ -266,6 +271,7 @@ private fun SettingsContent(
                         title = strings.settings.language,
                         subtitle = languageLabel,
                         onClick = onOpenLanguage,
+                        modifier = Modifier.testTag("settings_languageRow"),
                     )
                 }
                 GetAppSection(onOpenUrl = onOpenUrl)
@@ -304,7 +310,8 @@ private fun AccountSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .let { if (state.isAuthenticated) it.clickable(onClick = onOpenAccountInfo) else it }
-                .padding(Dimens.Spacing.lg),
+                .padding(Dimens.Spacing.lg)
+                .testTag("settings_accountCard"),
             verticalAlignment = Alignment.CenterVertically
         ) {
             SubcomposeAsyncImage(
@@ -340,12 +347,14 @@ private fun AccountSection(
                 icon = Icons.AutoMirrored.Filled.Logout,
                 title = strings.settings.signOut,
                 onClick = onSignOut,
+                modifier = Modifier.testTag("settings_signOutRow"),
             )
         } else {
             SettingsRow(
                 icon = Icons.AutoMirrored.Filled.Login,
                 title = strings.settings.signIn,
                 onClick = onOpenAuth,
+                modifier = Modifier.testTag("settings_signInRow"),
             )
         }
     }

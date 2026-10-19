@@ -22,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices.PHONE
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
@@ -59,7 +60,7 @@ private fun AppOverflowMenuContent(open: Boolean, onOpenChanged: (Boolean) -> Un
     if (!menu.visible) return
 
     Box(modifier = Modifier.padding(Dimens.Spacing.xs)) {
-        IconButton(onClick = { onOpenChanged(true) }) {
+        IconButton(onClick = { onOpenChanged(true) }, modifier = Modifier.testTag("appOverflowMenu_button")) {
             if (isAuthenticated && unread > 0) {
                 BadgedBox(badge = { Badge { Text(unread.toString()) } }) {
                     Icon(Icons.Filled.MoreVert, contentDescription = strings.home.menu)
@@ -78,6 +79,7 @@ private fun AppOverflowMenuContent(open: Boolean, onOpenChanged: (Boolean) -> Un
                         { Badge { Text(unread.toString()) } }
                     } else null,
                     onClick = { onOpenChanged(false); menu.openNotifications() },
+                    modifier = Modifier.testTag("appOverflowMenu_notificationsItem"),
                 )
             }
             if (AppMenu.Target.Qr !in menu.activeTargets) {
@@ -85,6 +87,7 @@ private fun AppOverflowMenuContent(open: Boolean, onOpenChanged: (Boolean) -> Un
                     text = { Text(strings.qr.home) },
                     leadingIcon = { Icon(Icons.Filled.QrCode, contentDescription = null) },
                     onClick = { onOpenChanged(false); menu.openQr() },
+                    modifier = Modifier.testTag("appOverflowMenu_qrItem"),
                 )
             }
             if (AppMenu.Target.Stats !in menu.activeTargets) {
@@ -92,6 +95,7 @@ private fun AppOverflowMenuContent(open: Boolean, onOpenChanged: (Boolean) -> Un
                     text = { Text(strings.home.stats) },
                     leadingIcon = { Icon(Icons.Filled.QueryStats, contentDescription = null) },
                     onClick = { onOpenChanged(false); menu.openStats() },
+                    modifier = Modifier.testTag("appOverflowMenu_statsItem"),
                 )
             }
             if (AppMenu.Target.ExchangeRates !in menu.activeTargets) {
@@ -99,6 +103,7 @@ private fun AppOverflowMenuContent(open: Boolean, onOpenChanged: (Boolean) -> Un
                     text = { Text(strings.exchangeRates.menuTitle) },
                     leadingIcon = { Icon(Icons.Filled.CurrencyExchange, contentDescription = null) },
                     onClick = { onOpenChanged(false); menu.openExchangeRates() },
+                    modifier = Modifier.testTag("appOverflowMenu_exchangeRatesItem"),
                 )
             }
             if (AppMenu.Target.Settings !in menu.activeTargets) {
@@ -106,6 +111,7 @@ private fun AppOverflowMenuContent(open: Boolean, onOpenChanged: (Boolean) -> Un
                     text = { Text(strings.home.settings) },
                     leadingIcon = { Icon(Icons.Filled.Settings, contentDescription = null) },
                     onClick = { onOpenChanged(false); menu.openSettings() },
+                    modifier = Modifier.testTag("appOverflowMenu_settingsItem"),
                 )
             }
         }

@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
@@ -117,7 +118,7 @@ fun PinSetupDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
                                     pagerState.animateScrollToPage(CONFIRM_PIN_PAGE)
                                 }
                             }),
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().testTag("pinSetupDialog_newPinField"),
                         )
 
                         else -> PinCodeField(
@@ -131,7 +132,7 @@ fun PinSetupDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
                             focusRequester = confirmFocusRequester,
                             imeAction = ImeAction.Done,
                             keyboardActions = KeyboardActions(onDone = { trySubmit() }),
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().testTag("pinSetupDialog_confirmPinField"),
                         )
                     }
                 }
@@ -146,27 +147,35 @@ fun PinSetupDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
             if (pagerState.currentPage == CONFIRM_PIN_PAGE) {
                 TextButton(
                     onClick = { trySubmit() },
-                    enabled = confirmPin.length == PIN_LENGTH
+                    enabled = confirmPin.length == PIN_LENGTH,
+                    modifier = Modifier.testTag("pinSetupDialog_saveButton"),
                 ) { Text(strings.save) }
             } else {
-                TextButton(onClick = {
-                    scope.launch {
-                        pagerState.animateScrollToPage(
-                            CONFIRM_PIN_PAGE
-                        )
-                    }
-                }, enabled = pin.length == PIN_LENGTH) { Text(strings.continueLabel) }
+                TextButton(
+                    onClick = {
+                        scope.launch {
+                            pagerState.animateScrollToPage(
+                                CONFIRM_PIN_PAGE
+                            )
+                        }
+                    },
+                    enabled = pin.length == PIN_LENGTH,
+                    modifier = Modifier.testTag("pinSetupDialog_continueButton"),
+                ) { Text(strings.continueLabel) }
             }
         },
         dismissButton = {
             if (pagerState.currentPage == CONFIRM_PIN_PAGE) {
-                TextButton(onClick = { scope.launch { pagerState.animateScrollToPage(NEW_PIN_PAGE) } }) {
+                TextButton(
+                    onClick = { scope.launch { pagerState.animateScrollToPage(NEW_PIN_PAGE) } },
+                    modifier = Modifier.testTag("pinSetupDialog_backButton"),
+                ) {
                     Text(
                         strings.back
                     )
                 }
             } else {
-                TextButton(onClick = onDismiss) { Text(strings.cancel) }
+                TextButton(onClick = onDismiss, modifier = Modifier.testTag("pinSetupDialog_cancelButton")) { Text(strings.cancel) }
             }
         },
     )

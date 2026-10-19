@@ -12,6 +12,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.navigation.LocalListPaneCanGoBack
@@ -23,7 +24,7 @@ import org.bigblackowl.debttracker.ui.components.button.IconButton
 
 @Composable
 fun BackButton(onClick: () -> Unit = {}) =
-    IconButton(onClick = onClick) {
+    IconButton(onClick = onClick, modifier = Modifier.testTag("backButton")) {
         Icon(
             Icons.AutoMirrored.Filled.ArrowBack,
             null

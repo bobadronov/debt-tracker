@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
@@ -66,9 +67,9 @@ private fun AccountOnboardingContent(onSignIn: () -> Unit, onSkip: () -> Unit) {
         BodyText(strings.onboardingAccountBody, textAlign = TextAlign.Center)
         Spacer(Modifier.height(Dimens.Spacing.xl))
 
-        Button(onClick = onSignIn) { Text(strings.settings.signIn) }
+        Button(onClick = onSignIn, modifier = Modifier.testTag("accountOnboarding_signInButton")) { Text(strings.settings.signIn) }
         Spacer(Modifier.height(Dimens.Spacing.sm))
-        TextButton(onClick = onSkip) { Text(strings.onboardingProtection.skip) }
+        TextButton(onClick = onSkip, modifier = Modifier.testTag("accountOnboarding_skipButton")) { Text(strings.onboardingProtection.skip) }
     }
 }
 

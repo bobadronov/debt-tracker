@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
@@ -134,6 +135,7 @@ private fun ExportContent(
                                         count = formatOptions.size
                                     ),
                                     label = { Text(label) },
+                                    modifier = Modifier.testTag("export_formatButton_${value.name}"),
                                 )
                             }
                         }
@@ -158,6 +160,7 @@ private fun ExportContent(
                                             count = directionOptions.size
                                         ),
                                         label = { Text(label) },
+                                        modifier = Modifier.testTag("export_directionButton_${value.name}"),
                                     )
                                 }
                             }
@@ -181,6 +184,7 @@ private fun ExportContent(
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         },
+                        modifier = Modifier.testTag("export_dateRangeRow"),
                     )
                 }
 
@@ -194,7 +198,7 @@ private fun ExportContent(
             LoadingButton(
                 onClick = { onExport(fromDate, toDate) },
                 isLoading = state.isExporting,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("export_submitButton"),
                 leadingIcon = {
                     Icon(
                         Icons.Filled.Download,
@@ -211,14 +215,16 @@ private fun ExportContent(
         DatePickerDialog(
             onDismissRequest = { showDateRangePicker = false },
             confirmButton = {
-                TextButton(onClick = {
-                    showDateRangePicker = false
-                }) { Text(strings.confirm) }
+                TextButton(
+                    onClick = { showDateRangePicker = false },
+                    modifier = Modifier.testTag("export_dateRangeConfirmButton"),
+                ) { Text(strings.confirm) }
             },
             dismissButton = {
-                TextButton(onClick = {
-                    showDateRangePicker = false
-                }) { Text(strings.cancel) }
+                TextButton(
+                    onClick = { showDateRangePicker = false },
+                    modifier = Modifier.testTag("export_dateRangeCancelButton"),
+                ) { Text(strings.cancel) }
             },
         ) {
             DateRangePicker(state = dateRangePickerState, modifier = Modifier.weight(1f))

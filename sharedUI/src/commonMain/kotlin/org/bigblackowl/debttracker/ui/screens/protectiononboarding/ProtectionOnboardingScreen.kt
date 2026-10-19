@@ -16,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
@@ -104,17 +105,17 @@ private fun ProtectionOnboardingContent(
         // Desktop has no biometric at all; mobile devices without biometric hardware/enrollment
         // (common on tablets) fall back to the same PIN setup instead of only offering Skip.
         if (state.biometricAvailable) {
-            Button(onClick = onEnableBiometric) {
+            Button(onClick = onEnableBiometric, modifier = Modifier.testTag("protectionOnboarding_enableBiometricButton")) {
                 Text(strings.onboardingProtection.enableBiometric)
             }
         } else {
-            Button(onClick = { showPinSetupDialog = true }) {
+            Button(onClick = { showPinSetupDialog = true }, modifier = Modifier.testTag("protectionOnboarding_enablePinButton")) {
                 Text(strings.onboardingProtection.enablePin)
             }
         }
 
         Spacer(Modifier.height(Dimens.Spacing.sm))
-        TextButton(onClick = onSkip) { Text(strings.onboardingProtection.skip) }
+        TextButton(onClick = onSkip, modifier = Modifier.testTag("protectionOnboarding_skipButton")) { Text(strings.onboardingProtection.skip) }
     }
 
     if (showPinSetupDialog) {

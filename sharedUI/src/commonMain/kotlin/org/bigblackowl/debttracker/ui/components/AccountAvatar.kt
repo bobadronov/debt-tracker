@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import coil3.compose.AsyncImage
@@ -80,7 +81,7 @@ fun AccountAvatar(
         FilledIconButton(
             onClick = onEditClick,
             enabled = !isUploading,
-            modifier = Modifier.align(Alignment.BottomEnd).size(Dimens.IconSize.md),
+            modifier = Modifier.align(Alignment.BottomEnd).size(Dimens.IconSize.md).testTag("accountAvatar_editButton"),
         ) {
             Icon(
                 Icons.Default.PhotoCamera,

@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -85,6 +86,7 @@ private fun SettingsNotificationsContent(
                         onSubtitleClick = if (notificationsEnabled && state.notificationsPermissionBlocked) onOpenNotificationSettings else null,
                         checked = notificationsEnabled,
                         onCheckedChange = onToggleNotifications,
+                        modifier = Modifier.testTag("settingsNotifications_enabledToggle"),
                     )
                     if (notificationsEnabled) {
                         SettingsRowDivider()
@@ -93,6 +95,7 @@ private fun SettingsNotificationsContent(
                             title = strings.notificationBody.hideAmountsToggle,
                             checked = hideAmountsInNotifications,
                             onCheckedChange = onToggleHideAmounts,
+                            modifier = Modifier.testTag("settingsNotifications_hideAmountsToggle"),
                         )
                     }
                 }

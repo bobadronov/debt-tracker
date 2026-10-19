@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import debt_tracker.sharedui.generated.resources.Res
@@ -108,6 +109,7 @@ private fun LanguageContent(selectedLocale: String, onBack: () -> Unit, onSelect
                         }
                     },
                     onClick = { onSelectLocale(value) },
+                    modifier = Modifier.testTag("languageRow_$value"),
                 )
                 if (index != languageOptions.lastIndex) SettingsRowDivider()
             }

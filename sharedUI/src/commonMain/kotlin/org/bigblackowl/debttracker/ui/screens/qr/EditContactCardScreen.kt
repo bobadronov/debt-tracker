@@ -10,6 +10,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
@@ -90,6 +91,7 @@ private fun EditContactCardContent(
             label = strings.fullName,
             clipboardText = clipboardText,
             isPasteRelevant = ::isValidFullName,
+            modifier = Modifier.testTag("editContactCard_nameField"),
         )
         PasteableOutlinedTextField(
             value = state.phone,
@@ -99,6 +101,7 @@ private fun EditContactCardContent(
             isPasteRelevant = ::isPhonePasteRelevant,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             visualTransformation = remember { UkrainianPhoneVisualTransformation() },
+            modifier = Modifier.testTag("editContactCard_phoneField"),
         )
         PasteableOutlinedTextField(
             value = state.email,
@@ -107,9 +110,10 @@ private fun EditContactCardContent(
             clipboardText = clipboardText,
             isPasteRelevant = ::isValidEmail,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            modifier = Modifier.testTag("editContactCard_emailField"),
         )
         Spacer(Modifier.height(Dimens.Spacing.sm))
-        Button(onClick = onSave, modifier = Modifier.fillMaxWidth()) { Text(strings.save) }
+        Button(onClick = onSave, modifier = Modifier.fillMaxWidth().testTag("editContactCard_saveButton")) { Text(strings.save) }
     }
 }
 

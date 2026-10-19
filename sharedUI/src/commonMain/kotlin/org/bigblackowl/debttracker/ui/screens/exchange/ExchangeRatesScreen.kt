@@ -51,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -200,9 +201,9 @@ private fun ExchangeRatesContent(
                                     label = { Text(strings.amountLabel) },
                                     singleLine = true,
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.weight(1f).testTag("exchangeRates_amountField"),
                                 )
-                                IconButton(onClick = onToggleInvert) {
+                                IconButton(onClick = onToggleInvert, modifier = Modifier.testTag("exchangeRates_invertButton")) {
                                     Icon(
                                         Icons.Filled.SwapVert,
                                         contentDescription = strings.swapDirection,
@@ -221,9 +222,9 @@ private fun ExchangeRatesContent(
                                     label = { Text(strings.searchHint) },
                                     singleLine = true,
                                     leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-                                    modifier = Modifier.weight(1f),
+                                    modifier = Modifier.weight(1f).testTag("exchangeRates_searchField"),
                                 )
-                                IconButton(onClick = onToggleSort) {
+                                IconButton(onClick = onToggleSort, modifier = Modifier.testTag("exchangeRates_sortButton")) {
                                     Icon(
                                         Icons.Filled.SortByAlpha,
                                         contentDescription = strings.sortByName,
@@ -309,7 +310,7 @@ private fun SectionLabel(text: String) {
 private fun SourceSelector(selected: RateSource, onSelect: (RateSource) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Box {
-        OutlinedButton(onClick = { expanded = true }) {
+        OutlinedButton(onClick = { expanded = true }, modifier = Modifier.testTag("exchangeRates_sourceSelector")) {
             SourceIcon(selected, Modifier.size(Dimens.IconSize.sm))
             Spacer(Modifier.width(Dimens.Spacing.sm))
             Text(selected.displayName)
@@ -337,7 +338,7 @@ private fun SourceSelector(selected: RateSource, onSelect: (RateSource) -> Unit)
 private fun BaseSelector(selected: FiatCurrency, enabled: Boolean, onSelect: (FiatCurrency) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Box {
-        OutlinedButton(onClick = { expanded = true }, enabled = enabled) {
+        OutlinedButton(onClick = { expanded = true }, enabled = enabled, modifier = Modifier.testTag("exchangeRates_baseSelector")) {
             CurrencyFlag(selected, Modifier.size(Dimens.IconSize.sm))
             Spacer(Modifier.width(Dimens.Spacing.sm))
             Text("${selected.code} ${selected.symbol}")
@@ -409,14 +410,14 @@ private fun RateRow(
     val strings = LocalStrings.current.exchangeRates
     val diff = previous?.let { rate.sell - it.sell }
     val copyValue = convert(rate.sell).formatRate()
-    TonalCard(shape = RoundedCornerShape(Dimens.Radius.sm)) {
+    TonalCard(modifier = Modifier.testTag("exchangeRates_rateRow_${rate.currency.code}"), shape = RoundedCornerShape(Dimens.Radius.sm)) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(start = Dimens.Spacing.sm, end = Dimens.Spacing.lg, top = Dimens.Spacing.sm, bottom = Dimens.Spacing.sm),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onTogglePin) {
+                IconButton(onClick = onTogglePin, modifier = Modifier.testTag("exchangeRates_pinButton_${rate.currency.code}")) {
                     Icon(
                         if (pinned) Icons.Filled.Star else Icons.Filled.StarBorder,
                         contentDescription = strings.pinned,

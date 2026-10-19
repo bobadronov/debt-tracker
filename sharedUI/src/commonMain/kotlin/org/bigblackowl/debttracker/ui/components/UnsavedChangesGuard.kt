@@ -8,6 +8,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.ui.components.button.TextButton
 
@@ -72,10 +74,16 @@ fun UnsavedChangesGuard(hasUnsavedChanges: Boolean, onSave: () -> Unit, onDiscar
                 // for an async save, once its own success effect arrives) — without this, that call
                 // finds the interceptor still registered and immediately re-shows this same dialog
                 // instead of actually leaving.
-                TextButton(onClick = { showDialog = false; BackInterceptor.unregister(handler); onSave() }) { Text(strings.save) }
+                TextButton(
+                    onClick = { showDialog = false; BackInterceptor.unregister(handler); onSave() },
+                    modifier = Modifier.testTag("unsavedChangesDialog_saveButton"),
+                ) { Text(strings.save) }
             },
             dismissButton = {
-                TextButton(onClick = { showDialog = false; BackInterceptor.unregister(handler); onDiscard() }) { Text(strings.discardChanges) }
+                TextButton(
+                    onClick = { showDialog = false; BackInterceptor.unregister(handler); onDiscard() },
+                    modifier = Modifier.testTag("unsavedChangesDialog_discardButton"),
+                ) { Text(strings.discardChanges) }
             },
         )
     }

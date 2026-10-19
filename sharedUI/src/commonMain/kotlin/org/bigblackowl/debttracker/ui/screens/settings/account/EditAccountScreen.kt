@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
@@ -132,7 +133,7 @@ private fun EditAccountContent(
             supportingText = state.fullNameError?.let { { Text(it) } },
             leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag("editAccount_nameField"),
         )
 
         OutlinedTextField(
@@ -154,13 +155,13 @@ private fun EditAccountContent(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             visualTransformation = remember { UkrainianPhoneVisualTransformation() },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag("editAccount_phoneField"),
         )
         Spacer(Modifier.height(Dimens.Spacing.md))
         LoadingButton(
             onClick = onSave,
             isLoading = state.isSaving,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag("editAccount_saveButton"),
             label = { Text(strings.save) },
         )
     }

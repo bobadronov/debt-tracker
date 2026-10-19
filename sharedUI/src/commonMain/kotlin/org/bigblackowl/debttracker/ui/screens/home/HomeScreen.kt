@@ -48,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
@@ -205,12 +206,14 @@ private fun HomeContent(
                     Tab(
                         selected = pagerState.currentPage == 0,
                         onClick = { scope.launch { pagerState.animateScrollToPage(0) } },
-                        text = { Text(strings.home.tabDebtors) }
+                        text = { Text(strings.home.tabDebtors) },
+                        modifier = Modifier.testTag("home_debtorsTab"),
                     )
                     Tab(
                         selected = pagerState.currentPage == 1,
                         onClick = { scope.launch { pagerState.animateScrollToPage(1) } },
-                        text = { Text(strings.home.tabCreditors) }
+                        text = { Text(strings.home.tabCreditors) },
+                        modifier = Modifier.testTag("home_creditorsTab"),
                     )
                 }
                 // Swiping between tabs (HorizontalPager) replaces swipe-to-delete on the rows —

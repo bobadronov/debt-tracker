@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
@@ -87,14 +88,14 @@ private fun ContactPickerContent(
                 OutlinedTextField(
                     value = state.query,
                     onValueChange = onSearch,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("contactPicker_searchField"),
                     singleLine = true,
                     placeholder = { Text(strings.contactPicker.searchPlaceholder) },
                 )
 
                 ClickableOutlinedRow(
                     onClick = onNewContact,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("contactPicker_newContactRow"),
                 ) {
                     Icon(Icons.Filled.PersonAdd, contentDescription = null)
                     Spacer(Modifier.width(Dimens.Spacing.md))
@@ -111,7 +112,7 @@ private fun ContactPickerContent(
                 } else {
                     LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
                         items(state.contacts, key = { it.contactKey() }) { contact ->
-                            ContactPickerRow(contact = contact, onClick = { onPickContact(contact) })
+                            ContactPickerRow(contact = contact, onClick = { onPickContact(contact) }, key = contact.contactKey())
                             HorizontalDivider()
                         }
                     }
@@ -124,12 +125,13 @@ private fun ContactPickerContent(
 private fun ContactSuggestion.contactKey(): String = "$fullName|$phone|$email"
 
 @Composable
-private fun ContactPickerRow(contact: ContactSuggestion, onClick: () -> Unit) {
+private fun ContactPickerRow(contact: ContactSuggestion, onClick: () -> Unit, key: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = Dimens.Spacing.md),
+            .padding(vertical = Dimens.Spacing.md)
+            .testTag("contactPickerRow_$key"),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         EntityAvatar(id = contact.fullName, name = contact.fullName, avatarUrl = contact.avatarUrl)

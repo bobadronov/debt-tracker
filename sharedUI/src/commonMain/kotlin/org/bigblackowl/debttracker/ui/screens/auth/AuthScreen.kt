@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -180,7 +181,7 @@ private fun AuthContent(
                         label = strings.fullName,
                         clipboardText = clipboardText,
                         isPasteRelevant = ::isValidFullName,
-                        modifier = Modifier.focusRequester(fullNameFocusRequester),
+                        modifier = Modifier.focusRequester(fullNameFocusRequester).testTag("auth_fullNameField"),
                         isError = state.fullNameError != null,
                         supportingText = state.fullNameError,
                         leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
@@ -199,7 +200,8 @@ private fun AuthContent(
                     isPasteRelevant = ::isValidEmail,
                     modifier = Modifier
                         .focusRequester(emailFocusRequester)
-                        .semantics { contentType = ContentType.Username },
+                        .semantics { contentType = ContentType.Username }
+                        .testTag("auth_emailField"),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email,
                         imeAction = ImeAction.Next,
@@ -242,6 +244,7 @@ private fun AuthContent(
                             onClick = {
                                 passwordVisible = !passwordVisible
                             },
+                            modifier = Modifier.testTag("auth_togglePasswordVisibilityButton"),
                         ) {
                             Icon(
                                 imageVector = if (passwordVisible) {
@@ -260,7 +263,8 @@ private fun AuthContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(passwordFocusRequester)
-                        .semantics { contentType = if (state.isSignUpMode) ContentType.NewPassword else ContentType.Password },
+                        .semantics { contentType = if (state.isSignUpMode) ContentType.NewPassword else ContentType.Password }
+                        .testTag("auth_passwordField"),
                 )
 
                 // After a failed sign-in — Supabase Auth can't tell an unknown email from a wrong
@@ -272,7 +276,7 @@ private fun AuthContent(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         BodyText(strings.authExtra.offerSignUpPrompt)
-                        TextButton(onClick = { onSwitchToSignUp() }) {
+                        TextButton(onClick = { onSwitchToSignUp() }, modifier = Modifier.testTag("auth_offerSignUpButton")) {
                             Text(strings.authExtra.offerSignUpAction)
                         }
                     }
@@ -315,7 +319,8 @@ private fun AuthContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .focusRequester(confirmPasswordFocusRequester)
-                            .semantics { contentType = ContentType.NewPassword },
+                            .semantics { contentType = ContentType.NewPassword }
+                            .testTag("auth_confirmPasswordField"),
                     )
 
                     PasteableOutlinedTextField(
@@ -324,7 +329,7 @@ private fun AuthContent(
                         label = strings.phone,
                         clipboardText = clipboardText,
                         isPasteRelevant = ::isPhonePasteRelevant,
-                        modifier = Modifier.focusRequester(phoneFocusRequester).semantics { contentType = ContentType.PhoneNumber },
+                        modifier = Modifier.focusRequester(phoneFocusRequester).semantics { contentType = ContentType.PhoneNumber }.testTag("auth_phoneField"),
                         leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null) },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Phone,
@@ -346,7 +351,7 @@ private fun AuthContent(
                     onClick = { onSubmit() },
                     isLoading = state.isLoading,
                     enabled = !state.isGoogleLoading,
-                    modifier = Modifier.fillMaxWidth(.8f),
+                    modifier = Modifier.fillMaxWidth(.8f).testTag("auth_submitButton"),
                     label = { Text(if (state.isSignUpMode) strings.auth.submitSignUp else strings.auth.submitSignIn) },
                 )
 
@@ -363,7 +368,7 @@ private fun AuthContent(
                     OutlinedButton(
                         onClick = { onGoogleSignIn() },
                         enabled = !state.isLoading && !state.isGoogleLoading,
-                        modifier = Modifier.fillMaxWidth(.8f),
+                        modifier = Modifier.fillMaxWidth(.8f).testTag("auth_googleSignInButton"),
                     ) {
                         if (state.isGoogleLoading) {
                             CircularWavyProgressIndicator(
@@ -390,7 +395,7 @@ private fun AuthContent(
                     }
                 }
 
-                TextButton(onClick = { onToggleMode() }) {
+                TextButton(onClick = { onToggleMode() }, modifier = Modifier.testTag("auth_toggleModeButton")) {
                     Text(if (state.isSignUpMode) strings.auth.toggleToSignIn else strings.auth.toggleToSignUp)
                 }
             }

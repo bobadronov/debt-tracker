@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
@@ -87,11 +88,13 @@ fun ContactDetailScaffold(
                 actions = {
                     if (!isLoading) {
                         onEdit?.let {
-                            IconButton(onClick = it) {
+                            IconButton(onClick = it, modifier = Modifier.testTag("contactDetail_editButton")) {
                                 Icon(Icons.Filled.Edit, contentDescription = LocalStrings.current.edit)
                             }
                         }
-                        IconButton(onClick = onExport) { Icon(Icons.Default.Share, contentDescription = null) }
+                        IconButton(onClick = onExport, modifier = Modifier.testTag("contactDetail_shareButton")) {
+                            Icon(Icons.Default.Share, contentDescription = null)
+                        }
                     }
                 },
             )
@@ -128,8 +131,8 @@ fun ContactDetailScaffold(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = Dimens.Spacing.lg),
                     horizontalArrangement = Arrangement.spacedBy(Dimens.Spacing.sm),
                 ) {
-                    Button(onClick = onPrimary, modifier = Modifier.weight(1f)) { Text(primaryLabel) }
-                    OutlinedButton(onClick = onSecondary, modifier = Modifier.weight(1f)) { Text(secondaryLabel) }
+                    Button(onClick = onPrimary, modifier = Modifier.weight(1f).testTag("contactDetail_primaryButton")) { Text(primaryLabel) }
+                    OutlinedButton(onClick = onSecondary, modifier = Modifier.weight(1f).testTag("contactDetail_secondaryButton")) { Text(secondaryLabel) }
                 }
 
                 Spacer(Modifier.height(Dimens.Spacing.sm))

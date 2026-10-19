@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -182,6 +183,7 @@ private fun SettingsAboutContent(
                         title = feedbackStrings.title,
                         subtitle = feedbackStrings.subtitle,
                         onClick = { onOpenFeedback(feedbackUrl(locale, theme)) },
+                        modifier = Modifier.testTag("settingsAbout_feedbackRow"),
                     )
                 }
             }

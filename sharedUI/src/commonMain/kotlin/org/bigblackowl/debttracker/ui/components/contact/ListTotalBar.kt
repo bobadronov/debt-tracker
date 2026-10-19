@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
@@ -38,7 +39,7 @@ fun ListTotalBar(label: String, totalText: String, onAdd: () -> Unit) {
             }
             FloatingActionButton(
                 onClick = onAdd,
-                modifier = Modifier.padding(start = Dimens.Spacing.md),
+                modifier = Modifier.padding(start = Dimens.Spacing.md).testTag("contactList_addFab"),
             ) { Icon(Icons.Default.Add, null) }
         }
     }

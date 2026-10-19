@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
@@ -130,7 +131,7 @@ private fun NotificationsContent(
                 if (state.notifications.any { !it.isRead }) {
                     TextButton(
                         onClick = onMarkAllRead,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().testTag("notifications_markAllReadButton"),
                     ) {
                         Icon(Icons.Filled.DoneAll, contentDescription = null, modifier = Modifier.padding(end = Dimens.Spacing.sm))
                         Text(strings.notifications.markAllRead)
@@ -140,6 +141,7 @@ private fun NotificationsContent(
                     state.notifications.forEachIndexed { index, notification ->
                         NotificationRow(
                             notification = notification,
+                            modifier = Modifier.testTag("notificationRow_${notification.id}"),
                             onOpen = { onOpen(notification) },
                             onDelete = { onDelete(notification.id) },
                             onApprove = notification.relatedLinkRequestId?.let { requestId ->
@@ -188,6 +190,7 @@ private fun NotificationRow(
     notification: AppNotification,
     onOpen: () -> Unit,
     onDelete: () -> Unit,
+    modifier: Modifier = Modifier,
     onApprove: (() -> Unit)? = null,
     onReject: (() -> Unit)? = null,
     onApproveCorrection: (() -> Unit)? = null,
@@ -212,6 +215,7 @@ private fun NotificationRow(
         iconTint = accent,
         iconContainerColor = accent.copy(alpha = 0.14f),
         onClick = onOpen,
+        modifier = modifier,
         trailing = {
             when {
                 notification.type == NotificationType.LINK_REQUEST && onApprove != null && onReject != null -> Row {
@@ -286,7 +290,7 @@ private fun CorrectionDialog(
                             s.isNotBlank() && runCatching { BigDecimal.parseString(s) }.getOrNull()?.let { it > BigDecimal.ZERO } == true
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.padding(start = Dimens.Spacing.xxl, top = Dimens.Spacing.xs, bottom = Dimens.Spacing.sm),
+                        modifier = Modifier.padding(start = Dimens.Spacing.xxl, top = Dimens.Spacing.xs, bottom = Dimens.Spacing.sm).testTag("correctionDialog_amountField"),
                     ) { amountText = sanitizeAmountInput(it) }
                 }
                 ReasonRow(
@@ -306,10 +310,11 @@ private fun CorrectionDialog(
             TextButton(
                 onClick = { onSubmit(reason, parsedAmount?.takeIf { reason == CorrectionReason.WRONG_AMOUNT }) },
                 enabled = canSend,
+                modifier = Modifier.testTag("correctionDialog_sendButton"),
             ) { Text(strings.notifications.correction.send) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(strings.cancel) }
+            TextButton(onClick = onDismiss, modifier = Modifier.testTag("correctionDialog_cancelButton")) { Text(strings.cancel) }
         },
     )
 }

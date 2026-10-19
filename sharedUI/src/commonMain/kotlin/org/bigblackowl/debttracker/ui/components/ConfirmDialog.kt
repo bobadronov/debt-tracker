@@ -4,7 +4,9 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
@@ -31,10 +33,12 @@ fun ConfirmDialog(
         title = { Text(title) },
         text = { Text(text) },
         confirmButton = {
-            TextButton(onClick = onConfirm) { Text(confirmLabel, color = confirmColor) }
+            TextButton(onClick = onConfirm, modifier = Modifier.testTag("confirmDialog_confirmButton")) {
+                Text(confirmLabel, color = confirmColor)
+            }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(dismissLabel) }
+            TextButton(onClick = onDismiss, modifier = Modifier.testTag("confirmDialog_dismissButton")) { Text(dismissLabel) }
         },
     )
 }

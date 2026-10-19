@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
@@ -117,11 +118,11 @@ private fun AuthGateContent(
                     tint = MaterialTheme.colorScheme.primary,
                 )
                 Spacer(Modifier.height(Dimens.Spacing.xl))
-                Button(onClick = onRetryBiometric) {
+                Button(onClick = onRetryBiometric, modifier = Modifier.testTag("authGate_retryBiometricButton")) {
                     Text(strings.authGate.retry)
                 }
                 if (hasPinCode) {
-                    TextButton(onClick = onSwitchToPin) {
+                    TextButton(onClick = onSwitchToPin, modifier = Modifier.testTag("authGate_switchToPinButton")) {
                         Text(strings.authGate.usePinCode)
                     }
                 }
@@ -136,6 +137,7 @@ private fun AuthGateContent(
                 value = state.pinInput,
                 onValueChange = onPinChange,
                 focusRequester = pinFocusRequester,
+                modifier = Modifier.testTag("authGate_pinField"),
             )
             AnimatedVisibility(
                 state.error != null,
@@ -150,7 +152,7 @@ private fun AuthGateContent(
             }
             if (biometricEnabled) {
                 Spacer(Modifier.height(Dimens.Spacing.sm))
-                TextButton(onClick = onRetryBiometric) {
+                TextButton(onClick = onRetryBiometric, modifier = Modifier.testTag("authGate_useBiometricButton")) {
                     Text(strings.authGate.useBiometric)
                 }
             }

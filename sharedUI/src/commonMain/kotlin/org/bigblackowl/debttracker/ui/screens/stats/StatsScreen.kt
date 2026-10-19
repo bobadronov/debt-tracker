@@ -29,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
@@ -286,7 +287,8 @@ private fun TopRow(rank: Int, id: String, name: String, avatarUrl: String?, bala
     Row(
         modifier = Modifier.fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = Dimens.Spacing.lg, vertical = Dimens.Spacing.md),
+            .padding(horizontal = Dimens.Spacing.lg, vertical = Dimens.Spacing.md)
+            .testTag("statsTopRow_$id"),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {

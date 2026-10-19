@@ -27,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
@@ -107,6 +108,7 @@ fun TransactionEditSheet(
                 isError = error != null,
                 supportingText = error,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.testTag("transactionEditSheet_amountField"),
             ) { amountText = sanitizeAmountInput(it); error = null }
 
             PaymentMethodChipRow(selected = method, onSelect = { method = it })
@@ -117,9 +119,10 @@ fun TransactionEditSheet(
                 label = strings.comment,
                 clipboardText = clipboardText,
                 isPasteRelevant = { it.isNotBlank() },
+                modifier = Modifier.testTag("transactionEditSheet_commentField"),
             )
 
-            ClickableOutlinedRow(onClick = { showDatePicker = true }) {
+            ClickableOutlinedRow(onClick = { showDatePicker = true }, modifier = Modifier.testTag("transactionEditSheet_dateRow")) {
                 Column(Modifier.weight(1f)) {
                     LabelText(strings.transactionEdit.dateLabel)
                     TitleText(date.formatDueDateTime(), style = MaterialTheme.typography.bodyLarge)
@@ -136,7 +139,7 @@ fun TransactionEditSheet(
                     }
                     onConfirm(parsed, method, comment.trim().ifBlank { null }, date)
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("transactionEditSheet_saveButton"),
             ) { Text(strings.save) }
         }
     }

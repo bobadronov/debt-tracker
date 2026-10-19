@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -100,7 +101,10 @@ private fun ActiveSessionsContent(
                                 if (state.revokingId == session.id) {
                                     CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.IconSize.sm))
                                 } else {
-                                    TextButton(onClick = { pendingRevoke = session }) {
+                                    TextButton(
+                                        onClick = { pendingRevoke = session },
+                                        modifier = Modifier.testTag("activeSessions_revokeButton_${session.id}"),
+                                    ) {
                                         Text(strings.activeSessions.logOut, color = MaterialTheme.debtAccentColors.debt)
                                     }
                                 }
@@ -116,7 +120,7 @@ private fun ActiveSessionsContent(
                     TextButton(
                         onClick = { showRevokeAllConfirm = true },
                         enabled = !state.isRevokingAll,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().testTag("activeSessions_revokeAllButton"),
                     ) {
                         if (state.isRevokingAll) {
                             CircularWavyProgressIndicator(modifier = Modifier.size(Dimens.IconSize.sm))

@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import coil3.compose.AsyncImage
@@ -88,8 +89,8 @@ fun ProfileSuggestionCard(
                     )
                 }
             }
-            TextButton(onClick = onUse) { Text(strings.contactSuggestionUse) }
-            IconButton(onClick = onDismiss) {
+            TextButton(onClick = onUse, modifier = Modifier.testTag("profileSuggestionCard_useButton")) { Text(strings.contactSuggestionUse) }
+            IconButton(onClick = onDismiss, modifier = Modifier.testTag("profileSuggestionCard_dismissButton")) {
                 Icon(Icons.Default.Close, contentDescription = strings.cancel)
             }
         }

@@ -33,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
@@ -127,7 +128,7 @@ fun AddEditContactForm(
                 onBack = onDone,
                 actions = {
                     onScannedContact?.let {
-                        IconButton(onClick = { showScanner = true }) {
+                        IconButton(onClick = { showScanner = true }, modifier = Modifier.testTag("addEditContact_scanButton")) {
                             Icon(Icons.Filled.QrCodeScanner, contentDescription = strings.qr.hubScanTab)
                         }
                     }
@@ -158,12 +159,14 @@ fun AddEditContactForm(
                             onClick = { onDirectionChange(DebtDirection.DEBTOR) },
                             shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
                             icon = { Icon(Icons.AutoMirrored.Filled.CallReceived, contentDescription = null) },
+                            modifier = Modifier.testTag("addEditContact_debtorDirectionButton"),
                         ) { Text(strings.home.tabDebtors) }
                         SegmentedButton(
                             selected = direction == DebtDirection.CREDITOR,
                             onClick = { onDirectionChange(DebtDirection.CREDITOR) },
                             shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
                             icon = { Icon(Icons.AutoMirrored.Filled.CallMade, contentDescription = null) },
+                            modifier = Modifier.testTag("addEditContact_creditorDirectionButton"),
                         ) { Text(strings.home.tabCreditors) }
                     }
                 }
@@ -182,6 +185,7 @@ fun AddEditContactForm(
                     placeholder = strings.fullNamePlaceholder,
                     isError = fullNameError != null,
                     supportingText = fullNameError,
+                    modifier = Modifier.testTag("addEditContact_nameField"),
                 )
                 ContactSuggestionsList(
                     suggestions = nameSuggestions,
@@ -193,7 +197,7 @@ fun AddEditContactForm(
                     label = strings.phone,
                     clipboardText = clipboardText,
                     isPasteRelevant = ::isPhonePasteRelevant,
-                    modifier = Modifier.semantics { contentType = ContentType.PhoneNumber },
+                    modifier = Modifier.semantics { contentType = ContentType.PhoneNumber }.testTag("addEditContact_phoneField"),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     visualTransformation = remember { UkrainianPhoneVisualTransformation() },
                 )
@@ -203,7 +207,7 @@ fun AddEditContactForm(
                     label = strings.email,
                     clipboardText = clipboardText,
                     isPasteRelevant = ::isValidEmail,
-                    modifier = Modifier.semantics { contentType = ContentType.EmailAddress },
+                    modifier = Modifier.semantics { contentType = ContentType.EmailAddress }.testTag("addEditContact_emailField"),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 )
                 profileSuggestion?.let { suggestion ->
@@ -220,6 +224,7 @@ fun AddEditContactForm(
                         label = strings.comment,
                         clipboardText = clipboardText,
                         isPasteRelevant = { it.trim().length in 1..500 },
+                        modifier = Modifier.testTag("addEditContact_commentField"),
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -231,7 +236,7 @@ fun AddEditContactForm(
                             label = initialAmountLabel,
                             clipboardText = clipboardText,
                             isPasteRelevant = ::isValidAmountText,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).testTag("addEditContact_amountField"),
                             isError = amountError != null,
                             supportingText = amountError,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -241,7 +246,7 @@ fun AddEditContactForm(
                             selectedCurrency = currency,
                             onSelect = onCurrencyChange,
                             label = strings.currency,
-                            modifier = Modifier.weight(.6f),
+                            modifier = Modifier.weight(.6f).testTag("addEditContact_currencyField"),
                         )
                     }
                     PaymentMethodChipRow(
@@ -253,13 +258,14 @@ fun AddEditContactForm(
                         onDueDateChange = onDueDateChange,
                         reminderLeadDays = reminderLeadDays,
                         onToggleReminderLead = onToggleReminderLead,
+                        modifier = Modifier.testTag("addEditContact_reminderField"),
                     )
                 }
             }
             LoadingButton(
                 onClick = onSave,
                 isLoading = isSaving,
-                modifier = Modifier.widthIn(max = Dimens.contentMaxWidth),
+                modifier = Modifier.widthIn(max = Dimens.contentMaxWidth).testTag("addEditContact_saveButton"),
                 label = { Text(strings.save) },
             )
         }

@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -96,6 +97,7 @@ private fun SettingsDataContent(
                         icon = Icons.Filled.Download,
                         title = strings.settings.exportData,
                         onClick = onExport,
+                        modifier = Modifier.testTag("settingsData_exportRow"),
                     )
                     // For local-only accounts the local cache is the sole copy of the data: clearing
                     // it without Supabase as a source of truth would be an inconspicuous
@@ -107,6 +109,7 @@ private fun SettingsDataContent(
                             icon = Icons.Filled.CleaningServices,
                             title = strings.settings.clearCache.title,
                             onClick = { showClearCacheConfirm = true },
+                            modifier = Modifier.testTag("settingsData_clearCacheRow"),
                         )
                     }
                     SettingsRowDivider()
@@ -117,6 +120,7 @@ private fun SettingsDataContent(
                         iconTint = MaterialTheme.debtAccentColors.debt,
                         iconContainerColor = MaterialTheme.debtAccentColors.debt.copy(alpha = 0.12f),
                         onClick = { showDeleteConfirm1 = true },
+                        modifier = Modifier.testTag("settingsData_deleteAllRow"),
                     )
                 }
                 DataResultLine(

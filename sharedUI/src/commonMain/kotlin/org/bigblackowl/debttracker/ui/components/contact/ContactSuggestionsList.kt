@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.domain.model.ContactSuggestion
@@ -46,7 +47,8 @@ fun ContactSuggestionsList(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { onSelect(suggestion) }
-                        .padding(horizontal = Dimens.Spacing.md, vertical = Dimens.Spacing.sm),
+                        .padding(horizontal = Dimens.Spacing.md, vertical = Dimens.Spacing.sm)
+                        .testTag("nameSuggestionRow_$index"),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     EntityAvatar(id = suggestion.fullName, name = suggestion.fullName, avatarUrl = suggestion.avatarUrl, size = Dimens.IconSize.sm)

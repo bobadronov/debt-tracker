@@ -3,6 +3,8 @@ package org.bigblackowl.debttracker.ui.components.contact
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.domain.model.ScannedContact
@@ -25,8 +27,16 @@ fun ScannedContactDialog(
         onDismissRequest = onDismiss,
         title = { Text(strings.qr.hubScannedDialogTitle) },
         text = { Text(strings.qr.hubScannedDialogMessage(contact.fullName)) },
-        confirmButton = { TextButton(onClick = onAddAsDebtor) { Text(strings.qr.hubScannedAsDebtor) } },
-        dismissButton = { TextButton(onClick = onAddAsCreditor) { Text(strings.qr.hubScannedAsCreditor) } },
+        confirmButton = {
+            TextButton(onClick = onAddAsDebtor, modifier = Modifier.testTag("scannedContactDialog_addAsDebtorButton")) {
+                Text(strings.qr.hubScannedAsDebtor)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onAddAsCreditor, modifier = Modifier.testTag("scannedContactDialog_addAsCreditorButton")) {
+                Text(strings.qr.hubScannedAsCreditor)
+            }
+        },
     )
 }
 
