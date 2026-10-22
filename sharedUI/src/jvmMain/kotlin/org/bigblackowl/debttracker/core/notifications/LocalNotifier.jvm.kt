@@ -1,9 +1,12 @@
 package org.bigblackowl.debttracker.core.notifications
 
-import dev.nucleusframework.notification.common.NotificationManager
-import dev.nucleusframework.notification.common.NotificationResult
-import dev.nucleusframework.notification.common.notification
 import io.github.aakira.napier.Napier
+import java.awt.SystemTray
+import java.awt.TrayIcon
+import java.awt.image.BufferedImage
+import java.util.Timer
+import javax.imageio.ImageIO
+import kotlin.concurrent.schedule
 
 /**
  * Set by the desktop app's `main()` so a clicked notification can bring the (possibly
@@ -16,52 +19,42 @@ object DesktopNotificationWindow {
 }
 
 /**
- * Desktop notifications go straight to Nucleus `notification-common` — a real OS notification
- * (WinRT toast / Freedesktop D-Bus / `UNUserNotificationCenter`). There is no app-drawn fallback:
- * an event that can't be shown as a toast is still in the `notifications` table, so the in-app
- * notifications screen and the unread-count badge surface it when the window is next opened.
- *
- * The Windows toast AUMID + Start Menu shortcut are derived from the `nucleus.app.id` /
- * `nucleus.app.name` system properties (set in the desktop app's `main()`, which also sets
- * `nucleus.executable.type` so Nucleus creates the shortcut rather than requiring a pre-existing
- * one). [init] eagerly triggers that creation so the very first toast isn't lost.
+ * Desktop notifications use the JDK's AWT [SystemTray] balloon (no native libs of our own). Each
+ * notification adds a short-lived [TrayIcon], shows the balloon and removes the icon again, so it
+ * never competes with the app's own tray icon. Clicking the balloon fires the deep link and
+ * surfaces the window. If the platform has no system tray the event is only logged: it is still in
+ * the `notifications` table, so the in-app screen and unread badge show it.
  *
  * There is no separate permission (unlike Android/iOS/Web), so [requestPermission] is always `true`.
  */
 internal class DesktopLocalNotifier : LocalNotifier {
 
-    init {
-        // Nucleus creates the Windows Start Menu shortcut (required for toast delivery) lazily on
-        // the first send(); do it now instead so a notification that lands during startup still
-        // shows. No-op on Linux/macOS.
-        runCatching { NotificationManager.initialize() }
-            .onFailure { Napier.w { "NotificationManager.initialize failed: ${it.message}" } }
-    }
-
     override suspend fun requestPermission(): Boolean = true
 
     override fun notify(title: String, body: String, deepLink: String?) {
-        // runCatching covers the whole path: isAvailable() / send() throw UnsatisfiedLinkError when
-        // a backend's native lib can't load. A failure is logged, not surfaced (see the class doc).
         val failure: String? = runCatching {
-            if (!NotificationManager.isAvailable()) return@runCatching "no notification backend on this platform"
-            when (
-                val result = notification(
-                    title = title,
-                    message = body,
-                    onActivated = {
-                        // Nucleus does not guarantee this runs on a UI thread; both callees are
-                        // thread-safe (a StateFlow write / a snapshot-state write).
-                        deepLink?.let(NotificationDeepLinks::onIncomingLink)
-                        DesktopNotificationWindow.bringToFront?.invoke()
-                    },
-                ).send()
-            ) {
-                is NotificationResult.Success -> null
-                is NotificationResult.Failure -> result.reason
+            if (!SystemTray.isSupported()) return@runCatching "system tray not supported"
+            val tray = SystemTray.getSystemTray()
+            val icon = TrayIcon(trayImage(), "Debt Tracker")
+            icon.isImageAutoSize = true
+            icon.addActionListener {
+                deepLink?.let(NotificationDeepLinks::onIncomingLink)
+                DesktopNotificationWindow.bringToFront?.invoke()
             }
+            tray.add(icon)
+            icon.displayMessage(title, body, TrayIcon.MessageType.INFO)
+            Timer(true).schedule(REMOVE_DELAY_MS) { runCatching { tray.remove(icon) } }
+            null
         }.getOrElse { it.message ?: it::class.simpleName }
 
         if (failure != null) Napier.w { "Desktop notification not shown ($failure): $title" }
+    }
+
+    private fun trayImage() = runCatching {
+        ClassLoader.getSystemResourceAsStream("appIcons/LinuxIcon.png")?.use(ImageIO::read)
+    }.getOrNull() ?: BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB)
+
+    private companion object {
+        const val REMOVE_DELAY_MS = 15_000L
     }
 }

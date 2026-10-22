@@ -166,7 +166,6 @@ kotlin {
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.zxing.core) // decodes a QR code from a locally-picked image file (Desktop has no camera scanner)
-            implementation(libs.nucleus.notification) // native OS notifications; falls back to a Compose toast (LocalNotifier.jvm.kt)
             implementation(libs.java.keyring) // OS credential store for the Supabase session-encryption key (see DesktopSessionKeyCipher)
             implementation(libs.connectivity.http) // connectivity-device has no JVM target — HTTP-poll monitoring instead
         }

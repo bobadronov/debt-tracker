@@ -34,13 +34,7 @@ val appVersionName: String = versionProps.getProperty("VERSION_NAME").trim()
 dependencies {
     implementation(project(":sharedUI"))
     implementation(libs.koin.core) // main.kt calls KoinApplication.koin.get<SyncCoordinator>()
-    implementation(libs.compose.native.tray) // HDPI-correct system tray with icon-capable menu items (main.kt)
     implementation(libs.material.icons.extended) // ImageVector icons for the tray menu (main.kt's TrayMenu)
-
-    // Nucleus Tao windowing backend + Material 3 native window decorations (main.kt's MaterialDecoratedWindow).
-    implementation(libs.nucleus.application)
-    implementation(libs.nucleus.window.tao)
-    implementation(libs.nucleus.window.material3)
 }
 
 compose.desktop {

@@ -4,7 +4,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/** [DesktopLocalNotifier] hands every event to Nucleus `notification-common`; there is no fallback. */
+/** [DesktopLocalNotifier] shows events as AWT tray balloons. */
 class DesktopLocalNotifierTest {
 
     @Test
@@ -13,7 +13,7 @@ class DesktopLocalNotifierTest {
     }
 
     @Test
-    fun notifyNeverThrowsWhenNativeBackendIsUnavailable() {
+    fun notifyNeverThrowsWhenTrayIsUnavailable() {
         // Regression: NotificationManager.isAvailable() / send() throw UnsatisfiedLinkError when a
         // backend's native lib can't load (headless CI, arch mismatch). notify() must swallow it.
         val notifier = DesktopLocalNotifier()
