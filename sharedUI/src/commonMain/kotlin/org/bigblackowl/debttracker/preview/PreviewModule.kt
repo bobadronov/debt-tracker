@@ -10,6 +10,9 @@ import org.bigblackowl.debttracker.core.notifications.LocalNotifier
 import org.bigblackowl.debttracker.core.notifications.NotificationsPoller
 import org.bigblackowl.debttracker.core.notifications.ReminderScheduler
 import org.bigblackowl.debttracker.core.settings.AppSettings
+import org.bigblackowl.debttracker.core.settings.AppSettingsHiddenContacts
+import org.bigblackowl.debttracker.domain.repository.HiddenContactsRepository
+import org.bigblackowl.debttracker.domain.usecase.HideContactSuggestionUseCase
 import org.bigblackowl.debttracker.core.shortcuts.SearchFocusRequests
 import org.bigblackowl.debttracker.domain.model.ContactPrefill
 import org.bigblackowl.debttracker.domain.model.DebtDirection
@@ -26,6 +29,7 @@ import org.bigblackowl.debttracker.domain.usecase.ClearAppCacheUseCase
 import org.bigblackowl.debttracker.domain.usecase.ClearLocalCacheUseCase
 import org.bigblackowl.debttracker.domain.usecase.DeleteAllDataUseCase
 import org.bigblackowl.debttracker.domain.usecase.FindProfileByEmailUseCase
+import org.bigblackowl.debttracker.domain.usecase.SearchProfilesUseCase
 import org.bigblackowl.debttracker.domain.usecase.ForceSignOutUseCase
 import org.bigblackowl.debttracker.domain.usecase.ObserveContactSuggestionsUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddCreditorTransactionUseCase
@@ -111,6 +115,7 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     factoryOf(::ClearAppCacheUseCase)
     factoryOf(::ClearLocalCacheUseCase)
     factoryOf(::FindProfileByEmailUseCase)
+    factoryOf(::SearchProfilesUseCase)
     factoryOf(::ForceSignOutUseCase)
 
     factoryOf(::ObserveDebtorsUseCase)
@@ -133,6 +138,8 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     factoryOf(::DeleteCreditorTransactionUseCase)
     factoryOf(::LinkCreditorToRegisteredUserUseCase)
 
+    single<HiddenContactsRepository> { AppSettingsHiddenContacts(get()) }
+    factoryOf(::HideContactSuggestionUseCase)
     factoryOf(::ObserveContactSuggestionsUseCase)
     factoryOf(::DebtorActions)
     factoryOf(::CreditorActions)
@@ -143,7 +150,7 @@ fun previewModule(darkTheme: Boolean? = null): Module = module {
     viewModel { (direction: DebtDirection, prefill: ContactPrefill?, editId: String?) ->
         AddEditContactViewModel(
             direction, prefill, editId,
-            get(), get(), get(), get(), get(), get(), get(),
+            get(), get(), get(), get(), get(), get(), get(), get(),
         )
     }
     viewModel { (debtorId: String) -> DebtorDetailViewModel(debtorId, get(), get(), get(), get(), get(), get(), get()) }

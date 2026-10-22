@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -34,8 +35,10 @@ import org.bigblackowl.debttracker.domain.model.ContactSuggestion
 import org.bigblackowl.debttracker.domain.validation.formatUkrainianPhone
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
+import org.bigblackowl.debttracker.ui.components.ConfirmDialog
 import org.bigblackowl.debttracker.ui.components.EntityAvatar
 import org.bigblackowl.debttracker.ui.components.appbar.BackTopAppBar
+import org.bigblackowl.debttracker.ui.components.button.IconButton
 import org.bigblackowl.debttracker.ui.components.card.ClickableOutlinedRow
 import org.bigblackowl.debttracker.ui.components.text.BodyText
 import org.bigblackowl.debttracker.ui.components.text.CaptionText
@@ -61,6 +64,9 @@ fun ContactPickerScreen(
         onNewContact = onNewContact,
         onPickContact = onPickContact,
         onSearch = { viewModel.onIntent(ContactPickerIntent.Search(it)) },
+        onRequestRemove = { viewModel.onIntent(ContactPickerIntent.RequestRemove(it)) },
+        onConfirmRemove = { viewModel.onIntent(ContactPickerIntent.ConfirmRemove) },
+        onDismissRemove = { viewModel.onIntent(ContactPickerIntent.DismissRemove) },
     )
 }
 
@@ -71,8 +77,22 @@ private fun ContactPickerContent(
     onNewContact: () -> Unit,
     onPickContact: (ContactSuggestion) -> Unit,
     onSearch: (String) -> Unit,
+    onRequestRemove: (ContactSuggestion) -> Unit,
+    onConfirmRemove: () -> Unit,
+    onDismissRemove: () -> Unit,
 ) {
     val strings = LocalStrings.current
+
+    state.pendingRemoval?.let { contact ->
+        ConfirmDialog(
+            title = strings.contactPicker.removeTitle,
+            text = strings.contactPicker.removeMessage(contact.fullName),
+            confirmLabel = strings.contactPicker.remove,
+            onConfirm = onConfirmRemove,
+            onDismiss = onDismissRemove,
+            confirmColor = MaterialTheme.colorScheme.error,
+        )
+    }
 
     Scaffold(
         topBar = { BackTopAppBar(title = strings.contactPicker.title, onBack = onBack) },
@@ -112,7 +132,12 @@ private fun ContactPickerContent(
                 } else {
                     LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
                         items(state.contacts, key = { it.contactKey() }) { contact ->
-                            ContactPickerRow(contact = contact, onClick = { onPickContact(contact) }, key = contact.contactKey())
+                            ContactPickerRow(
+                                contact = contact,
+                                onClick = { onPickContact(contact) },
+                                onRemove = { onRequestRemove(contact) },
+                                key = contact.contactKey(),
+                            )
                             HorizontalDivider()
                         }
                     }
@@ -122,10 +147,10 @@ private fun ContactPickerContent(
     }
 }
 
-private fun ContactSuggestion.contactKey(): String = "$fullName|$phone|$email"
+private fun ContactSuggestion.contactKey(): String = key
 
 @Composable
-private fun ContactPickerRow(contact: ContactSuggestion, onClick: () -> Unit, key: String) {
+private fun ContactPickerRow(contact: ContactSuggestion, onClick: () -> Unit, onRemove: () -> Unit, key: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -136,11 +161,14 @@ private fun ContactPickerRow(contact: ContactSuggestion, onClick: () -> Unit, ke
     ) {
         EntityAvatar(id = contact.fullName, name = contact.fullName, avatarUrl = contact.avatarUrl)
         Spacer(Modifier.width(Dimens.Spacing.md))
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             TitleText(contact.fullName, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
             (formatUkrainianPhone(contact.phone) ?: contact.email?.takeIf(String::isNotBlank))?.let {
                 CaptionText(it, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
+        }
+        IconButton(onClick = onRemove, modifier = Modifier.testTag("contactPickerRow_remove_$key")) {
+            Icon(Icons.Filled.DeleteOutline, contentDescription = LocalStrings.current.contactPicker.remove)
         }
     }
 }
@@ -152,6 +180,9 @@ private fun Preview(state: ContactPickerState) = ContactPickerContent(
     onNewContact = {},
     onPickContact = {},
     onSearch = {},
+    onRequestRemove = {},
+    onConfirmRemove = {},
+    onDismissRemove = {},
 )
 
 private val PREVIEW_CONTACTS = listOf(
@@ -193,4 +224,10 @@ private fun ContactPickerScreenEmptyPreview() = DebtTrackerPreview(darkTheme = f
 @Composable
 private fun ContactPickerScreenNoResultsPreview() = DebtTrackerPreview(darkTheme = false) {
     Preview(ContactPickerState(query = "zzz", contacts = emptyList(), hasAnyContacts = true))
+}
+
+@Preview
+@Composable
+private fun ContactPickerScreenRemoveConfirmPreview() = DebtTrackerPreview(darkTheme = false) {
+    Preview(ContactPickerState(contacts = PREVIEW_CONTACTS, hasAnyContacts = true, pendingRemoval = PREVIEW_CONTACTS.first()))
 }

@@ -13,6 +13,12 @@ import org.bigblackowl.debttracker.domain.repository.ProfileLookupRepository
 private data class FindProfileByEmailParams(@SerialName("p_email") val email: String)
 
 @Serializable
+private data class SearchProfilesParams(
+    @SerialName("p_name") val name: String?,
+    @SerialName("p_phone") val phone: String?,
+)
+
+@Serializable
 private data class ProfileSuggestionDto(
     @SerialName("display_name") val displayName: String? = null,
     @SerialName("avatar_url") val avatarUrl: String? = null,
@@ -36,5 +42,13 @@ class SupabaseProfileLookupRepository(
             client.postgrest.rpc("find_profile_by_email", FindProfileByEmailParams(email))
                 .decodeSingleOrNull<ProfileSuggestionDto>()
         }.getOrNull()?.let { ProfileSuggestion(displayName = it.displayName, avatarUrl = it.avatarUrl) }
+    }
+
+    override suspend fun searchProfiles(name: String?, phone: String?): List<ProfileSuggestion> {
+        if (!authRepository.isAuthenticated.value) return emptyList()
+        return runCatching {
+            client.postgrest.rpc("search_profiles", SearchProfilesParams(name, phone))
+                .decodeList<ProfileSuggestionDto>()
+        }.getOrDefault(emptyList()).map { ProfileSuggestion(displayName = it.displayName, avatarUrl = it.avatarUrl) }
     }
 }

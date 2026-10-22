@@ -7,4 +7,7 @@ data class ContactSuggestion(
     val email: String?,
     val comment: String?,
     val avatarUrl: String? = null,
-)
+) {
+    /** Identity of a picker row — the same triple the suggestions are de-duplicated by; also what "hide" persists. */
+    val key: String get() = "${fullName.lowercase()}|$phone|$email"
+}

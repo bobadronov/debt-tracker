@@ -93,8 +93,8 @@ fun AddEditContactForm(
     onPhoneChange: (String) -> Unit,
     email: String,
     onEmailChange: (String) -> Unit,
-    profileSuggestion: ProfileSuggestion?,
-    onApplySuggestion: () -> Unit,
+    profileSuggestions: List<ProfileSuggestion>,
+    onApplySuggestion: (ProfileSuggestion) -> Unit,
     onDismissSuggestion: () -> Unit,
     comment: String,
     onCommentChange: (String) -> Unit,
@@ -210,10 +210,10 @@ fun AddEditContactForm(
                     modifier = Modifier.semantics { contentType = ContentType.EmailAddress }.testTag("addEditContact_emailField"),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 )
-                profileSuggestion?.let { suggestion ->
+                profileSuggestions.forEach { suggestion ->
                     ProfileSuggestionCard(
                         suggestion = suggestion,
-                        onUse = onApplySuggestion,
+                        onUse = { onApplySuggestion(suggestion) },
                         onDismiss = onDismissSuggestion,
                     )
                 }
@@ -310,7 +310,7 @@ private fun AddEditContactFormSample() {
         onPhoneChange = { phone = it },
         email = email,
         onEmailChange = { email = it },
-        profileSuggestion = null,
+        profileSuggestions = emptyList(),
         onApplySuggestion = {},
         onDismissSuggestion = {},
         comment = comment,

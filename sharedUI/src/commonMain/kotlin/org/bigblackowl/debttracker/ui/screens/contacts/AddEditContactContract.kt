@@ -31,8 +31,8 @@ data class AddEditContactState(
     val reminderLeadDays: Set<Int> = emptySet(),
     val fullNameError: String? = null,
     val amountError: String? = null,
-    /** Non-null until a match by email is found, applied, or dismissed (§ProfileLookup autofill). */
-    val profileSuggestion: ProfileSuggestion? = null,
+    /** Registered users matching the typed email / phone / full name — cleared when applied or dismissed (§ProfileLookup autofill). */
+    val profileSuggestions: List<ProfileSuggestion> = emptyList(),
     val suggestedAvatarUrl: String? = null,
     /** Past debtors/creditors whose name matches [fullName] as it's typed — inline name-autocomplete. */
     val nameSuggestions: List<ContactSuggestion> = emptyList(),
@@ -52,7 +52,7 @@ sealed interface AddEditContactIntent {
     data class MethodChanged(val value: PaymentMethod) : AddEditContactIntent
     data class DueDateChanged(val value: kotlin.time.Instant?) : AddEditContactIntent
     data class ToggleReminderLead(val days: Int) : AddEditContactIntent
-    data object ApplyProfileSuggestion : AddEditContactIntent
+    data class ApplyProfileSuggestion(val suggestion: ProfileSuggestion) : AddEditContactIntent
     data object DismissProfileSuggestion : AddEditContactIntent
     data class NameSuggestionSelected(val suggestion: ContactSuggestion) : AddEditContactIntent
     data class ApplyScannedContact(val contact: ScannedContact) : AddEditContactIntent

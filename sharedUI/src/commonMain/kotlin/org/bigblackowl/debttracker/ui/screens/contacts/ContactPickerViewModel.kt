@@ -8,16 +8,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.domain.model.ContactSuggestion
+import org.bigblackowl.debttracker.domain.usecase.HideContactSuggestionUseCase
 import org.bigblackowl.debttracker.domain.usecase.ObserveContactSuggestionsUseCase
 
 /**
  * Feeds [ContactPickerScreen] the list of previously entered debtors/creditors (via
  * [observeContactSuggestions] — merged + de-duplicated from both lists), filtered live by the
- * search query. No dedicated contacts table: the list syncs across devices simply because the
+ * search query; a contact the user removes is only hidden from this list (debts stay). No dedicated contacts table: the list syncs across devices simply because the
  * underlying debtors/creditors sync when signed in.
  */
 class ContactPickerViewModel(
     observeContactSuggestions: ObserveContactSuggestionsUseCase,
+    private val hideContact: HideContactSuggestionUseCase,
 ) : ViewModel() {
 
     private var allContacts: List<ContactSuggestion> = emptyList()
@@ -43,6 +45,12 @@ class ContactPickerViewModel(
         when (intent) {
             is ContactPickerIntent.Search -> _state.update {
                 it.copy(query = intent.value, contacts = filterContacts(allContacts, intent.value))
+            }
+            is ContactPickerIntent.RequestRemove -> _state.update { it.copy(pendingRemoval = intent.contact) }
+            ContactPickerIntent.DismissRemove -> _state.update { it.copy(pendingRemoval = null) }
+            ContactPickerIntent.ConfirmRemove -> {
+                _state.value.pendingRemoval?.let(hideContact::invoke)
+                _state.update { it.copy(pendingRemoval = null) }
             }
         }
     }

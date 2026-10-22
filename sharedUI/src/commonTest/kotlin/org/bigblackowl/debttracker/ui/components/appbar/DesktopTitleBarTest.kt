@@ -39,11 +39,25 @@ class DesktopTitleBarTest {
     @Test
     fun releaseByAStaleOwnerIsANoOp() {
         val current = Any()
+        DesktopTitleBar.set(owner, "Old", null, null)
         DesktopTitleBar.set(current, "Home", null, null)
         DesktopTitleBar.release(owner) // the outgoing screen during a nav transition
 
         assertTrue(DesktopTitleBar.content.value.title == "Home")
         DesktopTitleBar.release(current)
+    }
+
+    @Test
+    fun poppingRestoresThePreviousScreen() {
+        val under = Any()
+        val back = {}
+        DesktopTitleBar.set(under, "Contact", back, null)
+        DesktopTitleBar.set(owner, "Edit", {}, null)
+        DesktopTitleBar.release(owner) // popped; `under` never recomposed
+
+        assertTrue(DesktopTitleBar.content.value.title == "Contact")
+        assertSame(back, DesktopTitleBar.content.value.back)
+        DesktopTitleBar.release(under)
     }
 
     @Test

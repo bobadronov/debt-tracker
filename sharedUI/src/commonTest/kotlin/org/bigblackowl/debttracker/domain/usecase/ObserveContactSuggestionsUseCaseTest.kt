@@ -11,6 +11,9 @@ import org.bigblackowl.debttracker.domain.usecase.debtor.ObserveDebtorsUseCase
 import org.bigblackowl.debttracker.preview.FakeCreditorRepository
 import org.bigblackowl.debttracker.preview.FakeDebtorRepository
 import kotlin.test.Test
+import kotlinx.coroutines.flow.MutableStateFlow
+import org.bigblackowl.debttracker.domain.model.ContactSuggestion
+import org.bigblackowl.debttracker.domain.repository.HiddenContactsRepository
 import kotlin.test.assertEquals
 import kotlin.time.Clock
 
@@ -28,10 +31,23 @@ class ObserveContactSuggestionsUseCaseTest {
         createdAt = now, updatedAt = now, status = DebtStatus.ACTIVE, syncStatus = SyncStatus.SYNCED,
     )
 
-    private fun useCase(debtors: List<Debtor>, creditors: List<Creditor>) = ObserveContactSuggestionsUseCase(
+    private fun useCase(debtors: List<Debtor>, creditors: List<Creditor>, hidden: Set<String> = emptySet()) = ObserveContactSuggestionsUseCase(
         ObserveDebtorsUseCase(FakeDebtorRepository(seedDebtors = debtors, seedTransactions = emptyList())),
         ObserveCreditorsUseCase(FakeCreditorRepository(seedCreditors = creditors, seedTransactions = emptyList())),
+        FakeHiddenContacts(hidden),
     )
+
+    private class FakeHiddenContacts(initial: Set<String>) : HiddenContactsRepository {
+        override val keys = MutableStateFlow(initial)
+        override fun hide(key: String) { keys.value += key }
+    }
+
+    @Test
+    fun `hidden contacts are left out`() = runTest {
+        val alice = ContactSuggestion("Alice", null, null, null)
+        val result = useCase(listOf(debtor("Alice"), debtor("Bob")), emptyList(), hidden = setOf(alice.key)).invoke().first()
+        assertEquals(listOf("Bob"), result.map { it.fullName })
+    }
 
     @Test
     fun `merges debtors and creditors`() = runTest {

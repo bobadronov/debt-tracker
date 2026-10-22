@@ -40,6 +40,9 @@ class AppSettings(private val settings: Settings) {
     var myCardPhone: String by SettingsStringState(settings, KEY_MY_CARD_PHONE, "")
     var myCardEmail: String by SettingsStringState(settings, KEY_MY_CARD_EMAIL, "")
 
+    /** Newline-joined [org.bigblackowl.debttracker.domain.model.ContactSuggestion.key]s removed from the contact picker (device-local). */
+    var hiddenContactKeys: String by SettingsStringState(settings, KEY_HIDDEN_CONTACT_KEYS, "")
+
     /** Whether a desktop app-lock PIN has been set up. */
     val hasPinCode: Boolean
         get() = settings.getStringOrNull(KEY_PIN_HASH) != null
@@ -177,6 +180,7 @@ class AppSettings(private val settings: Settings) {
         const val KEY_MY_CARD_NAME = "my_card_name"
         const val KEY_MY_CARD_PHONE = "my_card_phone"
         const val KEY_MY_CARD_EMAIL = "my_card_email"
+        const val KEY_HIDDEN_CONTACT_KEYS = "hidden_contact_keys"
         const val KEY_LAST_SEEN_NOTIFICATION_AT = "last_seen_notification_at"
         const val KEY_NOTIFICATIONS_PERMISSION_REQUESTED = "notifications_permission_requested"
         const val KEY_LAST_SYNCED_USER_ID = "last_synced_user_id"

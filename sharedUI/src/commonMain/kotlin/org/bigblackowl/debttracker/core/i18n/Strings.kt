@@ -82,6 +82,10 @@ data class ContactPickerStrings(
     val newContact: String,
     val searchPlaceholder: String,
     val empty: String,
+    /** Confirm button + row action: removes the person from the picker list only (debts stay). */
+    val remove: String,
+    val removeTitle: String,
+    val removeMessage: (name: String) -> String,
 )
 
 data class CreditorDetailStrings(

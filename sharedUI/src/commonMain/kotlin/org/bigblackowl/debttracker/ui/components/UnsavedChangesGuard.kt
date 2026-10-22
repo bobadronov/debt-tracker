@@ -10,7 +10,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
+import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.ui.components.button.TextButton
 
 /**
@@ -87,4 +89,24 @@ fun UnsavedChangesGuard(hasUnsavedChanges: Boolean, onSave: () -> Unit, onDiscar
             },
         )
     }
+}
+
+@Preview
+@Composable
+private fun UnsavedChangesGuardPreviewLight() = DebtTrackerPreview(darkTheme = false){
+    UnsavedChangesGuard(
+        hasUnsavedChanges = false,
+        onSave = {},
+        onDiscard = {}
+    )
+}
+
+@Preview
+@Composable
+private fun UnsavedChangesGuardPreviewDark() = DebtTrackerPreview(darkTheme = true){
+    UnsavedChangesGuard(
+        hasUnsavedChanges = true,
+        onSave = {},
+        onDiscard = {}
+    )
 }

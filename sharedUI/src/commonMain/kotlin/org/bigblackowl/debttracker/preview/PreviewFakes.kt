@@ -429,6 +429,7 @@ class FakeSyncStatusProvider : SyncStatusProvider {
 /** Never finds a match — @Preview makes no network calls. */
 class FakeProfileLookupRepository : ProfileLookupRepository {
     override suspend fun findProfileByEmail(email: String): ProfileSuggestion? = null
+    override suspend fun searchProfiles(name: String?, phone: String?): List<ProfileSuggestion> = emptyList()
 }
 
 /** Empty history — @Preview makes no network calls to `notifications`. */

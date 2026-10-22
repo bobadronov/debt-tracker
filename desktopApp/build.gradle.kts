@@ -33,6 +33,8 @@ val appVersionName: String = versionProps.getProperty("VERSION_NAME").trim()
 
 dependencies {
     implementation(project(":sharedUI"))
+    implementation("io.github.youndie:appframe:0.2.0")
+    implementation(libs.compose.native.tray) // HDPI-correct tray with icon menu items (main.kt's TrayMenu)
     implementation(libs.koin.core) // main.kt calls KoinApplication.koin.get<SyncCoordinator>()
     implementation(libs.material.icons.extended) // ImageVector icons for the tray menu (main.kt's TrayMenu)
 }
@@ -62,6 +64,9 @@ compose.desktop {
         }
 
         nativeDistributions {
+            jvmArgs(
+                "-Dapple.awt.application.appearance=system"
+            )
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "Debt Tracker"
             packageVersion = appVersionName

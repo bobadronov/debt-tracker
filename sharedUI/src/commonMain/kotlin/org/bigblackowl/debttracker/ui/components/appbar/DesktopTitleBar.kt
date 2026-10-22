@@ -34,9 +34,11 @@ object DesktopTitleBar {
     private val _content = MutableStateFlow(Content())
     val content: StateFlow<Content> = _content.asStateFlow()
 
-    // During a nav transition the outgoing and incoming screens are both composed; the incoming
-    // one takes ownership, so the outgoing one's teardown must not wipe the bar it no longer owns.
-    private var owner: Any? = null
+    // Every live screen that routed content here, in order of first registration (newest last). The
+    // newest one is shown; when it leaves (nav pop) the previous one takes the bar back even though
+    // it never recomposed — so a screen that stays composed under a pushed one doesn't lose its
+    // title / back button, and an outgoing screen's teardown never wipes an incoming one's bar.
+    private val entries = LinkedHashMap<Any, Content>()
 
     /** Called once by the desktop shell (`main.kt`). */
     fun claim() {
@@ -44,15 +46,16 @@ object DesktopTitleBar {
     }
 
     fun set(owner: Any, title: String?, back: (() -> Unit)?, actions: (@Composable RowScope.() -> Unit)?) {
-        this.owner = owner
-        _content.value = Content(title, back, actions)
+        entries[owner] = Content(title, back, actions)
+        publish()
     }
 
-    /** Clears only if [owner] is still the current owner (no-op once another screen has taken over). */
+    /** Drops [owner]'s entry; the bar falls back to the newest remaining screen (or empty). */
     fun release(owner: Any) {
-        if (this.owner === owner) {
-            this.owner = null
-            _content.value = Content()
-        }
+        if (entries.remove(owner) != null) publish()
+    }
+
+    private fun publish() {
+        _content.value = entries.values.lastOrNull() ?: Content()
     }
 }

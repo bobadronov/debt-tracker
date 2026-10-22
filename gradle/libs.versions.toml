@@ -12,6 +12,7 @@ bignum = "0.3.10" # https://github.com/ionspin/kotlin-multiplatform-bignum
 buildConfig = "6.1.2" # https://github.com/gmazzo/gradle-buildconfig-plugin
 coil = "3.6.3" # https://github.com/coil-kt/coil
 compose-multiplatform = "1.12.2" # https://github.com/JetBrains/compose-multiplatform
+composeNativeTray = "2.1.6" # https://github.com/NucleusFramework/ComposeNativeTray — HDPI-correct desktop tray with icon menus
 connectivity = "2.5.3" # https://github.com/jordond/connectivity — network monitoring (device APIs on Android/iOS, HTTP polling on Desktop)
 filekit = "0.16.0" # https://github.com/vinceglb/FileKit
 googleid = "1.2.1" # https://developers.google.com/android/reference/com/google/android/libraries/identity/googleid/package-summary — Google ID token for Credential Manager
@@ -41,6 +42,7 @@ supabase = "3.8.0" # https://github.com/supabase-community/supabase-kt
 [libraries]
 
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
+compose-native-tray = { module = "dev.nucleusframework:composenativetray", version.ref = "composeNativeTray" }
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
 compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-multiplatform" }
 compose-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose-multiplatform" }

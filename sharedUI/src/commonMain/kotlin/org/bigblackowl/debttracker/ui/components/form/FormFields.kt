@@ -37,8 +37,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,6 +58,25 @@ import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.button.IconButton
 import org.bigblackowl.debttracker.ui.components.button.LoadingButton
+
+/**
+ * Hardware-keyboard form navigation (desktop/web): Tab → next field, Shift+Tab → previous, and —
+ * when [enterMovesNext] — Enter → next field, so a multi-field form can be filled without the mouse.
+ * Pass `enterMovesNext = false` for fields whose Enter already means something (multi-line, or an
+ * IME action like Done/Search).
+ */
+@Composable
+fun Modifier.focusNavigation(enterMovesNext: Boolean = true): Modifier {
+    val focusManager = LocalFocusManager.current
+    return onPreviewKeyEvent { event ->
+        if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+        when (event.key) {
+            Key.Tab -> focusManager.moveFocus(if (event.isShiftPressed) FocusDirection.Previous else FocusDirection.Next)
+            Key.Enter, Key.NumPadEnter -> enterMovesNext && focusManager.moveFocus(FocusDirection.Next)
+            else -> false
+        }
+    }
+}
 
 /**
  * The standard single-line text input for the app — use this for every free-text / amount
@@ -119,6 +147,11 @@ fun PasteableOutlinedTextField(
             visualTransformation = visualTransformation,
             modifier = Modifier
                 .fillMaxWidth()
+                .focusNavigation(
+                    enterMovesNext = singleLine &&
+                        keyboardActions == KeyboardActions.Default &&
+                        (keyboardOptions.imeAction == ImeAction.Default || keyboardOptions.imeAction == ImeAction.Next),
+                )
                 .onFocusChanged {
                     focused = it.isFocused
                 },

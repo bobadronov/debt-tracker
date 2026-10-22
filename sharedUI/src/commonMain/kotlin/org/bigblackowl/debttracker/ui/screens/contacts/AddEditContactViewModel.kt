@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.bigblackowl.debttracker.core.i18n.resolveStrings
 import org.bigblackowl.debttracker.core.settings.AppSettings
+import org.bigblackowl.debttracker.domain.model.ProfileSuggestion
 import org.bigblackowl.debttracker.domain.model.ContactPrefill
 import org.bigblackowl.debttracker.domain.model.ContactSuggestion
 import org.bigblackowl.debttracker.domain.model.Creditor
@@ -34,6 +35,7 @@ import org.bigblackowl.debttracker.domain.model.ScannedContact
 import org.bigblackowl.debttracker.domain.model.SyncStatus
 import org.bigblackowl.debttracker.domain.model.TransactionType
 import org.bigblackowl.debttracker.domain.usecase.FindProfileByEmailUseCase
+import org.bigblackowl.debttracker.domain.usecase.SearchProfilesUseCase
 import org.bigblackowl.debttracker.domain.usecase.ObserveContactSuggestionsUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddCreditorTransactionUseCase
 import org.bigblackowl.debttracker.domain.usecase.creditor.AddOrUpdateCreditorUseCase
@@ -54,6 +56,10 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 private const val EMAIL_LOOKUP_DEBOUNCE_MS = 500L
+private const val PROFILE_SEARCH_DEBOUNCE_MS = 500L
+
+/** Digits a phone needs before it is worth a lookup (matches the server-side threshold). */
+private const val PROFILE_SEARCH_MIN_PHONE_DIGITS = 9
 private const val NAME_SUGGESTIONS_LIMIT = 5
 
 /** The subset of [AddEditContactState] a Save would actually persist — everything else (errors,
@@ -118,12 +124,16 @@ class AddEditContactViewModel(
     private val creditorActions: CreditorActions,
     private val appSettings: AppSettings,
     private val findProfileByEmail: FindProfileByEmailUseCase,
+    private val searchProfiles: SearchProfilesUseCase,
     private val observeContactSuggestions: ObserveContactSuggestionsUseCase,
     private val observeDebtor: ObserveDebtorUseCase,
     private val observeCreditor: ObserveCreditorUseCase,
 ) : ViewModel() {
 
     private var emailLookupJob: Job? = null
+    private var profileSearchJob: Job? = null
+    private var emailMatch: ProfileSuggestion? = null
+    private var searchMatches: List<ProfileSuggestion> = emptyList()
     private var allContacts: List<ContactSuggestion> = emptyList()
 
     /** The row being edited (kept out of UI state — the screen only needs the flattened fields). */
@@ -212,8 +222,12 @@ class AddEditContactViewModel(
             is AddEditContactIntent.FullNameChanged -> {
                 _state.update { it.copy(fullName = intent.value, fullNameError = null) }
                 updateNameSuggestions()
+                searchRegisteredProfiles()
             }
-            is AddEditContactIntent.PhoneChanged -> _state.update { it.copy(phone = intent.value) }
+            is AddEditContactIntent.PhoneChanged -> {
+                _state.update { it.copy(phone = intent.value) }
+                searchRegisteredProfiles()
+            }
             is AddEditContactIntent.EmailChanged -> onEmailChanged(intent.value)
             is AddEditContactIntent.CommentChanged -> _state.update { it.copy(comment = intent.value) }
             is AddEditContactIntent.InitialAmountChanged -> _state.update { it.copy(initialAmountText = intent.value, amountError = null) }
@@ -231,8 +245,12 @@ class AddEditContactViewModel(
                     },
                 )
             }
-            AddEditContactIntent.ApplyProfileSuggestion -> applySuggestion()
-            AddEditContactIntent.DismissProfileSuggestion -> _state.update { it.copy(profileSuggestion = null) }
+            is AddEditContactIntent.ApplyProfileSuggestion -> applySuggestion(intent.suggestion)
+            AddEditContactIntent.DismissProfileSuggestion -> {
+                emailMatch = null
+                searchMatches = emptyList()
+                publishProfileSuggestions()
+            }
             is AddEditContactIntent.NameSuggestionSelected -> applyNameSuggestion(intent.suggestion)
             is AddEditContactIntent.ApplyScannedContact -> applyScannedContact(intent.contact)
             AddEditContactIntent.Save -> save()
@@ -280,26 +298,64 @@ class AddEditContactViewModel(
     }
 
     private fun onEmailChanged(value: String) {
-        _state.update { it.copy(email = value, profileSuggestion = null) }
+        _state.update { it.copy(email = value) }
         emailLookupJob?.cancel()
+        emailMatch = null
+        publishProfileSuggestions()
         if (!isValidEmail(value)) return
         emailLookupJob = viewModelScope.launch {
             delay(EMAIL_LOOKUP_DEBOUNCE_MS.milliseconds)
             val suggestion = findProfileByEmail(value.trim())
             if (suggestion != null && _state.value.email == value) {
-                _state.update { it.copy(profileSuggestion = suggestion) }
+                emailMatch = suggestion
+                publishProfileSuggestions()
             }
         }
     }
 
-    private fun applySuggestion() {
-        val suggestion = _state.value.profileSuggestion ?: return
+    /** Debounced name/phone lookup of registered users (new entries only; the repository skips Local-only sessions). */
+    private fun searchRegisteredProfiles() {
+        if (_state.value.isEditMode) return
+        profileSearchJob?.cancel()
+        searchMatches = emptyList()
+        publishProfileSuggestions()
+        val name = _state.value.fullName.trim()
+        val phone = _state.value.phone
+        val phoneReady = phone.count(Char::isDigit) >= PROFILE_SEARCH_MIN_PHONE_DIGITS
+        val nameReady = name.split(Regex("\\s+")).count { it.length >= 2 } >= 2
+        if (!phoneReady && !nameReady) return
+        profileSearchJob = viewModelScope.launch {
+            delay(PROFILE_SEARCH_DEBOUNCE_MS.milliseconds)
+            val found = searchProfiles(name.takeIf { nameReady }, phone.takeIf { phoneReady })
+            val now = _state.value
+            if (now.fullName.trim() == name && now.phone == phone) {
+                searchMatches = found
+                publishProfileSuggestions()
+            }
+        }
+    }
+
+    /** Merges the email and name/phone matches, hiding any whose name is already what's typed in. */
+    private fun publishProfileSuggestions() {
+        _state.update { current ->
+            val typed = current.fullName.trim()
+            val merged = (listOfNotNull(emailMatch) + searchMatches)
+                .filter { !it.displayName.isNullOrBlank() && !it.displayName.equals(typed, ignoreCase = true) }
+                .distinctBy { it.displayName?.lowercase() }
+            current.copy(profileSuggestions = merged)
+        }
+    }
+
+    private fun applySuggestion(suggestion: ProfileSuggestion) {
+        emailMatch = null
+        searchMatches = emptyList()
         _state.update {
             it.copy(
                 fullName = suggestion.displayName?.takeIf(String::isNotBlank) ?: it.fullName,
                 fullNameError = null,
                 suggestedAvatarUrl = suggestion.avatarUrl ?: it.suggestedAvatarUrl,
-                profileSuggestion = null,
+                nameSuggestions = emptyList(),
+                profileSuggestions = emptyList(),
             )
         }
     }

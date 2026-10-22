@@ -1,5 +1,6 @@
 package org.bigblackowl.debttracker.ui.screens.settings.account
 
+import org.bigblackowl.debttracker.ui.components.form.focusNavigation
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -133,7 +134,7 @@ private fun EditAccountContent(
             supportingText = state.fullNameError?.let { { Text(it) } },
             leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth().testTag("editAccount_nameField"),
+            modifier = Modifier.fillMaxWidth().focusNavigation().testTag("editAccount_nameField"),
         )
 
         OutlinedTextField(
@@ -155,7 +156,7 @@ private fun EditAccountContent(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             visualTransformation = remember { UkrainianPhoneVisualTransformation() },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth().testTag("editAccount_phoneField"),
+            modifier = Modifier.fillMaxWidth().focusNavigation().testTag("editAccount_phoneField"),
         )
         Spacer(Modifier.height(Dimens.Spacing.md))
         LoadingButton(

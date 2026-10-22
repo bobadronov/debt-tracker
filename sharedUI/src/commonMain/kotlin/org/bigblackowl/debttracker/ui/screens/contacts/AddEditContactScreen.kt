@@ -9,6 +9,7 @@ import androidx.compose.ui.tooling.preview.Devices.DESKTOP
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
+import org.bigblackowl.debttracker.domain.model.ProfileSuggestion
 import org.bigblackowl.debttracker.domain.model.ContactPrefill
 import org.bigblackowl.debttracker.domain.model.ContactSuggestion
 import org.bigblackowl.debttracker.domain.model.Currency
@@ -56,7 +57,7 @@ fun AddEditContactScreen(
         onSelectNameSuggestion = { viewModel.onIntent(AddEditContactIntent.NameSuggestionSelected(it)) },
         onPhoneChange = { viewModel.onIntent(AddEditContactIntent.PhoneChanged(sanitizePhoneInput(it))) },
         onEmailChange = { viewModel.onIntent(AddEditContactIntent.EmailChanged(it)) },
-        onApplySuggestion = { viewModel.onIntent(AddEditContactIntent.ApplyProfileSuggestion) },
+        onApplySuggestion = { viewModel.onIntent(AddEditContactIntent.ApplyProfileSuggestion(it)) },
         onDismissSuggestion = { viewModel.onIntent(AddEditContactIntent.DismissProfileSuggestion) },
         onCommentChange = { viewModel.onIntent(AddEditContactIntent.CommentChanged(it)) },
         onInitialAmountChange = { viewModel.onIntent(AddEditContactIntent.InitialAmountChanged(sanitizeAmountInput(it))) },
@@ -79,7 +80,7 @@ private fun AddEditContactContent(
     onSelectNameSuggestion: (ContactSuggestion) -> Unit,
     onPhoneChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
-    onApplySuggestion: () -> Unit,
+    onApplySuggestion: (ProfileSuggestion) -> Unit,
     onDismissSuggestion: () -> Unit,
     onCommentChange: (String) -> Unit,
     onInitialAmountChange: (String) -> Unit,
@@ -126,7 +127,7 @@ private fun AddEditContactContent(
         onPhoneChange = onPhoneChange,
         email = state.email,
         onEmailChange = onEmailChange,
-        profileSuggestion = state.profileSuggestion,
+        profileSuggestions = state.profileSuggestions,
         onApplySuggestion = onApplySuggestion,
         onDismissSuggestion = onDismissSuggestion,
         comment = state.comment,
