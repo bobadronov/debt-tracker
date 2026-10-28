@@ -35,9 +35,12 @@ import kotlin.time.Instant
  * [AppSettings.exchangeRatesCache], so the screen opens with data even before the request completes.
  */
 class HttpExchangeRatesRepository(
-    private val client: HttpClient,
+    client: HttpClient,
     private val settings: AppSettings,
 ) : ExchangeRatesRepository {
+
+    // Non-2xx (e.g. a bank API 504 with no body) must fail as a status error, not as a body-transform error.
+    private val http = client.config { expectSuccess = true }
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
@@ -81,14 +84,14 @@ class HttpExchangeRatesRepository(
     }
 
     private suspend fun fetchPrivatBankOn(date: LocalDate): PbResponse =
-        client.get("https://api.privatbank.ua/p24api/exchange_rates?json") {
+        http.get("https://api.privatbank.ua/p24api/exchange_rates?json") {
             parameter("date", date.toDdMmYyyy())
         }.body()
 
     // --- NBU: `cc` is the letter code, `rate` is already "hryvnias per 1 unit".
     private suspend fun fetchNbu(): ExchangeRatesSnapshot {
         val rows: List<NbuRow> =
-            client.get("https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json").body()
+            http.get("https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json").body()
         val rates = rows.mapNotNull { row ->
             val code = row.cc?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
             ExchangeRate(FiatCurrencies.of(code), row.rate, row.rate)
@@ -104,7 +107,7 @@ class HttpExchangeRatesRepository(
     // --- Monobank: ISO numeric codes, base is 980 (UAH). Exotic pairs come only via rateCross
     // (no separate buy/sell) — then we show a single cross-rate for both sides.
     private suspend fun fetchMonobank(): ExchangeRatesSnapshot {
-        val rows: List<MonoRow> = client.get("https://api.monobank.ua/bank/currency").body()
+        val rows: List<MonoRow> = http.get("https://api.monobank.ua/bank/currency").body()
         var date: LocalDate? = null
         val rates = rows.mapNotNull { row ->
             if (row.currencyCodeB != UAH_NUMERIC) return@mapNotNull null
@@ -119,7 +122,7 @@ class HttpExchangeRatesRepository(
 
     // --- NBP (Poland): table A, the mid rate `mid` = how many złoty per 1 unit of currency.
     private suspend fun fetchNbp(): ExchangeRatesSnapshot {
-        val tables: List<NbpTable> = client.get("https://api.nbp.pl/api/exchangerates/tables/A?format=json").body()
+        val tables: List<NbpTable> = http.get("https://api.nbp.pl/api/exchangerates/tables/A?format=json").body()
         val table = tables.firstOrNull() ?: error("NBP returned no table")
         val rates = table.rates.mapNotNull { row ->
             val code = row.code?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
@@ -133,7 +136,7 @@ class HttpExchangeRatesRepository(
     // so we invert to "1 X = N base". The ECB doesn't publish the hryvnia — it just won't appear in the list.
     private suspend fun fetchEcb(baseCode: String): ExchangeRatesSnapshot {
         val response: FrankfurterResponse =
-            client.get("https://api.frankfurter.dev/v1/latest") { parameter("base", baseCode) }.body()
+            http.get("https://api.frankfurter.dev/v1/latest") { parameter("base", baseCode) }.body()
         val rates = response.rates.mapNotNull { (code, perBase) ->
             val inverted = perBase.takeIf { it > 0.0 }?.let { 1.0 / it } ?: return@mapNotNull null
             ExchangeRate(FiatCurrencies.of(code), inverted, inverted)
@@ -143,7 +146,7 @@ class HttpExchangeRatesRepository(
 
     // --- ČNB (Czechia): `rate` is korunas per `amount` units of currency (some are per 100), we normalize to 1.
     private suspend fun fetchCnb(): ExchangeRatesSnapshot {
-        val response: CnbResponse = client.get("https://api.cnb.cz/cnbapi/exrates/daily?lang=EN").body()
+        val response: CnbResponse = http.get("https://api.cnb.cz/cnbapi/exrates/daily?lang=EN").body()
         var date: LocalDate? = null
         val rates = response.rates.mapNotNull { row ->
             val code = row.currencyCode?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
@@ -158,7 +161,7 @@ class HttpExchangeRatesRepository(
     // --- ExchangeRate-API via open.er-api.com (free, no key, ~160 currencies):
     // `/v6/latest/<base>` → `rates[X]` = how many X per 1 unit of the base, we invert to "1 X = N base".
     private suspend fun fetchExchangerateApi(baseCode: String): ExchangeRatesSnapshot {
-        val response: ErApiResponse = client.get("https://open.er-api.com/v6/latest/$baseCode").body()
+        val response: ErApiResponse = http.get("https://open.er-api.com/v6/latest/$baseCode").body()
         if (response.result != null && response.result != "success") error("ExchangeRate-API: ${response.result}")
         val rates = response.rates.mapNotNull { (code, perBase) ->
             val inverted = perBase.takeIf { it > 0.0 }?.let { 1.0 / it } ?: return@mapNotNull null
