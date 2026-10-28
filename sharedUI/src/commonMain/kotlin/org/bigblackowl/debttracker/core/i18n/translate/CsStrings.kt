@@ -137,6 +137,7 @@ val CsStrings = Strings(
         remove = "Odebrat",
         removeTitle = "Odebrat ze seznamu?",
         removeMessage = { name -> "„$name“ zmizí ze seznamu kontaktů. Dluhy a historie zůstanou beze změny." },
+        fromPhoneContacts = "Z kontaktů v telefonu",
     ),
     creditorDetail = CreditorDetailStrings(
         titleFallback = "Věřitel",
@@ -167,6 +168,7 @@ val CsStrings = Strings(
         filterClosed = "Uzavřené",
         filterAll = "Vše",
         total = "Celkem dlužím",
+        emptyHint = "Zatím žádní věřitelé.\nKlepnutím na „+“ přidáte někoho, komu dlužíte.",
     ),
     debtorList = DebtorListStrings(
         searchPlaceholder = "Hledat dlužníky",
@@ -179,6 +181,7 @@ val CsStrings = Strings(
         filterClosed = "Uzavřené",
         filterAll = "Vše",
         total = "Celkem mně dluží",
+        emptyHint = "Zatím žádní dlužníci.\nKlepnutím na „+“ přidáte někoho, kdo dluží vám.",
     ),
     export = ExportStrings(
         title = "Export",
@@ -213,6 +216,8 @@ val CsStrings = Strings(
         preferences = "Předvolby",
         data = "Data",
         protection = "Zámek aplikace",
+        addWidget = "Widget na plochu",
+        protectionRow = "Zabezpečení",
         haptic = "Haptická odezva",
         notifications = "Oznámení",
         notificationsBlocked = "Zapněte je pro Debt Tracker v nastavení zařízení",

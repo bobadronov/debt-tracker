@@ -137,6 +137,7 @@ val DeStrings = Strings(
         remove = "Entfernen",
         removeTitle = "Aus der Liste entfernen?",
         removeMessage = { name -> "„$name“ verschwindet aus deiner Kontaktliste. Schulden und Verlauf bleiben unverändert." },
+        fromPhoneContacts = "Aus Telefonkontakten",
     ),
     creditorDetail = CreditorDetailStrings(
         titleFallback = "Gläubiger",
@@ -167,6 +168,7 @@ val DeStrings = Strings(
         filterClosed = "Abgeschlossen",
         filterAll = "Alle",
         total = "Gesamtsumme, die ich schulde",
+        emptyHint = "Noch keine Gläubiger.\nTippe auf „+“, um jemanden hinzuzufügen, dem du Geld schuldest.",
     ),
     debtorList = DebtorListStrings(
         searchPlaceholder = "Schuldner suchen",
@@ -179,6 +181,7 @@ val DeStrings = Strings(
         filterClosed = "Abgeschlossen",
         filterAll = "Alle",
         total = "Gesamtsumme, die mir geschuldet wird",
+        emptyHint = "Noch keine Schuldner.\nTippe auf „+“, um jemanden hinzuzufügen, der dir Geld schuldet.",
     ),
     export = ExportStrings(
         title = "Exportieren",
@@ -213,6 +216,8 @@ val DeStrings = Strings(
         preferences = "Präferenzen",
         data = "Daten",
         protection = "App-Sperre",
+        addWidget = "Widget zum Startbildschirm",
+        protectionRow = "Sicherheit",
         haptic = "Haptisches Feedback",
         notifications = "Benachrichtigungen",
         notificationsBlocked = "In den Geräteeinstellungen für Debt Tracker aktivieren",

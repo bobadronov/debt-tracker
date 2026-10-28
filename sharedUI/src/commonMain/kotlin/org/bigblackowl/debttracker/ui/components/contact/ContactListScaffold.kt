@@ -1,6 +1,7 @@
 package org.bigblackowl.debttracker.ui.components.contact
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
@@ -40,6 +41,7 @@ fun <T> ContactListScaffold(
     searchBar: @Composable () -> Unit,
     totalBar: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    emptyContent: (@Composable () -> Unit)? = null,
     row: @Composable (T) -> Unit,
 ) {
     Column(
@@ -60,6 +62,11 @@ fun <T> ContactListScaffold(
             ) {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     items(items, key = key) { row(it) }
+                    if (items.isEmpty() && emptyContent != null) {
+                        item(key = "empty") {
+                            Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) { emptyContent() }
+                        }
+                    }
                 }
             }
 

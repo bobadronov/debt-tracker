@@ -14,9 +14,12 @@ import org.bigblackowl.debttracker.preview.DebtTrackerPreview
 fun FloatingActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier.Companion,
+    tooltip: String? = null,
     content: @Composable () -> Unit,
 ) {
-    FloatingActionButton(onClick = rememberOnceClick(onClick = onClick), modifier = modifier, content = content)
+    HoverTooltip(tooltip) {
+        FloatingActionButton(onClick = rememberOnceClick(onClick = onClick), modifier = modifier, content = content)
+    }
 }
 
 @Preview

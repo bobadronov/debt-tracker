@@ -74,7 +74,7 @@ fun <S, F> ListSearchBar(
             placeholder = { Text(searchPlaceholder) },
             trailingIcon = if (query.isNotEmpty()) {
                 {
-                    IconButton(onClick = { onQueryChange("") }, modifier = Modifier.testTag("contactList_clearSearchButton")) {
+                    IconButton(onClick = { onQueryChange("") }, tooltip = clearSearchDescription, modifier = Modifier.testTag("contactList_clearSearchButton")) {
                         Icon(Icons.Filled.Close, clearSearchDescription)
                     }
                 }
@@ -83,7 +83,7 @@ fun <S, F> ListSearchBar(
 
         var filterMenuOpen by remember { mutableStateOf(false) }
         Box {
-            IconButton(onClick = { filterMenuOpen = true }, modifier = Modifier.testTag("contactList_filterButton")) {
+            IconButton(onClick = { filterMenuOpen = true }, tooltip = filterDescription, modifier = Modifier.testTag("contactList_filterButton")) {
                 Icon(Icons.Filled.FilterList, filterDescription)
             }
             DropdownMenu(

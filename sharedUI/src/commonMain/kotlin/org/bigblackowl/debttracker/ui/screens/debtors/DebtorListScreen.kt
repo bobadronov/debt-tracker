@@ -100,6 +100,8 @@ private fun DebtorListContent(
         onChangeStatus = onChangeStatusFilter,
         totalLabel = strings.debtorList.total,
         totalText = state.totalsByCurrency.formatTotals(),
+        addLabel = strings.addEditDebtor.titleNew,
+        emptyHint = strings.debtorList.emptyHint,
         onAdd = onAddDebtor,
         deleteLabel = strings.delete,
         itemId = { it.debtor.id },

@@ -15,9 +15,12 @@ fun IconButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier.Companion,
     enabled: Boolean = true,
+    tooltip: String? = null,
     content: @Composable () -> Unit,
 ) {
-    IconButton(onClick = rememberOnceClick(onClick = onClick), modifier = modifier, enabled = enabled, content = content)
+    HoverTooltip(tooltip) {
+        IconButton(onClick = rememberOnceClick(onClick = onClick), modifier = modifier, enabled = enabled, content = content)
+    }
 }
 
 @Preview

@@ -88,7 +88,7 @@ fun ContactDetailScaffold(
                 actions = {
                     if (!isLoading) {
                         onEdit?.let {
-                            IconButton(onClick = it, modifier = Modifier.testTag("contactDetail_editButton")) {
+                            IconButton(onClick = it, tooltip = LocalStrings.current.edit, modifier = Modifier.testTag("contactDetail_editButton")) {
                                 Icon(Icons.Filled.Edit, contentDescription = LocalStrings.current.edit)
                             }
                         }

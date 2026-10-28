@@ -86,6 +86,8 @@ data class ContactPickerStrings(
     val remove: String,
     val removeTitle: String,
     val removeMessage: (name: String) -> String,
+    /** Tooltip of the top-bar action that opens the OS contact picker to prefill the form. */
+    val fromPhoneContacts: String,
 )
 
 data class CreditorDetailStrings(
@@ -119,6 +121,8 @@ data class CreditorListStrings(
     val filterClosed: String,
     val filterAll: String,
     val total: String,
+    /** Shown in the empty list (no items, no search query). */
+    val emptyHint: String,
 )
 
 data class DebtorListStrings(
@@ -132,6 +136,8 @@ data class DebtorListStrings(
     val filterClosed: String,
     val filterAll: String,
     val total: String,
+    /** Shown in the empty list (no items, no search query). */
+    val emptyHint: String,
 )
 
 data class ExportStrings(
@@ -180,6 +186,10 @@ data class SettingsStrings(
     val preferences: String,
     val data: String,
     val protection: String,
+    /** Short label of the Settings row that opens the protection screen. */
+    val protectionRow: String,
+    /** Settings row that asks the launcher to pin the home-screen widget (Android). */
+    val addWidget: String,
     val haptic: String,
     val notifications: String,
     /** Subtitle shown under the Notifications row when the OS permission was denied. */

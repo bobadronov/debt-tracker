@@ -69,10 +69,12 @@ private class ListDetailScene<T : Any>(
         }
     }
 
-    // Two ListDetailScenes are the "same scene" iff they show the same list — required so NavDisplay
-    // reuses the scene (and only swaps the detail pane) when the selected item changes.
-    override fun equals(other: Any?) = other is ListDetailScene<*> && other.key == key
-    override fun hashCode() = key.hashCode()
+    // Same scene iff same list AND same detail. Equal scenes make NavDisplay keep the *old* scene
+    // instance (with its captured detailEntry), so a detail swap (Settings row -> another row) would
+    // never reach the screen if the detail weren't part of the identity.
+    override fun equals(other: Any?) =
+        other is ListDetailScene<*> && other.key == key && other.detailEntry.contentKey == detailEntry.contentKey
+    override fun hashCode() = 31 * key.hashCode() + detailEntry.contentKey.hashCode()
 }
 
 /**

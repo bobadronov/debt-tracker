@@ -15,6 +15,7 @@ import org.bigblackowl.debttracker.domain.model.ContactSuggestion
 import org.bigblackowl.debttracker.domain.model.Currency
 import org.bigblackowl.debttracker.domain.model.DebtDirection
 import org.bigblackowl.debttracker.domain.model.PaymentMethod
+import org.bigblackowl.debttracker.core.contacts.rememberDevicePhoneContactPicker
 import org.bigblackowl.debttracker.domain.model.ScannedContact
 import org.bigblackowl.debttracker.domain.validation.sanitizeAmountInput
 import org.bigblackowl.debttracker.domain.validation.sanitizePhoneInput
@@ -48,6 +49,8 @@ fun AddEditContactScreen(
         }
     }
 
+    val pickPhoneContact = rememberDevicePhoneContactPicker { viewModel.onIntent(AddEditContactIntent.ApplyScannedContact(it)) }
+
     AddEditContactContent(
         state = state,
         snackbarHostState = snackbarHostState,
@@ -67,6 +70,7 @@ fun AddEditContactScreen(
         onToggleReminderLead = { viewModel.onIntent(AddEditContactIntent.ToggleReminderLead(it)) },
         onSave = { viewModel.onIntent(AddEditContactIntent.Save) },
         onScannedContact = { viewModel.onIntent(AddEditContactIntent.ApplyScannedContact(it)) },
+        onPickPhoneContact = pickPhoneContact,
     )
 }
 
@@ -90,6 +94,7 @@ private fun AddEditContactContent(
     onToggleReminderLead: (Int) -> Unit,
     onSave: () -> Unit,
     onScannedContact: (ScannedContact) -> Unit,
+    onPickPhoneContact: (() -> Unit)?,
 ) {
     val strings = LocalStrings.current
     UnsavedChangesGuard(
@@ -147,6 +152,7 @@ private fun AddEditContactContent(
         isSaving = state.isSaving,
         onSave = onSave,
         onScannedContact = if (state.isEditMode) null else onScannedContact,
+        onPickPhoneContact = if (state.isEditMode) null else onPickPhoneContact,
     )
 }
 
@@ -170,6 +176,7 @@ private fun Preview(state: AddEditContactState) = AddEditContactContent(
     onToggleReminderLead = {},
     onSave = {},
     onScannedContact = {},
+    onPickPhoneContact = {},
 )
 
 @Preview

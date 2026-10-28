@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Android
@@ -55,6 +56,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.SubcomposeAsyncImage
 import org.bigblackowl.debttracker.BuildConfig
+import org.bigblackowl.debttracker.core.widget.rememberAddHomeScreenWidget
 import org.bigblackowl.debttracker.core.i18n.LocalStrings
 import org.bigblackowl.debttracker.core.platform.AppPlatform
 import org.bigblackowl.debttracker.core.platform.currentPlatform
@@ -92,6 +94,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = koinViewModel(),
 ) {
     val settings = koinInject<AppSettings>()
+    val addWidget = rememberAddHomeScreenWidget()
     val authRepository = koinInject<AuthRepository>()
     val uriHandler = LocalUriHandler.current
     val isAuthenticated by authRepository.isAuthenticated.collectAsStateWithLifecycle()
@@ -126,6 +129,7 @@ fun SettingsScreen(
         onToggleRunInBackground = { settings.runInBackground = it },
         onSetTheme = { settings.theme = it },
         onOpenUrl = { uriHandler.openUri(it) },
+        onAddWidget = addWidget,
     )
 }
 
@@ -160,6 +164,7 @@ private fun SettingsContent(
     onToggleRunInBackground: (Boolean) -> Unit,
     onSetTheme: (String) -> Unit,
     onOpenUrl: (String) -> Unit,
+    onAddWidget: (() -> Unit)?,
 ) {
     val strings = LocalStrings.current
     var showSignOutConfirm by remember { mutableStateOf(false) }
@@ -188,7 +193,7 @@ private fun SettingsContent(
                     if (showProtectionRow) {
                         SettingsRow(
                             icon = Icons.Filled.Lock,
-                            title = strings.settings.protection,
+                            title = strings.settings.protectionRow,
                             onClick = onOpenProtection,
                             modifier = Modifier.testTag("settings_protectionRow"),
                         )
@@ -210,6 +215,15 @@ private fun SettingsContent(
                         modifier = Modifier.testTag("settings_dataRow"),
                     )
                     SettingsRowDivider()
+                    if (onAddWidget != null) {
+                        SettingsRow(
+                            icon = Icons.Filled.Widgets,
+                            title = strings.settings.addWidget,
+                            onClick = onAddWidget,
+                            modifier = Modifier.testTag("settings_addWidgetRow"),
+                        )
+                        SettingsRowDivider()
+                    }
                     SettingsRow(
                         icon = Icons.Filled.Info,
                         title = strings.settings.about,
@@ -433,6 +447,7 @@ private fun Preview(state: SettingsScreenState) = SettingsContent(
     onToggleRunInBackground = {},
     onSetTheme = {},
     onOpenUrl = {},
+    onAddWidget = {},
 )
 
 private val PREVIEW_STATE_SIGNED_IN = SettingsScreenState(

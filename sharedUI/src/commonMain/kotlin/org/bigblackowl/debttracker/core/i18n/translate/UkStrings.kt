@@ -136,6 +136,7 @@ val UkStrings = Strings(
         remove = "Прибрати",
         removeTitle = "Прибрати зі списку?",
         removeMessage = { name -> "\"$name\" зникне зі списку контактів. Борги та історія залишаться без змін." },
+        fromPhoneContacts = "З контактів телефону",
     ),
     creditorDetail = CreditorDetailStrings(
         titleFallback = "Кредитор",
@@ -166,6 +167,7 @@ val UkStrings = Strings(
         filterClosed = "Закриті",
         filterAll = "Всі",
         total = "Загалом мої борги",
+        emptyHint = "Поки що немає кредиторів.\nНатисніть «+», щоб додати того, кому ви винні.",
     ),
     debtorList = DebtorListStrings(
         searchPlaceholder = "Пошук боржника",
@@ -178,6 +180,7 @@ val UkStrings = Strings(
         filterClosed = "Закриті",
         filterAll = "Всі",
         total = "Загалом мені винні",
+        emptyHint = "Поки що немає боржників.\nНатисніть «+», щоб додати того, хто винен вам.",
     ),
     export = ExportStrings(
         title = "Експорт",
@@ -212,6 +215,8 @@ val UkStrings = Strings(
         preferences = "Параметри",
         data = "Дані",
         protection = "Блокування застосунку",
+        addWidget = "Віджет на робочий стіл",
+        protectionRow = "Безпека",
         haptic = "Вібровідгук",
         notifications = "Сповіщення",
         notificationsBlocked = "Увімкніть їх для Debt Tracker у налаштуваннях пристрою",

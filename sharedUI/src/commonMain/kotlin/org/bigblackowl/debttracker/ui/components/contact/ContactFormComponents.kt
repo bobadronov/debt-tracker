@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CallMade
 import androidx.compose.material.icons.automirrored.filled.CallReceived
+import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -116,6 +117,8 @@ fun AddEditContactForm(
      * on Desktop/Web — see QR_SCAN_CAPABLE_PLATFORMS); fires with the decoded contact instead of
      * navigating anywhere. */
     onScannedContact: ((ScannedContact) -> Unit)? = null,
+    /** Non-null shows a "pick from phone contacts" action in the top bar (Android only for now). */
+    onPickPhoneContact: (() -> Unit)? = null,
 ) {
     val strings = LocalStrings.current
     val clipboardText by rememberClipboardText()
@@ -127,8 +130,17 @@ fun AddEditContactForm(
                 title = title,
                 onBack = onDone,
                 actions = {
+                    onPickPhoneContact?.let {
+                        IconButton(
+                            onClick = it,
+                            tooltip = strings.contactPicker.fromPhoneContacts,
+                            modifier = Modifier.testTag("addEditContact_pickPhoneContactButton"),
+                        ) {
+                            Icon(Icons.Filled.Contacts, contentDescription = strings.contactPicker.fromPhoneContacts)
+                        }
+                    }
                     onScannedContact?.let {
-                        IconButton(onClick = { showScanner = true }, modifier = Modifier.testTag("addEditContact_scanButton")) {
+                        IconButton(onClick = { showScanner = true }, tooltip = strings.qr.hubScanTab, modifier = Modifier.testTag("addEditContact_scanButton")) {
                             Icon(Icons.Filled.QrCodeScanner, contentDescription = strings.qr.hubScanTab)
                         }
                     }

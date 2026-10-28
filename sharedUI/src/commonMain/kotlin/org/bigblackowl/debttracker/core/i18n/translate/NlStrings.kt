@@ -137,6 +137,7 @@ val NlStrings = Strings(
         remove = "Verwijderen",
         removeTitle = "Uit de lijst verwijderen?",
         removeMessage = { name -> "„$name” verdwijnt uit je contactenlijst. Schulden en geschiedenis blijven ongewijzigd." },
+        fromPhoneContacts = "Uit telefooncontacten",
     ),
     creditorDetail = CreditorDetailStrings(
         titleFallback = "Crediteur",
@@ -167,6 +168,7 @@ val NlStrings = Strings(
         filterClosed = "Afgesloten",
         filterAll = "Alle",
         total = "Totaal dat ik schuldig ben",
+        emptyHint = "Nog geen schuldeisers.\nTik op „+” om iemand toe te voegen aan wie je geld verschuldigd bent.",
     ),
     debtorList = DebtorListStrings(
         searchPlaceholder = "Debiteuren zoeken",
@@ -179,6 +181,7 @@ val NlStrings = Strings(
         filterClosed = "Afgesloten",
         filterAll = "Alle",
         total = "Totaal dat aan mij verschuldigd is",
+        emptyHint = "Nog geen schuldenaars.\nTik op „+” om iemand toe te voegen die jou geld verschuldigd is.",
     ),
     export = ExportStrings(
         title = "Exporteren",
@@ -213,6 +216,8 @@ val NlStrings = Strings(
         preferences = "Voorkeuren",
         data = "Gegevens",
         protection = "App-vergrendeling",
+        addWidget = "Widget op startscherm",
+        protectionRow = "Beveiliging",
         haptic = "Haptische feedback",
         notifications = "Meldingen",
         notificationsBlocked = "Schakel ze in voor Debt Tracker in de apparaatinstellingen",

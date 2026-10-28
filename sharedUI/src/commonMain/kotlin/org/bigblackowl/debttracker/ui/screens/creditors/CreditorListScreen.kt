@@ -100,6 +100,8 @@ private fun CreditorListContent(
         onChangeStatus = onChangeStatusFilter,
         totalLabel = strings.creditorList.total,
         totalText = state.totalsByCurrency.formatTotals(),
+        addLabel = strings.addEditCreditor.titleNew,
+        emptyHint = strings.creditorList.emptyHint,
         onAdd = onAddCreditor,
         deleteLabel = strings.delete,
         itemId = { it.creditor.id },

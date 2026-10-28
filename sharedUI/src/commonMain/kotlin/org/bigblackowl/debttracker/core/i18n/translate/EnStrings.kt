@@ -136,6 +136,7 @@ val EnStrings = Strings(
         remove = "Remove",
         removeTitle = "Remove from list?",
         removeMessage = { name -> "\"$name\" will disappear from your contact list. Debts and history stay untouched." },
+        fromPhoneContacts = "From phone contacts",
     ),
     creditorDetail = CreditorDetailStrings(
         titleFallback = "Creditor",
@@ -166,6 +167,7 @@ val EnStrings = Strings(
         filterClosed = "Closed",
         filterAll = "All",
         total = "Total I owe",
+        emptyHint = "No creditors yet.\nTap “+” to add someone you owe.",
     ),
     debtorList = DebtorListStrings(
         searchPlaceholder = "Search debtors",
@@ -178,6 +180,7 @@ val EnStrings = Strings(
         filterClosed = "Closed",
         filterAll = "All",
         total = "Total owed to me",
+        emptyHint = "No debtors yet.\nTap “+” to add someone who owes you.",
     ),
     export = ExportStrings(
         title = "Export",
@@ -212,6 +215,8 @@ val EnStrings = Strings(
         preferences = "Preferences",
         data = "Data",
         protection = "App lock",
+        addWidget = "Add home screen widget",
+        protectionRow = "Security",
         haptic = "Haptic feedback",
         notifications = "Notifications",
         notificationsBlocked = "Turn them on for Debt Tracker in your device settings",

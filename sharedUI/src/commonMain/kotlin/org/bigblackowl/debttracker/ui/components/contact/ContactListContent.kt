@@ -5,6 +5,9 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.SortByAlpha
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -13,8 +16,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.tooling.preview.Devices.DESKTOP
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import org.bigblackowl.debttracker.preview.DebtTrackerPreview
+import org.bigblackowl.debttracker.theme.Dimens
 import org.bigblackowl.debttracker.ui.components.FullScreenLoadingIndicator
 
 /**
@@ -47,6 +52,8 @@ fun <T, S, F> ContactListContent(
     totalLabel: String,
     totalText: String,
     onAdd: () -> Unit,
+    addLabel: String,
+    emptyHint: String,
     deleteLabel: String,
     itemId: (T) -> String,
     itemName: (T) -> String,
@@ -68,6 +75,17 @@ fun <T, S, F> ContactListContent(
         isRefreshing = isRefreshing,
         onRefresh = onRefresh,
         modifier = modifier,
+        emptyContent = if (query.isBlank()) {
+            {
+                Text(
+                    emptyHint,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(Dimens.Spacing.xl),
+                )
+            }
+        } else null,
         searchBar = {
             ListSearchBar(
                 query = query,
@@ -88,7 +106,7 @@ fun <T, S, F> ContactListContent(
             )
         },
         totalBar = {
-            ListTotalBar(label = totalLabel, totalText = totalText, onAdd = onAdd)
+            ListTotalBar(label = totalLabel, totalText = totalText, onAdd = onAdd, addLabel = addLabel)
         },
     ) { item ->
         ContactRow(
@@ -137,6 +155,8 @@ private fun ContactListContentSample(isLoading: Boolean = false, items: List<Sam
         totalLabel = "Total",
         totalText = "4 650 ₴",
         onAdd = {},
+        addLabel = "Add",
+        emptyHint = "No items yet.\nTap “+” to add one.",
         deleteLabel = "Delete",
         itemId = { it.id },
         itemName = { it.name },

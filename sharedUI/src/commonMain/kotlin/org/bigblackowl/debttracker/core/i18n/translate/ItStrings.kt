@@ -137,6 +137,7 @@ val ItStrings = Strings(
         remove = "Rimuovi",
         removeTitle = "Rimuovere dalla lista?",
         removeMessage = { name -> "«$name» sparirà dalla tua lista di contatti. Debiti e cronologia restano invariati." },
+        fromPhoneContacts = "Dai contatti del telefono",
     ),
     creditorDetail = CreditorDetailStrings(
         titleFallback = "Creditore",
@@ -167,6 +168,7 @@ val ItStrings = Strings(
         filterClosed = "Chiusi",
         filterAll = "Tutti",
         total = "Totale che devo",
+        emptyHint = "Ancora nessun creditore.\nTocca «+» per aggiungere qualcuno a cui devi dei soldi.",
     ),
     debtorList = DebtorListStrings(
         searchPlaceholder = "Cerca debitori",
@@ -179,6 +181,7 @@ val ItStrings = Strings(
         filterClosed = "Chiusi",
         filterAll = "Tutti",
         total = "Totale che mi devono",
+        emptyHint = "Ancora nessun debitore.\nTocca «+» per aggiungere qualcuno che ti deve dei soldi.",
     ),
     export = ExportStrings(
         title = "Esporta",
@@ -213,6 +216,8 @@ val ItStrings = Strings(
         preferences = "Preferenze",
         data = "Dati",
         protection = "Blocco dell'app",
+        addWidget = "Widget nella schermata Home",
+        protectionRow = "Sicurezza",
         haptic = "Feedback aptico",
         notifications = "Notifiche",
         notificationsBlocked = "Attivale per Debt Tracker nelle impostazioni del dispositivo",

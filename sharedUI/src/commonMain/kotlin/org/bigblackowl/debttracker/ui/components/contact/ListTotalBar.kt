@@ -23,7 +23,7 @@ import org.bigblackowl.debttracker.ui.components.text.TitleText
 
 /** Running total + add button, pinned under the list. */
 @Composable
-fun ListTotalBar(label: String, totalText: String, onAdd: () -> Unit) {
+fun ListTotalBar(label: String, totalText: String, onAdd: () -> Unit, addLabel: String? = null) {
     ContentCard(modifier = Modifier.padding(Dimens.Spacing.md)) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(Dimens.Spacing.lg),
@@ -39,6 +39,7 @@ fun ListTotalBar(label: String, totalText: String, onAdd: () -> Unit) {
             }
             FloatingActionButton(
                 onClick = onAdd,
+                tooltip = addLabel,
                 modifier = Modifier.padding(start = Dimens.Spacing.md).testTag("contactList_addFab"),
             ) { Icon(Icons.Default.Add, null) }
         }
